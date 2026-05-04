@@ -24,6 +24,9 @@ export class UserModel extends BaseModel {
     @Column({ default: false })
     isEmailVerified: boolean;
 
+    @Column({ name: 'is_demo', default: false })
+    isDemo: boolean;
+
     @ManyToMany(() => RoleEntity, { eager: false })
     @JoinTable({
         name: 'user_roles',

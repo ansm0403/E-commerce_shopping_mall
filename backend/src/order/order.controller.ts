@@ -16,6 +16,7 @@ import { OrderQueryDto } from './dto/order-query.dto';
 import { OrderResponseDto } from './dto/order-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { DemoAccountGuard } from '../auth/guards/demo-account.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '../user/entity/role.entity';
 import { Serialize } from '../common/interceptors/serialize.interceptor';
@@ -108,6 +109,7 @@ export class AdminOrderController {
   }
 
   @Patch(':orderNumber/deliver')
+  @UseGuards(DemoAccountGuard)
   @Serialize(OrderResponseDto)
   @Auditable(AuditAction.SHIPMENT_DELIVERED)
   markDelivered(

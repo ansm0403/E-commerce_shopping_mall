@@ -28,6 +28,7 @@ import { RejectProductDto } from './dto/reject-product.dto';
 import { ProductResponseDto } from './dto/product-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { DemoAccountGuard } from '../auth/guards/demo-account.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '../user/entity/role.entity';
 import { ProductSeedService } from '../common/seeds/product.seed';
@@ -163,6 +164,7 @@ export class AdminProductController {
   }
 
   @Patch(':id/approve')
+  @UseGuards(DemoAccountGuard)
   @Serialize(ProductResponseDto)
   @Auditable(AuditAction.PRODUCT_APPROVED)
   approve(@Param('id', ParseIntPipe) id: number) {
@@ -170,6 +172,7 @@ export class AdminProductController {
   }
 
   @Patch(':id/reject')
+  @UseGuards(DemoAccountGuard)
   @Serialize(ProductResponseDto)
   @Auditable(AuditAction.PRODUCT_REJECTED, { captureBody: ['reason'] })
   reject(

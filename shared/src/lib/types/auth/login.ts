@@ -21,5 +21,6 @@ export interface LoginResponse {
     email: string;
     nickName: string;
     roles: ('buyer' | 'seller' | 'admin')[];
+    isDemo: boolean;
   };
 }

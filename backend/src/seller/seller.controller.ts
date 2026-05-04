@@ -14,6 +14,7 @@ import { ApplySellerDto } from './dto/apply-seller.dto';
 import { RejectSellerDto } from './dto/reject-seller.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { DemoAccountGuard } from '../auth/guards/demo-account.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '../user/entity/role.entity';
 import { User } from '../auth/decorators/user.decorator';
@@ -49,6 +50,7 @@ export class SellerController {
 
   // 관리자: 승인
   @Patch('applications/:id/approve')
+  @UseGuards(DemoAccountGuard)
   @Roles(Role.ADMIN)
   @Auditable(AuditAction.SELLER_APPROVED)
   approve(@Param('id', ParseIntPipe) id: number) {
@@ -57,6 +59,7 @@ export class SellerController {
 
   // 관리자: 거절
   @Patch('applications/:id/reject')
+  @UseGuards(DemoAccountGuard)
   @Roles(Role.ADMIN)
   @Auditable(AuditAction.SELLER_REJECTED, { captureBody: ['reason'] })
   reject(@Param('id', ParseIntPipe) id: number, @Body() dto: RejectSellerDto) {

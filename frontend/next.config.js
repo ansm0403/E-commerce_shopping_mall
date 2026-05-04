@@ -1,6 +1,16 @@
 //@ts-check
 
- 
+// ============================================================
+// [OPT-1] Bundle Analyzer
+// 측정 대상: 페이지별 JS 번들 크기 (First Load JS)
+// 측정 방법: ANALYZE=true yarn nx build frontend → 브라우저에서 .next/analyze/*.html 열기
+// 기대 효과: 불필요하게 큰 청크 식별 → dynamic import 대상 파악
+// ============================================================
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+  openAnalyzer: true,
+});
+
 const { composePlugins, withNx } = require('@nx/next');
 
 // ============================================================
@@ -63,6 +73,14 @@ const nextConfig = {
 
   // 모노레포 패키지 transpile 설정
   transpilePackages: ['@shopping-mall/shared'],
+
+  // ============================================================
+  // [OPT-7] next/image remotePatterns
+  // 측정 대상: LCP (Largest Contentful Paint) — 이미지 최적화로 WebP 변환 + CDN 캐시
+  // 측정 방법: Lighthouse > Performance > LCP / Network 탭 > 이미지 응답 Content-Type
+  // 기대 효과: WebP 변환으로 이미지 30~50% 용량 절감, Vercel Edge 캐시로 반복 요청 가속
+  // 주의: 이미지 URL 도메인이 여기 없으면 빌드 에러 → EC2 IP 변경 시 이 목록도 갱신 필요
+  // ============================================================
 
   // 보안 헤더 설정 (CSP 포함)
   async headers() {
@@ -176,7 +194,8 @@ const nextConfig = {
 };
 
 const plugins = [
-  // Add more Next.js plugins to this list if needed.
+  // [OPT-1] Bundle Analyzer: ANALYZE=true 환경에서만 활성화
+  withBundleAnalyzer,
   withNx,
 ];
 

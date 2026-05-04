@@ -57,6 +57,9 @@ export class DashboardSeedService implements OnApplicationBootstrap {
         await this.resetSeedData();
       }
 
+      // 데모 관리자 계정은 reset/alreadySeeded 체크와 독립적으로 항상 실행 (멱등)
+      await this.seedDemoAdmin();
+
       const alreadySeeded = await this.isSeedDataPresent();
       if (alreadySeeded) {
         console.log('⚠️   이미 시드 데이터가 있습니다.');
@@ -77,6 +80,55 @@ export class DashboardSeedService implements OnApplicationBootstrap {
     }
 
     process.exit(0);
+  }
+
+  // ─── 데모 관리자 계정 ──────────────────────────────────────────────────────────
+
+  /**
+   * 포트폴리오 시연용 공용 관리자 계정 생성.
+   *
+   * - DEMO_ADMIN_EMAIL / DEMO_ADMIN_PASSWORD 환경변수가 없으면 조용히 스킵.
+   * - 이미 존재하면 재생성 없이 스킵(멱등).
+   * - isDemo: true — DemoAccountGuard 가 위험 작업을 차단하는 데 사용.
+   * - email 이 '@seed.com' 도메인이 아니라 resetSeedData 로 삭제되지 않음(의도된 동작).
+   */
+  private async seedDemoAdmin(): Promise<void> {
+    const email = process.env['DEMO_ADMIN_EMAIL'];
+    const password = process.env['DEMO_ADMIN_PASSWORD'];
+
+    if (!email || !password) {
+      console.log('  ⚠️  DEMO_ADMIN_EMAIL / DEMO_ADMIN_PASSWORD 미설정 — 데모 관리자 스킵');
+      return;
+    }
+
+    const exists = await this.userRepo.findOne({ where: { email } });
+    if (exists) {
+      console.log(`  ✓ 데모 관리자 이미 존재: ${email}`);
+      return;
+    }
+
+    const adminRole = await this.roleRepo.findOne({ where: { name: Role.ADMIN } });
+    if (!adminRole) {
+      console.warn('  ⚠️  admin role 이 없습니다. RolesSeedService 가 먼저 실행되어야 합니다.');
+      return;
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    await this.userRepo.save(
+      this.userRepo.create({
+        email,
+        password: passwordHash,
+        nickName: '데모 관리자',
+        phoneNumber: '010-0000-0000',
+        address: '포트폴리오 시연용 계정',
+        isEmailVerified: true,
+        isDemo: true,
+        roles: [adminRole],
+      }),
+    );
+
+    console.log(`  ✓ 데모 관리자 생성 완료: ${email}`);
   }
 
   // ─── 사용자 / 셀러 ─────────────────────────────────────────────────────────
@@ -451,6 +503,19 @@ export class DashboardSeedService implements OnApplicationBootstrap {
        WHERE user_id IN (SELECT id FROM users WHERE email LIKE '%@seed.com')`,
     );
     await this.ds.query(`DELETE FROM users WHERE email LIKE '%@seed.com'`);
+
+    // DEMO_RESET=true 일 때만 데모 관리자도 함께 삭제
+    if (process.env['DEMO_RESET'] === 'true') {
+      const demoEmail = process.env['DEMO_ADMIN_EMAIL'];
+      if (demoEmail) {
+        await this.ds.query(
+          `DELETE FROM user_roles WHERE user_id IN (SELECT id FROM users WHERE email = $1)`,
+          [demoEmail],
+        );
+        await this.ds.query(`DELETE FROM users WHERE email = $1`, [demoEmail]);
+        console.log(`  ✓ 데모 관리자 삭제: ${demoEmail}`);
+      }
+    }
 
     console.log('  ✓ 삭제 완료\n');
   }

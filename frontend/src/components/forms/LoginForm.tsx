@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useLoginMutation } from "../../hook/useAuthMutation";
+import { useLoginMutation, useDemoLoginMutation } from "../../hook/useAuthMutation";
 import { Form, TextField, CheckboxField } from "./BaseForm";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -37,6 +37,7 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const redirectTo = safeRedirectPath(searchParams.get("redirect"));
   const loginMutation = useLoginMutation();
+  const demoLoginMutation = useDemoLoginMutation();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const defaultValues: LoginFormValues = {
@@ -120,6 +121,29 @@ export function LoginForm() {
         >
           회원가입
         </Link>
+      </div>
+
+      <div className="w-full mt-6 pt-5 border-t border-gray-200">
+        <p className="text-xs text-gray-400 text-center mb-3">채용 담당자 · 시연자용</p>
+        <button
+          type="button"
+          disabled={demoLoginMutation.isPending}
+          onClick={async () => {
+            setErrorMessage(null);
+            try {
+              await demoLoginMutation.mutateAsync();
+              router.push("/admin/dashboard");
+            } catch {
+              setErrorMessage("데모 로그인에 실패했습니다. 잠시 후 다시 시도해주세요.");
+            }
+          }}
+          className="w-full py-2.5 px-4 rounded-lg border border-dashed border-indigo-400 bg-indigo-50 text-indigo-700 text-sm font-semibold hover:bg-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {demoLoginMutation.isPending ? "로그인 중..." : "관리자 페이지 체험하기 (데모 계정)"}
+        </button>
+        <p className="text-xs text-gray-400 text-center mt-2">
+          가입 없이 관리자 대시보드를 둘러볼 수 있습니다. 일부 기능은 제한됩니다.
+        </p>
       </div>
     </div>
   );

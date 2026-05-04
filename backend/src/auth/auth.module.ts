@@ -8,6 +8,7 @@ import { RefreshTokenEntity } from './entity/refresh-token.entity';
 import { UserModel } from '../user/entity/user.entity';
 import { RoleEntity } from '../user/entity/role.entity';
 import { RolesGuard } from './guards/roles.guard';
+import { DemoAccountGuard } from './guards/demo-account.guard';
 import { EmailModule } from '../intrastructure/emailVerify/email.module';
 import { AuditModule } from '../audit/audit.module';
 import { RedisModule } from '../intrastructure/redis/redis.module';
@@ -31,7 +32,7 @@ import { RedisModule } from '../intrastructure/redis/redis.module';
     TypeOrmModule.forFeature([RefreshTokenEntity, UserModel, RoleEntity]),
   ],
   controllers: [AuthController],
-  providers: [AuthService, RolesGuard],
-  exports: [AuthService, RolesGuard],
+  providers: [AuthService, RolesGuard, DemoAccountGuard],
+  exports: [AuthService, RolesGuard, DemoAccountGuard],
 })
 export class AuthModule {}

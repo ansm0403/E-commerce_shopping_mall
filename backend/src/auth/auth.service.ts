@@ -27,6 +27,7 @@ interface JwtPayload {
   roles?: Role[];
   type: 'access' | 'refresh';
   tokenId?: string;
+  isDemo?: boolean;
 }
 
 interface LoginContext {
@@ -292,6 +293,23 @@ export class AuthService {
     return this.generateTokens(user, context, rememberMe);
   }
 
+  // ===== 데모 관리자 로그인 =====
+  async demoLogin(context: LoginContext) {
+    const enabled = this.configService.get<string>('DEMO_LOGIN_ENABLED');
+    if (enabled !== 'true') {
+      throw new ForbiddenException('데모 로그인이 비활성화되어 있습니다.');
+    }
+
+    const email = this.configService.get<string>('DEMO_ADMIN_EMAIL');
+    const password = this.configService.get<string>('DEMO_ADMIN_PASSWORD');
+
+    if (!email || !password) {
+      throw new ForbiddenException('데모 관리자 계정이 설정되지 않았습니다.');
+    }
+
+    return this.login({ email, password, rememberMe: false }, context);
+  }
+
   // ===== 토큰 생성 =====
   private async generateTokens(user: UserModel, context: LoginContext, isPersistent: boolean) {
     const tokenId = crypto.randomUUID();
@@ -302,6 +320,7 @@ export class AuthService {
       email: user.email,
       type: 'access',
       roles: user.roles?.map((r) => r.name) ?? [],
+      isDemo: user.isDemo ?? false,
     };
 
     const accessToken = this.jwtService.sign(accessPayload, {
@@ -354,6 +373,7 @@ export class AuthService {
         email: user.email,
         nickName: user.nickName,
         roles: user.roles?.map((r) => r.name) ?? [],
+        isDemo: user.isDemo ?? false,
       },
       isPersistent,
     };

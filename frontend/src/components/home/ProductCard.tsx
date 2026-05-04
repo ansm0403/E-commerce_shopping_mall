@@ -31,16 +31,18 @@ export default function ProductCard({ product }: ProductCardProps) {
       href={`/products/${product.id}`}
       className="group relative block overflow-hidden aspect-[3/4] bg-secondary-200"
     >
-      {/* Full-bleed 이미지 */}
       <img
         src={imageUrl}
         alt={product.name}
-        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+        className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+        onError={(e) => {
+          (e.currentTarget as HTMLImageElement).style.visibility = 'hidden';
+        }}
       />
 
       {/* 상단 할인 뱃지 */}
       {hasDiscount && (
-        <span className="absolute top-2.5 left-2.5 bg-primary-600 text-white text-xs font-bold px-2 py-1 rounded-sm leading-none tracking-wide">
+        <span className="absolute top-2.5 left-2.5 bg-primary-600 text-white text-xs font-bold px-2 py-1 rounded-sm leading-none tracking-wide z-10">
           -{product.discountRate}%
         </span>
       )}

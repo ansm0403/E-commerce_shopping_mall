@@ -2,6 +2,12 @@
   "name": "@shopping-mall/frontend",
   "version": "0.0.1",
   "private": true,
+  "scripts": {
+    "analyze": "ANALYZE=true yarn nx build frontend"
+  },
+  "devDependencies": {
+    "@next/bundle-analyzer": "^15.0.0"
+  },
   "dependencies": {
     "@portone/browser-sdk": "^0.1.3",
     "@shopping-mall/shared": "*",

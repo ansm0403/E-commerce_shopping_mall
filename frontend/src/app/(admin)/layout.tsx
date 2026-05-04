@@ -1,5 +1,6 @@
 import AdminSidebar from './admin/components/AdminSidebar';
 import AdminGuard from './admin/components/AdminGuard';
+import DemoModeBanner from './admin/components/DemoModeBanner';
 
 /**
  * (admin) route group의 공용 셸.
@@ -18,11 +19,14 @@ import AdminGuard from './admin/components/AdminGuard';
  */
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f1f5f9' }}>
-      <AdminSidebar />
-      <main style={{ flex: 1, padding: '32px', overflowY: 'auto' }}>
-        <AdminGuard>{children}</AdminGuard>
-      </main>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#f1f5f9' }}>
+      <DemoModeBanner />
+      <div style={{ display: 'flex', flex: 1 }}>
+        <AdminSidebar />
+        <main style={{ flex: 1, padding: '32px', overflowY: 'auto' }}>
+          <AdminGuard>{children}</AdminGuard>
+        </main>
+      </div>
     </div>
   );
 }

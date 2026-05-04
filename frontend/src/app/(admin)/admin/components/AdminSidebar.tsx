@@ -54,6 +54,32 @@ export default function AdminSidebar() {
           );
         })}
       </nav>
+      <div style={{ padding: '16px 20px', borderTop: '1px solid #334155' }}>
+        <Link
+          href="/"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '10px 12px',
+            fontSize: '14px',
+            color: '#94a3b8',
+            textDecoration: 'none',
+            borderRadius: '6px',
+            transition: 'all 0.15s',
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLAnchorElement).style.background = '#0f172a';
+            (e.currentTarget as HTMLAnchorElement).style.color = '#f8fafc';
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLAnchorElement).style.background = 'transparent';
+            (e.currentTarget as HTMLAnchorElement).style.color = '#94a3b8';
+          }}
+        >
+          ← 쇼핑몰 홈으로
+        </Link>
+      </div>
     </aside>
   );
 }

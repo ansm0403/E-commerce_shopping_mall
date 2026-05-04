@@ -35,3 +35,7 @@ export async function getMe() {
 export async function logout() {
     return authClient.post<LogoutResponse>("/auth/logout");
 }
+
+export async function demoLogin() {
+    return publicClient.post<LoginResponse>("/auth/demo-login");
+}

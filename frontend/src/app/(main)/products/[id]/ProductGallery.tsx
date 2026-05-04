@@ -8,7 +8,6 @@ interface ProductGalleryProps {
 }
 
 export default function ProductGallery({ images }: ProductGalleryProps) {
-  // isPrimary인 이미지부터 정렬, 없으면 sortOrder 기준
   const sortedImages = [...images].sort((a, b) => {
     if (a.isPrimary) return -1;
     if (b.isPrimary) return 1;
@@ -27,11 +26,9 @@ export default function ProductGallery({ images }: ProductGalleryProps) {
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isZoomed) return;
-
     const rect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
-
     setZoomPosition({ x, y });
   };
 
@@ -47,7 +44,7 @@ export default function ProductGallery({ images }: ProductGalleryProps) {
         <img
           src={mainImage.url}
           alt="상품 이미지"
-          className={`w-full h-full object-cover transition-transform duration-300 ${
+          className={`absolute inset-0 w-full h-full object-cover transition-transform duration-300 ${
             isZoomed ? 'scale-150' : 'scale-100'
           }`}
           style={
@@ -55,8 +52,9 @@ export default function ProductGallery({ images }: ProductGalleryProps) {
               ? { transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%` }
               : undefined
           }
-          // ⑤ 이미지 로드 실패 시 placeholder로 대체
-          onError={(e) => { e.currentTarget.src = '/images/placeholder.png'; }}
+          onError={(e) => {
+            (e.currentTarget as HTMLImageElement).style.visibility = 'hidden';
+          }}
         />
 
         {/* 줌 인디케이터 */}
@@ -72,7 +70,7 @@ export default function ProductGallery({ images }: ProductGalleryProps) {
         </div>
       </div>
 
-      {/* 섬네일 캐러셀 */}
+      {/* 썸네일 캐러셀 */}
       {displayImages.length > 1 && (
         <div className="grid grid-cols-4 gap-2">
           {displayImages.map((img, idx) => (
@@ -88,8 +86,10 @@ export default function ProductGallery({ images }: ProductGalleryProps) {
               <img
                 src={img.url}
                 alt={`상품 이미지 ${idx + 1}`}
-                className="w-full h-full object-cover"
-                onError={(e) => { e.currentTarget.src = '/images/placeholder.png'; }}
+                className="absolute inset-0 w-full h-full object-cover"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.visibility = 'hidden';
+                }}
               />
             </button>
           ))}

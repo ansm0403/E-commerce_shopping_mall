@@ -22,6 +22,28 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/*
+         * [OPT-8] preconnect / dns-prefetch — 외부 도메인 연결 선행 처리
+         *
+         * preconnect: DNS 조회 + TCP 핸드셰이크 + TLS 협상을 HTML 파싱 시점에 미리 수행
+         * dns-prefetch: DNS 조회만 선행 (preconnect보다 가벼움, 보조 수단)
+         *
+         * 적용 대상:
+         *   - PortOne: 결제 SDK가 로드하는 도메인 (모든 페이지 head에 미리 연결)
+         *
+         * ─── 측정 방법 ─────────────────────────────────────────────
+         * 도구: Chrome DevTools > Network > 연결 타임라인
+         * 측정 지표: SDK 도메인의 첫 요청 시 "Stalled / DNS Lookup / Initial connection" 시간
+         * 비교 방법:
+         *   1. DevTools > Network > 컬럼 우클릭 → "Connection ID" 체크
+         *   2. preconnect 없을 때: portone SDK 요청에 "DNS Lookup + SSL" 표시 (~100-300ms)
+         *   3. preconnect 있을 때: 해당 단계 없거나 < 5ms
+         */}
+        <link rel="preconnect" href="https://cdn.portone.io" />
+        <link rel="dns-prefetch" href="https://cdn.portone.io" />
+        <link rel="preconnect" href="https://api.portone.io" />
+        <link rel="dns-prefetch" href="https://api.portone.io" />
+
         <script dangerouslySetInnerHTML={{ __html: splashInitScript }} />
       </head>
       <body>

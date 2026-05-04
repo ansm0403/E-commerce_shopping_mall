@@ -8,6 +8,7 @@ import {
   Param,
   Ip,
   Headers,
+  HttpCode,
   UseGuards,
   Res,
   Req,
@@ -92,6 +93,24 @@ export class AuthController {
     @Ip() ipAddress: string,
   ) {
     return this.authService.resendVerificationEmail(email, ipAddress);
+  }
+
+  @Post('demo-login')
+  @HttpCode(200)
+  async demoLogin(
+    @Res({ passthrough: true }) res: Response,
+    @Ip() ipAddress: string,
+    @Headers('user-agent') userAgent?: string,
+    @Headers('x-device-id') deviceId?: string,
+  ) {
+    const result = await this.authService.demoLogin({ ipAddress, userAgent, deviceId });
+    this.setRefreshCookie(res, result.refreshToken, false);
+    return {
+      accessToken: result.accessToken,
+      expiresIn: result.expiresIn,
+      tokenType: result.tokenType,
+      user: result.user,
+    };
   }
 
   @Post('login')

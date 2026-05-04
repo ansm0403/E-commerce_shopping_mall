@@ -19,6 +19,7 @@ export type UserWithReviews = User & {
 export interface UserProfileResponse extends Omit<User, 'password' | 'wishList'> {
     nickName: string;
     isEmailVerified: boolean;
+    isDemo: boolean;
 }
 
 export interface UpdateProfileRequest {

@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { login, logout, register, verifyEmail, resendVerificationEmail } from "../service/auth";
+import { login, logout, register, verifyEmail, resendVerificationEmail, demoLogin } from "../service/auth";
 import type { LoginRequest, RegisterRequest } from "@shopping-mall/shared";
 import { authStorage } from "../service/auth-storage";
 import { resetLoggingOutFlag } from "../lib/axios/axios-http-client";
@@ -63,6 +63,20 @@ export function useResendVerificationMutation() {
     return useMutation({
         mutationKey: ["auth", "resend-verification"],
         mutationFn: (email: string) => resendVerificationEmail(email),
+    });
+}
+
+export function useDemoLoginMutation() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationKey: ["auth", "demo-login"],
+        mutationFn: () => demoLogin(),
+        onSuccess: (response) => {
+            resetLoggingOutFlag();
+            authStorage.setAccessToken(response.data.accessToken, false);
+            queryClient.setQueryData(['auth', 'user'], response.data.user);
+        },
     });
 }
 

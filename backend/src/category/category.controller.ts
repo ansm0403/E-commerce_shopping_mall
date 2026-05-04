@@ -17,6 +17,7 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 import { UpdateVisibilityDto } from './dto/update-visibility.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { DemoAccountGuard } from '../auth/guards/demo-account.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '../user/entity/role.entity';
 
@@ -40,7 +41,7 @@ export class CategoryController {
 
 // ─── 어드민 API ────────────────────────────────────────
 @Controller('admin/categories')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, DemoAccountGuard)
 @Roles(Role.ADMIN)
 export class AdminCategoryController {
   constructor(private readonly categoryService: CategoryService) {}
