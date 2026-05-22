@@ -59,3 +59,5 @@ logs/
 claude_logs/
 *.log
 *.log.bak
+
+docs/etc
