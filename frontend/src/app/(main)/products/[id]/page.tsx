@@ -50,6 +50,14 @@ import type { Product } from '@/model/product';
 // 재고 0 전환 등 즉시 반영이 필요한 경우: 백엔드에서 revalidateTag() 호출 (Route Handler 필요)
 export const revalidate = 300;
 
+// 동적 세그먼트([id])는 generateStaticParams가 있어야 ISR 캐시 라우트로 승격된다.
+// 빈 배열 = 빌드 시 프리렌더하는 경로는 없고, 첫 요청 시 on-demand 생성 후 revalidate(300s)까지 엣지 캐시.
+// (이게 없으면 Next가 라우트를 fully dynamic으로 처리해 매 요청 no-store 렌더 → x-vercel-cache 항상 MISS)
+export const dynamicParams = true;
+export async function generateStaticParams() {
+  return [];
+}
+
 export default async function ProductDetailPage({
   params,
 }: {
