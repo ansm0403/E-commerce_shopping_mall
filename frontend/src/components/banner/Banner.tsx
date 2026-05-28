@@ -1,20 +1,31 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import BannerSection from './BannerSection';
 
 interface BannerContentProps {
   bannerImg: string;
   children?: React.ReactNode;
   className?: string;
+  priority?: boolean;
+  sizes?: string;
 }
 
-function BannerContent({ bannerImg, children, className = '' }: BannerContentProps) {
+function BannerContent({ bannerImg, children, className = '', priority = false, sizes }: BannerContentProps) {
   return (
-    <div
-      className={`flex-shrink-0 w-full h-full flex items-center justify-center text-white text-2xl font-bold bg-cover bg-center bg-no-repeat ${className}`}
-      style={bannerImg ? { backgroundImage: `url(${bannerImg})` } : undefined}
-    >
+    <div className="relative flex-shrink-0 w-full h-full flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
+      {bannerImg && (
+        <Image
+          src={bannerImg}
+          alt=""
+          aria-hidden
+          fill
+          priority={priority}
+          sizes={sizes ?? '100vw'}
+          className={`object-cover ${className}`}
+        />
+      )}
       {children}
     </div>
   );
@@ -22,9 +33,9 @@ function BannerContent({ bannerImg, children, className = '' }: BannerContentPro
 
 export default function Banner() {
   const mainBanners = [
-    "/images/banner/main_banner1.jpg",
-    "/images/banner/main_banner2.jpg",
-    "/images/banner/main_banner3.jpg",
+    "/images/banner/main_banner1.webp",
+    "/images/banner/main_banner2.webp",
+    "/images/banner/main_banner3.webp",
   ];
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -73,7 +84,7 @@ export default function Banner() {
   return (
     <BannerSection
       backgroundColor="#f8f9fa"
-      backgroundImage="/images/banner/bannerbackground.png"
+      backgroundImage="/images/banner/bannerbackground.webp"
     >
       <div className="grid grid-cols-[2fr_1fr] grid-rows-[1fr_1.5fr] gap-4 py-8 min-h-[500px]">
         {/* 메인 배너 캐러셀 */}
@@ -88,11 +99,13 @@ export default function Banner() {
             className="flex h-full transition-transform duration-500 ease-in-out"
             style={{ transform: `translateX(-${currentIndex * 100}%)` }}
           >
-            {mainBanners.map((mainBanner) => (
+            {mainBanners.map((mainBanner, index) => (
               // hover 시 scale-105로 zoom-in, duration-700으로 느리고 부드럽게
               <BannerContent
                 bannerImg={mainBanner}
                 key={mainBanner}
+                priority={index === 0}
+                sizes="(max-width: 768px) 100vw, 800px"
                 className="transition-transform duration-700 ease-in-out group-hover:scale-105"
               />
             ))}
@@ -152,11 +165,11 @@ export default function Banner() {
         </div>
 
         <div className="col-start-2 row-start-1 bg-[linear-gradient(135deg,#f093fb_0%,#f5576c_100%)] cursor-pointer rounded-lg overflow-hidden group">
-          <BannerContent bannerImg="/images/banner/sub_banner1.jpg" className="transition-transform duration-500 ease-in-out group-hover:scale-110" />
+          <BannerContent bannerImg="/images/banner/sub_banner1.webp" sizes="(max-width: 768px) 100vw, 400px" className="transition-transform duration-500 ease-in-out group-hover:scale-110" />
         </div>
 
         <div className="col-start-2 row-start-2 bg-[linear-gradient(135deg,#4facfe_0%,#00f2fe_100%)] cursor-pointer rounded-lg overflow-hidden group">
-          <BannerContent bannerImg="/images/banner/sub_banner2.jpg" className="transition-transform duration-500 ease-in-out group-hover:scale-110" />
+          <BannerContent bannerImg="/images/banner/sub_banner2.webp" sizes="(max-width: 768px) 100vw, 400px" className="transition-transform duration-500 ease-in-out group-hover:scale-110" />
         </div>
       </div>
     </BannerSection>

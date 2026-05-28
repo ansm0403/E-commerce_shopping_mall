@@ -56,21 +56,32 @@ authClient.interceptors.request.use(
 );
 
 /**
- * Refresh Token을 사용하여 새로운 Access Token 발급
- * Race Condition 방지를 위해 Promise 기반 동기화 사용
- * refreshToken은 httpOnly 쿠키에 저장되어 자동으로 전송됨
+ * Refresh Token으로 새로운 Access Token을 발급받는다.
+ *
+ * [왜 이렇게 짰나 — 401 Race Condition 방지]
+ * Access Token이 만료된 직후, 여러 API 요청이 거의 동시에 401을 받는다.
+ * 각 요청이 독립적으로 /auth/refresh를 호출하면, Refresh Token "1회용 회전"
+ * 정책과 충돌해 두 번째 이후 요청이 모두 실패 → 사용자가 강제 로그아웃된다.
+ *
+ * 해결: 모듈 전역에 isRefreshing 플래그 + 공유 refreshPromise를 둔다.
+ *      첫 401 요청만 실제로 refresh를 호출하고, 동시에 들어온 다른 401들은
+ *      "이미 진행 중인 같은 Promise"를 함께 기다리게 한다 (큐처럼 동기화).
+ *
+ * refreshToken은 httpOnly 쿠키에 저장되어 자동으로 전송됨.
  */
 const refreshAccessToken = async (): Promise<string | null> => {
-  // 이미 로그아웃 처리 중이면 null 반환
+  // 이미 로그아웃 절차 중이면 더 이상 갱신 시도하지 않음 (무한 루프 방지)
   if (isLoggingOut) {
     return null;
   }
 
-  // 이미 refresh 중이면 기존 Promise 반환 (Race Condition 방지)
+  // (1) 다른 요청이 이미 refresh 중이라면, 새로 호출하지 말고
+  //     그 작업이 끝나길 같이 기다린다 → /auth/refresh는 단 1번만 나간다.
   if (isRefreshing && refreshPromise) {
     return refreshPromise;
   }
 
+  // (2) "내가 refresh를 시작했다" 표시 + 다른 요청들과 공유할 Promise 생성.
   isRefreshing = true;
 
   refreshPromise = (async () => {
@@ -101,6 +112,8 @@ const refreshAccessToken = async (): Promise<string | null> => {
       }
       return null;
     } finally {
+      // (3) 성공/실패 무관하게 플래그를 비워준다.
+      //     → 다음 만료 사이클에서 다시 큐를 만들 수 있도록 초기화.
       isRefreshing = false;
       refreshPromise = null;
     }

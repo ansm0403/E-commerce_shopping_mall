@@ -1,22 +1,102 @@
-<!-- nx configuration start-->
-<!-- Leave the start & end comments to automatically receive updates. -->
+# 신입 개발자 이력서용 프로젝트 분석 작업
 
-# General Guidelines for working with Nx
+이 프로젝트는 신입 프론트엔드 개발자 이력서 작성을 위한 자료 추출 작업 중입니다.
+일반적인 코딩 작업이 아니라 분석 작업이며, 결과물은 PROJECT_DOSSIER.md 파일에 누적됩니다.
 
-- When running tasks (for example build, lint, test, e2e, etc.), always prefer running the task through `nx` (i.e. `nx run`, `nx run-many`, `nx affected`) instead of using the underlying tooling directly
-- You have access to the Nx MCP server and its tools, use them to help the user
-- When answering questions about the repository, use the `nx_workspace` tool first to gain an understanding of the workspace architecture where applicable.
-- When working in individual projects, use the `nx_project_details` mcp tool to analyze and understand the specific project structure and dependencies
-- For questions around nx configuration, best practices or if you're unsure, use the `nx_docs` tool to get relevant, up-to-date docs. Always use this instead of assuming things about nx configuration
-- If the user needs help with an Nx configuration or project graph error, use the `nx_workspace` tool to get any errors
+해당 파일의 원칙을 적용했는지 확인하기 위하여 최초의 답변에 "분석 원칙 확인했습니다." 라고 메시지 보내줘.
 
-# CI Error Guidelines
+## 작업 성격
 
-If the user wants help with fixing an error in their CI pipeline, use the following flow:
-- Retrieve the list of current CI Pipeline Executions (CIPEs) using the `nx_cloud_cipe_details` tool
-- If there are any errors, use the `nx_cloud_fix_cipe_failure` tool to retrieve the logs for a specific task
-- Use the task logs to see what's wrong and help the user fix their problem. Use the appropriate tools if necessary
-- Make sure that the problem is fixed by running the task that you passed into the `nx_cloud_fix_cipe_failure` tool
+- 코드 수정이나 새 기능 구현 작업이 아님
+- 기존 코드, git log, 설정 파일을 분석하여 이력서 자료로 추출하는 작업
+- 결과물은 사용자가 빈칸을 채워 이력서로 완성할 자료
 
+## 전역 분석 원칙
 
-<!-- nx configuration end-->
+### 원칙 1: 추측 금지, 객관적 사실만
+
+- 추측해서 "왜 이걸 골랐다", "어떤 문제였다"를 만들지 마세요.
+- 코드, git log, 설정 파일에서 보이는 객관적 사실만 적습니다.
+- 의사결정의 "왜"는 사용자만 알 수 있는 영역이므로 빈칸으로 남깁니다.
+
+### 원칙 2: PAAR 구조 인식
+
+이 분석은 이력서를 PAAR 구조(Problem-Analyze-Action-Result)로 풀어내기 위한 원자료 작업입니다.
+
+- Problem: 어떤 문제가 있었는가
+- Analyze: 왜 이 방법을 선택했는가 (가장 중요, 대부분 빈칸으로 남김)
+- Action: 무엇을 어떻게 구현했는가
+- Result: 수치 성과 + 측정 방법
+
+이 4가지 중 Analyze가 가장 중요하며, 발굴이 가장 어려운 영역입니다.
+
+### 원칙 3: 수치는 측정 방법까지
+
+- 모든 수치에 측정 방법(도구, 명령어, 환경)을 함께 명시합니다.
+- "30% 개선"만 적지 말고 "Chrome DevTools Performance 탭으로 5회 평균 측정, 30% 개선"처럼 적습니다.
+- 직접 측정 가능한 수치는 가능한 한 실제 측정해서 값을 넣습니다.
+
+### 원칙 4: 자가 평가는 솔직하게
+
+- 별점 평가에서 후하게 매기지 마세요.
+- 신입 프로젝트는 대부분 별 2~3이 정상이고, 별 4~5는 매우 드뭅니다.
+- 별 4~5를 줄 때는 평가 근거를 구체적으로 명시합니다.
+
+활용 깊이 별점 기준:
+- 별 1: 튜토리얼 수준의 기본 사용
+- 별 2: 공식 예제를 응용한 사용
+- 별 3: 라이브러리/기술의 핵심 기능을 의도적으로 활용
+- 별 4: 깊은 기능까지 활용 (확장, 최적화, 커스터마이징)
+- 별 5: 깊은 이해 기반의 커스텀 활용
+
+### 원칙 5: 빈칸 형식 통일 (반드시 지킬 것!!)
+
+[빈칸 - 사용자 답변 필요] 질문 내용:
+답변 가이드: (어떤 방향으로 답하면 좋을지 1줄 힌트)
+추정 후보 (참고용):
+- 후보 1: [추정 내용] (신뢰도: 높음/중간/낮음, 근거)
+- 후보 2: [추정 내용]
+- 후보 3: [추정 내용]
+주의: 추정 후보는 코드/시점 기반의 합리적 추정이며, 
+정확한 당시 의사결정과 다를 수 있음.
+
+후보는 3개 이내로. 욕심내지 말 것.
+
+### 원칙 6: 자기소개 후킹 의식
+
+이 프로젝트가 이력서 자기소개 첫 문장에 쓸 만한 강한 수치나 임팩트를 가지고 있는지 의식적으로 발굴합니다.
+
+자기소개 첫 문장은 "성장하는 개발자" 같은 추상이 아니라 구체적 수치나 결과물로 호기심을 자극해야 합니다.
+
+### 원칙 7: 단순 구현 나열 vs 의사결정 구분
+
+- "X를 사용했다"는 단순 구현 나열은 변별력이 낮습니다.
+- "왜 X를 선택했는가"의 의사결정 근거가 진짜 가치입니다.
+- 따라서 의사결정 지점 발굴이 가장 중요한 작업입니다.
+
+### 원칙 8: 가이드라인의 부정 패턴 회피
+
+다음과 같은 "오래된 이력서 작성 방식"의 흔적이 나오면 적절히 표시합니다.
+
+- 단순 구현 나열 ("로그인 구현", "상품 목록 구현")
+- 추상적 표현 ("할 수 있게 됨", "하는 계기가 됨")
+- 의도가 불분명한 프로젝트 (의사결정 근거가 약한 경우)
+
+## 작업 진행 방식
+
+1. 사용자가 섹션 1부터 9까지 순서대로 프롬프트를 보냅니다.
+2. 각 프롬프트마다 해당 섹션을 PROJECT_DOSSIER.md에 추가(append)합니다.
+3. 이미 작성된 섹션은 수정하지 말고 새 섹션만 추가합니다.
+4. 첫 프롬프트(섹션 1)에서는 파일을 새로 만들고, 이후는 기존 파일에 추가합니다.
+
+## 세션 전환 시 동작
+
+세션이 끊겼다가 새로 시작되면 다음을 수행합니다.
+
+1. PROJECT_DOSSIER.md 파일을 읽어 어느 섹션까지 작성되었는지 확인
+2. 다음에 작성할 섹션 번호 파악
+3. 사용자에게 현재 상태 보고 후 대기
+
+## 작업 외 요청
+
+이력서 분석과 무관한 작업 요청이 오면 "현재 이력서 분석 작업 중입니다. 다른 작업을 원하시면 별도 폴더에서 진행하시거나, CLAUDE.md를 변경해주세요"라고 안내합니다.

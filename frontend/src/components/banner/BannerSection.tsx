@@ -1,6 +1,7 @@
 'use client'
 
 import { ReactNode } from "react";
+import Image from "next/image";
 
 interface BannerSectionProps {
     children: ReactNode;
@@ -19,9 +20,14 @@ export default function BannerSection({
             style={{ backgroundColor }}
         >
             {backgroundImage && (
-                <div
-                    className="absolute inset-0 bg-cover bg-center bg-no-repeat blur-[8px] z-0"
-                    style={{ backgroundImage: `url(${backgroundImage})` }}
+                <Image
+                    src={backgroundImage}
+                    alt=""
+                    aria-hidden
+                    fill
+                    priority
+                    sizes="100vw"
+                    className="object-cover blur-[8px] z-0"
                 />
             )}
             <div className="relative max-w-[1200px] mx-auto px-4 z-[1]">

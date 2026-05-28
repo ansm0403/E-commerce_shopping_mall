@@ -69,7 +69,9 @@ export function SignupForm() {
 
     } catch (error) {
       console.error("회원가입 실패:", error);
-      // TODO: 에러 처��� (토스트 메시지 등)
+      const axiosErr = error as { response?: { data?: { message?: unknown } } };
+      const message = axiosErr?.response?.data?.message ?? "회원가입에 실패했습니다.";
+      alert(Array.isArray(message) ? message.join("\n") : String(message));
     }
   };
 

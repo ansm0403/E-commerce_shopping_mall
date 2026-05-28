@@ -201,8 +201,20 @@ export class PaymentService {
       throw new BadRequestException('결제 금액이 일치하지 않습니다. 결제가 취소되었습니다.');
     }
 
+    // ────────────────────────────────────────────────────────────────────────
     // 4. 트랜잭션: SELECT FOR UPDATE → 상태 재검증 → 갱신
+    //
+    // [왜 이렇게 짰나 — 유령 결제 방지]
+    // 사용자의 결제 검증 요청과 PG사 웹훅이 거의 동시에 도착할 수 있다.
+    // 만약 락 없이 그냥 UPDATE만 하면, 두 요청이 동시에 PAID로 업데이트되어
+    // "한 결제가 두 번 처리"되는 유령 결제가 발생한다.
+    // → 같은 결제 행에 쓰기 잠금을 걸어 한 줄로 세우고, 락을 잡은 뒤
+    //   상태를 한 번 더 확인해서 "이미 처리됐으면 그냥 종료" 한다.
+    // ────────────────────────────────────────────────────────────────────────
     const updated = await this.dataSource.transaction(async (manager) => {
+      // (1) 결제 행을 "쓰기 잠금"으로 조회.
+      //     같은 결제를 동시에 처리하려는 다른 트랜잭션은 여기서 대기하게 됨.
+      //     (PostgreSQL의 SELECT ... FOR UPDATE)
       const locked = await manager
         .createQueryBuilder(PaymentEntity, 'p')
         .setLock('pessimistic_write')
@@ -211,9 +223,11 @@ export class PaymentService {
 
       if (!locked) throw new NotFoundException('결제 정보가 삭제되었습니다.');
 
-      // 트랜잭션 내 재검증: 웹훅이 먼저 처리했을 수 있음
+      // (2) 락이 풀리고 내가 들어왔을 때, 이미 다른 요청(예: 웹훅)이
+      //     PAID로 바꿔놨다면 여기서 즉시 종료 → 중복 처리 방지.
       if (locked.status === PaymentStatus.PAID) return null;
 
+      // (3) "진짜 처음 처리되는 경우"에만 PAID로 갱신.
       await manager.update(PaymentEntity, payment.id, {
         transactionId: dto.transactionId,
         status: PaymentStatus.PAID,
@@ -226,6 +240,7 @@ export class PaymentService {
         rawResponse: portonePayment as any,
       });
 
+      // (4) Order도 같은 트랜잭션에서 함께 갱신 → 둘 중 하나만 성공하는 일이 없도록.
       await manager.update(OrderEntity, payment.orderId, {
         status: OrderStatus.PAID,
         paidAt: portonePayment.paidAt ? new Date(portonePayment.paidAt) : null,
