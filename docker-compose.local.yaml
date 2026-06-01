@@ -11,7 +11,7 @@ services:
       - postgres_dev_data:/var/lib/postgresql/data
       - ./backend/postgres-data:/docker-entrypoint-initdb.d
     ports:
-      - "4321:5432"
+      - "15432:5432"
     environment:
       POSTGRES_USER: sangmoon
       POSTGRES_PASSWORD: postgres

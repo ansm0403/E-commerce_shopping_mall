@@ -33,7 +33,7 @@ export default function CategoryBar() {
       {!isLoading && !isError && roots.map((category) => (
         <NavItem
           key={category.id}
-          onClick={() => router.push(`/products?category=${encodeURIComponent(category.slug)}`)}
+          onClick={() => router.push(`/products?categoryId=${category.id}`)}
         >
           {category.name}
         </NavItem>

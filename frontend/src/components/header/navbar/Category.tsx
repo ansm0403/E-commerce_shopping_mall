@@ -33,7 +33,7 @@ interface CategoryItemProps {
   category: CategoryTreeNode;
   index: number;
   total: number;
-  onSelect: (slug: string) => void;
+  onSelect: (id: number) => void;
 }
 
 const CategoryItem = React.forwardRef<HTMLDivElement, CategoryItemProps>(
@@ -64,7 +64,7 @@ const CategoryItem = React.forwardRef<HTMLDivElement, CategoryItemProps>(
         onMouseLeave={() => setIsHovered(false)}
         onClick={(e) => {
           e.stopPropagation();
-          onSelect(category.slug);
+          onSelect(category.id);
         }}
       >
         {category.name}
@@ -114,8 +114,8 @@ export default function Category() {
     }
   }, [isDropdownVisible, categories.length]);
 
-  const handleSelect = (slug: string) => {
-    router.push(`/products?category=${slug}`);
+  const handleSelect = (id: number) => {
+    router.push(`/products?categoryId=${id}`);
   };
 
   return (
