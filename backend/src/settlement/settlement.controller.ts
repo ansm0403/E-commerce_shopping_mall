@@ -21,7 +21,7 @@ import { AuditAction } from '../audit/entity/audit-log.entity';
 
 // ── 셀러 정산 컨트롤러 ──
 
-@Controller('v1/seller/settlements')
+@Controller('seller/settlements')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.SELLER)
 export class SellerSettlementController {

@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { SellerEntity, SellerStatus } from './entity/seller.entity';
 import { UserModel } from '../user/entity/user.entity';
 import { RoleEntity, Role } from '../user/entity/role.entity';
@@ -23,6 +23,7 @@ export class SellerService {
     @InjectRepository(RoleEntity)
     private readonly roleRepository: Repository<RoleEntity>,
     private readonly commonService: CommonService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async apply(userId: number, dto: ApplySellerDto) {
@@ -68,8 +69,8 @@ export class SellerService {
 
   // 관리자: 승인
   async approve(sellerId: number) {
+    // 트랜잭션 바깥에서 미리 검증 (존재·상태 확인)
     const seller = await this.sellerRepository.findOne({ where: { id: sellerId } });
-
     if (!seller) {
       throw new NotFoundException('셀러 신청을 찾을 수 없습니다.');
     }
@@ -77,32 +78,34 @@ export class SellerService {
       throw new BadRequestException('대기 중인 신청만 승인할 수 있습니다.');
     }
 
-    await this.sellerRepository.update(sellerId, {
-      status: SellerStatus.APPROVED,
-      approvedAt: new Date(),
+    // seller.status 업데이트와 user 역할 부여를 원자적으로 처리
+    // — 역할 부여 실패 시 seller.status가 APPROVED로 남는 불일치 방지
+    await this.dataSource.transaction(async (manager) => {
+      await manager.update(SellerEntity, sellerId, {
+        status: SellerStatus.APPROVED,
+        approvedAt: new Date(),
+      });
+
+      const user = await manager.findOne(UserModel, {
+        where: { id: seller.userId },
+        relations: ['roles'],
+      });
+      if (!user) {
+        throw new NotFoundException('사용자를 찾을 수 없습니다.');
+      }
+
+      const [buyerRole, sellerRole] = await Promise.all([
+        manager.findOne(RoleEntity, { where: { name: Role.BUYER } }),
+        manager.findOne(RoleEntity, { where: { name: Role.SELLER } }),
+      ]);
+
+      const rolesToAdd = [buyerRole, sellerRole].filter((r): r is RoleEntity => r !== null);
+      const existingNames = user.roles.map((r) => r.name);
+      const newRoles = rolesToAdd.filter((r) => !existingNames.includes(r.name));
+
+      user.roles = [...user.roles, ...newRoles];
+      await manager.save(UserModel, user);
     });
-
-    // 유저에 SELLER + BUYER 역할 부여
-    const user = await this.userRepository.findOne({
-      where: { id: seller.userId },
-      relations: ['roles'],
-    });
-
-    const [buyerRole, sellerRole] = await Promise.all([
-      this.roleRepository.findOne({ where: { name: Role.BUYER } }),
-      this.roleRepository.findOne({ where: { name: Role.SELLER } }),
-    ]);
-
-    if (!user) {
-      throw new NotFoundException('사용자를 찾을 수 없습니다.');
-    }
-
-    const rolesToAdd = [buyerRole, sellerRole].filter((r): r is RoleEntity => r !== null);
-    const existingNames = user.roles.map((r) => r.name);
-    const newRoles = rolesToAdd.filter((r) => !existingNames.includes(r.name));
-
-    user.roles = [...user.roles, ...newRoles];
-    await this.userRepository.save(user);
 
     return { message: '셀러 신청이 승인되었습니다.' };
   }

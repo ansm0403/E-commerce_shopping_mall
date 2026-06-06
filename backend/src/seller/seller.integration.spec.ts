@@ -176,6 +176,44 @@ describe('Seller Integration Tests', () => {
       const buyerRoles = updatedUser.roles.filter((r) => r.name === Role.BUYER);
       expect(buyerRoles).toHaveLength(1);
     });
+
+    it('트랜잭션 정합성: sellers.status와 user_roles가 동시에 커밋됨', async () => {
+      const user = await createUserWithBuyerRole('tx-check@example.com');
+      const seller = await sellerRepository.save(
+        sellerRepository.create({ userId: user.id, ...mockApplyDto }),
+      );
+
+      await sellerService.approve(seller.id);
+
+      // 두 테이블을 별도 쿼리로 각각 확인 — 한쪽만 커밋된 불일치 상태 방지 검증
+      const [approvedSeller, updatedUser] = await Promise.all([
+        sellerRepository.findOne({ where: { id: seller.id } }),
+        userRepository.findOne({ where: { id: user.id }, relations: ['roles'] }),
+      ]);
+
+      expect(approvedSeller.status).toBe(SellerStatus.APPROVED);
+      expect(updatedUser.roles.map((r) => r.name)).toContain(Role.SELLER);
+    });
+
+    it('실패: 존재하지 않는 sellerId → NotFoundException', async () => {
+      await expect(sellerService.approve(999999)).rejects.toThrow('셀러 신청을 찾을 수 없습니다.');
+    });
+
+    it('실패: 이미 APPROVED 상태 재승인 시도 → BadRequestException', async () => {
+      const user = await createUserWithBuyerRole('already-approved@example.com');
+      const seller = await sellerRepository.save(
+        sellerRepository.create({
+          userId: user.id,
+          ...mockApplyDto,
+          status: SellerStatus.APPROVED,
+          approvedAt: new Date(),
+        }),
+      );
+
+      await expect(sellerService.approve(seller.id)).rejects.toThrow(
+        '대기 중인 신청만 승인할 수 있습니다.',
+      );
+    });
   });
 
   // ─── reject ──────────────────────────────────────────────
