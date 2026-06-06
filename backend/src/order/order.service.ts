@@ -68,6 +68,14 @@ export class OrderService {
    * 4. Order + OrderItems + Payment(READY) 생성
    * 5. 재고 차감 (선점)
    * 6. 트랜잭션 커밋 후 CartItem 삭제 + 이벤트
+   * 
+   TODO(주문 입력 리팩터링): 바로 구매가 장바구니를 거치지 않도록 입력을 분리한다.
+    - CreateOrderDto: cartItemIds → items[{ productId, quantity }] 로 변경,
+      장바구니 주문은 fromCartItemIds?(주문 성공 시 삭제용)를 추가로 받음
+    - 바로 구매 경로는 cart_items INSERT/DELETE 없이 items만으로 주문 생성
+    - 트랜잭션/비관적 락/재고 차감 로직(L87~L194)은 그대로 재사용, 검증 기준만   
+      items로 변경
+    - 프론트 '바로 구매'·'장바구니 주문' 호출부도 함께 수정
    */
   async createOrder(userId: number, dto: CreateOrderDto) {
     // 0. 빈 주문 방어

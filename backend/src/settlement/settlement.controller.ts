@@ -44,7 +44,7 @@ export class SellerSettlementController {
 
 // ── Admin 정산 컨트롤러 ──
 
-@Controller('v1/admin/settlements')
+@Controller('admin/settlements')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.ADMIN)
 export class AdminSettlementController {
