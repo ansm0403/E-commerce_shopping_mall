@@ -72,8 +72,8 @@
 
 ## 7. 조치 권장 (우선순위 — 착수 전)
 
-1. **정산 `v1/` 이중 prefix 수정** (작고 명확, 셀러/관리자 정산 둘 다 막힘).
-2. **승인 후 토큰 갱신 전략 결정**: 승인된 본인이 다음 refresh/재로그인 시 자연 반영되지만, "이미 로그인 중"이면 최대 15분 지연. 프론트에서 셀러 승인 확인 화면에 "재로그인 후 이용" 안내 또는 강제 토큰 갱신.
-3. **비데모 ADMIN으로 승인 플로우 실검증**: `auth.integration.spec.ts`가 이미 있으니 **셀러승인 e2e**(신청→실관리자 승인→역할부여→셀러 API 호출 성공) 추가가 가장 확실.
-4. `approve()` 트랜잭션화.
-5. `orderItem.sellerId ?? 0` 고아 방지 가드.
+1. ✅ **정산 `v1/` 이중 prefix 수정** — `settlement.controller.ts` `SellerSettlementController`를 `@Controller('seller/settlements')`로 수정. `AdminSettlementController`는 이미 `admin/settlements`로 정상이었음. (Step 0 완료, commit `84a83f4`)
+2. ✅ **승인 후 토큰 갱신 전략 결정** — 백엔드 무변경. Step 1 프론트(셀러 신청 상태 페이지)에서 `status=approved`인데 토큰에 SELLER가 없으면 `/auth/refresh` 1회 자동 트리거 + 실패 시 재로그인 안내로 결정. (Step 0 방침 확정)
+3. ❌→**Step 1으로 이관** **비데모 ADMIN으로 승인 플로우 실검증** — service 레벨 통합 테스트는 `seller.integration.spec.ts`에 완비. HTTP 가드·DemoAccountGuard·토큰 staleness까지 포함한 supertest e2e는 Step 1 셀러 온보딩 UI 구현과 함께 진행.
+4. ✅ **`approve()` 트랜잭션화** — `DataSource` 주입 후 `seller.update`와 `user.save`를 단일 `dataSource.transaction()`으로 원자화. 정합성 케이스 테스트 추가. (Step 0 완료, commit `84a83f4`)
+5. ⏸ `orderItem.sellerId ?? 0` 고아 방지 가드 — Step 3(주문/배송) 착수 시 함께 처리.
