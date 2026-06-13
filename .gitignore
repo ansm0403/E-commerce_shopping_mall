@@ -60,4 +60,7 @@ claude_logs/
 *.log
 *.log.bak
 
+# Slack 웹훅 비밀값 (Claude 훅 알림용) — .example 만 커밋, 실제 URL 파일은 제외
+.claude/.slack-webhook
+
 docs/etc

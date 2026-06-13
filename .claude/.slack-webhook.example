@@ -1,0 +1,9 @@
+# 이 파일은 형식 안내용 예시다. (커밋됨)
+#
+# 실제 사용법:
+#   1) 이 파일을 같은 폴더에 ".slack-webhook" 이름으로 복사한다.
+#      (확장자 없이 .slack-webhook — 이 파일은 .gitignore에 등록되어 커밋되지 않음)
+#   2) 아래 줄을 지우고, Slack에서 발급받은 #claude-hooks 채널용 Webhook URL 한 줄만 남긴다.
+#
+# 형식(아래의 <...> 자리에 실제 값이 들어간 URL을 .slack-webhook 에 한 줄로 붙여넣을 것):
+#   https://hooks.slack.com/services/<TEAM_ID>/<CHANNEL_ID>/<SECRET_TOKEN>

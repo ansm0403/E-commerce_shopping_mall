@@ -7,6 +7,7 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch: # Actions 탭에서 "Run workflow" 버튼으로 수동 실행 (알림 테스트용)
 
 permissions:
   actions: read
@@ -88,3 +89,32 @@ jobs:
 
       - name: Build affected projects
         run: yarn nx affected -t build --base=$NX_BASE --head=$NX_HEAD
+
+      # CI 결과(성공/실패)를 Slack #deployments 채널로 알림.
+      # always(): 앞 단계가 실패해도 실행 → 실패도 알림. PR에는 알림 안 보냄(노이즈 방지).
+      # 비밀값은 GitHub repo Secret(SLACK_WEBHOOK_DEPLOYMENTS)에서 읽으므로 코드에 URL 없음.
+      - name: Notify Slack (CI 결과)
+        if: always() && github.event_name != 'pull_request'
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_DEPLOYMENTS }}
+          JOB_STATUS: ${{ job.status }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+          ACTOR: ${{ github.actor }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$SLACK_WEBHOOK" ]; then
+            echo "SLACK_WEBHOOK_DEPLOYMENTS 시크릿 미설정 → 알림 스킵"
+            exit 0
+          fi
+          if [ "$JOB_STATUS" = "success" ]; then
+            EMOJI="✅"; STATUS="성공"
+          else
+            EMOJI="❌"; STATUS="실패"
+          fi
+          COMMIT_FIRST=$(printf '%s' "$COMMIT_MSG" | head -n1)
+          TEXT=$(printf '%s *CI %s* — `%s`\n• 브랜치: `%s` (by %s)\n• 커밋: %s\n• <%s|GitHub Actions 로그 보기>' \
+            "$EMOJI" "$STATUS" "$REPO" "$BRANCH" "$ACTOR" "${COMMIT_FIRST:-수동 실행(workflow_dispatch)}" "$RUN_URL")
+          PAYLOAD=$(jq -n --arg text "$TEXT" '{text: $text}')
+          curl -s -X POST -H 'Content-type: application/json' --data "$PAYLOAD" "$SLACK_WEBHOOK"
