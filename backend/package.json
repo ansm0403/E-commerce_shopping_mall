@@ -154,6 +154,7 @@
     "@nestjs/schedule": "*",
     "@nestjs/throttler": "*",
     "@nestjs/typeorm": "*",
+    "@sentry/nestjs": "*",
     "@shopping-mall/shared": "*",
     "class-transformer": "*",
     "class-validator": "*",

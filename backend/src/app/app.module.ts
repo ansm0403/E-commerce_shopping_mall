@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, HttpAdapterHost } from '@nestjs/core';
+import { SentryModule } from '@sentry/nestjs/setup';
+import { SentryGlobalFilter } from '@sentry/nestjs/setup';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -28,6 +30,8 @@ import { SeedModule } from '../seed/seed.module';
 
 @Module({
   imports: [
+    // Sentry: 다른 모듈보다 먼저 등록 (요청 컨텍스트/에러 캡처 활성화)
+    SentryModule.forRoot(),
     ConfigModule.forRoot({
       envFilePath: '.env',
       isGlobal: true,
@@ -82,6 +86,16 @@ import { SeedModule } from '../seed/seed.module';
     AppService,
     RolesSeedService,
     CategorySeedService,
+    // 처리되지 않은 예외를 Sentry로 캡처하는 전역 필터.
+    // useClass 대신 useFactory로 HttpAdapterHost의 httpAdapter를 명시적으로 주입한다.
+    // (SentryGlobalFilter가 상속한 BaseExceptionFilter는 응답 처리에 httpAdapter가
+    //  필요한데, useClass로는 주입이 누락돼 'isHeadersSent' 크래시가 발생함)
+    {
+      provide: APP_FILTER,
+      useFactory: (httpAdapterHost: HttpAdapterHost) =>
+        new SentryGlobalFilter(httpAdapterHost.httpAdapter),
+      inject: [HttpAdapterHost],
+    },
     // 모든 HTTP 엔드포인트에 ThrottlerGuard를 전역 적용
     // 개별 엔드포인트에서 @Throttle()로 override, @SkipThrottle()로 제외 가능
     { provide: APP_GUARD, useClass: ThrottlerGuard },

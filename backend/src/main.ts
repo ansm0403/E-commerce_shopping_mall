@@ -3,6 +3,9 @@
  * This is only a minimal backend to get started.
  */
 
+// ⚠️ Sentry 계측을 위해 반드시 다른 import보다 "최상단"에 위치해야 한다.
+import './instrument';
+
 import { ClassSerializerInterceptor, Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app/app.module';

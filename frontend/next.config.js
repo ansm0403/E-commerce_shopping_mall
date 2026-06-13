@@ -12,6 +12,7 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 });
 
 const { composePlugins, withNx } = require('@nx/next');
+const { withSentryConfig } = require('@sentry/nextjs');
 
 // ============================================================
 // [nginx+HTTPS 방식] — 향후 EC2에 도메인 + Nginx + Let's Encrypt 적용 시 사용
@@ -130,14 +131,19 @@ const nextConfig = {
   },
 
   // Webpack 설정: .js 확장자를 .ts로도 resolve + customConditions 추가
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, nextRuntime }) => {
     config.resolve.extensionAlias = {
       '.js': ['.js', '.ts', '.tsx'],
       '.jsx': ['.jsx', '.tsx'],
     };
-    // 모노레포 소스 직접 참조를 위한 customConditions
+    // 모노레포 소스 직접 참조를 위한 customConditions.
+    // 런타임별 조건(browser/edge-light)을 함께 넣어야 @sentry/nextjs 등
+    // 조건부 export 패키지가 올바른 빌드로 resolve된다.
+    // (이게 없으면 클라이언트 번들이 node 빌드를 끌어와 node:async_hooks에서 깨짐)
     config.resolve.conditionNames = [
       '@shopping-mall/source',
+      ...(!isServer ? ['browser'] : []),
+      ...(nextRuntime === 'edge' ? ['edge-light'] : []),
       'import',
       'module',
       'require',
@@ -199,4 +205,19 @@ const plugins = [
   withNx,
 ];
 
-module.exports = composePlugins(...plugins)(nextConfig);
+// ============================================================
+// Sentry: Nx 플러그인 합성 결과를 withSentryConfig로 한 번 더 감싼다.
+// - 클라이언트/서버 에러를 Sentry로 전송 (DSN은 NEXT_PUBLIC_SENTRY_DSN)
+// - 소스맵 업로드는 SENTRY_AUTH_TOKEN + org/project 가 있을 때만 동작(없으면 자동 스킵)
+//   → Vercel에 SENTRY_ORG/SENTRY_PROJECT/SENTRY_AUTH_TOKEN 설정 시 활성화
+// ============================================================
+module.exports = withSentryConfig(composePlugins(...plugins)(nextConfig), {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  silent: !process.env.CI, // CI에서만 로그 출력
+  widenClientFileUpload: true,
+  disableLogger: true, // Sentry 로거 코드 제거로 번들 절감
+  // 터널링: 브라우저 이벤트를 sentry.io가 아니라 같은 오리진(/monitoring)으로 보내
+  // 광고차단기/추적방지의 차단을 우회한다. (운영에서도 이벤트 유실 방지)
+  tunnelRoute: '/monitoring',
+});
