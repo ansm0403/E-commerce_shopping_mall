@@ -54,7 +54,7 @@
 ---
 
 ## 2-B. 후순위
-- **감사 로그 조회** `(admin)/admin/audit-logs/page.tsx`: ❓ `audit/` 컨트롤러에 관리자 목록 조회 엔드포인트 존재·가드 확인 후 진행.
+- **감사 로그 조회** `(admin)/admin/audit-logs/page.tsx`: ✅ 엔드포인트 존재 확정(`GET /v1/admin/audit-logs`, ADMIN 가드, 필터 완비). **별도 계획서로 분리**되어 운영 가시성 트랙으로 당겨짐 → [ex-audit-log-admin.md](./ex-audit-log-admin.md)(prefix 버그 수정 · 시드 재기준화 · 뷰어 2면). 이 문서에서는 더 다루지 않는다.
 - **카테고리 관리** `(admin)/admin/categories/page.tsx`: 백엔드 CRUD 존재(`category.controller.ts:49~67`, `admin/categories`)하나 운영 빈도 낮아 **가장 후순위**.
 
 ## 완료 기준 (DoD)
