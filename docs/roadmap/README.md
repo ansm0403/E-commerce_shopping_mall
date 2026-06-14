@@ -72,8 +72,8 @@
 
 ## 가로지르는 선결/정리 과제 (착수 전 확인)
 
-- ⚠ **라우트 이중 prefix 버그 (무리)**: 전역 prefix가 이미 `/v1`(`main.ts:85`)인데 일부 컨트롤러가 `@Controller('v1/...')`로 한 번 더 붙여 **실제 경로가 `/v1/v1/...`**가 된다. 정산(`settlement.controller.ts`)은 Step 0(`84a83f4`)에 정정 완료. **남은 무리**: `audit`/`wish-list`/`inquiry`/`user`/`review` 컨트롤러. **[ex-audit-log-admin.md](./ex-audit-log-admin.md) §2에서 일괄 수정**한다(깨질 프론트 호출부는 `wishlist.ts:11` 하나뿐 — 나머지는 프론트 미연결이라 백엔드만 고치면 됨).
+- ✅ **라우트 이중 prefix 버그 (무리) — 해결(2026-06-14)**: 전역 prefix가 이미 `/v1`(`main.ts:85`)인데 일부 컨트롤러가 `@Controller('v1/...')`로 한 번 더 붙여 실제 경로가 `/v1/v1/...`가 되던 문제. 정산은 Step 0(`84a83f4`)에 정정 완료, **남은 무리(`audit`/`wish-list`/`inquiry`/`user`/`review`)는 [ex-audit-log-admin.md](./ex-audit-log-admin.md) §2(Step A)에서 일괄 수정 완료** — 새 경로 200/401·옛 경로 404 curl 검증. 프론트 회귀 지점은 `wishlist.ts:11`(토글) 하나뿐이라 한 쌍으로 수정.
 - ⚠ **역할 변경 후 토큰 staleness**: 인가는 "토큰에 박힌 역할" 기준이라, 셀러 승인 직후에도 본인 토큰이 갱신되기 전(재로그인/refresh, access 15분)까지는 셀러 API가 403. 프론트는 `/auth/me`(DB fresh)로 메뉴를 띄우므로 "메뉴는 보이는데 API는 막힘"이 생길 수 있다. 셀러 승인 화면 설계 시 재로그인 안내/강제 토큰 갱신 고려. (상세 [00-role-audit.md](./00-role-audit.md) §2,§6)
-- ✅ **확정(2026-06-14)**: 관리자 감사로그 조회 엔드포인트 **존재** — `GET /v1/admin/audit-logs`, `@Roles(ADMIN)` 가드 + `AuditLogQueryDto` 필터(userId/action/success/기간/IP) 완비(`audit.controller.ts`). 단 위 이중 prefix 버그 대상이며 응답 DTO에 행위자 이름이 없는 갭이 있다 → 상세·조치 [ex-audit-log-admin.md](./ex-audit-log-admin.md).
+- ✅ **구현 완료(2026-06-14)**: 관리자 감사로그 조회 — `GET /v1/admin/audit-logs`(`@Roles(ADMIN)` + `AuditLogQueryDto` 필터). prefix 버그 수정, 응답 DTO에 행위자 닉네임/이메일 보강(`getAuditLogs` user 일괄 조인), `success` 필터 boolean 변환 버그(`enableImplicitConversion`) 수정, 시드 버킷 B·C 확장, 프론트 뷰어 2면(트리아지+포렌식) 구현. 상세 [ex-audit-log-admin.md](./ex-audit-log-admin.md).
 - ❓ **확인 필요(미점검)**: 셀러 문의 답변 엔드포인트(`inquiry/`)의 존재·역할 가드. 해당 Phase 착수 시 컨트롤러를 직접 읽어 확정(없으면 그 화면은 후순위로). (`inquiry`도 위 prefix 버그 무리에 포함)
 - **DTO 출처**: 셀러 상품등록 폼은 `backend/src/product/dto/create-product.dto.ts`를 진실의 원천으로 필드 구성(name·description·price·brand 필수, stockQuantity·categoryId·salesType·discountRate 선택). 카테고리별 specs(JSONB)는 후순위.

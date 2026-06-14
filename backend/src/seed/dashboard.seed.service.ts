@@ -71,6 +71,7 @@ export class DashboardSeedService implements OnApplicationBootstrap {
       const { userIds, sellerIds } = await this.seedUsers();
       await this.seedOrdersAndEvents(userIds, sellerIds, days);
       await this.seedLoginAudit(userIds, days);
+      await this.seedAdminAndSystemAudit(userIds, sellerIds, days);
 
       console.log('\n✅  Seed 완료! 아래 URL에서 차트를 확인하세요:');
       console.log('    http://localhost:3000/admin/dashboard\n');
@@ -437,6 +438,157 @@ export class DashboardSeedService implements OnApplicationBootstrap {
     console.log(`  ✓ 보안 audit_logs ${totalLogs}건 (${days + 1}일치)`);
   }
 
+  // ─── 관리자 행위(버킷 C) + 시스템 오류(버킷 B) audit_logs ──────────────────────
+
+  /**
+   * 감사로그 뷰어(ex-audit-log-admin §3-3)가 보여줄 두 버킷을 채운다.
+   *
+   * - 버킷 C(관리자 행위/책임추적): SELLER_APPROVED / PRODUCT_APPROVED·REJECTED /
+   *   PAYMENT_CANCELLED_ADMIN / SETTLEMENT_CONFIRMED·PAID.
+   *   행위자(actor)는 데모 관리자(DEMO_ADMIN_EMAIL)가 있으면 그 userId, 없으면 null +
+   *   metadata.actorLabel 로 표시.
+   * - 버킷 B(시스템 오류): success=false + errorMessage (결제검증/웹훅/크론 실패). 드물게.
+   *
+   * ⚠ "로그 전용(log-only)" 주의: 시드는 상품·정산 행을 만들지 않으므로
+   *   PRODUCT/SETTLEMENT 계열 액션은 대응 엔티티 없이 "로그만" 존재한다(상품 승인/정산
+   *   프론트는 별도 Phase 영역). SELLER_APPROVED 는 시드 셀러가 이미 APPROVED 라 상태와 정합.
+   */
+  private async seedAdminAndSystemAudit(
+    userIds: number[],
+    sellerIds: number[],
+    days: number,
+  ): Promise<void> {
+    const adminId = await this.resolveAdminActorId();
+    const actorMeta: Record<string, any> = adminId
+      ? {}
+      : { actorLabel: '데모 관리자(미생성 — DEMO_ADMIN_EMAIL 없음)' };
+    let count = 0;
+
+    // ── 버킷 C: 관리자 행위 ──
+    // 셀러 승인: 시드 셀러는 이미 APPROVED(seedUsers) → 로그만 추가(상태와 정합).
+    for (const sellerId of sellerIds) {
+      await this.insertAuditLog(
+        AuditAction.SELLER_APPROVED,
+        adminId,
+        randomKstTime(rand(1, days)),
+        true,
+        null,
+        { ...actorMeta, sellerId },
+      );
+      count++;
+    }
+
+    // 상품 승인/반려: 로그 전용(시드는 상품 행을 만들지 않음).
+    for (let i = 0; i < 4; i++) {
+      const rejected = i === 3;
+      await this.insertAuditLog(
+        rejected ? AuditAction.PRODUCT_REJECTED : AuditAction.PRODUCT_APPROVED,
+        adminId,
+        randomKstTime(rand(1, days)),
+        true,
+        null,
+        {
+          ...actorMeta,
+          productId: 900000 + i,
+          note: 'log-only(상품 시드 없음)',
+          ...(rejected ? { reason: '상품 정보 불충분' } : {}),
+        },
+      );
+      count++;
+    }
+
+    // 관리자 결제 강제취소 1~2건.
+    const adminCancelCount = rand(1, 2);
+    for (let i = 0; i < adminCancelCount; i++) {
+      await this.insertAuditLog(
+        AuditAction.PAYMENT_CANCELLED_ADMIN,
+        adminId,
+        randomKstTime(rand(1, days)),
+        true,
+        null,
+        { ...actorMeta, reason: '고객 요청 환불', note: 'log-only' },
+      );
+      count++;
+    }
+
+    // 정산 확정/지급: 로그 전용(정산 행 미시드 — 정산 프론트는 별도 Phase).
+    for (let i = 0; i < sellerIds.length; i++) {
+      await this.insertAuditLog(
+        AuditAction.SETTLEMENT_CONFIRMED,
+        adminId,
+        randomKstTime(rand(1, days)),
+        true,
+        null,
+        { ...actorMeta, sellerId: sellerIds[i], note: 'log-only(정산 행 미시드)' },
+      );
+      count++;
+      if (i % 2 === 0) {
+        await this.insertAuditLog(
+          AuditAction.SETTLEMENT_PAID,
+          adminId,
+          randomKstTime(rand(1, days)),
+          true,
+          null,
+          { ...actorMeta, sellerId: sellerIds[i], note: 'log-only(정산 행 미시드)' },
+        );
+        count++;
+      }
+    }
+
+    // ── 버킷 B: 시스템 오류(success=false) — 드물게 ──
+    // 결제 검증 실패(금액 불일치).
+    const payFailCount = rand(2, 4);
+    for (let i = 0; i < payFailCount; i++) {
+      await this.insertAuditLog(
+        AuditAction.PAYMENT_VERIFIED,
+        userIds[rand(0, userIds.length - 1)],
+        randomKstTime(rand(0, days)),
+        false,
+        'amount mismatch: expected !== paid',
+      );
+      count++;
+    }
+
+    // 웹훅 처리 실패(서명 검증 실패) — 무인 동작이라 userId=null.
+    const webhookFailCount = rand(1, 3);
+    for (let i = 0; i < webhookFailCount; i++) {
+      await this.insertAuditLog(
+        AuditAction.PAYMENT_WEBHOOK,
+        null,
+        randomKstTime(rand(0, days)),
+        false,
+        'webhook signature verification failed',
+      );
+      count++;
+    }
+
+    // 크론 자동만료 실패 — 시스템 자동 동작 가시성.
+    const cronFailCount = rand(1, 2);
+    for (let i = 0; i < cronFailCount; i++) {
+      await this.insertAuditLog(
+        AuditAction.CRON_ORDER_EXPIRED,
+        null,
+        randomKstTime(rand(0, days)),
+        false,
+        'failed to expire order: DB deadlock',
+      );
+      count++;
+    }
+
+    console.log(`  ✓ 관리자행위·시스템오류 audit_logs ${count}건 (버킷 B·C)`);
+  }
+
+  /**
+   * 버킷 C 관리자 행위의 행위자(actor) userId 해석.
+   * 데모 관리자(DEMO_ADMIN_EMAIL)가 있으면 그 id, 없으면 null(호출부에서 metadata로 표시).
+   */
+  private async resolveAdminActorId(): Promise<number | null> {
+    const email = process.env['DEMO_ADMIN_EMAIL'];
+    if (!email) return null;
+    const admin = await this.userRepo.findOne({ where: { email } });
+    return admin?.id ?? null;
+  }
+
   // ─── 공통 audit_logs INSERT ─────────────────────────────────────────────────
 
   private async insertAuditLog(
@@ -445,6 +597,7 @@ export class DashboardSeedService implements OnApplicationBootstrap {
     createdAt: Date,
     success: boolean,
     errorMessage: string | null = null,
+    metadata: Record<string, any> = {},
   ): Promise<void> {
     await this.ds.query(
       `INSERT INTO audit_logs (action, "userId", "ipAddress", "userAgent", metadata, success, "errorMessage", "createdAt")
@@ -454,7 +607,8 @@ export class DashboardSeedService implements OnApplicationBootstrap {
         userId,
         `192.168.1.${rand(1, 254)}`,
         'Seed/1.0',
-        JSON.stringify(SEED_METADATA),
+        // SEED_METADATA(마커)는 항상 유지 — SEED_RESET 정리 대상이 되도록.
+        JSON.stringify({ ...SEED_METADATA, ...metadata }),
         success,
         errorMessage,
         createdAt,
@@ -482,6 +636,13 @@ export class DashboardSeedService implements OnApplicationBootstrap {
   private async resetSeedData(): Promise<void> {
     console.log('  🗑️   기존 시드 데이터 삭제 중...');
 
+    // settlements 가 orders 를 FK 참조(order_id) → 주문 삭제 전에 먼저 정리.
+    // (시드 주문이 COMPLETED 까지 진행되면 정산 행이 자동 생성될 수 있음)
+    await this.ds.query(
+      `DELETE FROM settlements
+       WHERE order_id IN (SELECT id FROM orders WHERE memo LIKE $1)`,
+      [`${SEED_MEMO_PREFIX}%`],
+    );
     await this.ds.query(
       `DELETE FROM order_items
        WHERE order_id IN (SELECT id FROM orders WHERE memo LIKE $1)`,

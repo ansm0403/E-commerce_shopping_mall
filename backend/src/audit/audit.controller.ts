@@ -8,7 +8,7 @@ import { Serialize } from '../common/interceptors/serialize.interceptor';
 import { AuditLogQueryDto } from './dto/audit-log-query.dto';
 import { AuditLogResponseDto } from './dto/audit-log-response.dto';
 
-@Controller('v1/admin/audit-logs')
+@Controller('admin/audit-logs')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.ADMIN)
 export class AuditController {

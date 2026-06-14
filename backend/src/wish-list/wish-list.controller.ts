@@ -18,7 +18,7 @@ import { Serialize } from '../common/interceptors/serialize.interceptor';
 import { WishlistItemResponseDto } from './dto/wishlist-response.dto';
 import { BasePaginateDto } from '../common/dto/paginate.dto';
 
-@Controller('v1/wishlist')
+@Controller('wishlist')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.BUYER)
 export class WishListController {

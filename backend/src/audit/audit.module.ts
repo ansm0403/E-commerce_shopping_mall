@@ -7,10 +7,12 @@ import { AuditController } from './audit.controller';
 import { AuditInterceptor } from './interceptors/audit.interceptor';
 import { AuthModule } from '../auth/auth.module';
 import { CommonModule } from '../common/common.module';
+import { UserModel } from '../user/entity/user.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([AuditLogEntity]),
+    // UserModel: getAuditLogs 의 행위자(닉네임/이메일) 보강용 일괄 조회
+    TypeOrmModule.forFeature([AuditLogEntity, UserModel]),
     forwardRef(() => AuthModule),
     CommonModule,
   ],

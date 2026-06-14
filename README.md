@@ -94,6 +94,12 @@ docker compose -f docker-compose.prod.yaml up -d
 ![Yarn](https://img.shields.io/badge/yarn-%232C8EBB.svg?style=for-the-badge&logo=yarn&logoColor=white)
 ![Nx](https://img.shields.io/badge/nx-143055?style=for-the-badge&logo=nx&logoColor=white)
 
+### Observability & Ops
+
+![Sentry](https://img.shields.io/badge/Sentry-362D59?style=for-the-badge&logo=sentry&logoColor=white)
+![Slack](https://img.shields.io/badge/Slack-4A154B?style=for-the-badge&logo=slack&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/github%20actions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white)
+
 ---
 
 ## 백엔드 스택을 이렇게 고른 이유
@@ -228,6 +234,15 @@ shopping_mall/                        ← Nx 21 + Yarn 4 Workspace
 - `AuditInterceptor` + `@Auditable()` 커스텀 데코레이터 — 비즈니스 로직 무변경 자동 로깅
 - IP 주소, User-Agent, 성공/실패 기록
 - Helmet 보안 헤더 + CSP, Rate Limiting (Throttler)
+
+### 관측성 & 알림 (Sentry + Slack)
+
+운영 중 발생하는 에러를 놓치지 않기 위해 에러 추적과 Slack 알림을 연동했습니다.
+
+- **Sentry 에러 추적**: 프론트(`@sentry/nextjs`) · 백엔드(`@sentry/nestjs`) 런타임 에러를 자동 수집. DSN 미설정 시 자동 no-op이라 로컬에서도 안전.
+- **Slack 알림 3종**: CI 결과 → `#deployments`, Claude Code 작업 훅 → `#claude-hooks`, Sentry 새 이슈 → `#sentry-errors`.
+- **비밀값 분리**: 웹훅/DSN을 코드에 두지 않고 GitHub Secret · gitignore 파일 · 배포 플랫폼(Vercel/EC2) 환경변수로 격리.
+- 연동 과정의 엣지케이스 트러블슈팅(전역 필터 주입, Next.js 번들 resolve, 광고차단 우회 등)은 [docs/roadmap/ex-sentry-slack.md](docs/roadmap/ex-sentry-slack.md)에 정리.
 
 ---
 
@@ -469,6 +484,17 @@ accessToken 만료 시 동시에 여러 요청이 401을 받으면 refresh 요�
 ### Vercel 프록시를 통한 EC2 HTTPS 대체
 
 EC2에 nginx + Let's Encrypt를 구성하는 대신, Next.js `rewrites()`를 통해 Vercel 서버가 EC2를 서버사이드에서 호출하는 방식을 선택했습니다. 브라우저는 Vercel 도메인에만 요청하므로 `Secure` 쿠키, CORS 이슈 없이 운영할 수 있습니다. 향후 API 전용 도메인 발급 시 nginx 방식으로 전환 예정이며 `next.config.js` 주석에 전환 코드를 보관하고 있습니다.
+
+### Sentry 연동 트러블슈팅 (모노레포 / Next.js 엣지)
+
+에러 모니터링을 붙이는 과정에서 프레임워크 경계와 빌드 환경에서 비롯된 엣지케이스 여러 건을 겪고 해결했습니다.
+
+- **백엔드 전역 예외 필터**: `SentryGlobalFilter`를 `useClass`로 등록하니 `HttpAdapterHost`가 주입되지 않아 `isHeadersSent` 크래시 발생 → `useFactory`로 `httpAdapter`를 명시 주입해 해결.
+- **프론트 클라이언트 번들**: 모노레포 소스 참조용 커스텀 webpack `conditionNames`가 Next.js 기본 조건을 덮어써, 클라이언트 번들이 Sentry의 node 빌드를 끌어와 `node:async_hooks`에서 깨짐 → `browser`/`edge-light` 런타임 조건을 추가해 해결.
+- **이벤트 유실**: 광고차단/추적방지가 `ingest.sentry.io` 요청을 차단 → `tunnelRoute`로 same-origin(`/monitoring`) 우회.
+- **성능 분석**: SDK 추가 후 Lighthouse TBT가 빨간불(2,200ms)이었으나, **dev 모드 오버헤드**임을 운영 빌드 재측정으로 규명(운영 TBT 200ms). "성능 측정은 운영 빌드에서"를 체감.
+
+자세한 내용은 [docs/roadmap/ex-sentry-slack.md](docs/roadmap/ex-sentry-slack.md) 참고.
 
 ---
 

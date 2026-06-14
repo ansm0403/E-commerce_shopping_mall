@@ -14,6 +14,13 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
+  // ⏱ 프로세스 타임존을 UTC 고정.
+  // audit_logs.createdAt 등은 `timestamp without time zone`(naive=UTC wall-clock) 컬럼인데,
+  // node-postgres 는 이 값을 읽을 때 "프로세스 로컬 타임존"으로 해석한다(KST 머신이면 -9h 어긋남).
+  // 대시보드는 SQL 의 `AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul'` 로 DB 안에서 변환해 무관하지만,
+  // raw Date 를 그대로 직렬화하는 audit 조회 API 가 어긋났다. TZ=UTC 면 읽기/쓰기가 모두 UTC 로 일치.
+  process.env.TZ = 'UTC';
+
   const app = await NestFactory.create(AppModule);
 
   // Cookie Parser 미들웨어 (쿠키 읽기 위해 필요)

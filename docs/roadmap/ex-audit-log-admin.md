@@ -20,6 +20,28 @@
 
 ---
 
+## 0-1. 실행 결과 — 완료 (2026-06-14)
+
+Step A~E 전부 구현·검증 완료. 계획대로 진행했고, 착수 중 **계획에 없던 버그 2건을 추가로 발견·수정**했다.
+
+- **A. prefix + 뼈대 정리** — 6개 데코레이터 `v1/` 제거 + `wishlist.ts` 경로 수정 + `getFailedLoginAttempts` 삭제. 새 경로 200/401·옛 경로 404 curl 검증.
+- **B. 시드 재기준화·확장** — `SEED_RESET` 재시드로 "오늘" 기준 재정렬(이전엔 03~04월로 밀려나 있었음) + 버킷 B(시스템오류)·C(관리자행위) 시드 추가. `insertAuditLog`에 `metadata` 병합 파라미터 추가.
+- **C. DTO 행위자 보강** — `getAuditLogs`에 user 일괄 조인(N+1 회피) + DTO `userNickName`/`userEmail`. userId=null은 metadata.email fallback.
+- **D. 트리아지 뷰** / **E. 포렌식 검색 뷰** — `service/admin-audit.ts` → `hooks/useAuditQuery.ts`(TanStack Query, `useQueries`로 N회 호출) → page + 컴포넌트 3개. 트리아지 창은 시드가 30일에 걸쳐 있어 **30일**로 설정(7일이면 희소한 버킷 B가 빌 수 있음).
+
+**계획 외 발견·수정한 버그 2건**:
+1. **시드 reset가 정산 FK로 실패** — `settlements.order_id`가 `[SEED]` 주문을 참조해 `DELETE FROM orders`가 막힘. `resetSeedData`에 정산 선삭제 추가.
+2. **`success=false` 필터가 깨짐** — 전역 `ValidationPipe`의 `enableImplicitConversion`이 `@Transform`보다 먼저 돌며 `'false'`(string)→`true`로 coerce. DTO에서 원본 `obj[key]`(raw 쿼리스트링)를 읽도록 수정. (수정 전: `success=false`/`true`가 동일 집합 반환)
+3. **잘못된 날짜 쿼리가 500** — `startDate`/`endDate`가 `@IsString`이라 `?startDate=foo`가 통과 → `new Date('foo')`=Invalid Date → pg 오류 500. `@IsDateString`으로 바꿔 400 처리(프론트가 보내는 `YYYY-MM-DD`/ISO는 통과). 엣지케이스 검증 중 발견.
+4. **시각이 UTC로 표시(9h 어긋남)** — `audit_logs.createdAt`가 `timestamp without time zone`(naive=UTC)인데 node-postgres가 읽을 때 프로세스 로컬(KST)로 해석 → API가 9h 어긋난 인스턴트 반환. `main.ts` bootstrap에 `process.env.TZ='UTC'`로 읽기/쓰기 UTC 일치(대시보드는 SQL `AT TIME ZONE`이라 무영향). 프론트는 `toLocaleString(timeZone:'Asia/Seoul')`로 KST 표시.
+5. **`take` 무상한** — 엣지케이스 검증 중 발견. `?take=100000` 같은 거대 값이 통과해 무거운 쿼리 가능(admin 전용이라 위험은 낮음). DTO에 `@Max(100)` 추가 → 초과 시 400.
+
+> 엣지케이스 검증(URL 직접 조작 기준): 잘못된 날짜/page=0·음수/take 초과·userId 비숫자 → 모두 400, 결과 0건·전부 userId=null·page 범위초과 → graceful 200. 위 3·5번이 그 과정에서 잡혀 수정됨.
+
+> 빌드 도구 메모: `nx serve backend`(webpack dev)는 매우 느림. 시드/기동은 `yarn nx build backend` 후 `node backend/dist/main.js`가 수 초로 빠름.
+
+---
+
 ## 1. 배경 — Sentry와의 경계, 그리고 왜 지금 하는가
 
 ### 1-1. 감사로그 vs Sentry (겹치지 않음)
@@ -94,6 +116,8 @@ curl -i http://localhost:4000/v1/v1/admin/audit-logs     # 404 (옛 경로 사�
 > 위시리스트는 **백엔드+프론트를 한 쌍으로** 고치고, 찜 토글이 실제로 되는지 UI로 확인한다(유일한 회귀 지점).
 
 ### 2-5. AuditService 코드 정리 (뼈대 신뢰성 — 착수 전 권장)
+
+> ✅ **구현 결과**: 1번 **`getFailedLoginAttempts` 삭제 완료**(죽은 코드+버그 동시 제거). 2번 페이지네이션 통일은 **보류** — `getAuditLogs`는 손수 `findAndCount` 유지(응답 `meta` 형식이 뷰어 페이지네이션에 그대로 맞고, 행위자 보강 로직과 결합도 낮음).
 
 뷰어가 올라탈 [audit.service.ts](../../backend/src/audit/audit.service.ts)는 전반적으로 건전하나, **죽은 코드 1개에 버그가 박혀 있어** 나중에 누가 믿고 쓰다 당하기 전에 정리한다.
 
@@ -170,13 +194,17 @@ $env:NODE_SEED='true'; $env:SEED_RESET='true'; $env:SEED_DAYS='30'; yarn nx serv
 | 가드 | `JwtAuthGuard` + `RolesGuard` + `@Roles(Role.ADMIN)` ([audit.controller.ts:11-14](../../backend/src/audit/audit.controller.ts#L11)) |
 | 직렬화 | `@Serialize(AuditLogResponseDto)` ([audit.controller.ts:18](../../backend/src/audit/audit.controller.ts#L18)) |
 | 서비스 | [getAuditLogs](../../backend/src/audit/audit.service.ts#L52) — page/take 페이지네이션 + where 필터 + `createdAt DESC` |
-| 필터(쿼리) | [AuditLogQueryDto](../../backend/src/audit/dto/audit-log-query.dto.ts#L5): `page`(기본1) · `take`(기본50) · `userId` · `action`(enum) · `success`(bool) · `startDate` · `endDate` · `ipAddress` |
-| 응답 | `{ data: AuditLogResponseDto[], meta: { total, page, lastPage, take, hasNextPage } }` |
+| 필터(쿼리) | [AuditLogQueryDto](../../backend/src/audit/dto/audit-log-query.dto.ts#L5): `page`(기본1) · `take`(기본50, **최대100**) · `userId` · `action`(string) · `success`(bool, raw `obj[key]` 파싱) · `startDate`·`endDate`(`@IsDateString`) · `ipAddress` |
+| 응답 | `{ data: AuditLogResponseDto[], meta: { total, page, lastPage, take, hasNextPage } }` — **DTO에 `userNickName`/`userEmail` 포함(§4-2 ① 구현)** |
 | action 종류 | [AuditAction enum](../../backend/src/audit/entity/audit-log.entity.ts#L3) (인증·주문·결제·배송·상품·셀러·리뷰·정산·문의·사용자·크론) |
 
 → 즉 **포렌식 검색 뷰(§5-B)에 필요한 필터는 백엔드가 전부 지원**한다. 프론트가 쿼리스트링만 붙이면 됨.
 
-### 4-2. ⚠ 갭 — "누가"를 사람이 못 읽는다 (착수 시 결정)
+### 4-2. ⚠ 갭 — "누가"를 사람이 못 읽는다 → **옵션 ① 채택·구현 완료**
+
+> ✅ **구현 결과**: 옵션 ①. [getAuditLogs](../../backend/src/audit/audit.service.ts#L52)가 결과 행의 `userId`들을 모아 `In([...])`로 user를 **한 번에 조회(N+1 회피)**해 `userNickName`/`userEmail`을 행에 덧붙이고, [AuditLogResponseDto](../../backend/src/audit/dto/audit-log-response.dto.ts#L3)에 두 필드를 `@Expose`로 추가했다. `userId=null`(웹훅·크론·FAILED_LOGIN)은 `metadata.email` fallback → 없으면 null.
+
+(아래는 착수 시 검토했던 세 옵션 기록. ① 채택.)
 
 [AuditLogResponseDto](../../backend/src/audit/dto/audit-log-response.dto.ts#L3)는 `userId`(숫자)만 노출하고 **이메일/닉네임이 없다**. [getAuditLogs](../../backend/src/audit/audit.service.ts#L52)도 user 조인을 하지 않는다. 화면에 "user#42"만 뜨면 쓸모가 떨어진다. 세 옵션 중 택1(권장: ①):
 
@@ -184,13 +212,13 @@ $env:NODE_SEED='true'; $env:SEED_RESET='true'; $env:SEED_DAYS='30'; yarn nx serv
 2. 프론트 resolve: 별도 user 조회 API로 매핑(호출 증가, 비권장).
 3. 표시 보류: 1차는 `userId`만, 후속 보강(빠른 시연용).
 
-### 4-3. (선택) 요약 집계 엔드포인트 — 트리아지 카드용
+### 4-3. (선택) 요약 집계 엔드포인트 — 트리아지 카드용 → **옵션 (a) 채택**
+
+> ✅ **구현 결과**: 옵션 (a). 요약 엔드포인트 신설 없이 [useAuditQuery.ts](../../frontend/src/hooks/useAuditQuery.ts)의 `useTriageQuery`가 기존 엔드포인트를 `useQueries`로 **필터별 N회 호출**(FAILED_LOGIN/ACCOUNT_LOCKED count, success=false count+샘플, 관리자 action별 count+최근). 시스템오류 count는 `success=false 전체 − 실패 − 잠금`으로 보안 버킷을 차감해 산출. 카드가 많아지면 (b) 요약 엔드포인트로 후속 최적화.
 
 §5-A의 요약 카드("최근 24h: 실패 N · 잠금 M · 관리자행위 K")는 두 방법 중 택1:
 - (a) **프론트에서 기존 엔드포인트를 필터로 N번 호출**(`?success=false`, `?action=FAILED_LOGIN`, 기간=24h) — 추가 백엔드 0, 1차 권장.
 - (b) `GET /v1/admin/audit-logs/summary` 신설로 action별/버킷별 count 한 방 — 호출 절약, 후속 최적화.
-
-→ **1차는 (a)** 로 가고, 카드가 많아지면 (b) 도입.
 
 ---
 
@@ -201,7 +229,9 @@ $env:NODE_SEED='true'; $env:SEED_RESET='true'; $env:SEED_DAYS='30'; yarn nx serv
 
 ### 5-A. 트리아지 뷰 (요약 — "봐야 할 것")
 
-최근 24h(또는 7d) 기준 요약 카드 + 클릭 시 해당 필터로 상세 이동.
+요약 카드 + 클릭 시 해당 필터로 하단 포렌식 뷰 이동(`#forensic` 앵커 + URL 쿼리 세팅).
+
+> ✅ **구현 결과**: 집계 기간은 **최근 30일**로 구현([TriageCards](../../frontend/src/app/(admin)/admin/audit-logs/components/TriageCards.tsx)). 계획의 "24h/7d" 대신 30일을 쓴 이유 — 시드 버킷 B(시스템오류)·C(관리자행위)가 30일에 걸쳐 드물게 분포해(§3-3) 7일 창에선 빌 수 있어 DoD "빈 버킷 없음"이 깨질 위험. 30일이면 세 버킷이 안정적으로 채워진다.
 
 | 카드(버킷) | 데이터 소스(필터) |
 |---|---|
@@ -234,7 +264,7 @@ $env:NODE_SEED='true'; $env:SEED_RESET='true'; $env:SEED_DAYS='30'; yarn nx serv
 
 ---
 
-## 7. 완료 기준 (DoD)
+## 7. 완료 기준 (DoD) — ✅ 전부 충족 (2026-06-14)
 
 - prefix 버그 컨트롤러 6개가 `/v1/<...>` 단일 경로로 응답하고 옛 `/v1/v1/...`는 404. 위시리스트 토글 정상.
 - `SEED_RESET=true` 재시드 후, 관리자 대시보드 그래프가 **오늘 기준**으로 채워진다(필터를 과거로 밀 필요 없음).
@@ -260,10 +290,10 @@ $env:NODE_SEED='true'; $env:SEED_RESET='true'; $env:SEED_DAYS='30'; yarn nx serv
 - [dashboard.seed.service.ts](../../backend/src/seed/dashboard.seed.service.ts) (주문이벤트 [:225](../../backend/src/seed/dashboard.seed.service.ts#L225), 보안로그 [:384](../../backend/src/seed/dashboard.seed.service.ts#L384), 공통 INSERT [:442](../../backend/src/seed/dashboard.seed.service.ts#L442), reset [:482](../../backend/src/seed/dashboard.seed.service.ts#L482))
 - [seed-helpers.ts:14](../../backend/src/seed/seed-helpers.ts#L14) (시각 기준 `Date.now()` [:20](../../backend/src/seed/seed-helpers.ts#L20)) / [seed.module.ts](../../backend/src/seed/seed.module.ts)
 
-**프론트**
-- 수정 대상: [wishlist.ts:11](../../frontend/src/service/wishlist.ts#L11)
-- 신규(예정): `service/admin-audit.ts`, `hooks/admin-audit-query-options.ts`, `(admin)/admin/audit-logs/page.tsx`
-- 패턴 참고: [admin-dashboard.ts](../../frontend/src/service/admin-dashboard.ts#L37) / 프록시 [next.config.js:181](../../frontend/next.config.js#L181) / axios [axios-http-client.ts:5](../../frontend/src/lib/axios/axios-http-client.ts#L5)
+**프론트** (✅ 구현 완료)
+- 수정: [wishlist.ts:11](../../frontend/src/service/wishlist.ts#L11)(prefix), [UserMenu.tsx](../../frontend/src/components/header/topbar/UserMenu.tsx)(관리자 진입 버튼), [AdminSidebar.tsx](../../frontend/src/app/(admin)/admin/components/AdminSidebar.tsx)(상단 홈 링크)
+- 신규: [service/admin-audit.ts](../../frontend/src/service/admin-audit.ts)(API+타입+action 라벨), [hooks/useAuditQuery.ts](../../frontend/src/hooks/useAuditQuery.ts)(`useAuditLogsQuery`+`useTriageQuery`), [page.tsx](../../frontend/src/app/(admin)/admin/audit-logs/page.tsx) + 컴포넌트 3개(`TriageCards`·`AuditFilters`·`AuditTable`)
+- 패턴 참고: [admin-dashboard.ts](../../frontend/src/service/admin-dashboard.ts#L37) / axios [axios-http-client.ts:5](../../frontend/src/lib/axios/axios-http-client.ts#L5)
 
 ---
 

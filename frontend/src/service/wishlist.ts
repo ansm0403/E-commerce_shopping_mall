@@ -8,7 +8,7 @@ import { authClient } from '../lib/axios/axios-http-client';
  */
 export function toggleWishlist(productId: number) {
   return authClient.post<{ action: 'added' | 'removed'; productId: number }>(
-    '/v1/wishlist/toggle',
+    '/wishlist/toggle',
     { productId },
   );
 }

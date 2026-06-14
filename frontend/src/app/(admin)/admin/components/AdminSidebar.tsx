@@ -30,6 +30,27 @@ export default function AdminSidebar() {
         <span style={{ fontWeight: 700, fontSize: '16px', letterSpacing: '-0.3px' }}>
           🛍 관리자 콘솔
         </span>
+        {/* 상단 홈 링크 — 감사 로그처럼 긴 페이지에서 하단 홈 버튼이 스크롤로 가려지는 문제 보완 */}
+        <Link
+          href="/"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            marginTop: '12px',
+            fontSize: '12px',
+            color: '#94a3b8',
+            textDecoration: 'none',
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLAnchorElement).style.color = '#f8fafc';
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLAnchorElement).style.color = '#94a3b8';
+          }}
+        >
+          ← 쇼핑몰 홈으로
+        </Link>
       </div>
       <nav style={{ flex: 1, padding: '12px 0' }}>
         {NAV_ITEMS.map(({ href, label }) => {

@@ -10,6 +10,7 @@
 - **모노레포**: Nx 21 + Yarn(berry). 공용 타입 패키지 `@shopping-mall/shared`
 - **배포**: 프론트 **Vercel**, 백엔드 **AWS EC2**(Docker Compose: postgres+redis+backend).
   현재 **nginx 없이 Vercel rewrites 프록시**로 백엔드 우회.
+- **관측성**: **Sentry** 에러추적(프론트 `@sentry/nextjs`/백 `@sentry/nestjs`, DSN 없으면 no-op) + **Slack 알림 3종**(CI→`#deployments`, Claude 훅→`#claude-hooks`, Sentry→`#sentry-errors`). 상세 `docs/roadmap/ex-sentry-slack.md`.
 
 ## 2. 모노레포 구조
 - `backend/`     — NestJS API (`@shopping-mall/backend`)
@@ -17,7 +18,7 @@
 - `shared/`      — 프론트·백 공용 TS 타입/DTO 인터페이스 (`@shopping-mall/shared`, 빌드 후 `dist/` 소비)
 - `backend-e2e/` — 백엔드 e2e 테스트
 - `docs/`        — 설계·운영 문서 (데이터 흐름 문서는 §7 규칙 준수, 로드맵은 `docs/roadmap/`)
-- 루트: `nx.json`, `docker-compose.{yaml,local,prod}.yaml`, `Dockerfile.{backend,frontend}`, `Makefile`
+- 루트: `nx.json`, `docker-compose.{yaml,local,prod}.yaml`, `Dockerfile`(백엔드)·`Dockerfile.frontend`·`Dockerfile.dev`, `Makefile`
 
 ### 명령
 - 가능하면 **Nx로 실행**: `yarn nx serve backend`, `yarn nx dev frontend`, `yarn nx build <project>`, `yarn nx affected`
@@ -49,12 +50,14 @@
 **되어 있음**
 - 구매자 커머스 전 구간: 회원/인증 → 카테고리/상품/검색 → 장바구니 → 주문 → PortOne 결제 → 주문조회/취소/구매확정 → 리뷰/위시리스트/문의.
 - 관리자 **대시보드**(KPI·주문추이·보안·퍼널 차트) — `(admin)/admin/dashboard` 실구현.
+- 관리자 **감사 로그 조회** — `(admin)/admin/audit-logs` 실구현(트리아지 3버킷 요약 + 포렌식 검색: 필터·표·페이지네이션). 백엔드 `GET /v1/admin/audit-logs` 연결, 행위자 닉네임/이메일 보강. 상세 `docs/roadmap/ex-audit-log-admin.md`.
 - 셀러 **백엔드 워크플로 완성**: 신청→pending→승인/반려(SellerEntity, 은행정보 @Exclude, 감사로그).
 - 결제/정산/감사 백엔드 모듈 존재.
+- **관측성/알림(계획 외 삽입)**: Sentry 에러추적(프론트/백) + Slack 알림 3종 연동 완료. 트러블슈팅 회고 `docs/roadmap/ex-sentry-slack.md`.
 
 **비어 있음 / 스켈레톤**
 - **셀러 프론트** `(main)/seller/*` 전부 stub: 대시보드/상품/상품등록/주문/정산/문의.
-- **관리자 하위 페이지** stub: `orders`, `products`(승인), `categories`, `sellers`(승인), `settlements`, `audit-logs`. (dashboard만 실구현)
+- **관리자 하위 페이지** stub: `orders`, `products`(승인), `categories`, `sellers`(승인), `settlements`. (dashboard·audit-logs는 실구현)
 - **정산** 프론트 스켈레톤(백엔드만 존재).
 - **인프라**: nginx 미도입(Vercel→EC2 프록시 우회 중).
 

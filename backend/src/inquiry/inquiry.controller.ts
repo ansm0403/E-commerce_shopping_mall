@@ -26,7 +26,7 @@ import { AuditAction } from '../audit/entity/audit-log.entity';
 
 // ── Buyer 문의 컨트롤러 ──
 
-@Controller('v1/inquiries')
+@Controller('inquiries')
 export class InquiryController {
   constructor(private readonly inquiryService: InquiryService) {}
 
@@ -76,7 +76,7 @@ export class InquiryController {
 
 // ── Seller 문의 컨트롤러 ──
 
-@Controller('v1/seller/inquiries')
+@Controller('seller/inquiries')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.SELLER)
 export class SellerInquiryController {
