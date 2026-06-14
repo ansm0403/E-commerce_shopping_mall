@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
+import { Between, In, LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
 import { AuditLogEntity, AuditAction } from './entity/audit-log.entity';
 import { AuditLogQueryDto } from './dto/audit-log-query.dto';
 import { BasePaginateDto } from '../common/dto/paginate.dto';
 import { CommonService } from '../common/common.service';
+import { UserModel } from '../user/entity/user.entity';
 
 export interface LogData {
   userId?: number;
@@ -21,6 +22,8 @@ export class AuditService {
   constructor(
     @InjectRepository(AuditLogEntity)
     private readonly auditLogRepository: Repository<AuditLogEntity>,
+    @InjectRepository(UserModel)
+    private readonly userRepository: Repository<UserModel>,
     private readonly commonService: CommonService,
   ) {}
 
@@ -74,24 +77,36 @@ export class AuditService {
       skip: (page - 1) * take,
     });
 
+    // ── 행위자 보강: userId 들을 모아 한 번에 조회(N+1 회피) ──
+    // userId 가 null 인 행(FAILED_LOGIN·웹훅·크론 등)은 metadata.email 을 fallback 으로.
+    const userIds = [
+      ...new Set(
+        data
+          .map((log) => log.userId)
+          .filter((id): id is number => id !== null && id !== undefined),
+      ),
+    ];
+    const users = userIds.length
+      ? await this.userRepository.find({
+          where: { id: In(userIds) },
+          select: ['id', 'nickName', 'email'],
+        })
+      : [];
+    const userMap = new Map(users.map((u) => [u.id, u]));
+
+    const enriched = data.map((log) => {
+      const user = log.userId != null ? userMap.get(log.userId) : undefined;
+      const fallbackEmail = (log.metadata?.['email'] as string | undefined) ?? null;
+      return Object.assign({}, log, {
+        userNickName: user?.nickName ?? null,
+        userEmail: user?.email ?? fallbackEmail,
+      });
+    });
+
     const lastPage = Math.ceil(total / take);
     return {
-      data,
+      data: enriched,
       meta: { total, page, lastPage, take, hasNextPage: page < lastPage },
     };
-  }
-
-  async getFailedLoginAttempts(email: string, hours = 24) {
-    const since = new Date();
-    since.setHours(since.getHours() - hours);
-
-    return this.auditLogRepository.count({
-      where: {
-        action: AuditAction.FAILED_LOGIN,
-        metadata: { email } as any,
-        success: false,
-        createdAt: since as any,
-      },
-    });
   }
 }

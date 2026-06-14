@@ -22,6 +22,11 @@
 
 - [00-role-audit.md](./00-role-audit.md) — **3-Role(buyer/seller/admin) 인가·승인 로직 검토.** 셀러/관리자 화면 착수 전 필독(승인 로직 정합성, 토큰 staleness, 데모 가드).
 
+## 계획 외 삽입 — 운영/관측성 (2026-06-14)
+
+- [ex-sentry-slack.md](./ex-sentry-slack.md) — **Sentry 에러 추적 + Slack 알림 3종(CI / Claude 훅 / Sentry).** 숫자 시퀀스(셀러→관리자→인프라) **밖**에서, 기능 전달과 무관하게 운영 가시성을 먼저 확보하려고 **Step 0과 Step 1 사이에 끼어든 트랙**이다. 연동 과정의 엣지케이스 6건(Push Protection · isHeadersSent · node:async_hooks · 광고차단 · "새 이슈만 알림" · dev/운영 성능차) 회고를 담는다. 번호 대신 `ex-`(시퀀스 밖) 프리픽스를 쓴다.
+- [ex-audit-log-admin.md](./ex-audit-log-admin.md) — **관리자 감사로그 조회(계획서).** Sentry(기술적 예외)와 상보적인 "행위/보안 기록" 뷰어를 관리자 페이지에 붙이는 작업. 로드맵상 Step 5(후순위)지만 읽기 전용·백엔드 완성이라 독립적이어서 운영 가시성 트랙으로 당겨온다. 핵심: **(1) 라우트 이중 prefix 버그 일괄 수정**(아래 선결 과제 참조), **(2) 시드 재기준화·확장**(시드가 실행시각 기준 backdate라 시간이 지나면 그래프에서 사라짐), **(3) 프론트 뷰어 2면(트리아지 요약 + 포렌식 검색)**. 같은 `ex-` 프리픽스.
+
 ## 우선순위 / 단계
 
 | Phase | 문서 | 목표 | 비중 |
@@ -67,7 +72,8 @@
 
 ## 가로지르는 선결/정리 과제 (착수 전 확인)
 
-- ⚠ **정산 라우트 이중 prefix 버그**: `settlement.controller.ts`가 `@Controller('v1/seller/settlements')` / `@Controller('v1/admin/settlements')`로 선언됨. 전역 prefix가 이미 `/v1`(`main.ts:83`)이라 **실제 경로가 `/v1/v1/...`**가 된다. 정산 프론트 연결 **전에** 컨트롤러 경로를 `seller/settlements`/`admin/settlements`로 정정할 것(`wish-list` 프론트도 `/v1/wishlist/...`를 호출하므로 동일 패턴 점검).
+- ✅ **라우트 이중 prefix 버그 (무리) — 해결(2026-06-14)**: 전역 prefix가 이미 `/v1`(`main.ts:85`)인데 일부 컨트롤러가 `@Controller('v1/...')`로 한 번 더 붙여 실제 경로가 `/v1/v1/...`가 되던 문제. 정산은 Step 0(`84a83f4`)에 정정 완료, **남은 무리(`audit`/`wish-list`/`inquiry`/`user`/`review`)는 [ex-audit-log-admin.md](./ex-audit-log-admin.md) §2(Step A)에서 일괄 수정 완료** — 새 경로 200/401·옛 경로 404 curl 검증. 프론트 회귀 지점은 `wishlist.ts:11`(토글) 하나뿐이라 한 쌍으로 수정.
 - ⚠ **역할 변경 후 토큰 staleness**: 인가는 "토큰에 박힌 역할" 기준이라, 셀러 승인 직후에도 본인 토큰이 갱신되기 전(재로그인/refresh, access 15분)까지는 셀러 API가 403. 프론트는 `/auth/me`(DB fresh)로 메뉴를 띄우므로 "메뉴는 보이는데 API는 막힘"이 생길 수 있다. 셀러 승인 화면 설계 시 재로그인 안내/강제 토큰 갱신 고려. (상세 [00-role-audit.md](./00-role-audit.md) §2,§6)
-- ❓ **확인 필요(미점검)**: 관리자 감사로그 조회 엔드포인트(`audit/`), 셀러 문의 답변 엔드포인트(`inquiry/`)의 존재·역할 가드. 해당 Phase 착수 시 컨트롤러를 직접 읽어 확정(없으면 그 화면은 후순위로).
+- ✅ **구현 완료(2026-06-14)**: 관리자 감사로그 조회 — `GET /v1/admin/audit-logs`(`@Roles(ADMIN)` + `AuditLogQueryDto` 필터). prefix 버그 수정, 응답 DTO에 행위자 닉네임/이메일 보강(`getAuditLogs` user 일괄 조인), `success` 필터 boolean 변환 버그(`enableImplicitConversion`) 수정, 시드 버킷 B·C 확장, 프론트 뷰어 2면(트리아지+포렌식) 구현. 상세 [ex-audit-log-admin.md](./ex-audit-log-admin.md).
+- ❓ **확인 필요(미점검)**: 셀러 문의 답변 엔드포인트(`inquiry/`)의 존재·역할 가드. 해당 Phase 착수 시 컨트롤러를 직접 읽어 확정(없으면 그 화면은 후순위로). (`inquiry`도 위 prefix 버그 무리에 포함)
 - **DTO 출처**: 셀러 상품등록 폼은 `backend/src/product/dto/create-product.dto.ts`를 진실의 원천으로 필드 구성(name·description·price·brand 필수, stockQuantity·categoryId·salesType·discountRate 선택). 카테고리별 specs(JSONB)는 후순위.

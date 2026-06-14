@@ -9,7 +9,7 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { Auditable } from '../audit/decorators/auditable.decorator';
 import { AuditAction } from '../audit/entity/audit-log.entity';
 
-@Controller('v1/users')
+@Controller('users')
 @UseGuards(JwtAuthGuard)
 export class UserController {
   constructor(private readonly userService: UserService) {}

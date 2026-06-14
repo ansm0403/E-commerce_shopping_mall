@@ -208,7 +208,7 @@
 - [~] **강제 환불** — BE: `POST /admin/payments/:orderNumber/cancel` ✅ / FE: 스텁
 
 ### 감사 로그 조회
-- [~] **감사 로그 조회** (사용자별/액션별 필터) — BE: `GET /v1/admin/audit-logs` ✅ / FE: `/admin/audit-logs` 스텁
+- [x] **감사 로그 조회** (사용자별/액션별/성공여부/기간/IP 필터) — BE: `GET /v1/admin/audit-logs` ✅ / FE: `/admin/audit-logs` ✅ 트리아지 3버킷 + 포렌식 검색(필터·표·페이지네이션). 행위자 닉네임/이메일 보강. 상세 `docs/roadmap/ex-audit-log-admin.md`
 
 ---
 

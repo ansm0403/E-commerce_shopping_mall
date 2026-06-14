@@ -25,7 +25,7 @@ import { BasePaginateDto } from '../common/dto/paginate.dto';
 import { Auditable } from '../audit/decorators/auditable.decorator';
 import { AuditAction } from '../audit/entity/audit-log.entity';
 
-@Controller('v1/reviews')
+@Controller('reviews')
 export class ReviewController {
   constructor(private readonly reviewService: ReviewService) {}
 

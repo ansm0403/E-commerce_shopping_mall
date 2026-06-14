@@ -31,10 +31,24 @@ export default function UserMenu() {
   if (!isHydrated) return null;
   if (!user) return <LogIn />;
 
-  const items: { label: string; onClick: () => void; danger?: boolean }[] = [
+  // roles 런타임 형태는 [{ name: 'admin' }] (shared 타입은 string[]로 선언 — 미스매치 방어적 처리)
+  const isAdmin =
+    Array.isArray(user.roles) &&
+    (user.roles as Array<string | { name?: string }>).some(
+      (r) => (typeof r === 'string' ? r : r?.name) === 'admin',
+    );
+
+  const items: { label: string; onClick: () => void; danger?: boolean; admin?: boolean }[] = [
     { label: "내 정보", onClick: () => void 0 },
     { label: "주문 목록", onClick: () => { router.push('/my/orders'); setOpen(false); } },
     { label: "장바구니", onClick: () => { router.push('/cart'); setOpen(false); } },
+    ...(isAdmin
+      ? [{
+          label: "관리자 페이지",
+          onClick: () => { router.push('/admin/dashboard'); setOpen(false); },
+          admin: true,
+        }]
+      : []),
     { label: "로그아웃", onClick: () => setShowConfirm(true), danger: true },
   ];
 
@@ -67,7 +81,9 @@ export default function UserMenu() {
                 className={`w-full flex items-center px-4 py-2.5 text-sm transition-colors text-left ${
                   item.danger
                     ? 'text-red-500 hover:bg-red-50'
-                    : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-700'
+                    : item.admin
+                      ? 'text-indigo-600 font-semibold hover:bg-indigo-50'
+                      : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-700'
                 }`}
               >
                 {item.label}
