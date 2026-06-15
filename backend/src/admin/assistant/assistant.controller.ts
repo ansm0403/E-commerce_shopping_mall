@@ -1,10 +1,20 @@
-import { Body, Controller, Post, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import type { Response } from 'express';
 import { AssistantService } from './assistant.service';
 import { ChatRequestDto } from './dto/chat-request.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
+import { User } from '../../auth/decorators/user.decorator';
 import { Role } from '../../user/entity/role.entity';
 
 /**
@@ -26,12 +36,28 @@ export class AssistantController {
   }
 
   /**
+   * 새로고침 후 UI 복원용 — 대화의 메시지를 시간순으로 조회.
+   * 본인(@User('sub')) 소유 대화만 반환(아니면 빈 배열).
+   */
+  @Get('conversations/:id/messages')
+  getConversationMessages(
+    @Param('id', ParseIntPipe) id: number,
+    @User('sub') adminUserId: number,
+  ) {
+    return this.assistantService.getConversationMessages(id, adminUserId);
+  }
+
+  /**
    * SSE-over-POST: EventSource는 POST·Authorization 헤더를 못 쓰므로,
    * 프론트는 fetch + ReadableStream으로 받아 `data:` 프레임을 직접 파싱한다.
    * (가드는 핸들러 이전에 실행되므로 @Res 수동 응답이어도 admin 인증은 유지됨)
    */
   @Post('stream')
-  async stream(@Body() body: ChatRequestDto, @Res() res: Response) {
+  async stream(
+    @Body() body: ChatRequestDto,
+    @User('sub') adminUserId: number,
+    @Res() res: Response,
+  ) {
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache, no-transform');
     res.setHeader('Connection', 'keep-alive');
@@ -39,7 +65,11 @@ export class AssistantController {
     res.flushHeaders?.();
 
     try {
-      for await (const ev of this.assistantService.streamChat(body)) {
+      for await (const ev of this.assistantService.streamChat({
+        message: body.message,
+        conversationId: body.conversationId,
+        adminUserId,
+      })) {
         res.write(`data: ${JSON.stringify(ev)}\n\n`);
       }
     } catch {

@@ -118,6 +118,49 @@ export class DashboardService {
     };
   }
 
+  /**
+   * (AI 어시스턴트 도구 `get_order_stats` 용)
+   * 임의 기간(createdAt 기준)의 주문을 상태별로 GROUP BY 집계.
+   * - getSalesSummary 와 동일한 KST 반열림 구간([start, endNext)) + 최대 90일.
+   * - 매출(paid_at)과 달리 "주문 생성" 시점(createdAt) 기준 — 상태 분포를 보기 위함.
+   * - 집계 카운트만 반환(PII 0) → 무료티어 전송 안전.
+   */
+  async getOrderStats(
+    startDate: string,
+    endDate: string,
+  ): Promise<{
+    startDate: string;
+    endDate: string;
+    total: number;
+    byStatus: Record<string, number>;
+  }> {
+    const error = validateDateRange(startDate, endDate);
+    if (error) throw new BadRequestException(error);
+
+    const [start, endNext] = toKstRange(startDate, endDate);
+    const rows: { status: string; count: string }[] = await this.orderRepo.query(
+      `
+      SELECT status, COUNT(*)::text AS count
+      FROM orders
+      WHERE "createdAt" >= $1 AND "createdAt" < $2
+      GROUP BY status
+      `,
+      [start, endNext],
+    );
+
+    // 모든 OrderStatus 키를 0으로 초기화해 "없는 상태"도 0으로 명시(모델이 누락으로 오해 방지).
+    const byStatus: Record<string, number> = {};
+    for (const s of Object.values(OrderStatus)) byStatus[s] = 0;
+    let total = 0;
+    for (const r of rows) {
+      const n = Number(r.count);
+      byStatus[r.status] = n;
+      total += n;
+    }
+
+    return { startDate, endDate, total, byStatus };
+  }
+
   async getKpi() {
     const { todayStart, todayNow, ydayStart, ydayUntilNow } = getTodayAndYesterdaySoFar();
 

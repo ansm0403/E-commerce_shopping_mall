@@ -18,6 +18,37 @@ export type AssistantEvent =
 // axios baseURL과 동일 규칙: 브라우저 `/api/*` → next.config rewrites → 백엔드 `/v1/*`
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? '/api';
 
+/** 새로고침 후 UI 복원용 — 대화의 저장된 메시지(시간순). */
+export interface ConversationMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  createdAt: string;
+}
+
+/**
+ * 대화 메시지 조회. 스트리밍이 아니므로 일반 fetch GET.
+ * 반환 의미를 구분한다(복원 로직이 "id를 지울지" 판단해야 하므로):
+ * - `ConversationMessage[]`(빈 배열 포함): **확정 결과**. 200 OK. 빈 배열 = 없음/타인 소유 → id 폐기 가능.
+ * - `null`: **일시적 실패**(네트워크/401 등). id를 지우면 안 됨(다음에 복원 가능).
+ *   (만료 토큰으로 마운트 시 401을 빈 결과로 오인해 유효한 id를 날리는 사고 방지.)
+ */
+export async function fetchConversationMessages(
+  conversationId: string,
+): Promise<ConversationMessage[] | null> {
+  try {
+    const token = authStorage.getAccessToken();
+    const res = await fetch(
+      `${API_BASE}/admin/assistant/conversations/${conversationId}/messages`,
+      { headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) } },
+    );
+    if (!res.ok) return null; // 401/5xx 등 일시적 실패 → 호출부가 id 유지
+    const data = (await res.json()) as { messages?: ConversationMessage[] };
+    return data.messages ?? [];
+  } catch {
+    return null; // 네트워크/파싱 실패 → 일시적
+  }
+}
+
 /**
  * 어시스턴트 스트리밍 호출. SSE 이벤트를 순서대로 yield 하는 async generator.
  * @param body message + (선택) conversationId

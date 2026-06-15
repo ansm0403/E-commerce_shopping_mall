@@ -272,39 +272,83 @@ tools: [{
 
 > 원칙: **각 단계가 끝나면 그 자체로 동작/시연**된다. MVP는 Phase 3까지.
 
-### Phase 0 — 준비
-- [ ] **Gemini API 키 발급**(Google AI Studio) → `GEMINI_API_KEY` env (백엔드 `.env`, 운영 시 EC2 시크릿).
-- [ ] **Gemini SDK 설치** — 공식 패키지명·버전은 문서 확인 후 (백엔드 워크스페이스).
-- [ ] `intrastructure/ai/` 모듈 골격 + DI 등록. 키 없으면 no-op 가드.
-- [ ] **`LlmClient` 인터페이스 정의 + `GeminiClient` 구현** (프로바이더 추상화 — §3-4). 어시스턴트는 인터페이스에만 의존.
-- [ ] (추후) `ClaudeClient` 구현체를 같은 인터페이스로 추가 → env로 전환.
+### Phase 0 — 준비  ✅ 완료
+- [x] **Gemini API 키 발급**(Google AI Studio) → `GEMINI_API_KEY` env (백엔드 `.env`, 운영 시 EC2 시크릿).
+- [x] **Gemini SDK 설치** — `@google/genai` (백엔드 워크스페이스).
+- [x] `intrastructure/ai/` 모듈 골격 + DI 등록. 키 없으면 no-op 가드.
+- [x] **`LlmClient` 인터페이스 정의 + `GeminiClient` 구현** (프로바이더 추상화 — §3-4). 어시스턴트는 인터페이스에만 의존.
+- [ ] (추후) `ClaudeClient` 구현체를 같은 인터페이스로 추가 → env로 전환. ← 자금 여유 시(미착수)
 
-### Phase 1 — 단순 호출 (감 잡기)
-- [ ] `messages.create` 1회 호출하는 임시 엔드포인트/스크립트. system + user 1턴.
-- [ ] 응답 텍스트 확인. **"외부 API 한 번 호출"임을 체감.**
+### Phase 1 — 단순 호출 (감 잡기)  ✅ 완료
+- [x] `messages.create` 1회 호출하는 임시 엔드포인트/스크립트. system + user 1턴.
+- [x] 응답 텍스트 확인. **"외부 API 한 번 호출"임을 체감.**
 - 🎯 시연: 고정 질문 → AI 응답.
 
-### Phase 2 — 멀티턴 + 스트리밍 + 프론트 채팅 UI
-- [ ] 대화 배열 누적 + DB 저장(또는 메모리 임시).
-- [ ] `messages.stream()` 으로 스트리밍, NestJS→프론트 SSE/chunked.
-- [ ] `(admin)/admin/assistant` 채팅 UI (입력창 + 스트리밍 렌더).
+### Phase 2 — 멀티턴 + 스트리밍 + 프론트 채팅 UI  ✅ 완료
+- [x] 대화 배열 누적 + DB 저장(또는 메모리 임시). ← Phase 2는 인메모리, Phase 2.5에서 DB로 승격
+- [x] `messages.stream()` 으로 스트리밍, NestJS→프론트 SSE/chunked.
+- [x] `(admin)/admin/assistant` 채팅 UI (입력창 + 스트리밍 렌더).
 - 🎯 시연: 멀티턴 대화가 글자 흐르듯 나옴.
 
-### Phase 3 — Tool Use 1개 ★ ("사내 데이터 연동" 증명)
-- [ ] `get_sales_summary` tool(중립 정의 → Gemini function calling 포맷으로 변환) + 기존 통계 서비스에 디스패치 연결.
-- [ ] 호출→실행→재전달 루프 처리(Gemini function calling 흐름. Claude 전환 시 tool runner로 단순화 가능).
-- [ ] "지난달 매출?" → AI가 실제 DB 매출을 가져와 자연어로 답.
+### Phase 2.5 — 대화 DB 영속화 (인메모리 Map → TypeORM)  ✅ 완료(2026-06-15)
+- [x] `AssistantConversationEntity`(adminUserId 인덱스, title) + `AssistantMessageEntity`(conversationId, role, content) 신설, 둘 다 `BaseModel` 상속.
+- [x] `AssistantService.conversations Map` 제거 → repo 기반. user 메시지는 호출 전, assistant 응답은 완성 후 저장.
+- [x] 멀티턴 복원: conversationId 로 최근 `MAX_HISTORY`(20)개 메시지를 시간순 로드해 LLM에 재전송.
+- [x] 소유권 검증: conversationId 가 와도 `adminUserId`(JWT sub) 불일치/미존재면 새 대화로 취급(타인 대화 차단). 컨트롤러가 `@User('sub')` 전달.
+- [x] `AssistantModule`에 `forFeature([Conversation, Message])`. `autoLoadEntities`로 dev 스키마 자동 생성.
+- [x] **UI 복원**(후속 추가): `GET /v1/admin/assistant/conversations/:id/messages`(소유권 필터) + 프론트가 `conversationId`를 localStorage에 저장 → 마운트 시 조회해 새로고침 후 직전 대화 복원 + "새 대화" 버튼. (Phase 2.5 백엔드 영속화만으론 브라우저 새로고침 시 UI가 비어 보였음 — DB엔 있으나 조회 경로/프론트 복원이 없었기 때문.)
+- ⚠ **운영 반영**: 마이그레이션 없음(§3) → prod(`synchronize:false`)는 신규 테이블 2개 **수동 DDL** 필요. 기존 컬럼 변경 없음(신규 테이블뿐)이라 위험 낮음.
+- 🎯 시연: 서버 재시작 후에도 conversationId로 대화 이어짐 + 브라우저 새로고침 후 직전 대화 UI 복원 + "어떤 admin이 무엇을 물었나"가 DB에 기록(감사 관점). 실 DB 확인: `assistant_conversations`(id=1, adminUserId=1) / `assistant_messages`(user+assistant 2행) 저장 검증됨.
+
+### Phase 3 — Tool Use 1개 ★ ("사내 데이터 연동" 증명)  ✅ 완료
+- [x] `get_sales_summary` tool(중립 정의 → Gemini function calling 포맷으로 변환) + 기존 통계 서비스에 디스패치 연결.
+- [x] 호출→실행→재전달 루프 처리(Gemini function calling 흐름. Claude 전환 시 tool runner로 단순화 가능).
+- [x] "지난달 매출?" → AI가 실제 DB 매출을 가져와 자연어로 답.
 - 🎯 시연: **이 순간 "사내 데이터 연동" 성립. DOSSIER 3-17 ❌→⭕의 분기점.**
 
-### Phase 4 — 도구 확장
-- [ ] `get_order_stats`, `query_audit_logs`, `get_product_info` 추가.
-- [ ] 여러 도구를 AI가 상황에 맞게 선택/연쇄 호출하는지 확인.
-- 🎯 시연: "지난주 의심스러운 로그인 분석" → 감사로그 도구 호출 → 요약.
+### Phase 4 — 도구 확장  ✅ 구현 완료(2026-06-15. query_audit_logs e2e 검증됨 / order·product e2e 대기)
+- [x] `get_order_stats` → `DashboardService.getOrderStats(start,end)` **신설**(GROUP BY status, 집계만 → 무료티어 안전).
+- [x] `query_audit_logs` → `AuditService.getAuditLogs(query)` + **디스패처 비식별화 마스킹**(email `t***@***`, IP 끝옥텟 마스킹, userAgent/metadata 드롭 — §4-2 데이터 등급 게이트). `assistant-masking.ts`.
+- [x] `get_product_info` → `ProductService.findAllAdmin` + **안전필드 projection**(seller @Exclude 은행정보 등 raw 제외). findAllAdmin은 status/approvalStatus/sellerId만 필터(keyword/단건id 미지원)라 도구도 그 범위로 정직하게 좁힘.
+- [x] system 프롬프트에 4개 도구 사용 가이드 보강. LlmClient 인터페이스 무변경(중립 타입 의존 유지).
+- [x] query_audit_logs e2e: "지난주 로그인 실패 분석" → 감사로그 도구 호출 → 마스킹된(`10.0.*.*`) 요약 검증.
+- [ ] (검증 대기) get_order_stats / get_product_info e2e + 여러 도구 연쇄 선택. — 무료 RPD 절약 위해 핵심 시나리오만.
+- 🎯 시연: "지난주 의심스러운 로그인 분석" → 감사로그 도구 호출 → 마스킹된 요약.
 
-### Phase 5 — RAG (비정형 데이터)
-- [ ] `summarize_reviews`/`summarize_inquiries`: 단순 RAG(관련 텍스트 프롬프트 첨부)부터.
-- [ ] 데이터 많아지면 임베딩 + 벡터검색(pgvector 등) 검토.
-- 🎯 시연: "최근 부정 리뷰 핵심만 요약".
+### Phase 5 — RAG (비정형 데이터)  📋 계획 수립됨(2026-06-15) · 구현 다음 컨텍스트
+> 소스 조사 완료. 구현 전 아래 "착수 시 확정할 결정"부터 정한 뒤 코딩.
+> 메커니즘은 Phase 4와 동일(도구가 데이터 반환 → 모델이 요약). 다른 점은 **반환이 비정형 텍스트**라는 것 = "단순 RAG"(관련 텍스트를 프롬프트에 첨부해 모델이 그 위에서 추론). 임베딩/벡터검색은 5b로 분리.
+
+**5a — 단순 RAG (먼저)**
+- [ ] 도구 `summarize_reviews` — 상품/평점 조건으로 리뷰 텍스트를 모아 반환 → 모델이 요약.
+- [ ] 도구 `summarize_inquiries` — 상태(미답변 등)/상품 조건으로 문의 텍스트를 모아 반환 → 모델이 요약.
+- 🎯 시연: "최근 부정 리뷰 핵심만 요약", "미답변 문의 요약".
+
+**5b — 임베딩/벡터 검색 (나중, 데이터 많아지면)**
+- [ ] pgvector 등으로 의미 검색 후 상위 청크만 첨부. (현재 시드 규모엔 5a로 충분)
+
+**소스 조사 결과 (추측 금지 — 실제 시그니처)**
+- 리뷰: `ReviewService.getByProduct(productId, query)` 만 존재(productId 필수, relations `['user']`). **"전 상품 최근/부정 리뷰" 메서드 없음.** 엔티티 `ReviewEntity`: `rating(smallint)`, `comment(text)`, `imageUrls`, `userId`, `productId`. ⚠ `ReviewModule`은 `exports: [TypeOrmModule]`만 — **ReviewService 미export.**
+- 문의: `InquiryService.getByProduct(productId, userId, query)`(비밀 마스킹은 buyer 기준), `getSellerInquiries(userId, query)`(셀러 한정). **"전 셀러 미답변 문의" 메서드 없음.** 엔티티 `InquiryEntity`: `title`, `content(text)`, `answer(text|null)`, `answeredAt`, `isSecret(bool)`, `status(waiting|answered)`. ⚠ `InquiryModule`은 **exports 없음.**
+
+**실행안 (Phase 4 패턴 재사용)**
+1. 읽기 전용 메서드 **신설**(getOrderStats처럼):
+   - `ReviewService.getReviewsForAssistant({ productId?, maxRating?, take })` → `where productId?`, `rating <= maxRating?`(부정=≤2), `order createdAt DESC`, `take`(상한 50). 반환 `{ rating, comment, productId, createdAt }` — **user 관계 제외.**
+   - `InquiryService.getInquiriesForAssistant({ status?, productId?, take })` → `where status?`(미답변=waiting), `productId?`, `order createdAt DESC`, `take`. 반환 `{ status, title, content, answer, productId, isSecret, createdAt }` — **user/seller 관계 제외.**
+2. 모듈 export 추가: `ReviewModule.exports += ReviewService`, `InquiryModule.exports = [InquiryService]`. `AssistantModule`에 `ReviewModule`·`InquiryModule` import.
+3. 도구 정의 2개(`assistant-tools.ts`) + 디스패처 case 2개(`assistant.service.ts`) + system 프롬프트 도구 안내 보강. LlmClient 인터페이스 무변경.
+4. **비식별화(§4-2)**: 텍스트 자체가 요약 대상이라 통째 마스킹 불가 → **작성자 신원(user 관계) 미반환** + 본문 내 **이메일/전화번호 패턴 스크럽**(`assistant-masking.ts`에 `scrubText` 추가, `maskEmail` 재사용 + 전화 정규식).
+
+**⚠ 착수 시 확정할 결정 (다음 컨텍스트 시작에서 질문)**
+- (D1) **비밀 문의(isSecret=true)** 처리: (a) 본문 제외하고 건수만 / (b) 본문 마스킹 후 포함 / (c) 그대로 포함. → 무료티어 안전상 **(a) 권장.**
+- (D2) 읽기 전용 메서드 신설 + 서비스 export 추가 OK? (getOrderStats 선례와 동일 — 권장 yes.)
+- (D3) 5a(텍스트 첨부)만 이번에, 5b(임베딩)는 보류 — 시드 규모상 권장.
+
+**🔧 Phase 6 프롬프트 캐싱 "준비" 메모(이번에 코드 변경 X, 설계 인지만)**
+- 캐싱은 **안정적 prefix**(system 프롬프트 + tool 정의)가 핵심. 현재 `buildSystemPrompt()`에 **오늘 날짜가 섞여** 매일 prefix가 바뀜(하루 안엔 안정 — 캐시 TTL 짧아 실害 적지만), 캐싱 도입 시 **정적부(역할/규칙/도구안내) vs 동적부(날짜) 분리** 고려.
+- tool 정의는 정적이라 캐싱 친화적. 도구가 늘수록(현재 4 → Phase5 후 6개) 정의 토큰이 커져 캐싱 이득 증가.
+- LlmClient 인터페이스에 **usage(입력/출력/캐시적중 토큰) 노출**을 추가하면 Phase 6에서 적중률 측정 가능 — Phase 5 구현 중 자연스럽게 받아둘지 검토.
+- 프로바이더별 캐싱 방식 상이(Gemini context caching vs Claude cache_control breakpoint) → 인터페이스 추상화가 여기서도 유효.
 
 ### Phase 6 — 비용 / 캐싱 최적화
 - [ ] system 프롬프트·tool 정의에 prompt caching 적용(프로바이더별 지원 방식 확인 — Gemini/Claude 상이). 응답 usage로 캐시 적중 확인.
@@ -326,13 +370,14 @@ tools: [{
 
 ## 6. 완료 기준 (DoD)
 
-**MVP (Phase 0~3):**
-- [ ] 관리자가 `(admin)/admin/assistant`에서 멀티턴 대화 (스트리밍).
-- [ ] 최소 1개 tool(`get_sales_summary`)이 **실제 DB 데이터**를 가져와 답에 반영됨.
-- [ ] 권한: 비-admin 접근 차단. 키 없으면 기능 no-op.
-- [ ] 대화 기록 영속화(또는 세션 유지).
+**MVP (Phase 0~3):  ✅ 충족**
+- [x] 관리자가 `(admin)/admin/assistant`에서 멀티턴 대화 (스트리밍).
+- [x] 최소 1개 tool(`get_sales_summary`)이 **실제 DB 데이터**를 가져와 답에 반영됨. (Phase 4에서 4개로 확장)
+- [x] 권한: 비-admin 접근 차단. 키 없으면 기능 no-op.
+- [x] 대화 기록 영속화(Phase 2.5 DB 영속화 + 새로고침 UI 복원).
 
 **전체 (Phase 4~8): 각 Phase의 🎯 시연 항목 충족 + §7 파일 매핑/§8 트러블슈팅 작성.**
+- Phase 4 ✅ / Phase 5~8 미착수(5=RAG 다음 차례, 6=캐싱, 7=eval, 8=구매자 챗봇).
 
 <br>
 
@@ -348,20 +393,24 @@ tools: [{
 - 앱 등록: `backend/src/app/app.module.ts` (`AiModule.forRoot()`)
 
 **백엔드 — 어시스턴트 도메인 (admin 하위)**
-- 컨트롤러(`POST /v1/admin/assistant/chat`, `/stream` SSE): `backend/src/admin/assistant/assistant.controller.ts`
-- 서비스(시스템 프롬프트·멀티턴 인메모리·도구 디스패처): `backend/src/admin/assistant/assistant.service.ts`
-- 도구 정의(LlmToolDef): `backend/src/admin/assistant/assistant-tools.ts` (`get_sales_summary`)
+- 컨트롤러(`POST .../chat`, `POST .../stream` SSE, `GET .../conversations/:id/messages` 복원, `@User('sub')` adminUserId): `backend/src/admin/assistant/assistant.controller.ts`
+- 서비스(시스템 프롬프트·멀티턴 **DB 영속화**·도구 디스패처·projection): `backend/src/admin/assistant/assistant.service.ts`
+- 도구 정의(LlmToolDef): `backend/src/admin/assistant/assistant-tools.ts` (`get_sales_summary`, `get_order_stats`, `query_audit_logs`, `get_product_info`)
+- PII 비식별화 헬퍼: `backend/src/admin/assistant/assistant-masking.ts` (`maskEmail`/`maskIp`/`maskAuditLogs`)
+- 대화 영속화 엔티티(BaseModel 상속): `backend/src/admin/assistant/entity/conversation.entity.ts`, `entity/message.entity.ts`
 - DTO: `backend/src/admin/assistant/dto/chat-request.dto.ts`
-- 모듈: `backend/src/admin/assistant/assistant.module.ts` (AuthModule + AdminModule)
-- 매출 도구 대상 메서드: `backend/src/admin/dashboard/dashboard.service.ts` → `getSalesSummary(startDate, endDate)`
-  - `AdminModule`이 `DashboardService`를 `exports` 하여 어시스턴트가 주입받음.
+- 모듈: `backend/src/admin/assistant/assistant.module.ts` (AuthModule + AdminModule + AuditModule + ProductModule + forFeature[Conversation,Message])
+- 도구 대상 메서드:
+  - `backend/src/admin/dashboard/dashboard.service.ts` → `getSalesSummary(start,end)`, `getOrderStats(start,end)` (AdminModule exports)
+  - `backend/src/audit/audit.service.ts` → `getAuditLogs(query)` (AuditModule exports) — 결과는 `maskAuditLogs`로 비식별화 후 LLM 전송
+  - `backend/src/product/product.service.ts` → `findAllAdmin(query)` (ProductModule exports) — `projectProduct`로 안전필드만
 
 **프론트**
-- 채팅 UI: `frontend/src/app/(admin)/admin/assistant/page.tsx` + `components/AssistantChat.tsx`
-- SSE 파서(fetch + ReadableStream): `frontend/src/service/admin-assistant.ts`
+- 채팅 UI(새로고침 복원: localStorage conversationId + 마운트 fetch, "새 대화" 버튼): `frontend/src/app/(admin)/admin/assistant/components/AssistantChat.tsx` + `page.tsx`
+- SSE 파서(fetch + ReadableStream) + 대화 복원 fetch(`fetchConversationMessages`): `frontend/src/service/admin-assistant.ts`
 - 사이드바 메뉴: `frontend/src/app/(admin)/admin/components/AdminSidebar.tsx`
 
-**대화 영속화**: 현재 서버 인메모리(Map). DB 엔티티(TypeORM)는 **Phase 2.5 예정**(미구현).
+**대화 영속화**: ✅ **Phase 2.5 완료** — `assistant_conversations` / `assistant_messages`(TypeORM). conversationId(=대화 row id)로 멀티턴 복원, adminUserId 소유권 검증.
 
 <br>
 
@@ -383,10 +432,36 @@ tools: [{
 - 네이티브 `EventSource`는 POST·`Authorization` 헤더 불가 → 프론트는 **fetch + ReadableStream**으로 받고 `data:` 프레임 직접 파싱. 백엔드는 `@Res()`로 `text/event-stream` 수동 write(가드는 핸들러 이전 실행이라 admin 인증 유지). `X-Accel-Buffering: no`로 프록시 버퍼링 방지.
 - (테스트 메모) Git Bash(Windows)에서 인라인 한글이 깨진 UTF-8로 전송되어 스트리밍이 실패한 적 — `--data-binary @utf8파일`로 해결. 실제 브라우저는 정상 UTF-8이라 무관.
 
-### 8-4. (예약) 남은 항목
-- ⚠ tool 결과 직렬화 시 민감필드 노출(Phase 4 audit/PII 도구) — §4-2 데이터 등급 게이트.
+### 8-4. ⚠ 도구 결과는 직렬화 인터셉터를 거치지 않는다 — @Exclude 무력화 (Phase 4 핵심)
+- **함정**: `@Exclude()`/`@Expose()`(class-transformer)는 **HTTP 응답이 `ClassSerializerInterceptor`/`@Serialize`를 탈 때만** 작동한다. 도구 디스패처는 기존 서비스의 **반환값(엔티티)을 그대로 JSON 직렬화해 LLM 프롬프트에 넣으므로** 이 인터셉터를 안 탄다 → `@Exclude`가 무력화되어 민감필드가 LLM(무료티어면 학습)으로 샌다.
+- **실제 위험원**: ① `ProductService.findAllAdmin`의 `seller` 관계에 `@Exclude` 은행정보(bankName/bankAccountNumber/bankAccountHolder). ② `AuditService.getAuditLogs`의 이메일·IP·userAgent·metadata.
+- **해결**: 디스패처에서 직접 가공한다. ① 상품은 `projectProduct`로 **안전 필드만 화이트리스트 projection**(seller raw 제외). ② 감사로그는 `maskAuditLogs`로 **비식별화**(email `t***@***`, IP 끝옥텟 마스킹, userAgent/metadata 드롭).
+- **교훈**: "엔티티에 @Exclude 걸었으니 안전"은 HTTP 경로 한정. 새 소비 경로(LLM 도구·이벤트·큐 등)를 열 땐 직렬화 정책이 그 경로에도 적용되는지 반드시 재확인.
+
+### 8-5. ⚠ findAllAdmin 은 keyword/단건 id 필터가 없다 (get_product_info 설계)
+- 후보 메서드 `ProductService.findOne(id)`는 **구매자용**이라 비승인/숨김/단종 상품에 `NotFoundException` → 관리자 정보 조회엔 부적합. `findAllAdmin(query)`는 모든 상태를 보지만 **필터가 categoryId/status/approvalStatus/sellerId 뿐**(keyword·id 미지원).
+- 처음엔 도구에 `keyword`·`productId`를 넣었으나, findAllAdmin이 이를 무시 → 모델이 "검색했다"고 오해할 수 있음. **도구 파라미터를 서비스가 실제 지원하는 범위(status/approvalStatus/sellerId)로 정직하게 좁혔다.** (추측 매핑 금지 원칙의 사례.)
+
+### 8-7. ⚠ Phase 4 e2e 후 엣지케이스 검증 (2026-06-15, "지난주 로그인 실패 분석" 답변 점검)
+첫 e2e는 성공했으나(마스킹 IP `10.0.*.*` + 요약) 답변을 뜯어보니 4건의 엣지케이스 발견 → 수정.
+- **(A) metadata 통째 드롭 → 모델이 원인 추측**: 초기 `maskAuditLogs`가 metadata를 통째로 버렸다. 그런데 FAILED_LOGIN은 `errorMessage`가 없고 실패 원인이 **`metadata.reason`**(`invalid_password`/`user_not_found`)에 있다. 결과적으로 모델은 데이터 없이 "모두 wrong password"라고 **일반화/추측**했다(일부는 user_not_found일 수 있음). metadata 전수 조사 결과 PII는 `email` 키뿐 → **키 단위 비식별화**(`sanitizeMetadata`: email/ip 키만 마스킹, reason·count·orderNumbers 등 비-PII 보존)로 교체. 교훈: 마스킹은 "PII만 정확히" 제거해야지 통째 드롭하면 도구의 분석 가치 자체가 사라지고 환각을 유발한다.
+- **(B) 감사 날짜 범위 KST/종료일 누락**: `AuditService.getAuditLogs`는 `Between(new Date(start), new Date(end))`. 모델이 `endDate=2026-06-14`(날짜만) 주면 `new Date()`가 **UTC 자정 1순간**만 잡아 그날 데이터가 거의 누락 + KST와 9h 어긋남. 디스패처에 `normalizeAuditDate`(날짜만이면 시작 `T00:00:00+09:00`/끝 `T23:59:59.999+09:00`)를 넣어 KST 풀데이로 정규화. (대시보드 도구는 `toKstRange`로 이미 처리 — 감사 경로만 raw였음.)
+- **(C) history 윈도가 assistant로 시작**: 대화 21턴↑이면 `MAX_HISTORY`(20) 트림 윈도가 assistant 턴으로 시작할 수 있다(대화는 user로 시작해야 자연스러움). `loadHistory`에서 선두 assistant 턴 제거.
+- **(D) 첫 페이지만 조회**: `query_audit_logs`는 page=1·take≤100만 본다. 총계는 `meta.total`로 정확하나, total>take면 "모두/전부" 단정은 표본 한정 → 도구 description에 "총계는 meta.total, data는 표본"임을 명시.
+- (검증 대기) errorMessage는 현재 고정 문자열('토큰 재사용 감지' 등)뿐이라 PII 없음. userNickName은 마스킹 정책 결정상 유지(관리자 UI 노출값).
+
+### 8-8. ⚠ UI 대화 복원(localStorage) 엣지케이스 (2026-06-15)
+새로고침 복원을 붙인 뒤 발견·수정한 3건.
+- **복원 레이스(데이터 손실)**: 마운트 복원 fetch가 끝나기 전 사용자가 메시지를 보내면, 뒤늦게 도착한 복원 결과의 `setMessages`가 **진행 중 대화를 덮어쓴다.** → `interactedRef`(전송/새 대화 시 true)로 가드해 늦게 온 복원은 폐기. (conversationId는 useEffect에서 동기 세팅하므로 백엔드는 같은 대화에 정상 append — UI에 과거 턴이 잠깐 안 보일 뿐, 다음 새로고침에 복원.)
+- **일시적 401이 유효한 id를 삭제**: 복원 fetch를 "빈 결과=폐기"로 단순화했더니, 만료 토큰 마운트 시 401을 빈 결과로 오인해 **유효한 conversationId를 localStorage에서 지워** 복원이 영구 불가가 됐다. → `fetchConversationMessages` 반환을 **`[]`(200 확정 빈 결과=폐기 가능) vs `null`(네트워크/401 일시 실패=id 유지)** 로 구분.
+- **localStorage 접근 미가드**: 시크릿모드/스토리지 차단 시 `getItem/setItem`이 throw → 스트림 루프 catch로 들어가 엉뚱한 에러 표시. → `storage` 안전 래퍼(try/catch, 실패 무시)로 전부 감쌈.
+- 정상 동작 확인(수정 불필요): **계정 전환**(B가 A의 id로 마운트 → 백엔드 소유권 체크가 200 빈 결과 → 폐기 후 새 대화, 누수 없음), **잘못된 id**(ParseIntPipe 400 → null → 유지·자가치유), **XSS**(React 텍스트 이스케이프, dangerouslySetInnerHTML 미사용).
+- (미수정·낮은 우선순위) `getConversationMessages`는 대화 전체 메시지를 무제한 반환 — 초장기 대화 시 페이로드 큼. 현재 대화 짧아 보류(필요 시 최근 N 캡).
+
+### 8-9. (예약) 남은 항목
 - ⚠ 프롬프트 인젝션 방어 강화.
 - ⚠ 토큰/비용 폭증과 캐싱 적중률(Phase 6).
+- ⚠ 대화 history 길이 상한(현재 최근 20개 메시지) — 긴 대화에서 맥락 손실 vs 토큰 트레이드오프(Phase 6 compaction).
 
 <br>
 
