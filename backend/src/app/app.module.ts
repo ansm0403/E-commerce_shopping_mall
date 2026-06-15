@@ -27,6 +27,8 @@ import { InquiryModule } from '../inquiry/inquiry.module';
 import { AuditModule } from '../audit/audit.module';
 import { AdminModule } from '../admin/admin.module';
 import { SeedModule } from '../seed/seed.module';
+import { AiModule } from '../intrastructure/ai/ai.module';
+import { AssistantModule } from '../admin/assistant/assistant.module';
 
 @Module({
   imports: [
@@ -79,6 +81,8 @@ import { SeedModule } from '../seed/seed.module';
     InquiryModule,
     AuditModule,
     AdminModule,
+    AiModule.forRoot(),
+    AssistantModule,
     ...(process.env['NODE_SEED'] === 'true' ? [SeedModule] : []),
   ],
   controllers: [AppController],

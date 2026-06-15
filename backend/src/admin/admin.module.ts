@@ -19,5 +19,6 @@ import { DashboardService } from './dashboard/dashboard.service';
   ],
   controllers: [DashboardController],
   providers: [DashboardService],
+  exports: [DashboardService], // AI 어시스턴트(get_sales_summary 도구)에서 재사용
 })
 export class AdminModule {}

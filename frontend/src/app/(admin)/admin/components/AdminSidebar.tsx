@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 
 const NAV_ITEMS = [
   { href: '/admin/dashboard',   label: '대시보드' },
+  { href: '/admin/assistant',   label: 'AI 어시스턴트' },
   { href: '/admin/orders',      label: '주문 관리' },
   { href: '/admin/products',    label: '상품 관리' },
   { href: '/admin/sellers',     label: '셀러 관리' },

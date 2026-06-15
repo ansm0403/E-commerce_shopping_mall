@@ -27,6 +27,10 @@
 - [ex-sentry-slack.md](./ex-sentry-slack.md) — **Sentry 에러 추적 + Slack 알림 3종(CI / Claude 훅 / Sentry).** 숫자 시퀀스(셀러→관리자→인프라) **밖**에서, 기능 전달과 무관하게 운영 가시성을 먼저 확보하려고 **Step 0과 Step 1 사이에 끼어든 트랙**이다. 연동 과정의 엣지케이스 6건(Push Protection · isHeadersSent · node:async_hooks · 광고차단 · "새 이슈만 알림" · dev/운영 성능차) 회고를 담는다. 번호 대신 `ex-`(시퀀스 밖) 프리픽스를 쓴다.
 - [ex-audit-log-admin.md](./ex-audit-log-admin.md) — **관리자 감사로그 조회(계획서).** Sentry(기술적 예외)와 상보적인 "행위/보안 기록" 뷰어를 관리자 페이지에 붙이는 작업. 로드맵상 Step 5(후순위)지만 읽기 전용·백엔드 완성이라 독립적이어서 운영 가시성 트랙으로 당겨온다. 핵심: **(1) 라우트 이중 prefix 버그 일괄 수정**(아래 선결 과제 참조), **(2) 시드 재기준화·확장**(시드가 실행시각 기준 backdate라 시간이 지나면 그래프에서 사라짐), **(3) 프론트 뷰어 2면(트리아지 요약 + 포렌식 검색)**. 같은 `ex-` 프리픽스.
 
+## 계획 외 삽입 — AI 통합 (2026-06-15)
+
+- [ex-ai-assistant.md](./ex-ai-assistant.md) — **관리자 AI 어시스턴트(사내 데이터 + LLM 연동).** 관리자가 자연어로 사내 데이터를 질의하면 AI가 **tool use(function calling)** 로 기존 NestJS 서비스를 호출해 실 DB로 답하는 챗봇. 채용 공고의 "사내 데이터와 LLM 연동" 핵심 역량을 실데이터로 증명하는 트랙이라 시퀀스 밖에서 당겨온다. **MVP(Phase 0~3) 완료**: 프로바이더 비종속 `LlmClient`(현재 Gemini 무료티어 `gemini-3.1-flash-lite`, 추후 Claude) + SSE-over-POST 스트리밍 + 멀티턴(인메모리) + `get_sales_summary` 도구(→ `DashboardService`). 트러블슈팅 핵심: Gemini 3.x function calling의 `thought_signature` 보존, thinking 모델의 스트리밍 체감. 같은 `ex-` 프리픽스. **남음**: Phase 2.5 대화 DB 영속화 / Phase 4 도구 확장 / Phase 5 RAG.
+
 ## 우선순위 / 단계
 
 | Phase | 문서 | 목표 | 비중 |

@@ -79,6 +79,45 @@ export class DashboardService {
     private readonly orderRepo: Repository<OrderEntity>,
   ) {}
 
+  /**
+   * (AI 어시스턴트 도구 `get_sales_summary` 용)
+   * 임의 기간의 결제 완료 매출 합계 + 주문 건수.
+   * getKpi의 매출 SQL 패턴(paid_at NOT NULL, SUM(total_amount))을 임의 기간으로 재사용한다.
+   * 기간은 KST [start, endNext) 반열림 (toKstRange). 최대 90일(validateDateRange).
+   */
+  async getSalesSummary(
+    startDate: string,
+    endDate: string,
+  ): Promise<{
+    startDate: string;
+    endDate: string;
+    totalRevenue: number;
+    orderCount: number;
+  }> {
+    const error = validateDateRange(startDate, endDate);
+    if (error) throw new BadRequestException(error);
+
+    const [start, endNext] = toKstRange(startDate, endDate);
+    const [row]: { revenue: string | null; orders: string }[] =
+      await this.orderRepo.query(
+        `
+        SELECT
+          COALESCE(SUM(total_amount), 0)::text AS revenue,
+          COUNT(*)::text                       AS orders
+        FROM orders
+        WHERE paid_at IS NOT NULL AND paid_at >= $1 AND paid_at < $2
+        `,
+        [start, endNext],
+      );
+
+    return {
+      startDate,
+      endDate,
+      totalRevenue: Number(row.revenue ?? 0),
+      orderCount: Number(row.orders ?? 0),
+    };
+  }
+
   async getKpi() {
     const { todayStart, todayNow, ydayStart, ydayUntilNow } = getTodayAndYesterdaySoFar();
 

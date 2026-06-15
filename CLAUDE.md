@@ -33,9 +33,10 @@
 - **가드/데코레이터**: `JwtAuthGuard`, `RolesGuard`, `DemoAccountGuard` / `@Roles()`, `@User()`, `@Auditable()`.
 - **DB 스키마**: `synchronize: NODE_ENV!=='production'`. **마이그레이션 없음** — 엔티티 수정으로 스키마 관리(운영 반영 시 주의).
 - 공통 엔티티 `BaseModel`(id/createdAt/updatedAt). 페이지네이션 page/cursor 둘 다 지원(`common/`).
-- **인프라 모듈** `intrastructure/`(오타 그대로): `redis/`, `emailVerify/`(SMTP). 이벤트 `EventEmitterModule`, 레이트리밋 `ThrottlerModule`(전역 100req/60s), 감사로그 `audit/`.
+- **인프라 모듈** `intrastructure/`(오타 그대로): `redis/`, `emailVerify/`(SMTP), `ai/`(LLM 클라이언트 — 프로바이더 비종속 `LlmClient`, 현재 Gemini `@google/genai`, 추후 Claude). 이벤트 `EventEmitterModule`, 레이트리밋 `ThrottlerModule`(전역 100req/60s), 감사로그 `audit/`.
 - **결제**: PortOne(iamport) 연동 + 웹훅(`payment/`).
-- 모듈: auth, user, seller, category, product, review, cart, order, payment, settlement, inquiry, wish-list, audit, admin, common, intrastructure, seed, data.
+- **AI 어시스턴트**: `admin/assistant/`(관리자 자연어 질의 → tool use로 기존 서비스 호출, SSE 스트리밍). 상세 `docs/roadmap/ex-ai-assistant.md`.
+- 모듈: auth, user, seller, category, product, review, cart, order, payment, settlement, inquiry, wish-list, audit, admin(+assistant), common, intrastructure(+ai), seed, data.
 
 ## 4. 프론트 컨벤션 (`frontend/src`)
 - **App Router + 라우트 그룹**: `(auth)`(로그인/회원가입/이메일인증), `(main)`(상점·구매·`/my/*`·`/seller/*`), `(admin)`(`/admin/*`).
@@ -54,6 +55,7 @@
 - 셀러 **백엔드 워크플로 완성**: 신청→pending→승인/반려(SellerEntity, 은행정보 @Exclude, 감사로그).
 - 결제/정산/감사 백엔드 모듈 존재.
 - **관측성/알림(계획 외 삽입)**: Sentry 에러추적(프론트/백) + Slack 알림 3종 연동 완료. 트러블슈팅 회고 `docs/roadmap/ex-sentry-slack.md`.
+- **관리자 AI 어시스턴트(계획 외 삽입, MVP 완료)**: `(admin)/admin/assistant` — 자연어로 사내 데이터 질의 → **tool use(function calling)** 로 기존 서비스 호출. 프로바이더 비종속(현재 Gemini 무료티어, 추후 Claude) + SSE 스트리밍 + 멀티턴. Phase 0~3 완료: `get_sales_summary` 도구가 실 DB 매출로 응답. 상세 `docs/roadmap/ex-ai-assistant.md`. (대화 DB 영속화=Phase 2.5, 도구 확장=Phase 4 예정)
 
 **비어 있음 / 스켈레톤**
 - **셀러 프론트** `(main)/seller/*` 전부 stub: 대시보드/상품/상품등록/주문/정산/문의.
