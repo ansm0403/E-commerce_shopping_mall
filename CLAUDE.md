@@ -55,7 +55,7 @@
 - 셀러 **백엔드 워크플로 완성**: 신청→pending→승인/반려(SellerEntity, 은행정보 @Exclude, 감사로그).
 - 결제/정산/감사 백엔드 모듈 존재.
 - **관측성/알림(계획 외 삽입)**: Sentry 에러추적(프론트/백) + Slack 알림 3종 연동 완료. 트러블슈팅 회고 `docs/roadmap/ex-sentry-slack.md`.
-- **관리자 AI 어시스턴트(계획 외 삽입, MVP 완료)**: `(admin)/admin/assistant` — 자연어로 사내 데이터 질의 → **tool use(function calling)** 로 기존 서비스 호출. 프로바이더 비종속(현재 Gemini 무료티어, 추후 Claude) + SSE 스트리밍 + 멀티턴. Phase 0~3 완료: `get_sales_summary` 도구가 실 DB 매출로 응답. 상세 `docs/roadmap/ex-ai-assistant.md`. (대화 DB 영속화=Phase 2.5, 도구 확장=Phase 4 예정)
+- **관리자 AI 어시스턴트(계획 외 삽입)**: `(admin)/admin/assistant` — 자연어로 사내 데이터 질의 → **tool use(function calling)** 로 기존 서비스 호출. 프로바이더 비종속(현재 Gemini 무료티어, 추후 Claude) + SSE 스트리밍 + 멀티턴(대화 DB 영속화). **도구 6종**: get_sales_summary·get_order_stats·query_audit_logs·get_product_info(정형) + summarize_reviews·summarize_inquiries(비정형 RAG, Phase 5a — 상품/카테고리(하위)·기간 필터). PII는 디스패처에서 마스킹/projection/scrubText 처리(도구 결과는 직렬화 인터셉터 미경유 → @Exclude 무력). **구매자 상품 리뷰 자동 요약(Phase 5c)**: 어시스턴트와 별개로 상품 상세에 AI 리뷰 요약을 캐시(`product_summaries` 테이블)+노출 — 리뷰 변경 이벤트로 stale 표시 + 다음 열람 시 SWR 백그라운드 재생성(`GET /v1/products/:id/review-summary`, public; throttle 10분 + 동시 1건 CAS 락, LLM 키 없으면 no-op). 상세 `docs/roadmap/ex-ai-assistant.md`. (Phase 0~4 + 5a + 5c 완료, 다음=Phase 6 프롬프트 캐싱)
 
 **비어 있음 / 스켈레톤**
 - **셀러 프론트** `(main)/seller/*` 전부 stub: 대시보드/상품/상품등록/주문/정산/문의.

@@ -13,8 +13,11 @@ import { FoodEntity } from './entity/food/food.entity';
 import { SellerEntity } from '../seller/entity/seller.entity';
 import { OrderItemEntity } from '../order/entity/order-item.entity';
 import { CategoryEntity } from '../category/entity/category.entity';
+import { ProductSummaryEntity } from './entity/product-summary.entity';
 import { ProductController, AdminProductController } from './product.controller';
 import { ProductService } from './product.service';
+import { ProductSummaryService } from './product-summary.service';
+import { ReviewModule } from '../review/review.module';
 import { TypeOrmProductSearchService } from './product-search.service';
 import { PRODUCT_SEARCH_SERVICE } from './interfaces/product-search.interface';
 import { ProductSeedService } from '../common/seeds/product.seed';
@@ -36,13 +39,16 @@ import { AuthModule } from '../auth/auth.module';
       SellerEntity,
       OrderItemEntity,
       CategoryEntity,
+      ProductSummaryEntity,
     ]),
     CommonModule,
     AuthModule,
+    ReviewModule, // Phase 5c: ProductSummaryService 가 ReviewService.getReviewsForAssistant 재사용
   ],
   controllers: [ProductController, AdminProductController],
   providers: [
     ProductService,
+    ProductSummaryService,
     {
       provide: PRODUCT_SEARCH_SERVICE,
       useClass: TypeOrmProductSearchService,

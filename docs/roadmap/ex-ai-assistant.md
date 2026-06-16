@@ -256,6 +256,11 @@ tools: [{
 ### 4-3. 비용 / 프롬프트 캐싱
 - 긴 system 프롬프트 + tool 정의는 **prompt caching**으로 ~10% 가격 (Phase 6).
 - 대화 길이 상한 / 오래된 턴 요약(compaction)으로 입력 토큰 폭증 제어.
+- **⚠ 캐싱은 범용 표준이 아니라 프로바이더별 문법이 다르다(추상화가 필요한 이유):**
+  - **Claude**: 콘텐츠 블록에 인라인 `cache_control: {type:'ephemeral'}` 끊는점(breakpoint)을 붙인다.
+  - **Gemini**: 별도 리소스 — `ai.caches.create(...)`로 `CachedContent` 생성 후 호출에서 `config.cachedContent: 이름`으로 **참조**(그 외 implicit/자동 캐싱도 있음). `cache_control` 같은 인라인 필드는 없다.
+  - OpenAI 등은 자동(암묵) 캐싱 쪽 — 단일 표준은 없다. → `LlmClient`에 **중립적 "안정 prefix 캐싱" 개념**만 두고, 프로바이더 문법은 각 구현체(GeminiClient/ClaudeClient)가 흡수한다.
+- **확정된 진행 방향(2026-06-16)**: **지금은 Gemini 무료티어 유지** — 무료티어엔 청구서가 없어 "$ 절감" 숫자는 0이므로, Phase 6의 실가치는 **(1) 안정 prefix 분리(날짜 동적부 분리) (2) usage(입력/출력/캐시적중 토큰) 측정 (3) Gemini `CachedContent`/implicit 캐싱을 실제로 붙여 토큰 절감률 측정**이다. **추후 자금 여유 시 Claude(유료) + `cache_control`로 전환하면 같은 추상화 위에서 즉시 진짜 $ 절감으로 이어진다**(어시스턴트/도구 코드 무변경, `ClaudeClient` 추가 + `LLM_PROVIDER` env 전환).
 
 ### 4-4. 스트리밍
 - 채팅 UX·타임아웃 방지 위해 스트리밍 적용. NestJS에서 SSE 또는 chunked 응답으로 프론트에 흘림.
@@ -315,13 +320,17 @@ tools: [{
 - [ ] (검증 대기) get_order_stats / get_product_info e2e + 여러 도구 연쇄 선택. — 무료 RPD 절약 위해 핵심 시나리오만.
 - 🎯 시연: "지난주 의심스러운 로그인 분석" → 감사로그 도구 호출 → 마스킹된 요약.
 
-### Phase 5 — RAG (비정형 데이터)  📋 계획 수립됨(2026-06-15) · 구현 다음 컨텍스트
+### Phase 5 — RAG (비정형 데이터)  📋 계획 수립(2026-06-15) · 보강·결정 확정(2026-06-16) · 구현 다음 컨텍스트
 > 소스 조사 완료. 구현 전 아래 "착수 시 확정할 결정"부터 정한 뒤 코딩.
 > 메커니즘은 Phase 4와 동일(도구가 데이터 반환 → 모델이 요약). 다른 점은 **반환이 비정형 텍스트**라는 것 = "단순 RAG"(관련 텍스트를 프롬프트에 첨부해 모델이 그 위에서 추론). 임베딩/벡터검색은 5b로 분리.
 
-**5a — 단순 RAG (먼저)**
-- [ ] 도구 `summarize_reviews` — 상품/평점 조건으로 리뷰 텍스트를 모아 반환 → 모델이 요약.
-- [ ] 도구 `summarize_inquiries` — 상태(미답변 등)/상품 조건으로 문의 텍스트를 모아 반환 → 모델이 요약.
+**5a — 단순 RAG (먼저)  ✅ 구현·e2e·엣지검증 완료(2026-06-16. summarize_reviews/summarize_inquiries 둘 다 실데이터 검증 + 적대적 엣지케이스 실측·버그 2건 수정)**
+- [x] 도구 `summarize_reviews` — 상품/카테고리(하위 포함)/평점/기간 조건으로 리뷰 텍스트를 모아 반환 → 모델이 요약.
+- [x] 도구 `summarize_inquiries` — 상태(미답변 등)/상품/카테고리/기간 조건으로 문의 텍스트를 모아 반환 → 모델이 요약.
+- [x] e2e(reviews): "최근 부정 리뷰(평점 2 이하) 핵심만 요약" → 모델이 `summarize_reviews({maxRating:2})` 호출 → 실 리뷰 30건(배송지연·품질·광고불일치) 요약. 도구 결과 키가 `[rating,comment,productId,createdAt]` 뿐(user/seller·이메일·전화 부재) 확인.
+- [x] 문의 시드 선결(`InquirySeedService`, §아래) → 13건(미답변 8/답변 5/비밀 2, PII 2건) 생성.
+- [x] e2e(inquiries): "미답변 문의 요약" → 모델이 `summarize_inquiries({status:waiting})` 호출 → 8건 그룹 요약(배송/입고·상품정보·교환/AS). 도구 결과 키 `[status,title,content,answer,productId,isSecret,createdAt]`(user/seller 부재), **비밀 문의는 title/content/answer=null 메타만**(D1), 본문 전화번호는 `***` 스크럽 확인.
+- [x] 적대적 엣지케이스 검증(실 DB 실측) + 버그 2건 수정: 음수 `take`·불량 날짜(`2026-13-45`/`지난주`) 크래시 → 하한 클램프 + `normalizeDateRange` 검증. `In([])`=0행·scrubText 오마스킹 0건 확인. 상세 §8-10b.
 - 🎯 시연: "최근 부정 리뷰 핵심만 요약", "미답변 문의 요약".
 
 **5b — 임베딩/벡터 검색 (나중, 데이터 많아지면)**
@@ -331,28 +340,102 @@ tools: [{
 - 리뷰: `ReviewService.getByProduct(productId, query)` 만 존재(productId 필수, relations `['user']`). **"전 상품 최근/부정 리뷰" 메서드 없음.** 엔티티 `ReviewEntity`: `rating(smallint)`, `comment(text)`, `imageUrls`, `userId`, `productId`. ⚠ `ReviewModule`은 `exports: [TypeOrmModule]`만 — **ReviewService 미export.**
 - 문의: `InquiryService.getByProduct(productId, userId, query)`(비밀 마스킹은 buyer 기준), `getSellerInquiries(userId, query)`(셀러 한정). **"전 셀러 미답변 문의" 메서드 없음.** 엔티티 `InquiryEntity`: `title`, `content(text)`, `answer(text|null)`, `answeredAt`, `isSecret(bool)`, `status(waiting|answered)`. ⚠ `InquiryModule`은 **exports 없음.**
 
-**실행안 (Phase 4 패턴 재사용)**
-1. 읽기 전용 메서드 **신설**(getOrderStats처럼):
-   - `ReviewService.getReviewsForAssistant({ productId?, maxRating?, take })` → `where productId?`, `rating <= maxRating?`(부정=≤2), `order createdAt DESC`, `take`(상한 50). 반환 `{ rating, comment, productId, createdAt }` — **user 관계 제외.**
-   - `InquiryService.getInquiriesForAssistant({ status?, productId?, take })` → `where status?`(미답변=waiting), `productId?`, `order createdAt DESC`, `take`. 반환 `{ status, title, content, answer, productId, isSecret, createdAt }` — **user/seller 관계 제외.**
-2. 모듈 export 추가: `ReviewModule.exports += ReviewService`, `InquiryModule.exports = [InquiryService]`. `AssistantModule`에 `ReviewModule`·`InquiryModule` import.
-3. 도구 정의 2개(`assistant-tools.ts`) + 디스패처 case 2개(`assistant.service.ts`) + system 프롬프트 도구 안내 보강. LlmClient 인터페이스 무변경.
-4. **비식별화(§4-2)**: 텍스트 자체가 요약 대상이라 통째 마스킹 불가 → **작성자 신원(user 관계) 미반환** + 본문 내 **이메일/전화번호 패턴 스크럽**(`assistant-masking.ts`에 `scrubText` 추가, `maskEmail` 재사용 + 전화 정규식).
+> **⚠ 데이터/소스 상태 갱신 (2026-06-16, ex-review-frontend 작업 반영)**
+> - **리뷰 시드됨**: 커버리지 시드로 **published 336상품에 리뷰 1,882건**(부정 rating≤2 = 286건) 생성됨([ex-review-frontend.md](./ex-review-frontend.md) §3-B). → `summarize_reviews` 는 **실 텍스트로 바로 e2e 가능**(상품/부정/카테고리 시나리오 모두 데이터 있음).
+> - ~~**문의는 0건(미시드)**~~ → **✅ 해소(구현 시)**: `InquirySeedService` 신설로 13건(미답변 8/답변 5/비밀 2, PII 2건) 시드 → `summarize_inquiries` 실데이터 e2e 완료. 상세 §7·§8-10(E).
+> - `ReviewService` 에 메서드 추가됨(`getProductReviewSummary` — 평점 분포 집계). 단 **`ReviewModule` exports 는 여전히 `[TypeOrmModule]` 뿐** — Phase 5a 계획대로 `ReviewService` export + `getReviewsForAssistant` 신설 필요(변동 없음).
+> - 시드 주문 `order_items.product_id` 가 실제 published 상품으로 교체됨 → 카테고리→상품 변환 체인(D4) 검증 시 실 productId 사용 가능.
 
-**⚠ 착수 시 확정할 결정 (다음 컨텍스트 시작에서 질문)**
-- (D1) **비밀 문의(isSecret=true)** 처리: (a) 본문 제외하고 건수만 / (b) 본문 마스킹 후 포함 / (c) 그대로 포함. → 무료티어 안전상 **(a) 권장.**
-- (D2) 읽기 전용 메서드 신설 + 서비스 export 추가 OK? (getOrderStats 선례와 동일 — 권장 yes.)
-- (D3) 5a(텍스트 첨부)만 이번에, 5b(임베딩)는 보류 — 시드 규모상 권장.
+**실행안 (Phase 4 패턴 재사용) — ✅ 보강·결정 확정(2026-06-16)**
+
+리뷰/문의를 **상품 단위뿐 아니라 카테고리(하위 포함) 단위 + 기간(startDate/endDate)** 으로도 분석할 수 있게 보강한다. (조사 결과: 카테고리는 인접목록+materialized `path`+`depth` 하이브리드, 상품은 단일 `categoryId`로 **리프 카테고리** 참조, 리뷰/문의는 `productId` FK. 이름→id 변환 메서드는 부재 → 신설.)
+
+1. 읽기 전용 메서드 **신설**(getOrderStats처럼). **카테고리는 모르고 `productIds[]`만** 받는다:
+   - `ReviewService.getReviewsForAssistant({ productIds?, maxRating?, startDate?, endDate?, take })` → `where productId In(productIds)?`, `rating <= maxRating?`(부정=≤2), `createdAt Between?`, `order createdAt DESC`, `take`(상한 50/하한 1). 반환 `{ rating, comment, productId, createdAt }` — **user 관계 제외**, comment는 `scrubText` 통과.
+   - `InquiryService.getInquiriesForAssistant({ productIds?, status?, startDate?, endDate?, take })` → `where productId In(productIds)?`, `status?`(미답변=waiting), `createdAt Between?`, `take`(상한 50/하한 1). 반환 `{ status, title, content, answer, productId, isSecret, createdAt }` — **user/seller 관계 제외**. 비밀 문의(isSecret=true)는 본문/제목/답변 제외, 메타만(D1-(a)).
+2. **카테고리→상품 변환은 디스패처(`AssistantService.executeTool`)가 소유** — 리뷰/문의 서비스는 카테고리 무지. 변환 체인:
+   `categoryName → CategoryService.getCategoryIdsByName()(신규, path LIKE 하위 확장) → categoryIds[] → ProductService.getProductIdsByCategoryIds()(신규, 읽기전용, id만 select) → productIds[]`
+   - (D4) 카테고리는 **하위까지 펼침** — 상품이 리프에 저장돼 부모 정확일치는 0건. 기존 `findBySlug`/private `getCategoryIds`의 path LIKE 패턴 재사용.
+   - 단일 `productId`가 오면 `[productId]`, `categoryName`이 오면 위 체인, 둘 다 없으면 전체(상품 필터 없음). `categoryName` 매칭 0건이면 `{ error }`(환각 방지).
+   - 날짜는 디스패처에서 KST 정규화(`normalizeAuditDate` 방식) 후 ISO로 전달 — 서비스는 날짜 파싱도 모름.
+   - private 헬퍼 `resolveProductIds(args)`로 캡슐화. `CategoryModule`은 이미 `CategoryService`를 export(확인됨).
+3. 모듈 배선: `ReviewModule.exports += ReviewService`, `InquiryModule.exports = [InquiryService]`. `AssistantModule`에 `ReviewModule`·`InquiryModule` import + `CategoryService`/`ReviewService`/`InquiryService` 주입.
+4. 도구 정의 2개(`assistant-tools.ts`): `summarize_reviews{ productId?, categoryName?, maxRating?, startDate?, endDate?, take? }`, `summarize_inquiries{ productId?, categoryName?, status?, startDate?, endDate?, take? }`. `ASSISTANT_TOOLS` 4→6개. 디스패처 case 2개. system 프롬프트: 도구 안내 2줄 + **가드 문구**(지원 범위=상품/카테고리(하위 포함)+기간, 그 외 조건(브랜드/가격대/특정 작성자)은 미지원 안내, 작성자 신원 미조회·연락처 마스킹).
+5. **비식별화(§4-2)**: 텍스트 통째 마스킹 불가 → **작성자 신원(user/seller 미반환)** + 본문 **이메일/전화 스크럽**(`assistant-masking.ts`에 `scrubText` 신설, `maskEmail` 재사용 + 전화 정규식). LlmClient 인터페이스 무변경.
+
+**확정된 결정 (2026-06-16)**
+- (D1) 비밀 문의(isSecret=true): ✅ **(a) 본문 제외·메타만**.
+- (D2) 읽기 전용 메서드 신설 + 서비스 export: ✅ **yes**(getOrderStats 선례 동일).
+- (D3) 5a(텍스트 첨부)만 이번에, 5b(임베딩) 보류: ✅.
+- (D4) 카테고리 필터 하위 확장: ✅ **하위까지 펼침**(path LIKE).
+- (이름→ID 변환 위치): ✅ **디스패처가 변환, 서비스엔 `productIds[]`만 전달**(리뷰/문의 서비스는 카테고리 무지).
+
+### Phase 5c — 구매자 상품 리뷰 자동 요약 (이벤트 기반 무효화 + SWR)  ✅ 구현·e2e 검증 완료(2026-06-16. 콜드→fresh→stale→CAS 4종 실측)
+
+> **선결 상태(2026-06-16, ex-review-frontend 완료)**: 5c가 올라탈 **프론트 리뷰 UI 완성**, 상품 상세 `ReviewSection`에 **AI 요약 블록 자리(seam) 확보**(`AI_REVIEW_SUMMARY_ENABLED=false` 게이트로 미렌더 — 5c 구현 시 켠다), **리뷰 시드로 MIN_REVIEWS=3 충족**(요약 대상 확보), 리뷰 변경 시 집계 재계산하는 `review-event.listener.ts`도 존재(여기에 stale 핸들러만 추가하면 됨). **남은 5c = 백엔드 전부**(`ProductSummaryEntity`/`ProductSummaryService`/`GET /products/:id/review-summary` 신설 + 리스너에 stale UPDATE 편승). 프론트는 `available:false`/stale 뱃지 처리만 추가.
+
+> 5a(관리자 어시스턴트)는 "질문하면 요약"하는 **pull** 방식. 5c는 **구매자 상품 상세 페이지**에 리뷰 요약을 상시 노출하는 **캐시(push)** 방식. LLM 요약을 매 열람마다 만들지 않고 `ProductSummary`에 캐시한 뒤, 리뷰 변경 시 **"낡음"만 표시**하고 다음 열람 때 **백그라운드 재생성**한다. 요약 메커니즘은 5a와 동일한 "단순 RAG". 프론트 리뷰 UI 전체 계획은 [ex-review-frontend.md](./ex-review-frontend.md).
+
+**확정된 결정 (2026-06-16)**
+- 읽기: **stale-while-revalidate** — 낡아도 기존 요약 **즉시 반환**, 낡았으면 **백그라운드 비동기 재생성**(다음 방문자가 최신). 상품 페이지는 LLM을 절대 기다리지 않음. (사용자 원안 "다음 열람 때 재생성"을 채택하되 읽는 사람을 동기 대기시키지 않게 개선.)
+- 전달: **별도 경량 엔드포인트** `GET /v1/products/:id/review-summary`(상품 상세와 분리 지연 로드).
+- 비용 가드(Gemini 무료티어): **상품당 재생성 최소 간격(throttle) + 동시 1건 락(`generating`)**.
+- (P1) 리뷰 **본문만 수정**(별점 불변)은 현재 이벤트 미발행 → ✅ **1차 범위 제외**(본문 편집은 다음 별점변경/리뷰추가 시 반영). `review.updated` 이벤트는 신설하지 않음.
+- (P2) `ProductSummaryService` 위치 → ✅ **ProductModule**(상품 상세 라우트에 붙으므로 가장 자연스러움).
+- (P3) 튜닝값 → ✅ **기본값 유지**: MIN_REVIEWS=3 · throttle=10분 · take=30 · LOCK_TTL=2분.
+- (P4) 프롬프트/모델 변경 시 무효화 → ✅ **`promptVersion` 비교 자동 stale**.
+
+**엔티티 — `ProductSummaryEntity` (products 1:1, 신규 테이블 `product_summaries`)**
+- `productId`(unique FK, @Index) · `summaryText`(text, nullable) · `status` enum `fresh|stale|generating`(default `stale`) · `reviewCountAtGen`(int) · `model`(varchar)·`promptVersion`(int) · `generatedAt`(timestamptz, nullable) · `lockedAt`(timestamptz, nullable — 스턱 락 만료 판단) · BaseModel.
+- ProductEntity에 컬럼 추가 대신 **별도 테이블 분리** — 상품 핵심 row·목록 캐시(핫 경로)를 요약 쓰기로 건드리지 않기 위함. 스키마는 `synchronize` 자동 반영(운영 주의).
+
+**쓰기 경로 (낡음 표시 — LLM 호출 0)**
+- 기존 `review-event.listener.ts`에 핸들러 추가: `review.created`/`review.deleted` 수신 → 해당 productId `ProductSummary.status='stale'` 한 줄 UPDATE(없으면 upsert). 집계 갱신과 같은 이벤트에 편승.
+
+**읽기 경로 (SWR) — `GET /products/:id/review-summary`**
+1. ProductSummary 로드(없으면 콜드=stale, text=null). 2. `reviewCount < MIN_REVIEWS(3)` → `{ available:false }`. 3. `fresh` → 즉시 반환. 4. stale/콜드 → **기존 text 즉시 반환 + 재생성 비동기 트리거(await 안 함)**. 트리거는 비용 가드 통과 시: `(status!=='generating' OR lockedAt 만료)` AND `(generatedAt이 throttle보다 오래됨/콜드)` → **CAS UPDATE**(`SET status='generating',lockedAt=now WHERE status!='generating'`)로 동시 1건만 선점. 5. 응답에 `status` 동봉(프론트 "갱신 중" 뱃지).
+
+**재생성 `regenerate(productId)` (백그라운드)**
+- LLM 비활성이면 no-op. 최근 리뷰 take 30 로드(평점+본문, user 미반환) → `scrubText` → 평점 분포와 함께 `llm.generate()` → 3~4줄 한국어(장점/단점/총평). 성공: text/reviewCountAtGen/model/promptVersion/generatedAt 갱신·`status='fresh'`·lockedAt=null. 실패: `status='stale'` 롤백. 스턱 락: lockedAt이 LOCK_TTL(2분) 경과 시 재트리거 허용.
+
+**모듈/프론트**
+- `ProductSummaryService`(ProductModule). 의존: ProductSummaryRepository, 리뷰 읽기(5a `getReviewsForAssistant` 재사용 가능), `LLM_CLIENT`(전역). `scrubText`는 5a에서 신설한 것을 공용 유틸로 승격해 재사용.
+- 프론트: 상품 상세에서 별도 `useQuery`로 지연 로드. `available:false`면 미표시, stale/generating이면 "요약 갱신 중" 뱃지. (상세는 ex-review-frontend.md §3.)
+
+**유지 원칙**: LLM 키 없으면 no-op · user 미반환 + PII 스크럽 · 상품 핵심 row·목록 캐시 비오염 · take 상한 · **LlmClient 인터페이스 무변경**.
+
+**✅ 구현 결과 (2026-06-16)**
+- [x] `ProductSummaryEntity`(신규 테이블 `product_summaries`, BaseModel) — productId unique @Index + FK(OneToOne, eager 미로드), summaryText/status(`fresh|stale|generating`, default stale)/reviewCountAtGen/model/promptVersion/generatedAt/lockedAt. reviewCountAtGen·promptVersion default 0 → **콜드 INSERT-as-CAS** 가능.
+- [x] `scrubText` 공용 유틸 승격: `backend/src/common/utils/scrub-text.ts`(leaf, 의존 0). review/inquiry 서비스 import 경로 교체(§8-10(C) 역방향 의존 해소). `assistant-masking.ts`는 `maskEmail`/`maskIp`/`maskAuditLogs` 유지(scrubText 정의만 이전). 동작 동일(정규식 §8-10(B) 교정본 보존).
+- [x] `ProductSummaryService`(ProductModule): `getReviewSummary`(SWR 읽기) + `tryAcquireAndRegenerate`(비용 가드 CAS) + `regenerate`(fire-and-forget, getReviewsForAssistant 재사용). throttle 10분·LOCK_TTL 2분·MIN_REVIEWS 3·take 30. **롤백 2종**(§8-11b): 일시 오류(LLM throw/비활성)는 `rollbackStale()`(throttle 미적용 → 다음 방문 재시도), 비-일시 실패(**빈 응답**·**리뷰수 desync**)는 `rollbackStale(throttle=true)`(generatedAt=now → 헛 재생성/LLM 난타 방지).
+- [x] 읽기: `GET /v1/products/:id/review-summary`(public, ProductController). reviewCount<3 → `{available:false}`. fresh & promptVersion 일치 → 즉시. stale/콜드/promptVersion 불일치 → 기존 text 즉시 + 백그라운드 재생성 트리거(await 안 함).
+- [x] 쓰기: `ReviewEventListener`의 `review.created`/`review.deleted`에 `markSummaryStale`(상품 집계 갱신과 동일 이벤트에 편승) 추가. `ReviewModule.forFeature += ProductSummaryEntity`.
+- [x] 모듈 배선: `ProductModule`에 `forFeature[ProductSummaryEntity]` + `imports: ReviewModule` + `ProductSummaryService` provider. **순환 없음**(ReviewModule은 ProductModule 미import — 빌드/부팅 확인). `LLM_CLIENT`는 전역 AiModule.
+- [x] 프론트: `ReviewSection.tsx` `AI_REVIEW_SUMMARY_ENABLED=true` + 별도 `useQuery` 지연 로드. `available:false` 미표시 / `status!=='fresh'` "요약 갱신 중" 뱃지 / fresh 요약 노출. `model/service/query-options`(`productAiSummary`)에 타입·쿼리 추가(평점분포 `productSummary`와 별개).
+- ⚠ **운영 반영**: 마이그레이션 없음(§3) → prod(`synchronize:false`)는 신규 테이블 `product_summaries` **수동 DDL** 필요. 기존 컬럼 변경 없음(신규 테이블뿐)이라 위험 낮음.
+- **(설계 차이 — 채택)** 리스너는 "없으면 upsert"가 아니라 **plain UPDATE**(없으면 0행, no-op). 콜드를 stale과 동일 취급하고 재생성 트리거의 **INSERT-as-CAS가 row를 지연 생성**하므로 핫 경로(리뷰 작성)에 불필요한 INSERT를 붙이지 않는다. 동치이며 더 가벼움.
+
+**e2e 검증 (2026-06-16, 로컬 :4100, gemini-3.1-flash-lite)** — 상세 §8-11.
+- [x] (1) 콜드 GET(P101/P55) → `{status:'generating', summary:null}` + CAS 콜드선점 → regenerate 트리거.
+- [x] (2) 잠시 후 GET → `status:'fresh'` + 실 한국어 요약(장점/단점/총평) + generatedAt 세팅.
+- [x] (3) 시드 buyer 리뷰 1건 생성(API) → `review.created` → 리스너가 `status='stale'` → GET이 **직전 fresh 요약을 즉시 반환**(SWR) + throttle로 재생성 **CAS skip**(낭비 방지). 검증 후 리뷰 삭제(시드 정합 복구).
+- [x] (4) 스로틀 우회 후 6 동시 GET → **CAS acquire 1 + skip 5**(동시 1건만 재생성 선점) 실측.
+
+🎯 시연: 리뷰 여러 개 상품 → "구매자 리뷰 요약: 장점… 단점…" 자동 표시 → 새 부정 리뷰 작성(→stale) → 잠시 후 재방문 시 갱신(첫 재방문은 직전 요약, 그다음이 최신).
 
 **🔧 Phase 6 프롬프트 캐싱 "준비" 메모(이번에 코드 변경 X, 설계 인지만)**
 - 캐싱은 **안정적 prefix**(system 프롬프트 + tool 정의)가 핵심. 현재 `buildSystemPrompt()`에 **오늘 날짜가 섞여** 매일 prefix가 바뀜(하루 안엔 안정 — 캐시 TTL 짧아 실害 적지만), 캐싱 도입 시 **정적부(역할/규칙/도구안내) vs 동적부(날짜) 분리** 고려.
 - tool 정의는 정적이라 캐싱 친화적. 도구가 늘수록(현재 4 → Phase5 후 6개) 정의 토큰이 커져 캐싱 이득 증가.
 - LlmClient 인터페이스에 **usage(입력/출력/캐시적중 토큰) 노출**을 추가하면 Phase 6에서 적중률 측정 가능 — Phase 5 구현 중 자연스럽게 받아둘지 검토.
-- 프로바이더별 캐싱 방식 상이(Gemini context caching vs Claude cache_control breakpoint) → 인터페이스 추상화가 여기서도 유효.
+- 프로바이더별 캐싱 방식 상이(Gemini `CachedContent` 리소스 vs Claude `cache_control` breakpoint, §4-3) → 인터페이스 추상화가 여기서도 유효. **`cache_control`은 Claude 전용 문법**이라 Gemini에선 못 쓴다 — "cache_control을 만든다 = ClaudeClient를 만든다".
 
 ### Phase 6 — 비용 / 캐싱 최적화
-- [ ] system 프롬프트·tool 정의에 prompt caching 적용(프로바이더별 지원 방식 확인 — Gemini/Claude 상이). 응답 usage로 캐시 적중 확인.
-- [ ] 대화 길이 상한 / 오래된 턴 요약. 모델 tier 분기(단순 라우팅은 저가 모델).
+> **진행 방향 확정(2026-06-16)**: **지금은 Gemini 무료티어로** 구현(아래 a~c). 무료티어는 청구서가 없어 헤드라인 $ 절감은 0이므로, 목표는 "메커니즘을 실제로 붙이고 토큰 절감을 **측정**"하는 것. **추후 자금 여유 시 Claude(유료) + `cache_control`로 전환**(d) — `LlmClient` 추상화 덕에 어시스턴트/도구 코드 무변경, `ClaudeClient` 추가 + `LLM_PROVIDER` env 전환만으로 즉시 진짜 $ 절감.
+- [ ] (a) `buildSystemPrompt()`를 **정적 prefix(역할/규칙/도구안내) + 동적 suffix(오늘 날짜) 분리** — 캐시 prefix가 하루 안에서도 안정되게.
+- [ ] (b) `LlmClient`에 **usage(입력/출력/캐시적중 토큰) 노출** 추가 + GeminiClient가 `usageMetadata` 파싱해 흘려보냄. (인터페이스 변경 — Phase 6에선 허용.)
+- [ ] (c) **Gemini 캐싱 실제 적용**: explicit `CachedContent`(system+tools, 최소 토큰 임계치·무료티어 지원 여부 공식 문서 확인 — 추측 금지)로 prefix 캐시, 미지원/임계치 미달이면 implicit(자동) 캐싱으로 폴백하고 usage로 적중만 측정. 키 없음/미지원 시 no-op 폴백.
+- [ ] (d) **(추후, 자금 여유 시) Claude 전환 + `cache_control`**: `ClaudeClient` 신설(같은 `LlmClient` 인터페이스) → `cache_control` breakpoint로 system+tools 캐시 → 측정 가능한 진짜 $ 절감. env 전환만으로 Gemini↔Claude.
+- [ ] (별도 — Phase 6b) 대화 길이 상한 / 오래된 턴 요약(compaction, 현재 MAX_HISTORY=20). 모델 tier 분기(단순 라우팅은 저가 모델). 캐싱과 독립이라 분리.
 
 ### Phase 7 — 평가 (eval)
 - [ ] 대표 질문 셋(golden set) 정의 → 응답 품질/도구 선택 정확도 측정.
@@ -395,15 +478,27 @@ tools: [{
 **백엔드 — 어시스턴트 도메인 (admin 하위)**
 - 컨트롤러(`POST .../chat`, `POST .../stream` SSE, `GET .../conversations/:id/messages` 복원, `@User('sub')` adminUserId): `backend/src/admin/assistant/assistant.controller.ts`
 - 서비스(시스템 프롬프트·멀티턴 **DB 영속화**·도구 디스패처·projection): `backend/src/admin/assistant/assistant.service.ts`
-- 도구 정의(LlmToolDef): `backend/src/admin/assistant/assistant-tools.ts` (`get_sales_summary`, `get_order_stats`, `query_audit_logs`, `get_product_info`)
-- PII 비식별화 헬퍼: `backend/src/admin/assistant/assistant-masking.ts` (`maskEmail`/`maskIp`/`maskAuditLogs`)
+- 도구 정의(LlmToolDef): `backend/src/admin/assistant/assistant-tools.ts` (`get_sales_summary`, `get_order_stats`, `query_audit_logs`, `get_product_info`, **`summarize_reviews`, `summarize_inquiries`** — Phase 5a, 6개)
+- PII 비식별화 헬퍼: `backend/src/admin/assistant/assistant-masking.ts` (`maskEmail`/`maskIp`/`maskAuditLogs` + **`scrubText`** — 자유 텍스트 내 이메일·전화 마스킹, Phase 5a)
 - 대화 영속화 엔티티(BaseModel 상속): `backend/src/admin/assistant/entity/conversation.entity.ts`, `entity/message.entity.ts`
 - DTO: `backend/src/admin/assistant/dto/chat-request.dto.ts`
-- 모듈: `backend/src/admin/assistant/assistant.module.ts` (AuthModule + AdminModule + AuditModule + ProductModule + forFeature[Conversation,Message])
+- 모듈: `backend/src/admin/assistant/assistant.module.ts` (AuthModule + AdminModule + AuditModule + ProductModule + **CategoryModule + ReviewModule + InquiryModule**(Phase 5a) + forFeature[Conversation,Message])
 - 도구 대상 메서드:
   - `backend/src/admin/dashboard/dashboard.service.ts` → `getSalesSummary(start,end)`, `getOrderStats(start,end)` (AdminModule exports)
   - `backend/src/audit/audit.service.ts` → `getAuditLogs(query)` (AuditModule exports) — 결과는 `maskAuditLogs`로 비식별화 후 LLM 전송
   - `backend/src/product/product.service.ts` → `findAllAdmin(query)` (ProductModule exports) — `projectProduct`로 안전필드만
+  - **(Phase 5a) `backend/src/review/review.service.ts` → `getReviewsForAssistant({productIds?,maxRating?,startDate?,endDate?,take})`** — user 관계 제외 + comment `scrubText`. `ReviewModule.exports += ReviewService`.
+  - **(Phase 5a) `backend/src/inquiry/inquiry.service.ts` → `getInquiriesForAssistant({productIds?,status?,startDate?,endDate?,take})`** — user/seller 제외 + 본문 `scrubText`, 비밀 문의(isSecret)는 메타만. `InquiryModule.exports = [InquiryService]`.
+  - **(Phase 5a 변환 체인) `backend/src/category/category.service.ts` → `getCategoryIdsByName(name)`**(path LIKE 하위 확장) + **`backend/src/product/product.service.ts` → `getProductIdsByCategoryIds(ids)`**(읽기전용 id select). 디스패처 private `resolveProductIds(args)`가 categoryName→categoryIds→productIds 변환을 소유(리뷰/문의 서비스는 카테고리 무지). 날짜는 디스패처 `normalizeDateRange()`(= `normalizeAuditDate` KST 정규화 + 유효성 검증)로 정규화하며, 불량 날짜는 `{error}` 반환(§8-10b-(H)). 서비스 `take` 는 상한 50 + **하한 1** 클램프(§8-10b-(G)).
+  - **(Phase 5c 구매자 리뷰 자동 요약)**
+    - 엔티티: `backend/src/product/entity/product-summary.entity.ts` (`ProductSummaryEntity`, 테이블 `product_summaries`, BaseModel).
+    - 서비스: `backend/src/product/product-summary.service.ts` (`ProductSummaryService.getReviewSummary`(SWR 읽기) + private `tryAcquireAndRegenerate`(CAS 비용 가드) + `regenerate`(백그라운드, `ReviewService.getReviewsForAssistant` 재사용)). `LLM_CLIENT`(전역) 주입, `llm.generate()`로 요약.
+    - 엔드포인트: `backend/src/product/product.controller.ts` `getReviewSummary` → `GET /v1/products/:id/review-summary`(public, Throttle 60/분). 응답 DTO `backend/src/product/dto/review-summary-response.dto.ts`.
+    - 쓰기(무효화): `backend/src/review/listeners/review-event.listener.ts` `markSummaryStale`(`review.created`/`review.deleted`에 편승, LLM 0회). `ReviewModule.forFeature += ProductSummaryEntity`.
+    - 모듈: `backend/src/product/product.module.ts` (`forFeature[ProductSummaryEntity]` + `imports: ReviewModule` + `ProductSummaryService`).
+    - 공용 유틸: `backend/src/common/utils/scrub-text.ts` (`scrubText` — assistant-masking에서 승격, review/inquiry/product 공용).
+    - 프론트: `frontend/src/model/review.ts`(`ProductReviewAiSummary`), `frontend/src/service/review.ts`(`getProductReviewAiSummary`), `frontend/src/lib/react-query/review-query-options.ts`(`productAiSummary`), `frontend/src/app/(main)/products/[id]/ReviewSection.tsx`(`AI_REVIEW_SUMMARY_ENABLED=true` + 뱃지).
+  - **(Phase 5a 문의 시드)** `backend/src/seed/inquiry.seed.service.ts` `InquirySeedService.seedInquiries(buyerUserIds, sellerIds)` — `summarize_inquiries` 시연용 소규모 문의(미답변/답변/비밀 혼합, 일부 PII 포함). 실 published 상품 FK + 시드 buyer/seller(현 published 상품은 `seller_id=NULL`이라 시드 셀러로 FK 충족). 멱등=시드 buyer 문의 있으면 skip. `DashboardSeedService`가 리뷰 시드 뒤 호출 + `resetSeedData`에 inquiries 정리(유저 삭제 전, FK). `SeedModule`에 `forFeature[InquiryEntity]` + provider 등록.
 
 **프론트**
 - 채팅 UI(새로고침 복원: localStorage conversationId + 마운트 fetch, "새 대화" 버튼): `frontend/src/app/(admin)/admin/assistant/components/AssistantChat.tsx` + `page.tsx`
@@ -457,6 +552,41 @@ tools: [{
 - **localStorage 접근 미가드**: 시크릿모드/스토리지 차단 시 `getItem/setItem`이 throw → 스트림 루프 catch로 들어가 엉뚱한 에러 표시. → `storage` 안전 래퍼(try/catch, 실패 무시)로 전부 감쌈.
 - 정상 동작 확인(수정 불필요): **계정 전환**(B가 A의 id로 마운트 → 백엔드 소유권 체크가 200 빈 결과 → 폐기 후 새 대화, 누수 없음), **잘못된 id**(ParseIntPipe 400 → null → 유지·자가치유), **XSS**(React 텍스트 이스케이프, dangerouslySetInnerHTML 미사용).
 - (미수정·낮은 우선순위) `getConversationMessages`는 대화 전체 메시지를 무제한 반환 — 초장기 대화 시 페이로드 큼. 현재 대화 짧아 보류(필요 시 최근 N 캡).
+
+### 8-10. ⚠ Phase 5a(단순 RAG) 구현 중 발견·결정 (2026-06-16)
+- **(A) `productIds` 는 undefined(필터 없음) vs `[]`(필터 결과 0건)을 구분해야 한다**: 디스패처 `resolveProductIds`가 categoryName→productIds 변환 시, 카테고리는 존재하나 상품이 0건이면 `[]`를 돌려준다. 서비스가 `if (productIds?.length)`로 검사하면 빈 배열이 falsy → **필터가 빠져 전 상품 리뷰가 반환**되는 정반대 버그가 난다. → 서비스는 `if (productIds !== undefined) where.productId = In(productIds)`로 **정의 여부**만 보고, `In([])`(무매칭)으로 정직하게 0건을 만든다. (categoryName 자체가 0건 매칭이면 `resolveProductIds`가 `{error}` 반환 — 없는 카테고리를 "전체"로 오인하는 환각 방지.)
+- **(B) `scrubText` 국제 전화번호(+82, 선행 0 생략) 누락 — 표준화 검증에서 발견**: 초기 정규식 `(?:\+?82[-.\s]?)?0(?:1[0-9]|…)`은 선행 `0`을 필수로 봐서 실제 국제 표기 `+82 10 9876 5432`(0 생략형)를 놓쳤다. 컴파일 후 샘플(이메일·휴대폰·유선·070·국제·가격·주문번호) 단위 검증으로 잡아 `(?:\+?82[-.\s]?0?|0)(?:1[0-9]|[2-7][0-9]?)…`로 교정. 가격(`1,234,000원`)·주문번호(`ORD-…-A1B2`)·재고(`12000개`)는 형식이 달라 오마스킹되지 않음을 함께 확인. (교훈: 마스킹 정규식은 "잡아야 할 형식"과 "건드리면 안 될 형식"을 모두 샘플로 검증한다.)
+- **(C) 텍스트 스크럽 위치 = 서비스(`getReviewsForAssistant`/`getInquiriesForAssistant`)**: 감사로그(`maskAuditLogs`)는 디스패처에서 가공했지만, 5a는 `ForAssistant` 전용 읽기 메서드라 **메서드 계약 자체를 "LLM 전송 안전 행"**으로 잡았다(user/seller 미반환 + `scrubText` 적용). 그래서 review/inquiry 서비스가 `admin/assistant/assistant-masking`의 `scrubText`를 import — assistant-masking은 의존 없는 leaf 유틸이라 순환 없음. (Phase 5c에서 공용 유틸로 승격 예정.)
+- **(D) e2e 도구결과 PII 부재 직접 확인**: 임시 로그로 실 도구결과를 찍어 키가 `[rating,comment,productId,createdAt]` 뿐임을 관측 후 로그 제거. "코드상 안전"을 "관측된 안전"으로 승격(§8-4 @Exclude 우회 교훈의 실천).
+- **(E) summarize_inquiries 문의 시드 후 실데이터 e2e 완료**: 초기엔 `inquiries` 0건이라 빈 경로만 가능했으나, `InquirySeedService`(미답변 8/답변 5/비밀 2, PII 2건)를 추가해 "미답변 문의 요약" e2e를 통과. **현 published 상품이 `seller_id=NULL`**이라(상품 시드가 셀러 미연결) 문의의 `sellerId`는 시드 셀러로 FK를 충족했다(상품 소유 셀러를 못 씀). 비밀 문의 메타-only(title/content/answer=null)와 본문 전화번호 `***` 스크럽을 임시 로그로 직접 관측 후 제거.
+
+**8-10b. 적대적 엣지케이스 검증 (2026-06-16, 독립 DataSource 로 실측)**
+- **(F) ✅ `In([])` = 0행 확정**: TypeORM 0.3.27 은 `where productId In([])` 를 `WHERE ((0=1))` 로 컴파일 → 0행(전체 반환 아님). (A)의 `!== undefined` 분기가 의도대로 동작함을 실 DB 쿼리 로그로 확인. `undefined` 는 필터 미적용(전체), `[]` 는 0행으로 정확히 갈림.
+- **(G) 🐛→fix 음수 `take` 크래시**: 모델이 `take: -5` 를 보내면 `Math.min(take,50)` 이 음수를 통과시켜 `LIMIT -5` → Postgres `LIMIT must not be negative` 로 도구가 크래시한다(실측). → 두 서비스의 take 를 `Math.max(1, Math.min(take ?? 30, 50))` 로 **하한 1** 추가.
+- **(H) 🐛→fix 잘못된 날짜 `Between` 크래시**: `2026-13-45`(존재하지 않는 월/일, 그러나 `YYYY-MM-DD` 정규식은 통과)나 `지난주` 같은 비-날짜를 모델이 주면 `new Date()` 가 Invalid Date → `Between/MoreThanOrEqual` 에서 `invalid input syntax for type timestamp` 로 턴 전체가 실패한다(실측). → 디스패처에 `normalizeDateRange()` 신설: 정규화 후 `Number.isNaN(new Date().getTime())` 검증, 불량이면 `{error}` 를 모델에 피드백(턴 실패 대신 모델이 재시도/안내). 두 도구 모두 적용.
+- **(I) ✅ 무해 확인**: `smallint <= '2'`(문자열 take/rating) → Postgres 가 암묵 캐스팅하여 정상(크래시 없음). `In([2])` 정상. `take:0` → 0행(정상). 괄호형 전화 `(02)123-4567` 는 스크럽 못 함(미세 갭, 리뷰에 드묾)·status 에 Korean('미답변') 오면 필터 무시되고 전체 반환(모델은 enum 값 사용하도록 도구 설명에 명시됨) — 둘 다 크래시 아님, 현 범위 허용.
+- **(참고) Phase 4 latent**: `query_audit_logs`/`get_product_info` 도 같은 `normalizeAuditDate`·하한 없는 take 패턴 → 동일 음수 take/불량 날짜 취약. 이번엔 5a 도구만 수정. 차후 정리 권고.
+
+### 8-11. ⚠ Phase 5c(구매자 리뷰 자동 요약, SWR) 구현 중 발견·결정 (2026-06-16)
+- **(A) 콜드 상품은 락 선점에 row 가 필요 — INSERT-as-CAS 로 해결**: 요약 row 가 없는 콜드 상품은 `UPDATE ... WHERE` CAS 가 0행이라 재생성을 트리거할 수 없다. → 콜드는 `INSERT(status='generating')` 로 락을 선점하고, **unique(productId) 제약**이 동시 콜드 요청 중 1건만 통과시키게 했다(`QueryFailedError`=경쟁 패배=no-op). 기존 row 는 CAS UPDATE. 덕분에 리스너의 stale 표시는 **plain UPDATE**(없으면 0행)면 충분 — upsert 불필요(콜드≡stale, row 는 트리거가 지연 생성). 6 동시 GET 실측: **acquire 1 / skip 5**.
+- **(B) stale + throttle 내 = 재생성 보류(의도)**: 리뷰 생성 직후(생성된 지 수십초) 들어온 GET 은 status='stale' 이지만 generatedAt 이 throttle(10분) 내라 CAS 둘째 조건이 막아 **재생성하지 않고 직전 요약만 서빙**한다. 무료티어 호출 낭비 방지. 10분 경과 후 다음 방문자가 재생성. 실측으로 "create→stale→GET=직전 요약+CAS skip" 확인.
+- **(C) `LlmClient` 는 인터페이스 — 데코레이트 시그니처엔 `import type` 필수**: `@Inject(LLM_CLIENT) private llm: LlmClient` 에서 `isolatedModules`+`emitDecoratorMetadata` 켜진 빌드는 TS1272(런타임 메타데이터로 못 emit) 를 낸다. → `import type { LlmClient }` 로 교체(값은 `LLM_CLIENT` 토큰으로 주입되므로 타입만 필요). assistant.service 도 동일 패턴.
+- **(D) `.env` 로딩은 cwd 의존**: `ConfigModule.forRoot({envFilePath:'.env'})` 는 cwd 상대. `node dist/main.js` 를 repo 루트에서 실행하면 backend/.env 를 못 읽어 GeminiClient 가 no-op(키 미설정 경고) → 재생성이 stale 롤백만 한다. **backend/ 디렉터리에서 실행**(또는 nx serve:node)해야 키가 로딩됨. (운영/도커는 환경변수 주입이라 무관.)
+- **(E) PII 재확인(§8-4 실천)**: regenerate 가 LLM 에 넣는 데이터는 전부 `getReviewsForAssistant` 경유 → 키가 `[rating,comment,productId,createdAt]` 뿐(user/seller·은행정보 raw 없음), comment 는 `scrubText` 적용. 별도 가공 불필요. 임시 로그로 생성 텍스트(장점/단점/총평 한국어)·status 전이 관측 후 로그 제거.
+- **(F) 모듈 순환 점검**: `ProductModule → ReviewModule`(ReviewService 재사용) 단방향. ReviewModule 은 ProductModule 을 import 하지 않고 `ProductSummaryEntity` 를 forFeature 로 **엔티티 등록만** 함(리스너 repo 접근) → 순환 없음. 빌드·부팅 정상 확인.
+
+**8-11b. 적대적 엣지케이스 검증 (2026-06-16, 로컬 :4100 실측 8종 + 보강 2건)**
+정상 e2e(§위 4종) 후 경계·이상 입력을 실요청으로 점검 — 모두 크래시/500 없음, 의도대로 동작.
+- **(E1) ✅ 존재하지 않는 상품**(`GET /products/99999999/review-summary`) → `{available:false}`(HTTP 200). row 미생성·트리거 없음(reviewCount 0).
+- **(E2) ✅ `reviewCount < MIN_REVIEWS`** → `{available:false}`. **row 미생성 + LLM 호출 0**(가용성 검사가 row 로드·트리거보다 먼저). ⚠ 시드는 published 상품에 3~8건을 줘 1~2건 상품이 없으므로 reviewCount=0 상품으로 검증.
+- **(E3) ✅ 경계값 `reviewCount = 3`(=MIN_REVIEWS)** → 콜드→`generating`→`fresh` 요약 정상.
+- **(E4) ✅ 숫자 아닌 id**(`/products/abc/...`) → `400`(ParseIntPipe, "numeric string is expected").
+- **(E5) ✅ 스턱 락 회수**: `status='generating'` + `lockedAt` 3분 전(>LOCK_TTL 2분) → GET 이 CAS 첫 조건(`lockedAt < now-2m`)으로 **재선점** → 재생성 → `fresh` + generatedAt 갱신.
+- **(E6) ✅ 락 점유 중·미만료**: `lockedAt=now()` → CAS 선점 **거부**(재생성 0), 직전 요약 즉시 반환, row 불변. 동시 재생성 1건 보장 재확인.
+- **(E7) 🐛→fix phantom reviewCount(집계 desync)**: `products.reviewCount≥3` 인데 실제 리뷰 `<3` 이면, regenerate 가 `MIN_REVIEWS` 가드로 **`llm.generate` 이전에** rollback(크래시·LLM 호출 0). 단 초기 구현은 `generatedAt` 을 안 건드려(콜드 유지) **매 방문마다 헛 재생성**(DB 조회+CAS 왕복)이 반복됐다. → **rollback 에 throttle 옵션 추가**(`generatedAt=now()`)로 10분 억제. 실측: 1st GET 후 `stale`+generatedAt 세팅, 2nd GET 은 throttle 로 재트리거 없음.
+- **(E8) ✅ 콜드 동시 8 요청(unique race)**: 전부 `200`, `product_summaries` row 정확히 **1개**. 패배한 INSERT 는 `QueryFailedError` 로 흡수(`return false`) — 500/unhandled rejection 없음. **INSERT-as-CAS 가 동시 콜드 1건만 통과**시킴(§8-11(A)) 실증.
+- **(보강 #1) 🐛→fix 빈 LLM 응답**: `generate()` 가 빈/공백 문자열을 돌려주면(안전필터 차단 등) `status='fresh'`+`summaryText=''` 로 캐시돼 **빈 요약이 영구 고정**(fresh 라 재생성 안 됨, 프론트는 빈문자열 falsy → "준비 중" 무한 표시). → regenerate 가 `!text.trim()` 이면 **실패로 간주해 throttle rollback**(같은 프롬프트로 LLM 난타 방지, 다음 방문 재시도). (코드 검증 — 강제하려면 LLM 모킹 필요. throttle rollback 경로는 E7 로 실측됨.)
+- **(참고) 무해/설계상 허용**: ① 엔드포인트에 **상품 status/approval 게이트 없음**(hidden/draft 도 요약 반환) — 단 리뷰 보유 상품은 사실상 published 뿐이고 리뷰 텍스트는 PII 없는 공개 데이터라 현 범위 허용. ② 리뷰 삭제로 reviewCount<3 강하 시 stale row 가 남지만 `available:false` 로 미노출(리뷰 복귀 시 재생성). ③ 동시 부하에서 node-postgres `DeprecationWarning`(client.query 중복) 관측 — 5c 코드의 동기 await 경로/풀 사용과 무관한 일반 경고, 기능 영향 없음.
 
 ### 8-9. (예약) 남은 항목
 - ⚠ 프롬프트 인젝션 방어 강화.

@@ -60,6 +60,27 @@ export class CategoryService {
     return { category, descendants: children };
   }
 
+  /**
+   * (AI 어시스턴트 5a) 카테고리 이름 → 자신 + 모든 하위 카테고리 ID (path LIKE 하위 확장).
+   *
+   * - 상품은 리프 카테고리에 저장되므로, 부모 이름으로 거르려면 하위까지 펼쳐야 매칭된다(D4).
+   * - 이름 정확 일치(동명 카테고리가 여럿이면 각각의 서브트리를 합집합).
+   * - 매칭 0건이면 빈 배열 → 호출 측(디스패처)이 환각 방지용 에러로 처리한다.
+   */
+  async getCategoryIdsByName(name: string): Promise<number[]> {
+    const matched = await this.categoryRepository.find({ where: { name } });
+    if (matched.length === 0) return [];
+
+    const ids = new Set<number>();
+    for (const cat of matched) {
+      const subtree = await this.categoryRepository.find({
+        where: { path: Like(`${cat.path}%`) },
+      });
+      for (const c of subtree) ids.add(c.id);
+    }
+    return [...ids];
+  }
+
   // ─── 어드민 API ────────────────────────────────────────
 
   /**

@@ -41,6 +41,13 @@ export class ReviewController {
     return this.reviewService.create(userId, dto);
   }
 
+  // 공개 엔드포인트: 상품별 평점 분포 집계 (상품 상세 분포 막대용)
+  @Get('product/:productId/summary')
+  @Throttle({ default: { ttl: 60000, limit: 60 } })
+  getProductSummary(@Param('productId', ParseIntPipe) productId: number) {
+    return this.reviewService.getProductReviewSummary(productId);
+  }
+
   // 공개 엔드포인트: 상품별 리뷰 목록
   @Get('product/:productId')
   @Throttle({ default: { ttl: 60000, limit: 60 } })

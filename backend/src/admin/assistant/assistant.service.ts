@@ -15,6 +15,9 @@ import type {
 import { DashboardService } from '../dashboard/dashboard.service';
 import { AuditService } from '../../audit/audit.service';
 import { ProductService } from '../../product/product.service';
+import { CategoryService } from '../../category/category.service';
+import { ReviewService } from '../../review/review.service';
+import { InquiryService } from '../../inquiry/inquiry.service';
 import { AssistantConversationEntity } from './entity/conversation.entity';
 import { AssistantMessageEntity } from './entity/message.entity';
 import { ASSISTANT_TOOLS } from './assistant-tools';
@@ -53,6 +56,9 @@ export class AssistantService {
     private readonly dashboardService: DashboardService,
     private readonly auditService: AuditService,
     private readonly productService: ProductService,
+    private readonly categoryService: CategoryService,
+    private readonly reviewService: ReviewService,
+    private readonly inquiryService: InquiryService,
     @InjectRepository(AssistantConversationEntity)
     private readonly conversationRepo: Repository<AssistantConversationEntity>,
     @InjectRepository(AssistantMessageEntity)
@@ -76,8 +82,12 @@ export class AssistantService {
       '- 주문 상태별 건수·주문 통계: get_order_stats',
       '- 로그인 실패/보안 이벤트 등 감사 로그 검색·분석: query_audit_logs',
       '- 상품 정보·재고·승인 상태 조회: get_product_info',
+      '- 고객 리뷰 텍스트 요약·분석(부정 리뷰 등): summarize_reviews',
+      '- 고객 문의(Q&A) 요약·분석(미답변 등): summarize_inquiries',
       '도구가 돌려준 수치만 사용한다. 금액은 원화로 천 단위 구분(예: 1,234,000원)과 함께 표시한다.',
       '감사 로그 결과의 이메일·IP가 마스킹(***)되어 있어도 정상이며, 마스킹된 값을 그대로 보여준다.',
+      '리뷰·문의 요약(summarize_reviews/summarize_inquiries)은 상품(productId) 또는 카테고리(categoryName, 하위 포함)와 평점·상태·기간으로만 좁힐 수 있다. 브랜드·가격대·특정 작성자 등 다른 조건을 요청받으면 지원하지 않음을 알리고 가능한 범위로 안내한다.',
+      '리뷰·문의의 작성자 신원은 조회·추정하지 않으며, 본문에 남아 마스킹된 연락처(***)는 그대로 둔다. 도구가 빈 결과를 주면 "해당 조건의 데이터가 없다"고 사실대로 답하고 내용을 지어내지 않는다.',
     ].join('\n');
   }
 
@@ -102,6 +112,28 @@ export class AssistantService {
       return isEnd ? `${value}T23:59:59.999+09:00` : `${value}T00:00:00.000+09:00`;
     }
     return value;
+  }
+
+  /**
+   * 도구 인자 날짜를 KST 정규화 + 유효성 검증한다.
+   * - 모델이 'YYYY-MM-DD' 형식이지만 실재하지 않는 날짜(예: 2026-13-45)나 '지난주' 같은 비-날짜를
+   *   보내면 new Date() 가 Invalid Date 가 되고, 그대로 Between/MoreThanOrEqual 에 넣으면
+   *   "invalid input syntax for type timestamp" 로 도구 호출 전체가 실패한다.
+   *   → 여기서 미리 걸러 모델에 {error} 피드백을 준다(턴 실패 대신 모델이 재시도/안내 가능).
+   */
+  private normalizeDateRange(
+    startDate: string | undefined,
+    endDate: string | undefined,
+  ): { start?: string; end?: string; error?: string } {
+    const start = this.normalizeAuditDate(startDate, false);
+    const end = this.normalizeAuditDate(endDate, true);
+    if (start && Number.isNaN(new Date(start).getTime())) {
+      return { error: 'startDate 형식이 올바르지 않습니다. YYYY-MM-DD(실재하는 날짜)로 지정하세요.' };
+    }
+    if (end && Number.isNaN(new Date(end).getTime())) {
+      return { error: 'endDate 형식이 올바르지 않습니다. YYYY-MM-DD(실재하는 날짜)로 지정하세요.' };
+    }
+    return { start, end };
   }
 
   /**
@@ -169,9 +201,89 @@ export class AssistantService {
         );
       }
 
+      case 'summarize_reviews': {
+        const args = call.args as {
+          productId?: number;
+          categoryName?: string;
+          maxRating?: number;
+          startDate?: string;
+          endDate?: string;
+          take?: number;
+        };
+        const resolved = await this.resolveProductIds(args);
+        if (resolved.error) return { error: resolved.error };
+        const range = this.normalizeDateRange(args.startDate, args.endDate);
+        if (range.error) return { error: range.error };
+        const reviews = await this.reviewService.getReviewsForAssistant({
+          productIds: resolved.productIds,
+          maxRating: args.maxRating,
+          startDate: range.start,
+          endDate: range.end,
+          take: args.take,
+        });
+        return { count: reviews.length, reviews };
+      }
+
+      case 'summarize_inquiries': {
+        const args = call.args as {
+          productId?: number;
+          categoryName?: string;
+          status?: string;
+          startDate?: string;
+          endDate?: string;
+          take?: number;
+        };
+        const resolved = await this.resolveProductIds(args);
+        if (resolved.error) return { error: resolved.error };
+        const range = this.normalizeDateRange(args.startDate, args.endDate);
+        if (range.error) return { error: range.error };
+        const inquiries = await this.inquiryService.getInquiriesForAssistant({
+          productIds: resolved.productIds,
+          status: args.status,
+          startDate: range.start,
+          endDate: range.end,
+          take: args.take,
+        });
+        return { count: inquiries.length, inquiries };
+      }
+
       default:
         return { error: `알 수 없는 도구: ${call.name}` };
     }
+  }
+
+  /**
+   * (Phase 5a) summarize_reviews/inquiries 의 상품 필터를 productIds[] 로 해석한다.
+   * 카테고리→상품 변환은 디스패처가 소유 — 리뷰/문의 서비스는 카테고리를 모른다.
+   *
+   * 규칙:
+   * - productId 가 오면 [productId] (categoryName 보다 우선).
+   * - categoryName 만 오면: 이름→하위 포함 카테고리ID(getCategoryIdsByName) → 상품ID(getProductIdsByCategoryIds).
+   *   - 카테고리 이름 매칭 0건 → { error }(환각 방지: 없는 카테고리를 "전체"로 오인하지 않게).
+   *   - 카테고리는 있으나 상품 0건 → { productIds: [] }(빈 결과로 정직하게 응답하게).
+   * - 둘 다 없으면 { }(productIds 미지정 = 상품 필터 없음 = 전체).
+   */
+  private async resolveProductIds(args: {
+    productId?: number;
+    categoryName?: string;
+  }): Promise<{ productIds?: number[]; error?: string }> {
+    if (args.productId != null) return { productIds: [args.productId] };
+
+    if (args.categoryName) {
+      const categoryIds = await this.categoryService.getCategoryIdsByName(
+        args.categoryName,
+      );
+      if (categoryIds.length === 0) {
+        return {
+          error: `'${args.categoryName}' 카테고리를 찾을 수 없습니다. 정확한 카테고리 이름인지 확인하세요.`,
+        };
+      }
+      const productIds =
+        await this.productService.getProductIdsByCategoryIds(categoryIds);
+      return { productIds };
+    }
+
+    return {};
   }
 
   /**

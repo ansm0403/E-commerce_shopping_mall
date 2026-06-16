@@ -5,9 +5,16 @@ import { useParams, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { orderQueryOptions } from '@/lib/react-query/order-query-options';
+import { reviewQueryOptions } from '@/lib/react-query/review-query-options';
 import { useCancelOrder, useConfirmOrder, useCancelPayment } from '@/hooks/useOrder';
+import { useCreateReview, useUpdateReview } from '@/hooks/useReview';
 import { Modal, ModalFooter } from '@/components/common/Modal';
-import { OrderResponse, OrderStatus } from '@/model/order';
+import ReviewForm from '@/components/review/ReviewForm';
+import { OrderResponse, OrderStatus, OrderItemResponse } from '@/model/order';
+import { Review, PaginatedReviews } from '@/model/review';
+
+// 리뷰 수정 가능 기간(일) — 백엔드가 강제(30일). 프론트는 버튼 비활성+안내로 미러.
+const REVIEW_EDIT_WINDOW_DAYS = 30;
 
 // ─── 상태 표시 설정 ──────────────────────────────────────────────────────────
 
@@ -197,34 +204,63 @@ function StatusCard({ order }: { order: OrderResponse }) {
 }
 
 function ItemsCard({ order }: { order: OrderResponse }) {
+  const isCompleted = order.status === 'completed';
+
+  // 구매확정 주문에서만 내 리뷰를 조회해 항목별 작성/수정 상태를 판별.
+  const myReviewsQuery = useQuery({
+    ...reviewQueryOptions.myReviews({ page: 1, take: 100 }),
+    enabled: isCompleted,
+  });
+  const myReviews =
+    (myReviewsQuery.data?.data as PaginatedReviews | undefined)?.data ?? [];
+
+  // (orderId, productId) → 이 주문에 대해 작성한 리뷰
+  const reviewByProductId = new Map<number, Review>();
+  for (const r of myReviews) {
+    if (r.orderId === order.id) reviewByProductId.set(r.productId, r);
+  }
+
   return (
     <section className="bg-white rounded-xl border border-secondary-200 p-5">
       <h2 className="text-sm font-bold text-secondary-900 mb-3">주문 상품</h2>
       <div className="divide-y divide-secondary-100">
         {order.items.map((item) => (
-          <div key={item.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
-            {item.productImageUrl ? (
-              <img
-                src={item.productImageUrl}
-                alt={item.productName}
-                className="w-12 h-12 rounded-lg object-cover shrink-0"
-              />
-            ) : (
-              <div className="w-12 h-12 rounded-lg bg-primary-100 flex items-center justify-center shrink-0">
-                <span className="text-primary-600 font-bold text-base">
-                  {item.productName.charAt(0)}
-                </span>
+          <div key={item.id} className="py-3 first:pt-0 last:pb-0">
+            <div className="flex items-center gap-3">
+              {item.productImageUrl ? (
+                <img
+                  src={item.productImageUrl}
+                  alt={item.productName}
+                  className="w-12 h-12 rounded-lg object-cover shrink-0"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-lg bg-primary-100 flex items-center justify-center shrink-0">
+                  <span className="text-primary-600 font-bold text-base">
+                    {item.productName.charAt(0)}
+                  </span>
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-secondary-900 truncate">{item.productName}</p>
+                <p className="text-xs text-secondary-500">
+                  {Number(item.productPrice).toLocaleString()}원 × {item.quantity}개
+                </p>
               </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-secondary-900 truncate">{item.productName}</p>
-              <p className="text-xs text-secondary-500">
-                {Number(item.productPrice).toLocaleString()}원 × {item.quantity}개
+              <p className="text-sm font-bold text-secondary-900 shrink-0">
+                {Number(item.subtotal).toLocaleString()}원
               </p>
             </div>
-            <p className="text-sm font-bold text-secondary-900 shrink-0">
-              {Number(item.subtotal).toLocaleString()}원
-            </p>
+
+            {/* 구매확정 항목별 리뷰 작성/수정 진입 */}
+            {isCompleted && (
+              <div className="mt-2 flex justify-end">
+                <ItemReviewAction
+                  order={order}
+                  item={item}
+                  existingReview={reviewByProductId.get(item.productId)}
+                />
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -235,6 +271,108 @@ function ItemsCard({ order }: { order: OrderResponse }) {
         </span>
       </div>
     </section>
+  );
+}
+
+// ─── 항목별 리뷰 작성/수정 버튼 + 모달 ───────────────────────────────────────
+
+function ItemReviewAction({
+  order,
+  item,
+  existingReview,
+}: {
+  order: OrderResponse;
+  item: OrderItemResponse;
+  existingReview?: Review;
+}) {
+  const [open, setOpen] = useState(false);
+  const createReview = useCreateReview();
+  const updateReview = useUpdateReview();
+
+  const isEdit = !!existingReview;
+
+  // 30일 수정 제한(백엔드 강제) — 프론트도 버튼 비활성+안내
+  const daysSince = existingReview
+    ? (Date.now() - new Date(existingReview.createdAt).getTime()) / 86_400_000
+    : 0;
+  const editLocked = isEdit && daysSince > REVIEW_EDIT_WINDOW_DAYS;
+
+  const handleSubmit = async (values: { rating: number; comment: string }) => {
+    try {
+      if (isEdit) {
+        await updateReview.mutateAsync({
+          id: existingReview!.id,
+          body: { rating: values.rating, comment: values.comment },
+        });
+      } else {
+        await createReview.mutateAsync({
+          orderId: order.id,
+          productId: item.productId,
+          rating: values.rating,
+          comment: values.comment,
+          imageUrls: [],
+        });
+      }
+      setOpen(false);
+    } catch {
+      // onError 핸들러(useReview)에서 alert 처리됨
+    }
+  };
+
+  return (
+    <>
+      {editLocked ? (
+        <span
+          className="text-xs text-secondary-400"
+          title="리뷰 작성 후 30일이 지나 수정할 수 없습니다."
+        >
+          작성한 리뷰 (수정 기간 만료)
+        </span>
+      ) : (
+        <button
+          onClick={() => setOpen(true)}
+          className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${
+            isEdit
+              ? 'border-secondary-300 text-secondary-600 hover:bg-secondary-50'
+              : 'border-primary-300 text-primary-600 hover:bg-primary-50'
+          }`}
+        >
+          {isEdit ? '리뷰 수정' : '리뷰 작성'}
+        </button>
+      )}
+
+      <Modal
+        isOpen={open}
+        onClose={() => setOpen(false)}
+        title={isEdit ? '리뷰 수정' : '리뷰 작성'}
+        size="md"
+      >
+        <div className="mb-4 flex items-center gap-3">
+          {item.productImageUrl ? (
+            <img
+              src={item.productImageUrl}
+              alt={item.productName}
+              className="w-12 h-12 rounded-lg object-cover shrink-0"
+            />
+          ) : (
+            <div className="w-12 h-12 rounded-lg bg-primary-100 flex items-center justify-center shrink-0">
+              <span className="text-primary-600 font-bold">
+                {item.productName.charAt(0)}
+              </span>
+            </div>
+          )}
+          <p className="text-sm font-semibold text-secondary-900">{item.productName}</p>
+        </div>
+        <ReviewForm
+          initialRating={existingReview?.rating ?? 5}
+          initialComment={existingReview?.comment ?? ''}
+          submitLabel={isEdit ? '수정' : '등록'}
+          isPending={createReview.isPending || updateReview.isPending}
+          onSubmit={handleSubmit}
+          onCancel={() => setOpen(false)}
+        />
+      </Modal>
+    </>
   );
 }
 

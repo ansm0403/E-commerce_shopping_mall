@@ -33,6 +33,12 @@ function looksLikeEmail(v: unknown): v is string {
 }
 
 /**
+ * 자유 텍스트(리뷰/문의 본문)의 연락처 PII 스크럽은 공용 leaf 유틸로 승격됨:
+ * `src/common/utils/scrub-text.ts` 의 `scrubText`. (Phase 5c — 도메인 서비스의 admin/assistant
+ * 역방향 의존 해소 + product 요약에서도 재사용.)
+ */
+
+/**
  * metadata(자유형 JSON)를 선택적으로 비식별화한다.
  * - 통째 드롭하면 분석에 중요한 비-PII 진단정보(reason='invalid_password'/'user_not_found',
  *   count, orderNumbers 등)까지 잃어 모델이 원인을 "추측"하게 된다 → 키 단위로 처리.

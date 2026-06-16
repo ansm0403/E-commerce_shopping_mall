@@ -29,7 +29,11 @@
 
 ## 계획 외 삽입 — AI 통합 (2026-06-15)
 
-- [ex-ai-assistant.md](./ex-ai-assistant.md) — **관리자 AI 어시스턴트(사내 데이터 + LLM 연동).** 관리자가 자연어로 사내 데이터를 질의하면 AI가 **tool use(function calling)** 로 기존 NestJS 서비스를 호출해 실 DB로 답하는 챗봇. 채용 공고의 "사내 데이터와 LLM 연동" 핵심 역량을 실데이터로 증명하는 트랙이라 시퀀스 밖에서 당겨온다. **MVP(Phase 0~3) 완료**: 프로바이더 비종속 `LlmClient`(현재 Gemini 무료티어 `gemini-3.1-flash-lite`, 추후 Claude) + SSE-over-POST 스트리밍 + 멀티턴(인메모리) + `get_sales_summary` 도구(→ `DashboardService`). 트러블슈팅 핵심: Gemini 3.x function calling의 `thought_signature` 보존, thinking 모델의 스트리밍 체감. 같은 `ex-` 프리픽스. **남음**: Phase 2.5 대화 DB 영속화 / Phase 4 도구 확장 / Phase 5 RAG.
+- [ex-ai-assistant.md](./ex-ai-assistant.md) — **관리자 AI 어시스턴트(사내 데이터 + LLM 연동).** 관리자가 자연어로 사내 데이터를 질의하면 AI가 **tool use(function calling)** 로 기존 NestJS 서비스를 호출해 실 DB로 답하는 챗봇. 채용 공고의 "사내 데이터와 LLM 연동" 핵심 역량을 실데이터로 증명하는 트랙이라 시퀀스 밖에서 당겨온다. **MVP(Phase 0~3) 완료**: 프로바이더 비종속 `LlmClient`(현재 Gemini 무료티어 `gemini-3.1-flash-lite`, 추후 Claude) + SSE-over-POST 스트리밍 + 멀티턴(인메모리) + `get_sales_summary` 도구(→ `DashboardService`). 트러블슈팅 핵심: Gemini 3.x function calling의 `thought_signature` 보존, thinking 모델의 스트리밍 체감. 같은 `ex-` 프리픽스. **진행**: Phase 2.5(대화 DB 영속화)·Phase 4(도구 3종)·**Phase 5a RAG**(`summarize_reviews`/`summarize_inquiries` — 상품/카테고리(하위)·평점·상태·기간 필터, 작성자 미반환 + `scrubText` PII 스크럽, 문의 시드 + 양쪽 실데이터 e2e) 완료(2026-06-16). 5b(임베딩/pgvector)는 보류(D3). **Phase 5c(구매자 상품 리뷰 자동 요약, SWR 캐시) 완료(2026-06-16)**: `ProductSummaryEntity`(테이블 `product_summaries`)/`ProductSummaryService`(ProductModule) + public `GET /v1/products/:id/review-summary` + 리스너 stale 편승. 읽기는 SWR(낡아도 즉시 반환 + 백그라운드 재생성, 상품 페이지는 LLM 비동기 대기 안 함), 비용 가드(throttle 10분 + 동시 1건 CAS 락, 콜드는 INSERT-as-CAS), `scrubText` 공용 유틸 승격. 콜드→fresh→stale→CAS 4종 e2e 실측. **다음**: Phase 6(프롬프트 캐싱).
+
+## 계획 외 삽입 — 리뷰 프론트 (2026-06-16)
+
+- [ex-review-frontend.md](./ex-review-frontend.md) — **구매자 리뷰 기능 프론트 구현 + 지원 백엔드 보강.** 백엔드 `ReviewService`는 완성됐으나 프론트 리뷰 로직·UI가 전무(상품 상세는 평점분포 하드코딩·목록 정적 플레이스홀더, `my/reviews`는 stub)인 상태를 실기능으로 채운다. 핵심: **(1) 평점 분포 집계 엔드포인트 신설**, **(2) 목 리뷰 시드(전 상품 커버리지, 합성 orderId) + 시드 주문 `999999`→실제 productId 교체(쓰기 흐름 시연)**, **(3) 프론트 3면**(상품상세 리뷰 탭·주문상세 작성 진입·`my/reviews`). v1은 텍스트+별점만(이미지 후속). [ex-ai-assistant.md](./ex-ai-assistant.md) Phase 5c(AI 요약)와 연계. 같은 `ex-` 프리픽스.
 
 ## 우선순위 / 단계
 
