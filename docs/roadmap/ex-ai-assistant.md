@@ -429,18 +429,47 @@ tools: [{
 - LlmClient 인터페이스에 **usage(입력/출력/캐시적중 토큰) 노출**을 추가하면 Phase 6에서 적중률 측정 가능 — Phase 5 구현 중 자연스럽게 받아둘지 검토.
 - 프로바이더별 캐싱 방식 상이(Gemini `CachedContent` 리소스 vs Claude `cache_control` breakpoint, §4-3) → 인터페이스 추상화가 여기서도 유효. **`cache_control`은 Claude 전용 문법**이라 Gemini에선 못 쓴다 — "cache_control을 만든다 = ClaudeClient를 만든다".
 
-### Phase 6 — 비용 / 캐싱 최적화
+### Phase 6 — 비용 / 캐싱 최적화  ✅ a·b 완료 / c=implicit 측정 완료(explicit 무료티어 불가→(d) 이월) (2026-06-16)
 > **진행 방향 확정(2026-06-16)**: **지금은 Gemini 무료티어로** 구현(아래 a~c). 무료티어는 청구서가 없어 헤드라인 $ 절감은 0이므로, 목표는 "메커니즘을 실제로 붙이고 토큰 절감을 **측정**"하는 것. **추후 자금 여유 시 Claude(유료) + `cache_control`로 전환**(d) — `LlmClient` 추상화 덕에 어시스턴트/도구 코드 무변경, `ClaudeClient` 추가 + `LLM_PROVIDER` env 전환만으로 즉시 진짜 $ 절감.
-- [ ] (a) `buildSystemPrompt()`를 **정적 prefix(역할/규칙/도구안내) + 동적 suffix(오늘 날짜) 분리** — 캐시 prefix가 하루 안에서도 안정되게.
-- [ ] (b) `LlmClient`에 **usage(입력/출력/캐시적중 토큰) 노출** 추가 + GeminiClient가 `usageMetadata` 파싱해 흘려보냄. (인터페이스 변경 — Phase 6에선 허용.)
-- [ ] (c) **Gemini 캐싱 실제 적용**: explicit `CachedContent`(system+tools, 최소 토큰 임계치·무료티어 지원 여부 공식 문서 확인 — 추측 금지)로 prefix 캐시, 미지원/임계치 미달이면 implicit(자동) 캐싱으로 폴백하고 usage로 적중만 측정. 키 없음/미지원 시 no-op 폴백.
-- [ ] (d) **(추후, 자금 여유 시) Claude 전환 + `cache_control`**: `ClaudeClient` 신설(같은 `LlmClient` 인터페이스) → `cache_control` breakpoint로 system+tools 캐시 → 측정 가능한 진짜 $ 절감. env 전환만으로 Gemini↔Claude.
+>
+> **⚠ 가설→측정→정정 흐름은 §8-12 참조(이 Phase의 핵심 산출물)**: 한 줄 결론만 — explicit `CachedContent`는 **무료티어에서 불가**하되 사유는 "크기/미지원"이 아니라 **무료티어 캐시 storage 쿼터=0**(실측 정정). implicit도 현 prefix에서 미적중. → (c)는 "explicit 캐시 생성"이 아니라 **"implicit 측정 + 절감 추정"**으로 실현, 진짜 $ 절감은 (d) Claude 전환에서.
+- [x] (a) `buildSystemPrompt()`를 **정적 prefix(역할/규칙/도구안내) + 동적 suffix(오늘 날짜) 분리** — `LlmSystemPrompt {static, dynamic?}` 타입 신설. 날짜를 system **중간→suffix**로 밀어 정적부가 byte-identical. GeminiClient는 `composeSystem`으로 join(implicit), 추후 ClaudeClient는 static 직후 `cache_control` breakpoint.
+- [x] (b) `LlmClient`에 **usage 노출**: `LlmUsage {inputTokens, outputTokens, cachedTokens, thoughtsTokens?, totalTokens?}` + `LlmStreamEvent`에 `{type:'usage'}`(done 직전). GeminiClient가 `usageMetadata`(promptTokenCount/cachedContentTokenCount 등) 파싱, `generateWithTools`는 **라운드별 합산**+라운드 debug 로그. `AssistantService.streamChat`이 `[usage]` 로그로 적중률 관측(프론트엔 미전달 — SSE 와이어 무변경). 비스트림 `generate()`는 string 반환 유지(5c 캐싱 제외, D3).
+- [x] (c) **Gemini 캐싱**: implicit는 코드로 켜는 것 없음(a+b가 곧 최적화) — **실측으로 적중/미적중 관측**(현 flash-lite, prefix 2,316토큰=미적중). explicit는 **`GEMINI_EXPLICIT_CACHE='true'` 스캐폴드(기본 off)**: `ai.caches.create` 시도→불가(무료티어 storage 쿼터=0)·키없음 시 catch→no-op→implicit 경로. 추후 빌링/지원모델 전환 시 env 한 줄로 활성(코드 무변경). thoughtSignature·SSE·tool 루프 불변.
+- [ ] (d) **(추후, 자금 여유 시) Claude 전환 + `cache_control`**: `ClaudeClient` 신설(같은 `LlmClient` 인터페이스) → `cache_control` breakpoint로 system+tools 캐시 → 측정 가능한 진짜 $ 절감. env 전환만으로 Gemini↔Claude. `LlmSystemPrompt {static,dynamic}`이 breakpoint 위치를 이미 중립 개념으로 노출 → 인터페이스 누수 없음(확인됨).
 - [ ] (별도 — Phase 6b) 대화 길이 상한 / 오래된 턴 요약(compaction, 현재 MAX_HISTORY=20). 모델 tier 분기(단순 라우팅은 저가 모델). 캐싱과 독립이라 분리.
 
-### Phase 7 — 평가 (eval)
-- [ ] 대표 질문 셋(golden set) 정의 → 응답 품질/도구 선택 정확도 측정.
-- [ ] 회귀 방지: 프롬프트/모델 변경 시 eval 재실행.
-- 🎯 산출물: "응답 품질을 어떻게 측정했는가"는 포트폴리오 PAAR의 Result.
+**측정 결과 (2026-06-16, 무료티어, gemini-3.1-flash-lite, 임시 probe 후 제거 — 상세 흐름 §8-12)**
+
+| 지표 | 값 | 측정 방법 |
+|---|---|---|
+| static system 텍스트 | **477 토큰** | `countTokens`(system 텍스트를 plain content로) |
+| **안정 prefix = system + 도구 6종** | **2,316 토큰** | `caches.create` 거부 응답의 `requested=2316`(풀 도구셋) |
+| 전체 요청 prompt = prefix + user 메시지 | **2,340 토큰** | `generateContent`의 `promptTokenCount` |
+| explicit 캐시 최소치(flash-lite) | **1,024 토큰** | `caches.create` 400 응답(`min_total_token_count=1024`) |
+| 동일 prefix 2연속 호출 cachedContentTokenCount | **0 (미적중)** | streaming `usageMetadata` |
+
+- **무료티어 캐싱 미실현**: explicit는 storage 쿼터=0으로 하드 차단(크기는 2,316>1,024로 충족), implicit도 미적중. 둘 다 "측정·검증은 됐고 결과가 미실현".
+- **절감 추정(이월)**: 안정 prefix **2,316토큰**(system 477 + 도구 ~1,839)이 매 턴 재전송됨. implicit/explicit 75% 입력 할인이 적중하면 **턴당 ≈ 1,737 토큰 절감**(= 2,316 × 0.75; 짧은 턴 입력 2,340 기준 ~74%, history가 길어지면 절대 절감 ~1,737은 유지되고 비율은 체감). → (d) Claude `cache_control`(또는 빌링+지원모델)에서 실현. Claude 최소 기준 충족 여부는 **전환 시 확인 필요**.
+
+### Phase 7 — 평가 (eval)  📋 계획
+
+> 어시스턴트가 "그럴듯한 답"이 아니라 **"맞는 도구로 맞는 데이터를 가져와 답하는지"** 를 수치로 검증한다. 핵심 원칙: 처음부터 전부 자동화하지 않고, **채점이 명확한 것(도구 선택)부터** 단계적으로. 응답 품질(주관적)은 보조.
+
+- [ ] **(1) 측정 우선순위 — 도구 선택 정확도 먼저**: 질문 → 모델이 **올바른 도구·인자를 호출했는가**가 1순위 지표. 채점이 객관적이고(호출된 tool name·args 비교) 어시스턴트의 핵심 능력(=사내 데이터 연결)을 정확히 잰다. **응답 품질(요약이 좋은가)은 주관적이라 2순위**로 소규모만. 처음부터 전 항목 자동화를 목표하지 않는다 — 명확한 것부터 쌓는다.
+
+- [ ] **(2) 골든셋(대표 질문 셋) 구성 원칙**:
+  - **난이도별 골고루**: 쉬움(단일 도구 — "지난달 매출?") / 중간(조건·필터 — "지난주 로그인 실패만 분석") / 어려움(도구 조합·애매한 표현 — "요즘 문제 있는 카테고리 리뷰 정리해줘").
+  - **거절·미지원 케이스 필수 포함(함정)**: ① PII 요청("이 리뷰 쓴 사람 이메일?") → **거절/마스킹 유지가 정답**, ② 지원 범위 밖 조건("3만원대 브랜드X 리뷰") → **"지원 안 함" 안내가 정답**, ③ 없는 데이터 → **"데이터 없음" 사실 응답이 정답**. 이 함정 케이스들이 **PII 누출·과잉응답(환각)** 약점을 잡는다 — §4-2 마스킹 게이트와 system 프롬프트 가드(작성자 신원 미조회·지원범위 한정)가 실제로 지켜지는지 검증.
+  - **규모/운영**: 초기 **15~30개**로 시작하고, **오답을 발견할 때마다 그 케이스를 골든셋에 추가**하며 키운다(회귀 케이스 누적 = 같은 실수 재발 방지).
+
+- [ ] **(3) 채점 방법 — 지표별로 분리**:
+  - **도구 선택 = 규칙 기반 자동 채점**: 기대 tool name·핵심 args를 골든셋에 적어두고 실제 호출과 비교. 객관적·빠름·재현 가능. *트레이드오프*: 정답 도구 조합이 여럿일 수 있어 "허용 집합"으로 다뤄야 함.
+  - **응답 품질 = LLM-as-judge(소규모)**: 구체적 채점 기준 명문화(도구 결과 수치를 정확히 반영했나/지어내지 않았나/거절 케이스를 올바로 거절했나). *트레이드오프*: 자동·확장은 쉬우나 judge 자체가 비결정적 → 소규모 + 기준 고정으로 완화.
+
+- [ ] **(4) 회귀 방지 + 실행 비용 관리**: 프롬프트·모델(`GEMINI_MODEL`)·도구 정의를 바꿀 때 eval 재실행으로 **점수 하락(회귀) 감지**. **무료티어 RPD 고려**: tool use는 질문당 API 왕복 2~3회라 골든셋 30개면 수십~100여 콜 → **실행 비용(호출 수)도 관리 항목**(전체 재실행 vs 변경 영향 부분 실행 구분, 429 백오프 재사용).
+
+- 🎯 **산출물 / 포트폴리오 가치(PAAR의 Result)**: "응답 품질을 어떻게 측정했는가"에 더해, **"도구 선택 정확도 N%"** 같은 **수치가 검증 증거**가 된다. 특히 **거절 케이스 통과율**은 "PII 안전성을 어떻게 정량 보장했나"의 근거이고, **회귀 케이스 누적**은 "프롬프트·모델 변경에 안전하게 대응하는 체계"를 보여준다.
 
 ### Phase 8 — (후속) 구매자 챗봇
 - [ ] `(main)` 영역에 구매자용 챗봇: 상품 검색/추천/문의 응대.
@@ -469,15 +498,16 @@ tools: [{
 ## 7. 파일 매핑 (조회용 — Phase 0~3 구현 완료)
 
 **백엔드 — AI 인프라 (프로바이더 비종속)**
-- LlmClient 인터페이스(중립 타입): `backend/src/intrastructure/ai/llm-client.interface.ts`
+- LlmClient 인터페이스(중립 타입 + **(Phase 6) `LlmSystemPrompt {static,dynamic?}`·`LlmUsage`·`LlmStreamEvent` usage**): `backend/src/intrastructure/ai/llm-client.interface.ts`
 - DI 토큰: `backend/src/intrastructure/ai/ai.constants.ts` (`LLM_CLIENT`)
 - 모듈(forRoot, global, LLM_PROVIDER 분기): `backend/src/intrastructure/ai/ai.module.ts`
-- GeminiClient 구현(generate/generateStream/**generateWithTools**): `backend/src/intrastructure/ai/providers/gemini.client.ts`
+- GeminiClient 구현(generate/generateStream/**generateWithTools** + **(Phase 6) `composeSystem`·`toUsage`·라운드 usage 합산·`ensureCachePrefix` explicit 스캐폴드(`GEMINI_EXPLICIT_CACHE`, 기본 off)**): `backend/src/intrastructure/ai/providers/gemini.client.ts`
 - 앱 등록: `backend/src/app/app.module.ts` (`AiModule.forRoot()`)
+- **(Phase 6) env**: `GEMINI_EXPLICIT_CACHE`(기본 미설정=off; `'true'`일 때만 explicit `CachedContent` 시도, 실패 시 no-op→implicit).
 
 **백엔드 — 어시스턴트 도메인 (admin 하위)**
 - 컨트롤러(`POST .../chat`, `POST .../stream` SSE, `GET .../conversations/:id/messages` 복원, `@User('sub')` adminUserId): `backend/src/admin/assistant/assistant.controller.ts`
-- 서비스(시스템 프롬프트·멀티턴 **DB 영속화**·도구 디스패처·projection): `backend/src/admin/assistant/assistant.service.ts`
+- 서비스(시스템 프롬프트·멀티턴 **DB 영속화**·도구 디스패처·projection + **(Phase 6) `buildSystemPrompt():{static,dynamic}` 분리·`[usage]` 적중 로그**): `backend/src/admin/assistant/assistant.service.ts`
 - 도구 정의(LlmToolDef): `backend/src/admin/assistant/assistant-tools.ts` (`get_sales_summary`, `get_order_stats`, `query_audit_logs`, `get_product_info`, **`summarize_reviews`, `summarize_inquiries`** — Phase 5a, 6개)
 - PII 비식별화 헬퍼: `backend/src/admin/assistant/assistant-masking.ts` (`maskEmail`/`maskIp`/`maskAuditLogs` + **`scrubText`** — 자유 텍스트 내 이메일·전화 마스킹, Phase 5a)
 - 대화 영속화 엔티티(BaseModel 상속): `backend/src/admin/assistant/entity/conversation.entity.ts`, `entity/message.entity.ts`
@@ -588,10 +618,52 @@ tools: [{
 - **(보강 #1) 🐛→fix 빈 LLM 응답**: `generate()` 가 빈/공백 문자열을 돌려주면(안전필터 차단 등) `status='fresh'`+`summaryText=''` 로 캐시돼 **빈 요약이 영구 고정**(fresh 라 재생성 안 됨, 프론트는 빈문자열 falsy → "준비 중" 무한 표시). → regenerate 가 `!text.trim()` 이면 **실패로 간주해 throttle rollback**(같은 프롬프트로 LLM 난타 방지, 다음 방문 재시도). (코드 검증 — 강제하려면 LLM 모킹 필요. throttle rollback 경로는 E7 로 실측됨.)
 - **(참고) 무해/설계상 허용**: ① 엔드포인트에 **상품 status/approval 게이트 없음**(hidden/draft 도 요약 반환) — 단 리뷰 보유 상품은 사실상 published 뿐이고 리뷰 텍스트는 PII 없는 공개 데이터라 현 범위 허용. ② 리뷰 삭제로 reviewCount<3 강하 시 stale row 가 남지만 `available:false` 로 미노출(리뷰 복귀 시 재생성). ③ 동시 부하에서 node-postgres `DeprecationWarning`(client.query 중복) 관측 — 5c 코드의 동기 await 경로/풀 사용과 무관한 일반 경고, 기능 영향 없음.
 
+### 8-12. ⚠ Phase 6 캐싱 — 가설→1차 측정·추정→엣지 검증→사유 정정→이월 (검증 흐름. 이 Phase의 핵심 산출물)
+
+> 이 Phase는 코드 라인 수보다 **"가설을 세우고 실측으로 검증해 1차 추정을 스스로 정정한 과정"** 이 산출물이다.
+> 아래는 그 흐름을 수치·정정과 함께 시간순으로 남긴 것이다. (측정·검증은 모두 정상 수행됐고, 결과가 "미적중/무료티어 불가"였던 것 — 측정 자체가 "실패"한 게 아니다.)
+
+**(1) 배경 / 가설**
+어시스턴트는 stateless라 매 턴 **system 프롬프트 + 도구 6종 정의(안정 prefix)** 를 통째로 재전송한다. 이 prefix를 프롬프트 캐싱으로 묶으면 입력 토큰을 크게 줄일 수 있다는 게 가설. 단 **무료티어에서 캐싱이 실제로 적용되는지가 불확실** → 추측 대신 실측으로 확인하기로 결정. (캐싱 문법은 프로바이더별 상이 — Gemini는 `CachedContent` 리소스, Claude는 `cache_control` breakpoint, §4-3.)
+
+**(2) 1차 측정 · 추정**
+`@google/genai`로 prefix 토큰 규모와 implicit 적중을 실측:
+- static system 텍스트 = **477 토큰**(`countTokens`), 전체 요청 prompt(system+도구6+작은 user 메시지) = **2,340 토큰**(`generateContent`의 `promptTokenCount`).
+- 동일 prefix 2연속 호출 → **둘 다 `cachedContentTokenCount=0`**(implicit 미적중).
+- 이때의 **1차 추정 사유**(공식 문서 표만 보고): explicit 캐싱은 "① 유료 기능 + ② flash-lite 미지원(표에 3.5 Flash 4,096 / 2.5 Flash·Pro 2,048만 있고 flash-lite 없음) + ③ 우리 prefix가 임계치 미달". → "무료티어에선 explicit 불가, implicit만 측정"으로 잠정 결론.
+
+**(3) 엣지케이스 검증 → 사유 정정 (핵심)**
+"정말 미지원·임계치 미달인가?"를 확인하려고 **explicit 스캐폴드를 실제로 켜서 `ai.caches.create`를 호출**(§8-12b ③④). 그 결과 1차 추정 ②③이 **둘 다 틀렸음**이 드러났다:
+- **③은 틀림(미지원 X)** — 작은 prefix(157토큰)로 호출 → `400 "Cached content is too small. min_total_token_count=1024"`. 즉 **flash-lite도 explicit 캐싱 대상이고, 최소치는 1,024토큰**임이 응답으로 확정.
+- **②(임계치 미달)도 틀림** — production 풀 도구셋으로 호출하니 `429`가 **캐시 콘텐츠 = 2,316 토큰**(`requested=2316`)을 보고. **2,316 > 1,024로 최소치를 넘는다.** (정정 과정 중 한 interim probe는 도구 설명을 압축해 1,726으로 잰 적이 있으나, **production 동일 도구셋 재측정값 2,316이 최종 실측값**. 1,726/2,316 둘 다 1,024 초과라 결론 동일.)
+- **남은 진짜 사유 = 무료티어 storage 쿼터=0** — 그 429의 정체는 `RESOURCE_EXHAUSTED: TotalCachedContentStorageTokensPerModelFreeTier limit=0, requested=2316`. **크기와 무관하게 무료티어는 캐시 storage 자체가 0**이라 explicit 생성이 하드 차단된다. ⇒ "유료/미지원/미달"이라는 1차 추정이 아니라 **"무료티어 cached-storage limit=0"** 이 정확한 사유.
+- **안전성도 함께 검증** — 두 거부(400 too-small / 429 limit=0) 모두 **catchable throw** → `ensureCachePrefix`가 catch→`cacheName=null`→implicit 경로. 즉 `GEMINI_EXPLICIT_CACHE=true`로 켜도 어시스턴트는 깨지지 않고 자동 폴백(§8-12b).
+
+**(4) 결론**
+**사유는 정밀해졌으나 방향은 불변**: 무료티어 explicit 캐싱 불가(storage=0) → (c)는 **implicit 적중 측정 + explicit 스캐폴드 off**로 마무리. implicit도 현 prefix(2,316/2,340)에서 미적중(cached=0)이라 무료티어 캐싱은 미실현. 진짜 $ 절감은 추상화(`LlmSystemPrompt{static,dynamic}` + `LlmUsage`) 위에서 **(d) Claude+`cache_control` 전환**(또는 빌링 활성)으로 이월.
+
+**(5) 이월 절감 (추정)**
+안정 prefix **2,316토큰**(system 477 + 도구 ~1,839)이 매 턴 재전송된다. 75% 입력 할인이 적중하면 **턴당 ≈ 1,737 토큰 절감**(= 2,316 × 0.75; 짧은 턴 입력 2,340 기준 ~74%, history가 길어지면 절대 절감 ~1,737은 유지되고 비율은 체감). Claude 전환 시 prefix가 Claude 캐시 최소 기준을 충족할 것으로 보이나 **전환 시 확인 필요**.
+
+**기술 메모(구현 중 gotcha)**
+- **(C) `countTokens`는 Developer API에서 `systemInstruction`/`tools` config 미지원** — 호출 시 `"systemInstruction parameter is only supported in Gemini Enterprise Agent Platform mode"`. → system 텍스트는 plain content로 카운트(477), **prefix 전체 규모는 `generateContent`의 `promptTokenCount`(2,340) / 캐시콘텐츠는 `caches.create` 거부의 `requested`(2,316)** 로 측정.
+- **(D) usageMetadata 타입 docstring "not supported in Gemini API"는 보일러플레이트** — `GenerateContentResponseUsageMetadata` 클래스 주석에 그 문구가 있으나, 핵심 카운트(prompt/candidates/cachedContent/totalTokenCount)는 Developer API에서 **실제 반환됨**(probe 실측). Vertex 전용은 세부 모달리티 breakdown(cacheTokensDetails 등)뿐.
+- **(E) 정적/동적 분리의 핵심 동기는 implicit보다 Claude 전환 대비** — 한 대화의 턴들은 수 분 내(같은 날)라 날짜가 system 중간에 있어도 within-session prefix는 이미 안정적이었다. 분리의 실가치는 **ClaudeClient의 `cache_control` breakpoint**(매일 바뀌는 날짜가 breakpoint 앞이면 캐시 매일 버스트 방지)와, "안정 prefix" 경계를 인터페이스에 **프로바이더 비종속**으로 노출하는 것. `LlmSystemPrompt{static,dynamic}` → Gemini는 join, Claude는 breakpoint.
+- **(F) explicit 스캐폴드의 동적 날짜 처리** — 캐시 활성 시 캐시는 `static system + tools`만 담고(날짜 제외, 매일 바뀌어 캐시 무효화되므로), 날짜는 `cachedContent` 호출에 systemInstruction을 다시 줄 수 없어 **선두 user 턴으로 주입**(`toContentsWithDynamic`). off 기본 + 무료티어 storage=0이라 실행 경로 미진입.
+
+**8-12b. 적대적/엣지 실측 (2026-06-16, 임시 probe 4종 후 제거)**
+정적 회귀면 점검 + 런타임 4종 실측. 모두 크래시/행 없음, 폴백 graceful.
+- **(정적) 시그니처 변경 소비처**: `generate()` 호출 2곳(assistant `chat()`·product-summary)만 — 둘 다 `{static,dynamic}` 호환. `generateStream()`은 **소비처 0**(dead path)이라 usage 이벤트 추가 무해. `generateWithTools()` 유일 소비처는 `streamChat` — `usage`는 **내부 로그로만 소비**하고 컨트롤러로 yield 안 함 → `AssistantStreamEvent`(meta|text|done|error)에 usage 없음 → 프론트/SSE 무영향.
+- **(① 스트리밍 usage)** ✅ `generateContentStream` 의 **모든 chunk(3/3)에 usageMetadata 동봉**(last=prompt115/output18). 프로덕션 경로(스트림)에서 usage 수신 확인 — 범위2가 비스트림뿐 아니라 실경로에서 동작.
+- **(② tool-use 2라운드 usage 합산)** ✅ "지난달 매출?" → round0(get_sales_summary 호출, prompt186) → functionResponse 주입 → round1(최종답, prompt256). **라운드별 usage 합산 정상**(input=442/output=80). round1(반복 prefix)도 **cached=0** — 토큰 규모(186~256)가 1,024 미만이라 미적중(일관).
+- **(③ explicit 작은 prefix)** ✅ 157토큰으로 `caches.create` → `400 "too small, min_total_token_count=1024"`. **flash-lite 도 캐싱 지원 + 최소치 1,024 확정.** throw catchable → 폴백 정상.
+- **(④ explicit 전체 prefix)** ✅ production 풀 도구셋으로 `caches.create` → `429 "TotalCachedContentStorageTokensPerModelFreeTier limit=0, requested=2316"`. **무료티어 캐시 storage 쿼터=0 → explicit 하드 차단**(크기 무관, 2,316>1,024). throw catchable → `ensureCachePrefix` catch→null→implicit. **explicit 불가의 정확한 사유 = storage limit 0**(§8-12 (3) 정정). ※ 정정 과정 중 interim probe는 도구 설명을 압축해 `requested=1726`으로 잰 적 있으나, **production 동일 도구셋 재측정값 2,316이 최종 실측값**(둘 다 1,024 초과).
+- **(분석상 무해/미도달)**: divide-by-zero 가드(`inputTokens? ratio : '0'`) — usage 전무 시 NaN 방지. `cacheAttempted` 1회 시도 가드 — 실패 후 매 요청 재시도 안 함(프로세스 1회). `toContentsWithDynamic` 의 선두 user 턴 중복(캐시 활성 시) — 무료티어 storage=0 이라 실행 경로 미도달(off 기본).
+
 ### 8-9. (예약) 남은 항목
 - ⚠ 프롬프트 인젝션 방어 강화.
-- ⚠ 토큰/비용 폭증과 캐싱 적중률(Phase 6).
-- ⚠ 대화 history 길이 상한(현재 최근 20개 메시지) — 긴 대화에서 맥락 손실 vs 토큰 트레이드오프(Phase 6 compaction).
+- ✅ ~~토큰/비용 폭증과 캐싱 적중률(Phase 6)~~ → §8-12 + §5 Phase 6 측정으로 다룸(implicit 미적중 실측 + 절감 추정). 실현은 (d) Claude.
+- ⚠ 대화 history 길이 상한(현재 최근 20개 메시지) — 긴 대화에서 맥락 손실 vs 토큰 트레이드오프(Phase 6b compaction).
 
 <br>
 

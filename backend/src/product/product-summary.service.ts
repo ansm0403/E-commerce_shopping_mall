@@ -168,7 +168,8 @@ export class ProductSummaryService {
 
       const text = (
         await this.llm.generate({
-          system: ProductSummaryService.SUMMARY_SYSTEM,
+          // Phase 6: system 파라미터가 {static,dynamic?} 로 변경. 5c 요약은 캐싱 제외(D3) — 정적부만.
+          system: { static: ProductSummaryService.SUMMARY_SYSTEM },
           messages: [{ role: 'user', content: this.buildPrompt(reviews) }],
         })
       ).trim();
