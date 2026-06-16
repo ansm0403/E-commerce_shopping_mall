@@ -16,5 +16,6 @@ import { CommonModule } from '../common/common.module';
   ],
   controllers: [InquiryController, SellerInquiryController],
   providers: [InquiryService],
+  exports: [InquiryService],
 })
 export class InquiryModule {}

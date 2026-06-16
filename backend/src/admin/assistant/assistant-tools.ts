@@ -106,10 +106,77 @@ export const GET_PRODUCT_INFO_TOOL: LlmToolDef = {
   },
 };
 
-/** 어시스턴트에 등록되는 전체 도구 목록. (Phase 4 확장) */
+export const SUMMARIZE_REVIEWS_TOOL: LlmToolDef = {
+  name: 'summarize_reviews',
+  description:
+    '고객이 작성한 상품 리뷰 텍스트를 조건으로 모아 반환한다(모델이 그 내용을 요약·분석). ' +
+    '"최근 부정 리뷰 요약", "특정 상품/카테고리 리뷰 평가" 등에 사용한다. ' +
+    '필터는 상품(productId) 또는 카테고리(categoryName, 하위 카테고리까지 포함) 중 하나와 ' +
+    '평점 상한(maxRating, 부정 리뷰는 2), 기간(startDate~endDate)으로만 좁힐 수 있다. ' +
+    '브랜드·가격대·특정 작성자 같은 조건은 지원하지 않는다. ' +
+    '개인정보 보호를 위해 작성자 신원은 반환되지 않고 본문의 이메일·전화번호는 마스킹(***)된다. ' +
+    '날짜는 YYYY-MM-DD 형식. 반환 count 는 표본(최대 50건) 기준이다.',
+  parameters: {
+    type: 'object',
+    properties: {
+      productId: {
+        type: 'number',
+        description: '특정 상품 ID로 필터(선택). categoryName 과 함께 주면 productId 우선.',
+      },
+      categoryName: {
+        type: 'string',
+        description:
+          '카테고리 이름으로 필터(선택, 하위 카테고리까지 자동 포함). 예: "의류", "신발".',
+      },
+      maxRating: {
+        type: 'number',
+        description: '이 값 이하 평점만(1~5). 부정 리뷰만 보려면 2. 생략 시 전체 평점.',
+      },
+      startDate: { type: 'string', description: '조회 시작일 (YYYY-MM-DD, 포함). 생략 가능.' },
+      endDate: { type: 'string', description: '조회 종료일 (YYYY-MM-DD, 포함). 생략 가능.' },
+      take: { type: 'number', description: '가져올 최대 건수(기본 30, 최대 50).' },
+    },
+    required: [],
+  },
+};
+
+export const SUMMARIZE_INQUIRIES_TOOL: LlmToolDef = {
+  name: 'summarize_inquiries',
+  description:
+    '고객이 작성한 상품 문의(Q&A) 텍스트를 조건으로 모아 반환한다(모델이 그 내용을 요약·분석). ' +
+    '"미답변 문의 요약", "특정 상품/카테고리 문의 현황" 등에 사용한다. ' +
+    '필터는 상품(productId) 또는 카테고리(categoryName, 하위 포함) 중 하나와 ' +
+    '상태(status: waiting=미답변, answered=답변완료), 기간(startDate~endDate)으로만 좁힐 수 있다. ' +
+    '브랜드·가격대·특정 작성자 조건은 지원하지 않는다. ' +
+    '작성자 신원은 반환되지 않고 본문의 이메일·전화번호는 마스킹된다. ' +
+    '비밀 문의(isSecret=true)는 제목·본문·답변 없이 메타 정보만 반환된다. ' +
+    '날짜는 YYYY-MM-DD 형식. count 는 표본(최대 50건) 기준이다.',
+  parameters: {
+    type: 'object',
+    properties: {
+      productId: { type: 'number', description: '특정 상품 ID로 필터(선택).' },
+      categoryName: {
+        type: 'string',
+        description: '카테고리 이름으로 필터(선택, 하위 카테고리까지 자동 포함).',
+      },
+      status: {
+        type: 'string',
+        description: '문의 상태 필터: waiting(미답변) | answered(답변완료). 생략 시 전체.',
+      },
+      startDate: { type: 'string', description: '조회 시작일 (YYYY-MM-DD, 포함). 생략 가능.' },
+      endDate: { type: 'string', description: '조회 종료일 (YYYY-MM-DD, 포함). 생략 가능.' },
+      take: { type: 'number', description: '가져올 최대 건수(기본 30, 최대 50).' },
+    },
+    required: [],
+  },
+};
+
+/** 어시스턴트에 등록되는 전체 도구 목록. (Phase 5a 확장 — 4→6개) */
 export const ASSISTANT_TOOLS: LlmToolDef[] = [
   SALES_SUMMARY_TOOL,
   ORDER_STATS_TOOL,
   QUERY_AUDIT_LOGS_TOOL,
   GET_PRODUCT_INFO_TOOL,
+  SUMMARIZE_REVIEWS_TOOL,
+  SUMMARIZE_INQUIRIES_TOOL,
 ];

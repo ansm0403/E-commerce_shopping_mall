@@ -21,6 +21,7 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { Throttle } from '@nestjs/throttler';
 import { ProductService } from './product.service';
+import { ProductSummaryService } from './product-summary.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductQueryDto } from './dto/product-query.dto';
@@ -43,6 +44,7 @@ export class ProductController {
   constructor(
     private readonly productService: ProductService,
     private readonly productSeedService: ProductSeedService,
+    private readonly productSummaryService: ProductSummaryService,
   ) {}
 
   /** 구매자용: APPROVED + PUBLISHED 상품만 */
@@ -67,6 +69,16 @@ export class ProductController {
   @Serialize(ProductResponseDto)
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.productService.findOne(id);
+  }
+
+  /**
+   * (Phase 5c) 구매자 AI 리뷰 요약 — 공개, 상품 상세와 분리해 지연 로드한다.
+   * SWR: 캐시를 즉시 반환하고 낡았으면 백그라운드 재생성(읽기 경로 LLM 호출 0).
+   */
+  @Get(':id/review-summary')
+  @Throttle({ default: { ttl: 60000, limit: 60 } })
+  getReviewSummary(@Param('id', ParseIntPipe) id: number) {
+    return this.productSummaryService.getReviewSummary(id);
   }
 
   @Post()

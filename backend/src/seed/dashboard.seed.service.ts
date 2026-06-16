@@ -14,6 +14,8 @@ import {
   addHours,
   addDays,
 } from './seed-helpers';
+import { ReviewSeedService, SeedProductRef } from './review.seed.service';
+import { InquirySeedService } from './inquiry.seed.service';
 
 // ─── 상수 ────────────────────────────────────────────────────────────────────
 
@@ -42,6 +44,8 @@ export class DashboardSeedService implements OnApplicationBootstrap {
     private readonly roleRepo: Repository<RoleEntity>,
     @InjectRepository(SellerEntity)
     private readonly sellerRepo: Repository<SellerEntity>,
+    private readonly reviewSeedService: ReviewSeedService,
+    private readonly inquirySeedService: InquirySeedService,
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
@@ -69,9 +73,25 @@ export class DashboardSeedService implements OnApplicationBootstrap {
       }
 
       const { userIds, sellerIds } = await this.seedUsers();
-      await this.seedOrdersAndEvents(userIds, sellerIds, days);
+
+      // §3-C: 시드 주문 order_items 에 끼워 넣을 실제 published 상품 풀(999999 대체)
+      const productPool = await this.reviewSeedService.loadPublishedProductPool();
+      if (productPool.length === 0) {
+        console.log(
+          '  ⚠️  published 상품이 없어 주문 상품을 합성값(999999)으로 둡니다. ' +
+            'POST /v1/products/seed 로 상품을 먼저 시드하세요.',
+        );
+      }
+
+      await this.seedOrdersAndEvents(userIds, sellerIds, days, productPool);
       await this.seedLoginAudit(userIds, days);
       await this.seedAdminAndSystemAudit(userIds, sellerIds, days);
+
+      // §3-B: 전 published 상품 커버리지 리뷰 + 상품 집계 재계산(buyer 시드 뒤)
+      await this.reviewSeedService.seedCoverageReviews(userIds);
+
+      // Phase 5a 어시스턴트 summarize_inquiries 시연용 소규모 문의(미답변/답변/비밀 혼합)
+      await this.inquirySeedService.seedInquiries(userIds, sellerIds);
 
       console.log('\n✅  Seed 완료! 아래 URL에서 차트를 확인하세요:');
       console.log('    http://localhost:3000/admin/dashboard\n');
@@ -227,6 +247,7 @@ export class DashboardSeedService implements OnApplicationBootstrap {
     userIds: number[],
     sellerIds: number[],
     days: number,
+    productPool: SeedProductRef[],
   ): Promise<void> {
     let totalOrders = 0;
 
@@ -278,9 +299,11 @@ export class DashboardSeedService implements OnApplicationBootstrap {
         // 나머지 25% → PENDING_PAYMENT (paidAt, shippedAt... 모두 null)
 
         const itemCount = rand(1, 2);
-        const itemPriceIdx = rand(0, PRODUCT_PRICES.length - 1);
-        const unitPrice = PRODUCT_PRICES[itemPriceIdx];
-        const totalAmount = unitPrice * itemCount;
+        // §3-C: 실제 published 상품에서 itemCount 개를 뽑아 주문 상품으로 사용.
+        //       (쓰기 흐름 시연용 — 시드 유저가 구매확정 주문에서 실제 상품에 리뷰 작성 가능)
+        //       풀이 비면 기존 합성값(999999)으로 폴백.
+        const chosenItems = this.pickOrderItems(productPool, itemCount);
+        const totalAmount = chosenItems.reduce((sum, it) => sum + it.price, 0);
 
         // ── orders INSERT (raw SQL: @CreateDateColumn 을 우회해 과거 시각 직접 삽입) ──
         const orderResult: { id: number }[] = await this.ds.query(
@@ -318,7 +341,7 @@ export class DashboardSeedService implements OnApplicationBootstrap {
         const orderId = orderResult[0].id;
 
         // ── order_items INSERT ──
-        for (let k = 0; k < itemCount; k++) {
+        for (const item of chosenItems) {
           const sellerId = sellerIds[rand(0, sellerIds.length - 1)];
           await this.ds.query(
             `INSERT INTO order_items (
@@ -329,13 +352,13 @@ export class DashboardSeedService implements OnApplicationBootstrap {
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9)`,
             [
               orderId,
-              999999, // FK 없음 — Phase 5 구현 시 실제 productId 로 교체
+              item.productId,
               sellerId,
-              PRODUCT_NAMES[itemPriceIdx],
-              unitPrice,
-              null,
+              item.name,
+              item.price,
+              item.imageUrl,
               1,
-              unitPrice,
+              item.price,
               createdAt,
             ],
           );
@@ -372,6 +395,37 @@ export class DashboardSeedService implements OnApplicationBootstrap {
     }
 
     console.log(`  ✓ 주문 ${totalOrders}건 (${days + 1}일치)`);
+  }
+
+  /**
+   * 주문 1건에 들어갈 order_items 를 실제 상품 풀에서 중복 없이 선택.
+   * 풀이 비어 있으면 기존 합성 상품(999999)으로 폴백.
+   */
+  private pickOrderItems(
+    productPool: SeedProductRef[],
+    itemCount: number,
+  ): { productId: number; name: string; price: number; imageUrl: string | null }[] {
+    if (productPool.length === 0) {
+      // 폴백: 실제 상품이 없을 때만 합성값 사용(과거 동작 유지)
+      const idx = rand(0, PRODUCT_PRICES.length - 1);
+      return Array.from({ length: itemCount }, () => ({
+        productId: 999999,
+        name: PRODUCT_NAMES[idx],
+        price: PRODUCT_PRICES[idx],
+        imageUrl: null,
+      }));
+    }
+
+    const pool = [...productPool];
+    const out: { productId: number; name: string; price: number; imageUrl: string | null }[] = [];
+    const n = Math.min(itemCount, pool.length);
+    for (let i = 0; i < n; i++) {
+      const idx = rand(0, pool.length - 1);
+      const p = pool[idx];
+      out.push({ productId: p.id, name: p.name, price: p.price, imageUrl: p.imageUrl });
+      pool.splice(idx, 1);
+    }
+    return out;
   }
 
   // ─── 로그인 보안 audit_logs ─────────────────────────────────────────────────
@@ -654,6 +708,17 @@ export class DashboardSeedService implements OnApplicationBootstrap {
     );
     await this.ds.query(
       `DELETE FROM audit_logs WHERE metadata::jsonb->>'seed' = 'v1'`,
+    );
+    // 커버리지 리뷰(§3-B) 정리 — reviews.user_id 가 users FK 라 유저 삭제 전에 제거.
+    // 삭제 후 상품 집계는 다음 reseed 의 일괄 재계산(ReviewSeedService)이 정정.
+    await this.ds.query(
+      `DELETE FROM reviews
+       WHERE user_id IN (SELECT id FROM users WHERE email LIKE '%@seed.com')`,
+    );
+    // 문의(Phase 5a) 정리 — inquiries.user_id 가 users FK 라 유저 삭제 전에 제거.
+    await this.ds.query(
+      `DELETE FROM inquiries
+       WHERE user_id IN (SELECT id FROM users WHERE email LIKE '%@seed.com')`,
     );
     await this.ds.query(
       `DELETE FROM sellers

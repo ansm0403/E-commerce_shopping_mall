@@ -5,8 +5,16 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import {
+  Between,
+  FindOptionsWhere,
+  In,
+  LessThanOrEqual,
+  MoreThanOrEqual,
+  Repository,
+} from 'typeorm';
 import { InquiryEntity, InquiryStatus } from './entity/inquiry.entity';
+import { scrubText } from '../common/utils/scrub-text';
 import { ProductEntity } from '../product/entity/product.entity';
 import { SellerEntity } from '../seller/entity/seller.entity';
 import { CreateInquiryDto } from './dto/create-inquiry.dto';
@@ -155,5 +163,87 @@ export class InquiryService {
       where: { id: inquiryId },
       relations: ['user'],
     });
+  }
+
+  // ── AI 어시스턴트(Phase 5a 단순 RAG) ──
+
+  /**
+   * 어시스턴트 전용 읽기 메서드 — 조건에 맞는 문의 텍스트를 모아 LLM 요약에 넘긴다.
+   *
+   * - 카테고리는 모른다: 디스패처가 categoryName→productIds 변환 후 넘긴다.
+   *   productIds 가 undefined 면 전체, 빈 배열이면 "필터 결과 0건"으로 구분한다.
+   * - status(waiting/answered)·기간(createdAt)으로 좁힐 수 있다(미답변=waiting).
+   * - ⚠ user/seller 관계는 반환하지 않는다(작성자/셀러 신원 미노출). 본문은 scrubText 로 PII 제거.
+   * - (D1) 비밀 문의(isSecret=true)는 제목/본문/답변을 제외하고 메타(상태·상품·작성일)만 반환한다.
+   */
+  async getInquiriesForAssistant(params: {
+    productIds?: number[];
+    status?: string;
+    startDate?: string;
+    endDate?: string;
+    take?: number;
+  }): Promise<
+    {
+      status: InquiryStatus;
+      title: string | null;
+      content: string | null;
+      answer: string | null;
+      productId: number;
+      isSecret: boolean;
+      createdAt: Date;
+    }[]
+  > {
+    const where: FindOptionsWhere<InquiryEntity> = {};
+    if (params.productIds !== undefined) where.productId = In(params.productIds);
+    const status = this.normalizeStatus(params.status);
+    if (status) where.status = status;
+    const dateFilter = this.buildDateFilter(params.startDate, params.endDate);
+    if (dateFilter) where.createdAt = dateFilter;
+
+    const rows = await this.inquiryRepository.find({
+      where,
+      order: { createdAt: 'DESC' },
+      // 상한 50 + 하한 1 — 모델이 음수 take 를 보내면 'LIMIT must not be negative' 로 크래시한다.
+      take: Math.max(1, Math.min(params.take ?? 30, 50)),
+    });
+
+    return rows.map((r) =>
+      r.isSecret
+        ? {
+            status: r.status,
+            title: null,
+            content: null,
+            answer: null,
+            productId: r.productId,
+            isSecret: true,
+            createdAt: r.createdAt,
+          }
+        : {
+            status: r.status,
+            title: scrubText(r.title),
+            content: scrubText(r.content),
+            answer: scrubText(r.answer),
+            productId: r.productId,
+            isSecret: false,
+            createdAt: r.createdAt,
+          },
+    );
+  }
+
+  /** 모델이 준 status 문자열을 InquiryStatus enum 으로(유효하지 않으면 미적용). */
+  private normalizeStatus(status?: string): InquiryStatus | undefined {
+    if (!status) return undefined;
+    const v = status.toLowerCase();
+    if (v === InquiryStatus.WAITING) return InquiryStatus.WAITING;
+    if (v === InquiryStatus.ANSWERED) return InquiryStatus.ANSWERED;
+    return undefined;
+  }
+
+  /** createdAt 기간 필터 빌더. (ISO 문자열 입력, KST 정규화는 디스패처 담당) */
+  private buildDateFilter(start?: string, end?: string) {
+    if (start && end) return Between(new Date(start), new Date(end));
+    if (start) return MoreThanOrEqual(new Date(start));
+    if (end) return LessThanOrEqual(new Date(end));
+    return undefined;
   }
 }

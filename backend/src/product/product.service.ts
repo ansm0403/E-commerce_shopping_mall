@@ -357,6 +357,20 @@ export class ProductService {
     );
   }
 
+  /**
+   * (AI 어시스턴트 5a) 카테고리 ID 목록에 속한 상품 ID만 반환 (읽기 전용, id만 select).
+   * - 디스패처가 categoryName→categoryIds→productIds 변환 체인에서 사용.
+   * - 빈 입력이면 빈 배열. 상품 핵심 row 전체를 끌어오지 않고 id 컬럼만 조회.
+   */
+  async getProductIdsByCategoryIds(categoryIds: number[]): Promise<number[]> {
+    if (categoryIds.length === 0) return [];
+    const rows = await this.productRepository.find({
+      where: { categoryId: In(categoryIds) },
+      select: ['id'],
+    });
+    return rows.map((p) => p.id);
+  }
+
   /** 관리자: 상품 승인 */
   async approve(productId: number): Promise<ProductEntity> {
     const product = await this.dataSource.transaction(async (manager) => {
