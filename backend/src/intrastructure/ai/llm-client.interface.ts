@@ -32,10 +32,42 @@ export interface LlmToolCall {
   args: Record<string, unknown>;
 }
 
-/** 스트리밍 중 흘러나오는 이벤트 단위. (Phase 2~3) */
+/**
+ * system 프롬프트 — 정적 prefix + 동적 suffix 분리. (Phase 6)
+ *
+ * 캐싱(implicit/explicit)은 "안정적 prefix"가 핵심이다. 매 요청 바뀌는 값(오늘 날짜 등)이
+ * 정적 규칙 사이에 끼면 prefix가 흔들려 캐시 적중이 깨진다. 그래서 변하지 않는 부분(static)과
+ * 매번 바뀌는 부분(dynamic)을 분리하고, 프로바이더 구현체가 각자 문법으로 캐시 경계를 잡는다:
+ *  - Gemini: systemInstruction = static + '\n' + dynamic (날짜를 suffix로 → static+tools가 안정 prefix)
+ *  - Claude(추후): system = [{text:static, cache_control:'ephemeral'}, {text:dynamic}] (breakpoint after static)
+ * 인터페이스엔 프로바이더 고유 어휘(cache_control/cachedContent)를 노출하지 않는다 — 중립 개념만.
+ */
+export interface LlmSystemPrompt {
+  /** 변하지 않는 부분(역할/규칙/도구 안내). 캐시 prefix의 본체. */
+  static: string;
+  /** 매 요청 바뀌는 부분(예: 오늘 날짜). static 뒤에 붙는다. 캐시 경계 밖. */
+  dynamic?: string;
+}
+
+/** 토큰 사용량(usage). 캐시 적중 측정용. (Phase 6) */
+export interface LlmUsage {
+  /** 입력(프롬프트) 토큰. 캐시 적중분(cachedTokens)을 포함한 총 입력. */
+  inputTokens: number;
+  /** 출력(생성) 토큰. */
+  outputTokens: number;
+  /** 입력 중 캐시에서 재사용된 토큰(적중량). 0이면 미적중. */
+  cachedTokens: number;
+  /** thinking 모델의 추론 토큰(있을 때만). */
+  thoughtsTokens?: number;
+  /** 전체 토큰(프로바이더가 줄 때만). */
+  totalTokens?: number;
+}
+
+/** 스트리밍 중 흘러나오는 이벤트 단위. (Phase 2~3, Phase 6 usage) */
 export type LlmStreamEvent =
   | { type: 'text'; delta: string }
   | { type: 'tool_call'; call: LlmToolCall }
+  | { type: 'usage'; usage: LlmUsage }
   | { type: 'done' };
 
 export interface LlmClient {
@@ -50,7 +82,10 @@ export interface LlmClient {
    * LLM API는 stateless이므로 "기억"은 messages를 매번 통째로 보내는 것으로 구현된다.
    * 비활성(isEnabled()=false) 상태에서 호출하면 안 된다(호출 측이 먼저 확인).
    */
-  generate(params: { system: string; messages: LlmMessage[] }): Promise<string>;
+  generate(params: {
+    system: LlmSystemPrompt;
+    messages: LlmMessage[];
+  }): Promise<string>;
 
   /**
    * 스트리밍 호출. 응답 텍스트를 조각(delta)으로 흘려보낸다. (Phase 2)
@@ -58,7 +93,7 @@ export interface LlmClient {
    * 비활성 상태에서 호출하면 안 된다(호출 측이 먼저 확인).
    */
   generateStream(params: {
-    system: string;
+    system: LlmSystemPrompt;
     messages: LlmMessage[];
   }): AsyncIterable<LlmStreamEvent>;
 
@@ -70,7 +105,7 @@ export interface LlmClient {
    * - 텍스트는 { type:'text' } 델타로, 종료 시 { type:'done' }.
    */
   generateWithTools(params: {
-    system: string;
+    system: LlmSystemPrompt;
     messages: LlmMessage[];
     tools: LlmToolDef[];
     executeTool: (call: LlmToolCall) => Promise<unknown>;
