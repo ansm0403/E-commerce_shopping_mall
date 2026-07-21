@@ -452,9 +452,20 @@ tools: [{
 - **무료티어 캐싱 미실현**: explicit는 storage 쿼터=0으로 하드 차단(크기는 2,316>1,024로 충족), implicit도 미적중. 둘 다 "측정·검증은 됐고 결과가 미실현".
 - **절감 추정(이월)**: 안정 prefix **2,316토큰**(system 477 + 도구 ~1,839)이 매 턴 재전송됨. implicit/explicit 75% 입력 할인이 적중하면 **턴당 ≈ 1,737 토큰 절감**(= 2,316 × 0.75; 짧은 턴 입력 2,340 기준 ~74%, history가 길어지면 절대 절감 ~1,737은 유지되고 비율은 체감). → (d) Claude `cache_control`(또는 빌링+지원모델)에서 실현. Claude 최소 기준 충족 여부는 **전환 시 확인 필요**.
 
-### Phase 7 — 평가 (eval)  📋 계획
+### Phase 7 — 평가 (eval)  🚧 착수(관측 경로 완료 2026-07-21) · 골든셋/러너 다음
 
-> 어시스턴트가 "그럴듯한 답"이 아니라 **"맞는 도구로 맞는 데이터를 가져와 답하는지"** 를 수치로 검증한다. 핵심 원칙: 처음부터 전부 자동화하지 않고, **채점이 명확한 것(도구 선택)부터** 단계적으로. 응답 품질(주관적)은 보조.
+> **왜 eval인가(Problem)**: LLM은 비결정적이라 같은 질문도 응답이 흔들리고, 프롬프트·모델(`GEMINI_MODEL`)·도구 정의를 바꿀 때마다 "여전히 맞는 도구를 부르는가?"를 사람이 매번 손으로 확인할 수 없다. 눈으로 한두 번 돌려보고 "되는 것 같다"는 검증은 회귀를 놓친다. → **변경 때마다 자동으로 회귀를 잡을 측정 장치**가 필요하다.
+
+**7-0 — 관측 경로(도구 호출 캡처)  ✅ 완료(2026-07-21)**
+> eval 러너가 채점하려면 "질문 → **실제로 어떤 도구를 어떤 인자로 불렀는가**"를 밖에서 볼 수 있어야 한다. 기존 `streamChat`은 도구 호출을 내부 처리하고 프론트엔 최종 텍스트만 흘려 관측 불가였다.
+- [x] `AssistantService.chatWithTrace(message)` 신설 — 실제 채팅과 **동일 조건**(`buildSystemPrompt` + `ASSISTANT_TOOLS` + 도구 디스패처)으로 단일 턴 처리하되 `{ reply, toolCalls[], usage }` 반환. `toolCalls`는 `{name,args,result}` 시간순. **캡처는 `executeTool` 래핑**(tool_call 이벤트 소비가 아니라)으로 이름·인자에 더해 **결과까지** 잡아 LLM-judge 채점 근거 확보. `AssistantToolTrace`/`AssistantTraceResult` 타입 export.
+- [x] **DB 비영속 + 단일 턴** — 시험 질문이 `assistant_conversations`에 쌓이지 않게 저장/로드 없음(`streamChat`과 분기). **HTTP 엔드포인트 미신설** — 러너는 `NestFactory.createApplicationContext(AppModule)`로 앱을 코드 부팅해 서비스 직접 호출(컨트롤러·인증·SSE 우회, 공격 표면·와이어 포맷 불변). SSE `AssistantStreamEvent`·`streamChat` 무변경(diff 확인).
+- [x] **Phase 4 latent 버그 동시 수정**(§8-10b (참고) 해소) — 골든셋 함정 케이스가 이 경로를 때리기 전에 선제거: `query_audit_logs`는 `normalizeAuditDate`×2 → `normalizeDateRange`(불량 날짜 검증 포함)로 교체 + `take` 하한 1, `get_product_info`는 `take` 하한 1. 스모크(직접 디스패치)로 `2026-13-45`/`지난주`→`{error}` 무크래시, 음수 take→정상 반환 실측.
+- 🎯 스모크(로컬, gemini-3.1-flash-lite): "지난달 매출?" → `chatWithTrace` → `toolCalls=[get_sales_summary{2026-06-01~06-30}]` + 실 DB 답변(16,948,800원/142건) + usage(input 4,789/output 91) 캡처 확인.
+
+**7-1~7-5 — 골든셋·러너·채점·점수표  📋 계획(다음)**
+>
+> 그래서 어시스턴트가 "그럴듯한 답"이 아니라 **"맞는 도구로 맞는 데이터를 가져와 답하는지"** 를 수치로 검증한다. 핵심 원칙: 처음부터 전부 자동화하지 않고, **채점이 명확한 것(도구 선택)부터** 단계적으로. 응답 품질(주관적)은 보조.
 
 - [ ] **(1) 측정 우선순위 — 도구 선택 정확도 먼저**: 질문 → 모델이 **올바른 도구·인자를 호출했는가**가 1순위 지표. 채점이 객관적이고(호출된 tool name·args 비교) 어시스턴트의 핵심 능력(=사내 데이터 연결)을 정확히 잰다. **응답 품질(요약이 좋은가)은 주관적이라 2순위**로 소규모만. 처음부터 전 항목 자동화를 목표하지 않는다 — 명확한 것부터 쌓는다.
 
@@ -469,7 +480,9 @@ tools: [{
 
 - [ ] **(4) 회귀 방지 + 실행 비용 관리**: 프롬프트·모델(`GEMINI_MODEL`)·도구 정의를 바꿀 때 eval 재실행으로 **점수 하락(회귀) 감지**. **무료티어 RPD 고려**: tool use는 질문당 API 왕복 2~3회라 골든셋 30개면 수십~100여 콜 → **실행 비용(호출 수)도 관리 항목**(전체 재실행 vs 변경 영향 부분 실행 구분, 429 백오프 재사용).
 
-- 🎯 **산출물 / 포트폴리오 가치(PAAR의 Result)**: "응답 품질을 어떻게 측정했는가"에 더해, **"도구 선택 정확도 N%"** 같은 **수치가 검증 증거**가 된다. 특히 **거절 케이스 통과율**은 "PII 안전성을 어떻게 정량 보장했나"의 근거이고, **회귀 케이스 누적**은 "프롬프트·모델 변경에 안전하게 대응하는 체계"를 보여준다.
+- [ ] **(5) 측정 흐름(end-to-end) + 산출물 형태**: 측정 방법을 수치와 함께 명시할 수 있도록 파이프라인을 고정한다 — **골든셋(질문 + 기대 도구·핵심 인자 + 정답 유형)** → eval 러너가 각 질문을 어시스턴트에 던져 **실제 호출된 도구·인자를 캡처**(어시스턴트의 도구 호출을 관측할 경로 필요) → 규칙 기반 자동 비교 + (소수) LLM-judge → **점수표 산출**(도구 선택 정확도 %, 거절 케이스 통과율, 난이도별 분포, 실행 콜 수). 이 점수표가 변경 전후 비교·회귀 감지의 근거이자 포트폴리오 Result의 **재현 가능한 실물**이 된다.
+
+- 🎯 **산출물 / 포트폴리오 가치(PAAR의 Result)**: "응답 품질을 어떻게 측정했는가"에 더해, **"도구 선택 정확도 N%"**(측정 방법 = 골든셋 M개를 러너로 실행해 호출 도구·인자 자동 대조) 같은 **수치가 검증 증거**가 된다. 특히 **거절 케이스 통과율**은 "PII 안전성을 어떻게 정량 보장했나"의 근거이고, **회귀 케이스 누적**은 "프롬프트·모델 변경에 안전하게 대응하는 체계"를 보여준다.
 
 ### Phase 8 — (후속) 구매자 챗봇
 - [ ] `(main)` 영역에 구매자용 챗봇: 상품 검색/추천/문의 응대.
@@ -595,7 +608,7 @@ tools: [{
 - **(G) 🐛→fix 음수 `take` 크래시**: 모델이 `take: -5` 를 보내면 `Math.min(take,50)` 이 음수를 통과시켜 `LIMIT -5` → Postgres `LIMIT must not be negative` 로 도구가 크래시한다(실측). → 두 서비스의 take 를 `Math.max(1, Math.min(take ?? 30, 50))` 로 **하한 1** 추가.
 - **(H) 🐛→fix 잘못된 날짜 `Between` 크래시**: `2026-13-45`(존재하지 않는 월/일, 그러나 `YYYY-MM-DD` 정규식은 통과)나 `지난주` 같은 비-날짜를 모델이 주면 `new Date()` 가 Invalid Date → `Between/MoreThanOrEqual` 에서 `invalid input syntax for type timestamp` 로 턴 전체가 실패한다(실측). → 디스패처에 `normalizeDateRange()` 신설: 정규화 후 `Number.isNaN(new Date().getTime())` 검증, 불량이면 `{error}` 를 모델에 피드백(턴 실패 대신 모델이 재시도/안내). 두 도구 모두 적용.
 - **(I) ✅ 무해 확인**: `smallint <= '2'`(문자열 take/rating) → Postgres 가 암묵 캐스팅하여 정상(크래시 없음). `In([2])` 정상. `take:0` → 0행(정상). 괄호형 전화 `(02)123-4567` 는 스크럽 못 함(미세 갭, 리뷰에 드묾)·status 에 Korean('미답변') 오면 필터 무시되고 전체 반환(모델은 enum 값 사용하도록 도구 설명에 명시됨) — 둘 다 크래시 아님, 현 범위 허용.
-- **(참고) Phase 4 latent**: `query_audit_logs`/`get_product_info` 도 같은 `normalizeAuditDate`·하한 없는 take 패턴 → 동일 음수 take/불량 날짜 취약. 이번엔 5a 도구만 수정. 차후 정리 권고.
+- **(참고) Phase 4 latent → ✅ 해소(2026-07-21, Phase 7-0)**: `query_audit_logs`/`get_product_info` 도 같은 `normalizeAuditDate`·하한 없는 take 패턴 → 동일 음수 take/불량 날짜 취약이었음. Phase 7 관측 경로 착수 시 함께 수정: `query_audit_logs`는 `normalizeDateRange`(검증 포함) + take 하한 1, `get_product_info`는 take 하한 1. 직접 디스패치 스모크로 `2026-13-45`/`지난주`→`{error}` 무크래시, 음수 take→정상 실측.
 
 ### 8-11. ⚠ Phase 5c(구매자 리뷰 자동 요약, SWR) 구현 중 발견·결정 (2026-06-16)
 - **(A) 콜드 상품은 락 선점에 row 가 필요 — INSERT-as-CAS 로 해결**: 요약 row 가 없는 콜드 상품은 `UPDATE ... WHERE` CAS 가 0행이라 재생성을 트리거할 수 없다. → 콜드는 `INSERT(status='generating')` 로 락을 선점하고, **unique(productId) 제약**이 동시 콜드 요청 중 1건만 통과시키게 했다(`QueryFailedError`=경쟁 패배=no-op). 기존 row 는 CAS UPDATE. 덕분에 리스너의 stale 표시는 **plain UPDATE**(없으면 0행)면 충분 — upsert 불필요(콜드≡stale, row 는 트리거가 지연 생성). 6 동시 GET 실측: **acquire 1 / skip 5**.

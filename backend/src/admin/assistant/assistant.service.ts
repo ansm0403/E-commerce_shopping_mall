@@ -12,6 +12,7 @@ import type {
   LlmMessage,
   LlmSystemPrompt,
   LlmToolCall,
+  LlmUsage,
 } from '../../intrastructure/ai/llm-client.interface';
 import { DashboardService } from '../dashboard/dashboard.service';
 import { AuditService } from '../../audit/audit.service';
@@ -33,6 +34,30 @@ export type AssistantStreamEvent =
   | { type: 'text'; delta: string }
   | { type: 'done' }
   | { type: 'error'; message: string };
+
+/**
+ * (Phase 7) 도구 호출 1건의 관측 기록 — eval 채점의 원재료.
+ * - name/args: 규칙 기반 채점(모델이 "맞는 도구·인자"를 골랐는가)의 대조 대상.
+ * - result: LLM-as-judge 채점(답변이 도구 결과 수치를 정확히 반영했는가)의 근거.
+ */
+export interface AssistantToolTrace {
+  name: string;
+  args: Record<string, unknown>;
+  result: unknown;
+}
+
+/**
+ * (Phase 7) chatWithTrace 의 반환 — 한 질문의 실행 관측 결과.
+ * eval 러너가 이 셋으로 채점한다: toolCalls(도구 선택) · reply(응답 품질) · usage(실행 비용).
+ */
+export interface AssistantTraceResult {
+  /** 최종 답변 전문(스트리밍 델타를 합친 것). */
+  reply: string;
+  /** 시간순 도구 호출 기록(빈 배열 = 도구 미사용, 예: 거절/미지원 안내). */
+  toolCalls: AssistantToolTrace[];
+  /** 토큰 사용량(eval 실행 비용 집계용). usage 이벤트가 없으면 null. */
+  usage: LlmUsage | null;
+}
 
 /**
  * 관리자 AI 어시스턴트 서비스.
@@ -186,15 +211,19 @@ export class AssistantService {
           endDate?: string;
           take?: number;
         };
+        // 날짜만 들어오면 KST 풀데이로 정규화 + 불량 날짜(2026-13-45 등) 검증(§8-10b-(H)).
+        // (normalizeAuditDate 만 쓰면 Invalid Date 가 그대로 Between 에 들어가 DB 크래시.)
+        const range = this.normalizeDateRange(args.startDate, args.endDate);
+        if (range.error) return { error: range.error };
         // 무료티어(Gemini) 전송 안전: PII(이메일·IP·userAgent·metadata) 비식별화 게이트(§4-2).
         const result = await this.auditService.getAuditLogs({
           action: args.action as never,
           success: args.success,
           userId: args.userId,
-          // 날짜만 들어오면 KST 풀데이로 정규화(아니면 endDate 당일이 거의 제외됨 + UTC 어긋남).
-          startDate: this.normalizeAuditDate(args.startDate, false),
-          endDate: this.normalizeAuditDate(args.endDate, true),
-          take: Math.min(args.take ?? 50, 100),
+          startDate: range.start,
+          endDate: range.end,
+          // 하한 1 — 모델이 음수 take 를 주면 LIMIT -5 로 Postgres 크래시(§8-10b-(G)).
+          take: Math.max(1, Math.min(args.take ?? 50, 100)),
           page: 1,
         });
         return { data: maskAuditLogs(result.data), meta: result.meta };
@@ -314,7 +343,8 @@ export class AssistantService {
       approvalStatus: args.approvalStatus as never,
       status: args.status as never,
       sellerId: args.sellerId,
-      take: Math.min(args.take ?? 20, 50),
+      // 하한 1 — 음수 take 는 LIMIT -N 로 Postgres 크래시(§8-10b-(G), Phase 4 latent).
+      take: Math.max(1, Math.min(args.take ?? 20, 50)),
       page: 1,
     } as never);
 
@@ -391,6 +421,50 @@ export class AssistantService {
       messages: [{ role: 'user', content: message }],
     });
     return { reply };
+  }
+
+  /**
+   * (Phase 7, eval 관측 경로) 단일 턴 질문을 실제 채팅과 동일한 조건
+   * (buildSystemPrompt + ASSISTANT_TOOLS + 도구 디스패처)으로 처리하되,
+   * 어떤 도구를 어떤 인자로 불러 어떤 결과를 받았는지(toolCalls)와 최종 답변(reply),
+   * 토큰 사용량(usage)을 함께 반환한다. eval 러너가 이걸로 도구 선택/응답 품질을 채점한다.
+   *
+   * - DB 비영속: 시험 질문이 대화 테이블에 쌓이지 않도록 저장/로드하지 않는다(streamChat과 다른 점).
+   * - 단일 턴: 골든셋 질문은 전부 1턴이라 history 없이 이번 질문만 보낸다.
+   * - executeTool 을 한 겹 감싸(wrapping) 이름·인자에 더해 결과까지 시간순으로 수집한다.
+   *   (LLM-as-judge 가 "답변이 도구 결과 수치를 정확히 반영했는가"를 채점하려면 result 가 필요.)
+   */
+  async chatWithTrace(message: string): Promise<AssistantTraceResult> {
+    if (!this.llm.isEnabled()) {
+      throw new ServiceUnavailableException(
+        'AI 어시스턴트가 비활성 상태입니다. GEMINI_API_KEY 를 설정하세요.',
+      );
+    }
+
+    const toolCalls: AssistantToolTrace[] = [];
+    let reply = '';
+    let usage: LlmUsage | null = null;
+
+    for await (const ev of this.llm.generateWithTools({
+      system: this.buildSystemPrompt(),
+      messages: [{ role: 'user', content: message }],
+      tools: ASSISTANT_TOOLS,
+      // 기존 디스패처를 그대로 실행하되, 이름·인자·결과를 관측 기록에 남긴다.
+      executeTool: async (call) => {
+        const result = await this.executeTool(call);
+        toolCalls.push({ name: call.name, args: call.args, result });
+        return result;
+      },
+    })) {
+      if (ev.type === 'text') {
+        reply += ev.delta;
+      } else if (ev.type === 'usage') {
+        usage = ev.usage;
+      }
+      // tool_call 이벤트는 무시 — 실행 결과까지 담긴 executeTool 래핑으로 이미 수집한다.
+    }
+
+    return { reply, toolCalls, usage };
   }
 
   /**
