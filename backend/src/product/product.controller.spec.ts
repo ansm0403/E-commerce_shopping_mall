@@ -1,8 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
+
+// circular dependency 방지: OrderEntity → ShipmentEntity → OrderEntity 순환 차단
+jest.mock('../order/entity/order.entity', () => ({
+  OrderEntity: class OrderEntity {},
+  OrderStatus: { PENDING: 'pending', PREPARING: 'preparing', SHIPPED: 'shipped', DELIVERED: 'delivered', COMPLETED: 'completed', CANCELLED: 'cancelled' },
+}));
+
 import { ProductController, AdminProductController } from './product.controller';
 import { ProductService } from './product.service';
 import { ProductSeedService } from '../common/seeds/product.seed';
+import { ProductSummaryService } from './product-summary.service';
 import { ProductEntity, ProductStatus, ApprovalStatus, SalesType } from './entity/product.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -46,6 +54,10 @@ const mockSeedService = {
   seedProducts: jest.fn(),
 };
 
+const mockSummaryService = {
+  getReviewSummary: jest.fn(),
+};
+
 describe('ProductController', () => {
   let controller: ProductController;
 
@@ -56,6 +68,7 @@ describe('ProductController', () => {
       providers: [
         { provide: ProductService, useValue: mockProductService },
         { provide: ProductSeedService, useValue: mockSeedService },
+        { provide: ProductSummaryService, useValue: mockSummaryService },
       ],
     })
       .overrideGuard(JwtAuthGuard).useValue({ canActivate: () => true })
