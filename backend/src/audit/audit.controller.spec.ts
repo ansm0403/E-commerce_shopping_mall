@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { AuditController } from './audit.controller';
 import { AuditService } from './audit.service';
-import { AuditLogEntity } from './entity/audit-log.entity';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 
 describe('AuditController', () => {
   let controller: AuditController;
@@ -11,13 +11,12 @@ describe('AuditController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuditController],
       providers: [
-        AuditService,
-        {
-          provide: getRepositoryToken(AuditLogEntity),
-          useValue: { save: jest.fn(), find: jest.fn(), create: jest.fn() },
-        },
+        { provide: AuditService, useValue: { getAuditLogs: jest.fn() } },
       ],
-    }).compile();
+    })
+      .overrideGuard(JwtAuthGuard).useValue({ canActivate: () => true })
+      .overrideGuard(RolesGuard).useValue({ canActivate: () => true })
+      .compile();
 
     controller = module.get<AuditController>(AuditController);
   });

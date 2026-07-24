@@ -82,6 +82,9 @@ describe('AuthService', () => {
     refreshTokenRepository = createMockRepository();
     roleRepository = createMockRepository();
     redisService = createMockRedisService();
+    // register/login/verifyEmail 모두 진입 직후 IP rate limit을 확인한다.
+    // 기본값을 통과로 두지 않으면 undefined가 반환돼 모든 테스트가 429로 끝난다.
+    redisService.checkRateLimit.mockResolvedValue(true);
     auditService = { log: jest.fn().mockResolvedValue(undefined) };
     emailService = { sendVerificationEmail: jest.fn().mockResolvedValue(undefined) };
 

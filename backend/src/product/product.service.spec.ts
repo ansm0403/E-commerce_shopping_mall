@@ -15,7 +15,10 @@ import { ProductEntity, ProductStatus, ApprovalStatus, SalesType } from './entit
 import { ProductImageEntity } from './entity/product-image.entity';
 import { OrderItemEntity } from '../order/entity/order-item.entity';
 import { SellerEntity, SellerStatus } from '../seller/entity/seller.entity';
+import { CategoryEntity } from '../category/entity/category.entity';
 import { RedisService } from '../intrastructure/redis/redis.service';
+import { CommonService } from '../common/common.service';
+import { PRODUCT_SEARCH_SERVICE } from './interfaces/product-search.interface';
 
 const mockProduct = (overrides: Partial<ProductEntity> = {}): ProductEntity =>
   ({
@@ -85,6 +88,11 @@ const mockOrderItemRepository = {
   count: jest.fn(),
 };
 
+const mockCategoryRepository = {
+  findOne: jest.fn(),
+  createQueryBuilder: jest.fn(),
+};
+
 /** 트랜잭션 내부에서 사용되는 EntityManager mock */
 const mockManager = {
   create: jest.fn(),
@@ -107,6 +115,15 @@ const mockRedisService = {
   delCacheByPattern: jest.fn().mockResolvedValue(undefined),
 };
 
+/** 목록 조회는 QueryBuilder가 아니라 CommonService.paginate에 위임된다 */
+const mockCommonService = {
+  paginate: jest.fn(),
+};
+
+const mockSearchService = {
+  search: jest.fn(),
+};
+
 describe('ProductService', () => {
   let service: ProductService;
 
@@ -116,6 +133,7 @@ describe('ProductService', () => {
     createQueryBuilder.getManyAndCount.mockResolvedValue([[], 0]);
     mockDataSource.transaction.mockImplementation((cb: (manager: any) => Promise<any>) => cb(mockManager));
     mockRedisService.getCache.mockResolvedValue(null);
+    mockCommonService.paginate.mockResolvedValue({ data: [], meta: { total: 0 } });
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -124,9 +142,12 @@ describe('ProductService', () => {
         { provide: getRepositoryToken(ProductImageEntity), useValue: mockImageRepository },
         { provide: getRepositoryToken(SellerEntity), useValue: mockSellerRepository },
         { provide: getRepositoryToken(OrderItemEntity), useValue: mockOrderItemRepository },
+        { provide: getRepositoryToken(CategoryEntity), useValue: mockCategoryRepository },
         { provide: DataSource, useValue: mockDataSource },
         { provide: EventEmitter2, useValue: mockEventEmitter },
         { provide: RedisService, useValue: mockRedisService },
+        { provide: CommonService, useValue: mockCommonService },
+        { provide: PRODUCT_SEARCH_SERVICE, useValue: mockSearchService },
       ],
     }).compile();
 
@@ -138,7 +159,7 @@ describe('ProductService', () => {
   describe('findAll', () => {
     it('상품 목록을 페이지네이션과 함께 반환한다', async () => {
       const products = [mockProduct({ approvalStatus: ApprovalStatus.APPROVED, status: ProductStatus.PUBLISHED })];
-      createQueryBuilder.getManyAndCount.mockResolvedValue([products, 1]);
+      mockCommonService.paginate.mockResolvedValue({ data: products, meta: { total: 1 } });
 
       const result = await service.findAll({ page: 1, take: 20 }) as any;
 
@@ -146,13 +167,33 @@ describe('ProductService', () => {
       expect(result.meta.total).toBe(1);
     });
 
-    it('기본적으로 approvalStatus=APPROVED 필터를 적용한다', async () => {
+    it('기본적으로 approvalStatus=APPROVED + PUBLISHED 필터를 적용한다', async () => {
       await service.findAll({ page: 1, take: 20 });
 
-      expect(createQueryBuilder.andWhere).toHaveBeenCalledWith(
-        'product.approvalStatus = :approvalStatus',
-        { approvalStatus: ApprovalStatus.APPROVED },
+      expect(mockCommonService.paginate).toHaveBeenCalledWith(
+        expect.anything(),
+        mockProductRepository,
+        'products',
+        expect.objectContaining({
+          where: expect.objectContaining({
+            approvalStatus: ApprovalStatus.APPROVED,
+            status: ProductStatus.PUBLISHED,
+          }),
+        }),
       );
+    });
+
+    it('keyword가 있으면 검색 서비스로 위임한다', async () => {
+      const found = { data: [mockProduct()], meta: { total: 1 } };
+      mockSearchService.search.mockResolvedValue(found);
+
+      const result = await service.findAll({ page: 1, take: 20, keyword: '노트북' });
+
+      expect(result).toEqual(found);
+      expect(mockSearchService.search).toHaveBeenCalledWith(
+        expect.objectContaining({ keyword: '노트북' }),
+      );
+      expect(mockCommonService.paginate).not.toHaveBeenCalled();
     });
   });
 
@@ -205,14 +246,16 @@ describe('ProductService', () => {
       const seller = mockSeller({ id: 1, userId: 100 });
       mockSellerRepository.findOne.mockResolvedValue(seller);
       const products = [mockProduct({ sellerId: 1 })];
-      createQueryBuilder.getManyAndCount.mockResolvedValue([products, 1]);
+      mockCommonService.paginate.mockResolvedValue({ data: products, meta: { total: 1 } });
 
-      const result = await service.findMyProducts(100, { page: 1, take: 20 });
+      const result = await service.findMyProducts(100, { page: 1, take: 20 }) as any;
 
       expect(result.data).toEqual(products);
-      expect(createQueryBuilder.andWhere).toHaveBeenCalledWith(
-        'product.sellerId = :sellerId',
-        { sellerId: 1 },
+      expect(mockCommonService.paginate).toHaveBeenCalledWith(
+        expect.anything(),
+        mockProductRepository,
+        'products/my',
+        expect.objectContaining({ where: expect.objectContaining({ sellerId: 1 }) }),
       );
     });
 
@@ -474,22 +517,24 @@ describe('ProductService', () => {
         mockProduct({ approvalStatus: ApprovalStatus.PENDING }),
         mockProduct({ id: 2, approvalStatus: ApprovalStatus.APPROVED }),
       ];
-      createQueryBuilder.getManyAndCount.mockResolvedValue([products, 2]);
+      mockCommonService.paginate.mockResolvedValue({ data: products, meta: { total: 2 } });
 
-      const result = await service.findAllAdmin({ page: 1, take: 20 });
+      const result = await service.findAllAdmin({ page: 1, take: 20 }) as any;
 
       expect(result.data).toHaveLength(2);
       expect(result.meta.total).toBe(2);
     });
 
     it('approvalStatus 필터를 적용할 수 있다', async () => {
-      createQueryBuilder.getManyAndCount.mockResolvedValue([[], 0]);
-
       await service.findAllAdmin({ page: 1, take: 20, approvalStatus: ApprovalStatus.PENDING });
 
-      expect(createQueryBuilder.andWhere).toHaveBeenCalledWith(
-        'product.approvalStatus = :approvalStatus',
-        { approvalStatus: ApprovalStatus.PENDING },
+      expect(mockCommonService.paginate).toHaveBeenCalledWith(
+        expect.anything(),
+        mockProductRepository,
+        'admin/products',
+        expect.objectContaining({
+          where: expect.objectContaining({ approvalStatus: ApprovalStatus.PENDING }),
+        }),
       );
     });
   });

@@ -1,0 +1,16 @@
+{
+  "//": "Phase 7 eval 러너(ts-node) 전용 오버라이드. 베이스(tsconfig.base.json)는 module:nodenext + customConditions 라 ts-node CJS 즉시 실행이 안 되고, commonjs 로 바꾸면 customConditions 가 옵션 충돌을 일으켜 상속 대신 독립 파일로 둔다. 실행: (cwd=backend) TS_NODE_PROJECT=eval/tsconfig.eval.json node -r ts-node/register/transpile-only eval/run-eval.ts",
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "es2021",
+    "lib": ["es2022"],
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "strict": true,
+    "strictPropertyInitialization": false,
+    "skipLibCheck": true,
+    "types": ["node"]
+  }
+}
