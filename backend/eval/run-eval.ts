@@ -28,6 +28,7 @@ import {
 import { ASSISTANT_TOOLS } from '../src/admin/assistant/assistant-tools';
 import { LlmUsage } from '../src/intrastructure/ai/llm-client.interface';
 import { scrubText } from '../src/common/utils/scrub-text';
+import { sleep, callWithRetry429 } from './eval-utils';
 
 // ─────────────────────────────────────────────────────────────
 // 골든셋 타입 (golden-set.json 형식 — 7-1)
@@ -290,53 +291,8 @@ function gradeCase(
 }
 
 // ─────────────────────────────────────────────────────────────
-// 실행 (429 지수 백오프 + 케이스 간 딜레이)
+// 실행 — 429 백오프는 eval-utils.ts(7-3 judge 와 공유)로 추출.
 // ─────────────────────────────────────────────────────────────
-
-const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
-
-function is429(e: unknown): boolean {
-  const status = (e as { status?: unknown })?.status;
-  const msg = String((e as Error)?.message ?? e);
-  return status === 429 || /\b429\b|RESOURCE_EXHAUSTED|Too Many Requests/i.test(msg);
-}
-
-/**
- * 429 응답 본문에서 서버가 지정한 재시도 대기(초)를 파싱.
- * 무료티어(RPM 15/분) 429 는 "Please retry in 24.6s" / retryDelay:"24s" 를 함께 준다 —
- * 첫 전체 실행에서 실측한 형식. 파싱 실패 시 null(지수 백오프 폴백).
- */
-function parseRetryDelayMs(e: unknown): number | null {
-  const msg = String((e as Error)?.message ?? e);
-  const m = /retry in (\d+(?:\.\d+)?)s/i.exec(msg) ?? /"retryDelay"\s*:\s*"(\d+)s"/.exec(msg);
-  return m ? Math.ceil(Number(m[1]) * 1000) : null;
-}
-
-/**
- * 429 면 최대 3회 재시도. 대기 시간은 max(서버 지정 retryDelay + 1초, 지수 백오프 5→15→45초).
- * (1차 전체 실행에서 1→2→4초로는 RPM 창이 안 열려 1건이 채점 불가로 남은 교훈.)
- * 그 외 에러는 즉시 throw.
- */
-async function callWithRetry(
-  svc: AssistantService,
-  question: string,
-): Promise<AssistantTraceResult> {
-  const backoffs = [5_000, 15_000, 45_000];
-  for (let attempt = 0; ; attempt += 1) {
-    try {
-      return await svc.chatWithTrace(question);
-    } catch (e) {
-      if (!is429(e) || attempt >= backoffs.length) throw e;
-      const serverMs = parseRetryDelayMs(e);
-      const wait = Math.max(serverMs != null ? serverMs + 1_000 : 0, backoffs[attempt]);
-      console.log(
-        `    ⏳ 429(rate limit) — ${Math.round(wait / 1000)}초 후 재시도 (${attempt + 1}/${backoffs.length}` +
-          `${serverMs != null ? `, 서버 지정 ${Math.round(serverMs / 1000)}s` : ''})`,
-      );
-      await sleep(wait);
-    }
-  }
-}
 
 // ─────────────────────────────────────────────────────────────
 // 리포트 (콘솔 점수표 + JSON 저장)
@@ -461,7 +417,7 @@ async function main() {
     const c = cases[i];
     process.stdout.write(`[${i + 1}/${cases.length}] ${c.id} ... `);
     try {
-      const trace = await callWithRetry(svc, c.question);
+      const trace = await callWithRetry429(() => svc.chatWithTrace(c.question));
       const { status, violations } = gradeCase(c, trace);
       consecutiveErrors = 0;
       results.push({
