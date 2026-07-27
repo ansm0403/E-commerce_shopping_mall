@@ -38,6 +38,8 @@ export function makeEmails(suite: string) {
     buyerReject: `${p}buyer-reject@test.local`,
     admin: `${p}admin@test.local`,
     demoAdmin: `${p}demo-admin@test.local`,
+    seller: `${p}seller@test.local`,
+    buyer: `${p}buyer@test.local`,
   };
 }
 
@@ -96,6 +98,57 @@ export async function createPendingProduct(
     [opts.name, opts.sellerId ?? null],
   );
   return product.id;
+}
+
+/**
+ * 승인된 셀러 1명 프로비저닝(sellers 테이블 직접 삽입).
+ * 신청→승인 왕복 자체는 seller-approval 스펙이 HTTP 로 검증하므로,
+ * 상품 라이프사이클 스펙은 "이미 승인된 셀러"에서 출발한다.
+ * businessNumber 는 unique 라 스위트별로 다른 값을 넘겨야 한다.
+ */
+export async function createApprovedSeller(
+  ds: DataSource,
+  opts: { userId: number; businessName: string; businessNumber: string },
+): Promise<number> {
+  const [seller] = await ds.query(
+    `INSERT INTO sellers (user_id, "businessName", "businessNumber", "representativeName",
+                          "businessAddress", "bankName", "bankAccountNumber", "bankAccountHolder",
+                          status, "approvedAt")
+     VALUES ($1, $2, $3, 'e2e대표', '서울시 테스트구 e2e로 1', 'e2e은행', '000-00-000000', 'e2e대표',
+             'approved', NOW())
+     RETURNING id`,
+    [opts.userId, opts.businessName, opts.businessNumber],
+  );
+  return seller.id;
+}
+
+/**
+ * e2e 계정이 만든 주문·결제·장바구니를 정리한다.
+ * products 삭제 전에 불러야 한다 — order_items.product_id FK 가 상품 삭제를 막는다.
+ */
+export async function cleanupE2eOrders(ds: DataSource, suite: string): Promise<void> {
+  const like = `${e2ePrefix(suite)}%`;
+  const orderIds: Array<{ id: number }> = await ds.query(
+    `SELECT o.id FROM orders o JOIN users u ON u.id = o.user_id WHERE u.email LIKE $1`,
+    [like],
+  );
+  if (orderIds.length > 0) {
+    const ids = orderIds.map((r) => r.id);
+    await ds.query(`DELETE FROM shipments WHERE order_id = ANY($1)`, [ids]);
+    await ds.query(`DELETE FROM payments WHERE order_id = ANY($1)`, [ids]);
+    await ds.query(`DELETE FROM order_items WHERE order_id = ANY($1)`, [ids]);
+    await ds.query(`DELETE FROM orders WHERE id = ANY($1)`, [ids]);
+  }
+  // 장바구니(실패한 테스트가 남긴 잔여물 포함)
+  await ds.query(
+    `DELETE FROM cart_items WHERE cart_id IN
+       (SELECT c.id FROM carts c JOIN users u ON u.id = c.user_id WHERE u.email LIKE $1)`,
+    [like],
+  );
+  await ds.query(
+    `DELETE FROM carts WHERE user_id IN (SELECT id FROM users WHERE email LIKE $1)`,
+    [like],
+  );
 }
 
 /** 이름 접두로 e2e 상품을 지운다(계정과 무관하게 남을 수 있어 별도 정리). */

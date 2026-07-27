@@ -179,10 +179,17 @@ const nextConfig = {
   // Vercel 환경변수 API_PROXY_TARGET 도 함께 제거
   // ============================================================
   async rewrites() {
+  const apiTarget = process.env.API_PROXY_TARGET || 'http://localhost:4000/v1';
+  // 업로드 이미지는 /v1 프리픽스 없이 서빙된다(backend main.ts express.static) — API 타깃에서 /v1만 뗀다.
+  const uploadsTarget = apiTarget.replace(/\/v1\/?$/, '');
   return [
     {
       source: '/api/:path*',
-      destination: `${process.env.API_PROXY_TARGET || 'http://localhost:4000/v1'}/:path*`,
+      destination: `${apiTarget}/:path*`,
+    },
+    {
+      source: '/uploads/:path*',
+      destination: `${uploadsTarget}/uploads/:path*`,
     },
   ];
   },

@@ -47,8 +47,11 @@
   - 표 스타일이 감사로그→셀러→상품으로 세 번 복제될 참이라 `(admin)/admin/components/table-ui.tsx`로 스타일·`AdminPagination`만 추출하고 셀러 화면도 옮겼다. 컬럼 구성이 화면마다 크게 달라 표 컴포넌트 자체는 일반화하지 않았다. (audit-logs는 metadata 펼치기 등 자기 사정이 있어 그대로 뒀다)
   - **e2e 추가**: `backend-e2e/src/backend/admin-product-approval.e2e.spec.ts` — buyer 403 / 데모 관리자 조회 200·승인 403 / 비데모 ADMIN 승인 200 + `approvedAt` 기록 / 중복 승인 400 / 반려 사유 필수 400 / `approvalStatus` 필터 실효성. 두 e2e 스펙이 계정을 공유하면 병렬 실행 시 서로의 데이터를 지우므로 **스펙별 이름공간**(`makeEmails(suite)`)으로 독립시켰다(`runInBand` 없이도 통과 확인).
 
-> ⚠ **발견한 백엔드 결손 — 반려된 상품은 되살릴 수 없다.**
-> `approve`/`reject` 모두 PENDING만 허용하는데, 셀러가 상품을 수정할 때 PENDING으로 되돌리는 건 `APPROVED`인 경우뿐이다(`product.service.ts` update의 EC1). 즉 REJECTED 상품은 수정해도 REJECTED에 머물러 영구 사망한다 — 셀러 신청은 재신청이 되는데 상품은 안 되는 비대칭이다. 현재 동작을 e2e로 고정해 뒀고, 수정은 **Phase 1 §1-A②(셀러 상품 수정)** 에서 함께 다룬다.
+> ✅ **해소됨 (2026-07-28, §1-A② 작업에서) — 반려된 상품을 셀러가 재제출할 수 있다.**
+> `update()`의 EC1을 넓혀 **REJECTED도 수정 시 PENDING 복귀 + rejectionReason 초기화**로 바꿨다(셀러 신청의
+> 반려→재신청과 대칭). 관리자가 반려를 직접 뒤집는 경로는 여전히 없다 — 되살리는 길은 셀러의 수정=재제출뿐.
+> 아울러 **승인=게시**가 되면서 `approve()`가 DRAFT 상품을 PUBLISHED로 승격한다(승인 즉시 상점 노출·주문 가능).
+> 왕복 검증: `backend-e2e/src/backend/seller-product-lifecycle.e2e.spec.ts`. 상세는 `01-seller-core.md` §1-A②.
 
 ### ③ 전체 주문 관리
 - **연계 백엔드 (이미 존재)**

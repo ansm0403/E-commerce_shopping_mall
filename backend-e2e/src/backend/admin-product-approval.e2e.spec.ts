@@ -99,6 +99,8 @@ describe('관리자 상품 승인/반려 (HTTP e2e)', () => {
     expect(approve.status).toBe(200);
     expect(approve.data.approvalStatus).toBe('approved');
     expect(approve.data.approvedAt).not.toBeNull();
+    // 승인 = 게시 (Step 5) — draft 상품은 승인과 동시에 published 로 올라간다
+    expect(approve.data.status).toBe('published');
 
     // 이미 승인된 상품은 다시 승인할 수 없다
     const twice = await axios.patch(
@@ -130,9 +132,9 @@ describe('관리자 상품 승인/반려 (HTTP e2e)', () => {
     expect(reject.data.approvalStatus).toBe('rejected');
     expect(reject.data.rejectionReason).toBe(reason);
 
-    // ⚠ 반려된 상품은 되살릴 수 없다 — approve 도 PENDING 만 받는다.
-    //   셀러가 수정해도 PENDING 으로 돌아가는 건 APPROVED 인 경우뿐이라(product.service.ts),
-    //   현재 설계상 반려는 사실상 최종 결정이다. 이 테스트는 그 사실을 고정해 둔다.
+    // 관리자가 반려를 직접 뒤집는 경로는 없다 — approve 는 여전히 PENDING 만 받는다.
+    //   되살리는 길은 셀러의 수정 = 재제출(REJECTED → PENDING 복귀, Step 5)뿐이며,
+    //   그 왕복은 seller-product-lifecycle 스펙이 검증한다.
     const revive = await axios.patch(
       `/admin/products/${productId}/approve`,
       {},

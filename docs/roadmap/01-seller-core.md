@@ -30,27 +30,35 @@
   - 반려 → 재신청 시 이전 신청 내용을 프리필하되 **은행 3필드는 응답에 없어(@Exclude) 재입력**받는다. 백엔드 `apply()`가 REJECTED 행을 PENDING으로 되돌리며 사유를 지운다.
   - 진입 링크가 코드베이스에 아예 없어서 헤더 `UserMenu`에 항목 추가(역할에 따라 "셀러 신청"/"셀러 센터").
 
-### ② 셀러 상품 등록 / 내 상품 관리  (승인된 셀러)
+### ② 셀러 상품 등록 / 내 상품 관리  (승인된 셀러) — ✅ 구현 완료 (2026-07-28)
 
-> ⛔ **착수 전 해소해야 할 블로커 — 셀러가 등록한 상품은 승인해도 상점에 뜨지 않고 주문도 안 된다** (2026-07-28 확인)
+> ✅ **게시 블로커 해소 — "승인=게시 + 셀러 토글" 혼합안(a+b)으로 결정** (2026-07-28)
 >
-> 1. `create()`가 상품을 **`status: DRAFT`** 로 저장한다 — `product.service.ts:203-222`
-> 2. 공개 목록 `findAll`은 `approvalStatus=APPROVED` **AND `status=PUBLISHED`** 만 통과 — `product.service.ts:114-117`
-> 3. 주문 생성도 `status !== PUBLISHED` 면 거부 — `order.service.ts:132-137`
-> 4. 그런데 `approve()`는 `approvalStatus`·`approvedAt`·`rejectionReason`만 바꾸고 **`status`는 건드리지 않는다** — `product.service.ts:374-397`
-> 5. `CreateProductDto`에 **`status` 필드가 없고**, `UpdateProductDto = PartialType(CreateProductDto)` 라 수정 경로에도 없다
+> 문제는 "API 어디에도 `status`를 PUBLISHED로 만드는 경로가 없다"였다(아래 이력 참고). 결정한 설계:
+> 1. **승인 = 게시**: `approve()`가 `status`가 `DRAFT`일 때만 `PUBLISHED`로 승격 — 재승인(수정 재심사) 시
+>    셀러가 골라둔 HIDDEN/DISCONTINUED를 관리자가 덮어쓰지 않는다.
+> 2. **셀러 토글**: 신규 `PATCH /products/:id/status`(SELLER)가 `published|hidden|discontinued`만 받는다
+>    (`UpdateProductStatusDto` @IsIn — DRAFT·SOLD_OUT은 시스템 관리 상태라 수동 지정 불가).
+>    **approvalStatus는 건드리지 않아 재심사를 발동하지 않는다** — 내용 수정(PATCH :id)의 EC1과 분리한 이유.
+>    `published`로 올리는 건 `approvalStatus=APPROVED`일 때만(400).
+> 3. **반려 부활**: `update()`의 EC1을 넓혀 **REJECTED도 수정 시 PENDING 복귀 + rejectionReason 초기화**
+>    — 셀러 신청의 반려→재신청과 대칭. 관리자가 반려를 직접 뒤집는 경로는 여전히 없다(셀러 재제출만).
+> 4. 수정 재심사 중(status=published, approvalStatus=pending)에는 목록·주문 필터의 approvalStatus 조건
+>    때문에 자동으로 상점에서 내려가고, 재승인되면 그대로 복귀한다.
 >
-> → **API 어디에도 `status`를 PUBLISHED로 만들 방법이 없다.** 시드 상품이 상점에 보이는 건 시드가 DB에 직접
-> `published`로 넣기 때문이다(현재 분포: published 336 / sold_out 13, 전부 approved).
-> 상세 조회(`findOne`)는 HIDDEN·DISCONTINUED만 막으므로 **DRAFT 상품도 상세 페이지에는 보인다** — 목록에만 안 뜨고 주문만 안 되는, 더 헷갈리는 형태다.
+> 전 과정은 `backend-e2e/src/backend/seller-product-lifecycle.e2e.spec.ts`가 고정한다:
+> 등록→미노출·장바구니 차단→승인=게시→노출→**실제 주문 생성**→숨김/재게시(재심사 미발동)→반려→수정 재제출→재승인.
+> (기존 admin-product-approval 스펙도 "승인 시 published" 단언 추가로 갱신)
 >
-> **선택지**: (a) `approve()`가 `status`도 PUBLISHED로 올린다("승인=게시", 최소 변경) /
-> (b) `Create·UpdateProductDto`에 `status` 추가해 셀러가 게시·숨김을 직접 제어(실서비스에 가까움) /
-> (c) `create()` 기본값을 PUBLISHED로(승인 전엔 어차피 안 보이므로 안전하나 DRAFT 개념이 죽음).
-> 어느 쪽이든 **"셀러 등록 → 관리자 승인 → 공개 목록 노출 → 주문 생성"이 통과하는지 e2e로 확인**할 것.
+> <details><summary>블로커 원인 이력 (2026-07-28 확인, 해소됨)</summary>
 >
-> 함께 판단할 것: **반려된 상품을 되살릴 수 없는 문제**(02-admin-core §2-A② 하단 참고).
-> 현재 동작은 `backend-e2e/src/backend/admin-product-approval.e2e.spec.ts`에 고정돼 있으니 고칠 경우 그 테스트도 함께 수정한다.
+> 1. `create()`가 상품을 `status: DRAFT` 로 저장
+> 2. 공개 목록 `findAll`은 `approvalStatus=APPROVED` AND `status=PUBLISHED` 만 통과
+> 3. 주문 생성도 `status !== PUBLISHED` 면 거부
+> 4. `approve()`는 `approvalStatus`·`approvedAt`·`rejectionReason`만 변경
+> 5. `CreateProductDto`/`UpdateProductDto`에 `status` 필드 없음
+> → 시드 상품이 보였던 건 시드가 DB에 직접 `published`로 넣기 때문이었다.
+> </details>
 - **연계 백엔드 (이미 존재)**
   | 메서드/경로 | 역할 | 파일 |
   |---|---|---|
@@ -66,6 +74,24 @@
   - `(main)/seller/products/new/page.tsx` (stub→폼)
   - `(main)/seller/products/page.tsx` (stub→내 상품 목록/수정·삭제)
 - **산출물**: 셀러가 상품을 등록하고, 목록에서 재고/가격 수정·삭제, 이미지 업로드 가능.
+- **구현 메모 (2026-07-28)**
+  - **백엔드 추가분**: 위 게시 경로 3종 외에 `GET /products/my/:id`(수정 화면용 단건 — 공개 `findOne`은
+    미승인·HIDDEN을 404로 숨기므로 별도 경로가 필요했다).
+  - **업로드 이미지 정적 서빙이 없었다**: `addImage`가 URL을 `/uploads/…`로 저장하는데 서빙 코드가 전무.
+    `main.ts`에 `express.static('/uploads')` 추가(글로벌 prefix `v1` 미적용) + `next.config.js` rewrites에
+    `/uploads/:path*` 프록시 추가(API 타깃에서 `/v1`만 뗀 주소로). ⚠ **diskStorage라 컨테이너 재배포 시
+    파일 유실** — S3 등 외부 스토리지 전환 전까지의 한계로 기록해 둔다.
+  - **등록은 2단계 API**: `POST /products` 성공 후 그 id로 `POST /products/:id/images`(장당 순차 업로드,
+    첫 장이 대표). 이미지 단계 실패는 "등록 실패"가 아니라 "이미지만 추가 못 함"으로 안내(`ImageUploadError`).
+  - **FormData 함정**: axios 인스턴스가 `Content-Type: application/json`을 고정하므로 업로드 요청에서만
+    `headers: { 'Content-Type': undefined }`로 지워 브라우저가 multipart boundary를 붙이게 한다.
+  - **SellerGuard 신설**: `(main)/seller/layout.tsx`에 부착(기존엔 가드 없음). AdminGuard를 본떴고,
+    승인 직후 낡은 토큰은 `useSellerRoleSync`(§7-2와 동일 큐)로 refresh 1회 자동 해소. 비-셀러는
+    `/my/seller-apply`로 안내.
+  - **shared 추가**: `product/seller-product.ts`(`SellerProduct`·`CreateProductRequest`·
+    `UpdateProductStatusRequest`·`SELLER_SETTABLE_STATUSES` 등).
+  - 수정 화면(`[id]/edit`)이 반려 상품의 **재제출 경로**다 — 반려 사유 배너 + "저장하면 재심사" 안내.
+  - 관리자 표 스타일(`table-ui.tsx`)·페이지네이션을 셀러 목록에서도 재사용(복제 금지 규칙).
 
 ### ③ 셀러 주문 / 배송 처리
 - **연계 백엔드 (이미 존재)**

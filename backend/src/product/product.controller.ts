@@ -24,6 +24,7 @@ import { ProductService } from './product.service';
 import { ProductSummaryService } from './product-summary.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { UpdateProductStatusDto } from './dto/update-product-status.dto';
 import { ProductQueryDto } from './dto/product-query.dto';
 import { RejectProductDto } from './dto/reject-product.dto';
 import { ProductResponseDto } from './dto/product-response.dto';
@@ -64,6 +65,15 @@ export class ProductController {
     return this.productService.findMyProducts(req.user.sub, query);
   }
 
+  /** 셀러: 본인 상품 단건(수정 화면용) — 공개 :id 와 달리 HIDDEN 등 모든 상태를 보여준다 */
+  @Get('my/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SELLER)
+  @Serialize(ProductResponseDto)
+  findMyProduct(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
+    return this.productService.findMyProduct(id, req.user.sub);
+  }
+
   @Get(':id')
   @Throttle({ default: { ttl: 60000, limit: 60 } })
   @Serialize(ProductResponseDto)
@@ -101,6 +111,20 @@ export class ProductController {
     @Req() req: any,
   ) {
     return this.productService.update(id, dto, req.user.sub);
+  }
+
+  /** 셀러: 게시/숨김/단종 토글 — 내용 수정(PATCH :id)과 달리 재심사를 발동하지 않는다 */
+  @Patch(':id/status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SELLER)
+  @Serialize(ProductResponseDto)
+  @Auditable(AuditAction.PRODUCT_UPDATED, { captureBody: ['status'] })
+  updateStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateProductStatusDto,
+    @Req() req: any,
+  ) {
+    return this.productService.updateStatus(id, dto.status, req.user.sub);
   }
 
   @Delete(':id')
