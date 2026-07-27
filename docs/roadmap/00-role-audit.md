@@ -74,6 +74,10 @@
 
 1. ✅ **정산 `v1/` 이중 prefix 수정** — `settlement.controller.ts` `SellerSettlementController`를 `@Controller('seller/settlements')`로 수정. `AdminSettlementController`는 이미 `admin/settlements`로 정상이었음. (Step 0 완료, commit `84a83f4`)
 2. ✅ **승인 후 토큰 갱신 전략 결정 → 구현 완료** — 백엔드 무변경. `status=approved`인데 토큰에 SELLER가 없으면 `/auth/refresh` 1회 자동 트리거 + 실패 시 재로그인 안내. (방침 Step 0 확정 → `(main)/my/seller-apply`의 `useSellerRoleSync`로 구현, 2026-07-27. 토큰 payload 판독은 신규 `frontend/src/lib/jwt.ts`, 갱신 큐는 axios 인터셉터의 `refreshAccessToken` 공유)
-3. ❌→**Step 1으로 이관** **비데모 ADMIN으로 승인 플로우 실검증** — service 레벨 통합 테스트는 `seller.integration.spec.ts`에 완비. HTTP 가드·DemoAccountGuard·토큰 staleness까지 포함한 supertest e2e는 Step 1 셀러 온보딩 UI 구현과 함께 진행.
+3. ✅ **비데모 ADMIN으로 승인 플로우 실검증** — `backend-e2e/src/backend/seller-approval.e2e.spec.ts` 신규(2026-07-27). 실행 중인 서버에 실제 HTTP로 붙어 ① 신청→pending ② buyer 토큰의 관리자 엔드포인트 403(RolesGuard) ③ **데모 관리자 승인 403**(DemoAccountGuard — 조회는 200이므로 "역할이 아니라 데모라서 막힌 것"이 구분된다) ④ 비데모 ADMIN 목록 조회 + **응답에 password 해시 없음**(Step 1 회귀 방지) ⑤ 승인 후 DB에 buyer+seller 역할 ⑥ **구토큰으로는 여전히 403** ⑦ refresh 후 신토큰으로 200 ⑧ 반려 사유 저장·노출까지 검증. 3회 연속 실행 통과 확인.
+   - 계정 준비만 DB 직결(비데모 ADMIN을 만드는 API가 없고, 회원가입은 `isEmailVerified=false`라 로그인이 막힌다). 검증 대상 동작은 전부 HTTP.
+   - **기존 e2e 스캐폴딩은 죽어 있었다** — `GET /api`(없는 엔드포인트) 기대, 포트 3000(실제 4000), `setupFiles`가 함수를 export해 baseURL이 설정된 적 없음, teardown의 `killPort`가 개발 서버를 죽임, `dependsOn: backend:serve`가 이미 뜬 서버와 EADDRINUSE 충돌. 전부 정리했고 **이미 떠 있는 서버를 대상으로** 돌게 바꿨다.
+   - 로그인은 IP당 10회/5분 제한이라 계정당 1회만 로그인하고 토큰을 재사용하며, `beforeAll`에서 `rate:login:*`를 비운다(안 그러면 연속 두 번째 실행이 429).
+   - `jest.config.ts` → `jest.config.cjs`: Node 22.18+ 타입 스트리핑이 `export default`를 보고 ESM으로 판정해 `__dirname`이 사라지는 문제(로컬에서 jest가 config 파싱 단계에서 죽음)를 확장자로 못 박아 해결.
 4. ✅ **`approve()` 트랜잭션화** — `DataSource` 주입 후 `seller.update`와 `user.save`를 단일 `dataSource.transaction()`으로 원자화. 정합성 케이스 테스트 추가. (Step 0 완료, commit `84a83f4`)
 5. ⏸ `orderItem.sellerId ?? 0` 고아 방지 가드 — Step 3(주문/배송) 착수 시 함께 처리.
