@@ -31,6 +31,26 @@
   - 진입 링크가 코드베이스에 아예 없어서 헤더 `UserMenu`에 항목 추가(역할에 따라 "셀러 신청"/"셀러 센터").
 
 ### ② 셀러 상품 등록 / 내 상품 관리  (승인된 셀러)
+
+> ⛔ **착수 전 해소해야 할 블로커 — 셀러가 등록한 상품은 승인해도 상점에 뜨지 않고 주문도 안 된다** (2026-07-28 확인)
+>
+> 1. `create()`가 상품을 **`status: DRAFT`** 로 저장한다 — `product.service.ts:203-222`
+> 2. 공개 목록 `findAll`은 `approvalStatus=APPROVED` **AND `status=PUBLISHED`** 만 통과 — `product.service.ts:114-117`
+> 3. 주문 생성도 `status !== PUBLISHED` 면 거부 — `order.service.ts:132-137`
+> 4. 그런데 `approve()`는 `approvalStatus`·`approvedAt`·`rejectionReason`만 바꾸고 **`status`는 건드리지 않는다** — `product.service.ts:374-397`
+> 5. `CreateProductDto`에 **`status` 필드가 없고**, `UpdateProductDto = PartialType(CreateProductDto)` 라 수정 경로에도 없다
+>
+> → **API 어디에도 `status`를 PUBLISHED로 만들 방법이 없다.** 시드 상품이 상점에 보이는 건 시드가 DB에 직접
+> `published`로 넣기 때문이다(현재 분포: published 336 / sold_out 13, 전부 approved).
+> 상세 조회(`findOne`)는 HIDDEN·DISCONTINUED만 막으므로 **DRAFT 상품도 상세 페이지에는 보인다** — 목록에만 안 뜨고 주문만 안 되는, 더 헷갈리는 형태다.
+>
+> **선택지**: (a) `approve()`가 `status`도 PUBLISHED로 올린다("승인=게시", 최소 변경) /
+> (b) `Create·UpdateProductDto`에 `status` 추가해 셀러가 게시·숨김을 직접 제어(실서비스에 가까움) /
+> (c) `create()` 기본값을 PUBLISHED로(승인 전엔 어차피 안 보이므로 안전하나 DRAFT 개념이 죽음).
+> 어느 쪽이든 **"셀러 등록 → 관리자 승인 → 공개 목록 노출 → 주문 생성"이 통과하는지 e2e로 확인**할 것.
+>
+> 함께 판단할 것: **반려된 상품을 되살릴 수 없는 문제**(02-admin-core §2-A② 하단 참고).
+> 현재 동작은 `backend-e2e/src/backend/admin-product-approval.e2e.spec.ts`에 고정돼 있으니 고칠 경우 그 테스트도 함께 수정한다.
 - **연계 백엔드 (이미 존재)**
   | 메서드/경로 | 역할 | 파일 |
   |---|---|---|
