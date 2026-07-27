@@ -68,8 +68,12 @@ authClient.interceptors.request.use(
  *      "이미 진행 중인 같은 Promise"를 함께 기다리게 한다 (큐처럼 동기화).
  *
  * refreshToken은 httpOnly 쿠키에 저장되어 자동으로 전송됨.
+ *
+ * export 하는 이유: 401 이 아니어도 토큰을 갱신해야 할 때가 있다.
+ * 셀러 승인 직후처럼 DB 역할은 바뀌었는데 손에 든 토큰이 낡은 경우(00-role-audit §7-2),
+ * 화면이 직접 이 함수를 부른다 — 같은 큐를 쓰므로 401 재발급과 경합하지 않는다.
  */
-const refreshAccessToken = async (): Promise<string | null> => {
+export const refreshAccessToken = async (): Promise<string | null> => {
   // 이미 로그아웃 절차 중이면 더 이상 갱신 시도하지 않음 (무한 루프 방지)
   if (isLoggingOut) {
     return null;

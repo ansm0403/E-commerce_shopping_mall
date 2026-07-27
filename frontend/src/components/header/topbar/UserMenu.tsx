@@ -32,16 +32,25 @@ export default function UserMenu() {
   if (!user) return <LogIn />;
 
   // roles 런타임 형태는 [{ name: 'admin' }] (shared 타입은 string[]로 선언 — 미스매치 방어적 처리)
-  const isAdmin =
+  const hasRole = (role: string) =>
     Array.isArray(user.roles) &&
     (user.roles as Array<string | { name?: string }>).some(
-      (r) => (typeof r === 'string' ? r : r?.name) === 'admin',
+      (r) => (typeof r === 'string' ? r : r?.name) === role,
     );
+
+  const isAdmin = hasRole('admin');
+  // /auth/me 는 DB 기준이라 승인 즉시 seller 가 보인다(토큰은 아직 낡았을 수 있음).
+  // 메뉴 라벨만 바꾸는 용도라 이 정도 판정으로 충분 — 실제 권한 적용은 seller-apply 화면이 처리한다.
+  const isSeller = hasRole('seller');
 
   const items: { label: string; onClick: () => void; danger?: boolean; admin?: boolean }[] = [
     { label: "내 정보", onClick: () => void 0 },
     { label: "주문 목록", onClick: () => { router.push('/my/orders'); setOpen(false); } },
     { label: "장바구니", onClick: () => { router.push('/cart'); setOpen(false); } },
+    {
+      label: isSeller ? "셀러 센터" : "셀러 신청",
+      onClick: () => { router.push(isSeller ? '/seller' : '/my/seller-apply'); setOpen(false); },
+    },
     ...(isAdmin
       ? [{
           label: "관리자 페이지",

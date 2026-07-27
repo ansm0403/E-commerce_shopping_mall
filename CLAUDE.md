@@ -52,14 +52,16 @@
 - 구매자 커머스 전 구간: 회원/인증 → 카테고리/상품/검색 → 장바구니 → 주문 → PortOne 결제 → 주문조회/취소/구매확정 → 리뷰/위시리스트/문의.
 - 관리자 **대시보드**(KPI·주문추이·보안·퍼널 차트) — `(admin)/admin/dashboard` 실구현.
 - 관리자 **감사 로그 조회** — `(admin)/admin/audit-logs` 실구현(트리아지 3버킷 요약 + 포렌식 검색: 필터·표·페이지네이션). 백엔드 `GET /v1/admin/audit-logs` 연결, 행위자 닉네임/이메일 보강. 상세 `docs/roadmap/ex-audit-log-admin.md`.
+- 관리자 **셀러 승인/반려** — `(admin)/admin/sellers` 실구현(상태 탭·목록·페이지네이션 + 승인/반려 모달, 반려 사유 필수). 백엔드 `GET /v1/seller/applications`·`PATCH .../approve|reject` 연결. 승인은 seller.status 변경 + SELLER 역할 부여가 한 트랜잭션. 이때 `UserModel.password`에 `@Exclude()`를 추가해 `relations:['user']` 응답에서 해시가 새던 것을 차단(중첩 2단 직렬화로 검증). 상세 `docs/roadmap/02-admin-core.md` §2-A①.
+- 셀러 **신청/상태 확인 프론트** — `(main)/my/seller-apply` 실구현(미신청/pending/approved/rejected 4분기, 반려 사유 표시 + 재신청). 승인됐는데 손에 든 토큰이 낡은 경우(인가는 토큰의 역할 기준) `/auth/refresh`를 1회 자동 트리거해 해소 — 토큰 판독은 `frontend/src/lib/jwt.ts`(서명 검증 아님, UI 판단용). 상세 `docs/roadmap/01-seller-core.md` §1-A①.
 - 셀러 **백엔드 워크플로 완성**: 신청→pending→승인/반려(SellerEntity, 은행정보 @Exclude, 감사로그).
 - 결제/정산/감사 백엔드 모듈 존재.
 - **관측성/알림(계획 외 삽입)**: Sentry 에러추적(프론트/백) + Slack 알림 3종 연동 완료. 트러블슈팅 회고 `docs/roadmap/ex-sentry-slack.md`.
 - **관리자 AI 어시스턴트(계획 외 삽입)**: `(admin)/admin/assistant` — 자연어로 사내 데이터 질의 → **tool use(function calling)** 로 기존 서비스 호출. 프로바이더 비종속(현재 Gemini 무료티어, 추후 Claude) + SSE 스트리밍 + 멀티턴(대화 DB 영속화). **도구 6종**: get_sales_summary·get_order_stats·query_audit_logs·get_product_info(정형) + summarize_reviews·summarize_inquiries(비정형 RAG, Phase 5a — 상품/카테고리(하위)·기간 필터). PII는 디스패처에서 마스킹/projection/scrubText 처리(도구 결과는 직렬화 인터셉터 미경유 → @Exclude 무력). **구매자 상품 리뷰 자동 요약(Phase 5c)**: 어시스턴트와 별개로 상품 상세에 AI 리뷰 요약을 캐시(`product_summaries` 테이블)+노출 — 리뷰 변경 이벤트로 stale 표시 + 다음 열람 시 SWR 백그라운드 재생성(`GET /v1/products/:id/review-summary`, public; throttle 10분 + 동시 1건 CAS 락, LLM 키 없으면 no-op). 상세 `docs/roadmap/ex-ai-assistant.md`. **프롬프트 캐싱·usage(Phase 6 a·b·c)**: system 정적/동적 분리 + usage 노출 + Gemini implicit 측정/explicit 스캐폴드(off). 무료티어는 explicit 캐싱 불가(캐시 storage 쿼터=0) → 진짜 $ 절감은 추후 Claude+`cache_control` 전환(env 한 줄). 측정 수치·검증 서사는 문서 §8-12. **평가(Phase 7 + A-1)**: 골든셋 20문항 + 규칙 러너 + LLM-judge로 도구 선택·응답 태도·충실성 자동 채점, 프롬프트 1줄 수정→재측정으로 eval 루프 완주(도구 선택 94.1→100%, judge 무회귀 — 서사 문서 §8-13~15). (Phase 0~4 + 5a + 5c + 6a·b·c + 7 + A-1 완료, 다음=Phase 6b)
 
 **비어 있음 / 스켈레톤**
-- **셀러 프론트** `(main)/seller/*` 전부 stub: 대시보드/상품/상품등록/주문/정산/문의.
-- **관리자 하위 페이지** stub: `orders`, `products`(승인), `categories`, `sellers`(승인), `settlements`. (dashboard·audit-logs는 실구현)
+- **셀러 프론트** `(main)/seller/*` 전부 stub: 대시보드/상품/상품등록/주문/정산/문의. (신청 화면 `my/seller-apply`는 실구현)
+- **관리자 하위 페이지** stub: `orders`, `products`(승인), `categories`, `settlements`. (dashboard·audit-logs·sellers는 실구현)
 - **정산** 프론트 스켈레톤(백엔드만 존재).
 - **인프라**: nginx 미도입(Vercel→EC2 프록시 우회 중).
 

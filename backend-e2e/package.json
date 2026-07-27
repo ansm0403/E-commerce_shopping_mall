@@ -13,13 +13,10 @@
           "{projectRoot}/test-output/jest/coverage"
         ],
         "options": {
-          "jestConfig": "backend-e2e/jest.config.ts",
-          "passWithNoTests": true
-        },
-        "dependsOn": [
-          "@shopping-mall/backend:build",
-          "@shopping-mall/backend:serve"
-        ]
+          "jestConfig": "backend-e2e/jest.config.cjs",
+          "passWithNoTests": true,
+          "runInBand": true
+        }
       }
     }
   }
