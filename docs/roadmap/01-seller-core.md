@@ -114,8 +114,9 @@
   - e2e(배송 왕복): 결제는 PortOne 웹훅 없이 `simulatePaidOrder()`(DB로 리스너 결과물 재현) 후
     출고→배송완료→구매확정을 전부 HTTP 로 — **구매확정 시 정산 PENDING 자동 생성**(금액·수수료 10%)까지 단언.
 
-### ④ 셀러 정산 조회
-- **선결**: README의 ⚠ **정산 이중 prefix 버그** 먼저 수정(`settlement.controller.ts`).
+### ④ 셀러 정산 조회 — ✅ 구현 완료 (2026-07-28)
+- ~~**선결**: README의 ⚠ 정산 이중 prefix 버그 먼저 수정~~ → **이미 해소돼 있었다** — 현재
+  `settlement.controller.ts`는 `@Controller('seller/settlements')`로 깨끗하다(착수 시 재확인 완료).
 - **연계 백엔드 (이미 존재)**
   | 메서드/경로 | 역할 | 파일 |
   |---|---|---|
@@ -125,6 +126,16 @@
   - `service/settlement.ts` (신규), `hooks/settlement-query-options.ts` (신규)
   - `(main)/seller/settlements/page.tsx` (stub→정산 내역/요약)
 - **산출물**: 셀러가 정산 요약(누적/대기/지급액)과 기간별 내역을 조회.
+- **구현 메모 (2026-07-28)**
+  - **"정산 생성 코드가 없다"는 사전 감사가 틀렸었다** — `SettlementEventListener`(settlement 모듈 내부)가
+    `order.completed`(구매 확정, order.service.ts confirmOrder 발행)를 받아 **셀러별 정산 PENDING 을
+    자동 생성**한다(수수료 10%, 멱등). 모듈 밖 참조만 검색해서 놓친 것. 즉 백엔드 신규 구현이 아니라
+    **검증 + 프론트 연결**이 실제 작업이었고, 생성 체인은 배송 왕복 e2e 가 이미 단언한다.
+  - 응답 DTO 함정 수정: `SettlementResponseDto extends BaseModel`이라 @Expose 없는 id/createdAt/updatedAt 이
+    응답에서 통째로 빠지고 있었다(@Serialize = excludeExtraneousValues). 기본 3필드를 DTO 에 직접 재선언.
+  - 정산 목록 meta 는 다른 화면과 달리 `totalPages`를 준다 — 프론트 `toAdminPageMeta()`로 변환해
+    공용 `AdminPagination`을 재사용.
+  - 화면엔 액션이 없다(확정/지급은 관리자 §2-A④) — 요약 카드 4장 + 상태 탭 + 내역 표.
 
 ---
 

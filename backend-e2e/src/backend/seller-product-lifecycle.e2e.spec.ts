@@ -54,6 +54,8 @@ describe('셀러 상품 라이프사이클 (HTTP e2e)', () => {
   let seller: { accessToken: string };
   let buyer: { accessToken: string };
   let admin: { accessToken: string };
+  /** 배송 왕복 테스트가 만든 주문 — 정산 API 테스트가 이어받는다 */
+  let settledOrderNumber: string;
 
   const cleanup = async () => {
     await cleanupE2eOrders(ds, SUITE);
@@ -372,6 +374,79 @@ describe('셀러 상품 라이프사이클 (HTTP e2e)', () => {
     expect(Number(settlements[0].commission_amount)).toBe(6000); // 10%
     expect(Number(settlements[0].settlement_amount)).toBe(54000);
     expect(settlements[0].status).toBe('pending');
+
+    settledOrderNumber = orderNumber; // 다음 테스트(정산 API)가 이어받는다
+  }, 60_000);
+
+  it('정산 API: 셀러 조회/요약 + 관리자 확정→지급 전이 (02-A④·01-A④)', async () => {
+    expect(settledOrderNumber).toBeDefined(); // 배송 왕복 테스트 선행 전제
+
+    // 셀러 — 내 정산 목록 (BaseModel 재선언 덕에 id/createdAt 이 실려 와야 한다)
+    const mine = await axios.get('/seller/settlements', {
+      ...auth(seller.accessToken),
+      params: { page: 1, take: 20 },
+    });
+    expect(mine.status).toBe(200);
+    const settlement = mine.data.data.find((s: any) => s.orderNumber === settledOrderNumber);
+    expect(settlement).toBeDefined();
+    expect(settlement.id).toBeDefined();
+    expect(settlement.status).toBe('pending');
+    expect(Number(settlement.settlementAmount)).toBe(54000);
+
+    // 셀러 — 요약 (이 스위트의 셀러는 정산이 이 1건뿐이라 값이 결정적이다)
+    const summary = await axios.get('/seller/settlements/summary', auth(seller.accessToken));
+    expect(summary.status).toBe(200);
+    expect(summary.data.totalAmount).toBe(60000);
+    expect(summary.data.totalCommission).toBe(6000);
+    expect(summary.data.totalSettlement).toBe(54000);
+    expect(summary.data.pendingCount).toBe(1);
+
+    // 구매자 토큰으로는 셀러 정산 조회가 막힌다 (RolesGuard)
+    const forbidden = await axios.get('/seller/settlements', auth(buyer.accessToken));
+    expect(forbidden.status).toBe(403);
+
+    // 관리자 — 전체 목록(셀러 필터) + seller 요약 포함
+    const adminList = await axios.get('/admin/settlements', {
+      ...auth(admin.accessToken),
+      params: { page: 1, take: 20, sellerId },
+    });
+    expect(adminList.status).toBe(200);
+    const target = adminList.data.data.find((s: any) => s.orderNumber === settledOrderNumber);
+    expect(target).toBeDefined();
+    expect(target.seller?.businessName).toBeDefined();
+
+    // 전이 규칙: PENDING 에서 pay 는 400 (confirm 을 건너뛸 수 없다)
+    const payEarly = await axios.patch(
+      `/admin/settlements/${target.id}/pay`, {}, auth(admin.accessToken),
+    );
+    expect(payEarly.status).toBe(400);
+
+    // PENDING → CONFIRMED
+    const confirm = await axios.patch(
+      `/admin/settlements/${target.id}/confirm`, {}, auth(admin.accessToken),
+    );
+    expect(confirm.status).toBe(200);
+    expect(confirm.data.status).toBe('confirmed');
+    expect(confirm.data.confirmedAt).not.toBeNull();
+
+    // 중복 확정은 400
+    const confirmTwice = await axios.patch(
+      `/admin/settlements/${target.id}/confirm`, {}, auth(admin.accessToken),
+    );
+    expect(confirmTwice.status).toBe(400);
+
+    // CONFIRMED → PAID
+    const pay = await axios.patch(
+      `/admin/settlements/${target.id}/pay`, {}, auth(admin.accessToken),
+    );
+    expect(pay.status).toBe(200);
+    expect(pay.data.status).toBe('paid');
+    expect(pay.data.paidAt).not.toBeNull();
+
+    // 셀러 요약에도 반영 — pending 0 / paid 1
+    const summaryAfter = await axios.get('/seller/settlements/summary', auth(seller.accessToken));
+    expect(summaryAfter.data.pendingCount).toBe(0);
+    expect(summaryAfter.data.paidCount).toBe(1);
   }, 60_000);
 
   it('승인된 상품 수정 = 재심사: PENDING 으로 돌아가되 게시 상태는 유지된다', async () => {

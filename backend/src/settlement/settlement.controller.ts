@@ -10,6 +10,7 @@ import {
 import { SettlementService } from './settlement.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { DemoAccountGuard } from '../auth/guards/demo-account.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '../user/entity/role.entity';
 import { User } from '../auth/decorators/user.decorator';
@@ -57,6 +58,7 @@ export class AdminSettlementController {
   }
 
   @Patch(':id/confirm')
+  @UseGuards(DemoAccountGuard)
   @Serialize(SettlementResponseDto)
   @Auditable(AuditAction.SETTLEMENT_CONFIRMED)
   confirm(@Param('id', ParseIntPipe) id: number) {
@@ -64,6 +66,7 @@ export class AdminSettlementController {
   }
 
   @Patch(':id/pay')
+  @UseGuards(DemoAccountGuard)
   @Serialize(SettlementResponseDto)
   @Auditable(AuditAction.SETTLEMENT_PAID)
   markAsPaid(@Param('id', ParseIntPipe) id: number) {

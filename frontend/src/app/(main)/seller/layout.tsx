@@ -21,6 +21,9 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
           <Link href="/seller/orders" className="text-gray-600 hover:text-blue-600">
             주문/배송
           </Link>
+          <Link href="/seller/settlements" className="text-gray-600 hover:text-blue-600">
+            정산
+          </Link>
         </nav>
         {children}
       </div>

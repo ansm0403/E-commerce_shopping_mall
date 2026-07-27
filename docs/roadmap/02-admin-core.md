@@ -70,16 +70,24 @@
   - `deliver`는 DemoAccountGuard 적용 — 403 은 화면 배너에 백엔드 message 그대로 표시.
   - e2e 는 §1-A③ 배송 왕복 테스트가 겸한다(관리자 deliver·상세 조회 포함).
 
-### ④ 정산 확인/지급
-- **선결**: Phase 1과 동일한 ⚠ 정산 이중 prefix 버그 수정 선반영.
+### ④ 정산 확인/지급 — ✅ 구현 완료 (2026-07-28)
+- ~~**선결**: 정산 이중 prefix 버그 수정~~ → 이미 해소돼 있었다(§1-A④ 메모 참고).
 - **연계 백엔드 (이미 존재)**
   | 메서드/경로 | 파일 |
   |---|---|
   | `GET /admin/settlements` | `backend/src/settlement/settlement.controller.ts:53` |
   | `PATCH /admin/settlements/:id/confirm` | `settlement.controller.ts:59` |
   | `PATCH /admin/settlements/:id/pay` | `settlement.controller.ts:66` |
-- **변경 대상 (프론트)**: `service/settlement.ts`(Phase 1과 공유, admin 함수 추가), `(admin)/admin/settlements/page.tsx`(stub→목록 + 확정/지급).
+- **변경 대상 (프론트)**: `service/admin-settlement.ts`(신규), `hooks/admin-settlement-query-options.ts`(신규), `(admin)/admin/settlements/page.tsx`(stub→목록 + 확정/지급).
 - **산출물**: 관리자가 정산 건을 확정(confirm)하고 지급(pay) 처리.
+- **구현 메모 (2026-07-28)**
+  - **백엔드 보강 2건**: ① `confirm`/`pay`에 `DemoAccountGuard` 추가(다른 관리자 변이와 일관성 —
+    데모 계정은 조회만). ② `SettlementResponseDto`의 BaseModel 상속 제거 + id/createdAt/updatedAt
+    재선언(직렬화 함정, §1-A④ 메모).
+  - 상태 탭 기본값 = `pending`("처리할 것"), 전이는 2단계 강제: PENDING→confirm→CONFIRMED→pay→PAID.
+    건너뛰기/중복은 백엔드 400 — e2e 로 고정(`seller-product-lifecycle.e2e.spec.ts` 정산 API 테스트).
+  - DoD 충족: 셀러 신청 승인 → 상품 승인 → 주문 → 배송완료 → 구매확정 → 정산 확정·지급이
+    전부 HTTP e2e 한 파일에서 이어진다.
 
 ---
 
