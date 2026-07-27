@@ -4,31 +4,34 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { filterBarStyle, tabStyle } from '../../components/table-ui';
 
 /**
- * 상태 탭 — 진실 원천은 URL(useSearchParams).
- * status 파라미터가 없으면 'pending' 으로 본다 — 관리자가 들어오자마자 "처리할 것"을 보게.
- * 전체 조회는 status=all 로 명시한다(URL만 봐도 무엇을 보고 있는지 알 수 있게).
- * 탭을 바꾸면 page 는 1로 리셋한다(감사 로그 필터와 동일한 규칙).
+ * 승인 상태 탭 — 진실 원천은 URL.
+ * approvalStatus 미지정 = 'pending'(들어오자마자 "처리할 것"이 보이게),
+ * 전체 조회는 'all' 로 명시한다. 셀러 승인 화면과 같은 규칙.
+ *
+ * 검색창을 두지 않은 이유: 백엔드 findAllAdmin 은 categoryId·status·approvalStatus·sellerId 만
+ * 필터로 쓴다. ProductQueryDto 에 keyword 가 있어도 admin 경로에서는 무시되므로
+ * 동작하지 않는 입력은 만들지 않는다.
  */
 
-export const DEFAULT_SELLER_STATUS = 'pending';
+export const DEFAULT_APPROVAL_STATUS = 'pending';
 
 const TABS = [
-  { value: 'pending', label: '대기' },
+  { value: 'pending', label: '승인 대기' },
   { value: 'approved', label: '승인' },
   { value: 'rejected', label: '반려' },
   { value: 'all', label: '전체' },
 ] as const;
 
-export default function SellerFilters() {
+export default function ProductFilters() {
   const router = useRouter();
   const pathname = usePathname();
   const sp = useSearchParams();
 
-  const current = sp.get('status') ?? DEFAULT_SELLER_STATUS;
+  const current = sp.get('approvalStatus') ?? DEFAULT_APPROVAL_STATUS;
 
-  const select = (status: string) => {
+  const select = (value: string) => {
     const params = new URLSearchParams(sp.toString());
-    params.set('status', status);
+    params.set('approvalStatus', value);
     params.delete('page'); // 탭 변경 → 1페이지부터
     router.push(`${pathname}?${params.toString()}`);
   };

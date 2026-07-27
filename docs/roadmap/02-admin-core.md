@@ -27,7 +27,7 @@
   - pending이 아닌 행은 액션 버튼을 감춘다(백엔드 400과 이중 방어). 승인/반려의 `DemoAccountGuard` 403은 모달 안에 인라인으로 표시.
   - 승인 성공 ≠ 신청자가 즉시 셀러 기능 사용 가능. 인가는 토큰의 역할 기준이라 기존 액세스 토큰은 여전히 buyer — 모달 안내문에 명시했고, 실제 해소는 Phase 1 §A①(토큰 staleness 처리)에서 한다.
 
-### ② 상품 승인/반려
+### ② 상품 승인/반려 — ✅ 구현 완료 (2026-07-28)
 - **연계 백엔드 (이미 존재)**
   | 메서드/경로 | 파일 |
   |---|---|
@@ -36,6 +36,19 @@
   | `PATCH /admin/products/:id/reject` | `product.controller.ts:174` |
 - **변경 대상 (프론트)**: `service/admin-product.ts`(신규), `hooks/admin-product-query-options.ts`(신규), `(admin)/admin/products/page.tsx`(stub→승인 대기 목록 + 승인/반려).
 - **산출물**: 셀러가 등록한 상품의 `approvalStatus`(pending→approved/rejected)를 관리자가 전환.
+- **구현 메모**
+  - shared 신규 `product/admin-product.ts` — `ApprovalStatus`·`SalesType`(같은 폴더 `ProductStatus`의 `as const` 스타일 준수), `AdminProduct`(ProductResponseDto와 1:1), `AdminProductQuery`, `RejectProductRequest`.
+  - **실제 응답을 찍어보고 타입 3건을 교정했다** (서버에 직접 요청해 확인):
+    · `price`가 **문자열**로 온다(`"1760000.00"`) — TypeORM decimal이 문자열을 주고 `@Serialize`의 `plainToInstance`는 값을 변환하지 않는다. 타입을 `number | string`으로 두고 `formatPrice`가 양쪽을 받는다.
+    · `tags`는 **목록 응답에 실려 오지 않는다** — `findAllAdmin`의 relations가 `['images','category','seller']`뿐이라 `excludeExtraneousValues`가 지운다. optional로 선언.
+    · 이미지 필드는 `sortOrder`이지 기존 공개용 `ProductImage`의 `displayOrder`가 아니다 → `AdminProductImage`를 별도로 뒀다.
+  - ⚠ `findAllAdmin`은 `categoryId·status·approvalStatus·sellerId`만 필터로 쓴다. `ProductQueryDto`에 `keyword`/`tags`가 있어도 admin 경로에서는 **무시**되므로 검색창을 만들지 않았다(동작하지 않는 입력을 두지 않는다).
+  - 시드 상품은 `sellerId=null`이라 표에 "셀러 없음"으로 표시된다(`products.seller_id` nullable).
+  - 표 스타일이 감사로그→셀러→상품으로 세 번 복제될 참이라 `(admin)/admin/components/table-ui.tsx`로 스타일·`AdminPagination`만 추출하고 셀러 화면도 옮겼다. 컬럼 구성이 화면마다 크게 달라 표 컴포넌트 자체는 일반화하지 않았다. (audit-logs는 metadata 펼치기 등 자기 사정이 있어 그대로 뒀다)
+  - **e2e 추가**: `backend-e2e/src/backend/admin-product-approval.e2e.spec.ts` — buyer 403 / 데모 관리자 조회 200·승인 403 / 비데모 ADMIN 승인 200 + `approvedAt` 기록 / 중복 승인 400 / 반려 사유 필수 400 / `approvalStatus` 필터 실효성. 두 e2e 스펙이 계정을 공유하면 병렬 실행 시 서로의 데이터를 지우므로 **스펙별 이름공간**(`makeEmails(suite)`)으로 독립시켰다(`runInBand` 없이도 통과 확인).
+
+> ⚠ **발견한 백엔드 결손 — 반려된 상품은 되살릴 수 없다.**
+> `approve`/`reject` 모두 PENDING만 허용하는데, 셀러가 상품을 수정할 때 PENDING으로 되돌리는 건 `APPROVED`인 경우뿐이다(`product.service.ts` update의 EC1). 즉 REJECTED 상품은 수정해도 REJECTED에 머물러 영구 사망한다 — 셀러 신청은 재신청이 되는데 상품은 안 되는 비대칭이다. 현재 동작을 e2e로 고정해 뒀고, 수정은 **Phase 1 §1-A②(셀러 상품 수정)** 에서 함께 다룬다.
 
 ### ③ 전체 주문 관리
 - **연계 백엔드 (이미 존재)**

@@ -1,13 +1,11 @@
 import axios from 'axios';
 import { DataSource } from 'typeorm';
-import {
-  cleanupE2eData,
-  createDataSource,
-  createUser,
-  emails,
-  E2E_PASSWORD,
-} from '../support/db';
+import { cleanupE2eData, createDataSource, createUser, makeEmails, E2E_PASSWORD } from '../support/db';
 import { resetLoginRateLimits } from '../support/redis';
+
+/** 이 스펙 전용 계정 이름공간 — 다른 스펙과 겹치지 않게 한다 */
+const SUITE = 'seller-flow';
+const emails = makeEmails(SUITE);
 
 /**
  * 셀러 승인 플로우 HTTP e2e (00-role-audit §7-3 해소).
@@ -68,7 +66,7 @@ describe('셀러 승인 플로우 (HTTP e2e)', () => {
     await ds.initialize();
 
     // 이전 실행이 중간에 죽었을 수 있으니 먼저 청소하고 시작한다.
-    await cleanupE2eData(ds);
+    await cleanupE2eData(ds, SUITE);
     await resetLoginRateLimits();
 
     buyerApproveId = await createUser(ds, { email: emails.buyerApprove, role: 'buyer' });
@@ -84,7 +82,7 @@ describe('셀러 승인 플로우 (HTTP e2e)', () => {
 
   afterAll(async () => {
     if (ds?.isInitialized) {
-      await cleanupE2eData(ds);
+      await cleanupE2eData(ds, SUITE);
       await ds.destroy();
     }
   });
