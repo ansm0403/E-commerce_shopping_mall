@@ -123,7 +123,34 @@ export async function createApprovedSeller(
 }
 
 /**
- * e2e 계정이 만든 주문·결제·장바구니를 정리한다.
+ * 결제 완료를 시뮬레이션한다 — PortOne 웹훅 없이 order.paid 리스너의 결과물을 재현:
+ * orders → preparing(+paid_at), payments → paid, 셀러별 shipments(preparing) 생성.
+ * (이벤트를 밖에서 쏠 수 없으므로 DB 로 만들고, 검증 대상인 출고→배송완료→구매확정은 HTTP 로 태운다)
+ */
+export async function simulatePaidOrder(ds: DataSource, orderNumber: string): Promise<void> {
+  const [order] = await ds.query(`SELECT id FROM orders WHERE order_number = $1`, [orderNumber]);
+  if (!order) throw new Error(`주문 ${orderNumber} 을 찾을 수 없습니다.`);
+
+  await ds.query(
+    `UPDATE orders SET status = 'preparing', paid_at = NOW() WHERE id = $1`,
+    [order.id],
+  );
+  await ds.query(
+    `UPDATE payments SET status = 'paid', paid_at = NOW() WHERE order_id = $1`,
+    [order.id],
+  );
+  // 셀러별 배송건 — sellerId=null(셀러 없는 상품)은 리스너와 동일하게 제외(§7-5)
+  await ds.query(
+    `INSERT INTO shipments (order_id, seller_id, status)
+     SELECT DISTINCT $1::int, seller_id, 'preparing'::shipments_status_enum FROM order_items
+     WHERE order_id = $1 AND seller_id IS NOT NULL
+     ON CONFLICT DO NOTHING`,
+    [order.id],
+  );
+}
+
+/**
+ * e2e 계정이 만든 주문·결제·배송·정산·장바구니를 정리한다.
  * products 삭제 전에 불러야 한다 — order_items.product_id FK 가 상품 삭제를 막는다.
  */
 export async function cleanupE2eOrders(ds: DataSource, suite: string): Promise<void> {
@@ -134,6 +161,7 @@ export async function cleanupE2eOrders(ds: DataSource, suite: string): Promise<v
   );
   if (orderIds.length > 0) {
     const ids = orderIds.map((r) => r.id);
+    await ds.query(`DELETE FROM settlements WHERE order_id = ANY($1)`, [ids]);
     await ds.query(`DELETE FROM shipments WHERE order_id = ANY($1)`, [ids]);
     await ds.query(`DELETE FROM payments WHERE order_id = ANY($1)`, [ids]);
     await ds.query(`DELETE FROM order_items WHERE order_id = ANY($1)`, [ids]);

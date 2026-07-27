@@ -78,7 +78,13 @@ export class OrderEventListener {
       });
 
       // Shipment 생성 (멱등: 이미 존재하면 스킵)
-      const sellerIds = [...new Set(items.map((item) => item.sellerId))];
+      // §7-5: sellerId=null(셀러 없는 시드 상품)은 배송 주체가 없어 Shipment 를 만들지 않는다
+      //       — null 을 넣으면 shipments.seller_id NOT NULL+FK 위반으로 리스너가 재시도 루프에 빠진다.
+      const sellerIds = [
+        ...new Set(
+          items.map((item) => item.sellerId).filter((id): id is number => id != null),
+        ),
+      ];
       for (const sellerId of sellerIds) {
         const existing = await manager.findOne(ShipmentEntity, {
           where: { orderId: event.orderId, sellerId },

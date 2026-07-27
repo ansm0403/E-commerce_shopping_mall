@@ -48,9 +48,10 @@ export class SettlementEventListener {
       where: { orderId: event.orderId },
     });
 
-    // 셀러별 매출액 집계
+    // 셀러별 매출액 집계 — sellerId=null(셀러 없는 시드 상품)은 정산 대상이 아니다(§7-5)
     const sellerAmountMap = new Map<number, number>();
     for (const item of items) {
+      if (item.sellerId == null) continue;
       const current = sellerAmountMap.get(item.sellerId) ?? 0;
       sellerAmountMap.set(item.sellerId, current + Number(item.subtotal));
     }

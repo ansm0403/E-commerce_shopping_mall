@@ -147,7 +147,8 @@ export class OrderService {
 
         orderItemsData.push({
           productId: product.id,
-          sellerId: product.sellerId ?? 0,
+          // §7-5: 셀러 없는 상품은 0(가짜 id)이 아니라 null — shipments FK·정산 집계 고아 방지
+          sellerId: product.sellerId ?? null,
           productName: product.name,
           productPrice: Number(product.price),
           productImageUrl: primaryImage?.url ?? null,
@@ -306,6 +307,9 @@ export class OrderService {
     const qb = this.orderRepository
       .createQueryBuilder('order')
       .innerJoinAndSelect('order.items', 'items', 'items.sellerId = :sellerId', { sellerId: seller.id })
+      // 본인 배송건만 함께 싣는다 — 프론트가 "배송 처리 가능(PREPARING)" 여부를 행에서 판단할 수 있게.
+      // (shipment 는 결제 완료 시점에 생성되므로 결제 전 주문은 빈 배열이 맞다)
+      .leftJoinAndSelect('order.shipments', 'shipments', 'shipments.sellerId = :sellerId', { sellerId: seller.id })
       .leftJoinAndSelect('order.payment', 'payment')
       .orderBy('order.createdAt', 'DESC')
       .take(take)

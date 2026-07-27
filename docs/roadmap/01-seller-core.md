@@ -93,7 +93,7 @@
   - 수정 화면(`[id]/edit`)이 반려 상품의 **재제출 경로**다 — 반려 사유 배너 + "저장하면 재심사" 안내.
   - 관리자 표 스타일(`table-ui.tsx`)·페이지네이션을 셀러 목록에서도 재사용(복제 금지 규칙).
 
-### ③ 셀러 주문 / 배송 처리
+### ③ 셀러 주문 / 배송 처리 — ✅ 구현 완료 (2026-07-28)
 - **연계 백엔드 (이미 존재)**
   | 메서드/경로 | 역할 | 파일 |
   |---|---|---|
@@ -104,6 +104,15 @@
   - `hooks/seller-order-query-options.ts` (신규)
   - `(main)/seller/orders/page.tsx` (stub→주문 목록 + 송장/배송처리 액션)
 - **산출물**: 셀러가 자신에게 들어온 주문을 보고 `ship` 처리(주문 상태 전이) 가능.
+- **구현 메모 (2026-07-28)**
+  - 상태 탭 기본값 = `preparing`(출고 대기 = "처리할 것"), 전체는 `all` 명시 — URL 진실 원천 규칙.
+  - **백엔드 1줄 보강**: `getSellerOrders`에 `order.shipments`를 **본인 것만** leftJoin — 행에서
+    "배송 처리 가능(내 shipment 가 PREPARING)"을 판단하기 위해. shipment 는 결제 완료 시점에
+    생성되므로 결제 전 주문은 빈 배열이 정상(버튼 없음).
+  - **§7-5 함께 해소**: `orderItem.sellerId ?? 0` → null 저장 + 리스너/정산 집계 null 스킵.
+    0이면 `shipments.seller_id` FK 위반으로 `order.paid` 리스너가 재시도 루프에 빠지는 잠복 버그였다.
+  - e2e(배송 왕복): 결제는 PortOne 웹훅 없이 `simulatePaidOrder()`(DB로 리스너 결과물 재현) 후
+    출고→배송완료→구매확정을 전부 HTTP 로 — **구매확정 시 정산 PENDING 자동 생성**(금액·수수료 10%)까지 단언.
 
 ### ④ 셀러 정산 조회
 - **선결**: README의 ⚠ **정산 이중 prefix 버그** 먼저 수정(`settlement.controller.ts`).

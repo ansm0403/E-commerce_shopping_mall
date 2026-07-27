@@ -60,7 +60,11 @@
 - 주문 생성: `orderItem.sellerId = product.sellerId` (`order.service.ts:150`).
 - 셀러 주문 조회: `items.sellerId = seller.id`로 필터 (`order.service.ts:308`).
 - → 기준이 **SellerEntity.id로 일관** → 셀러가 자기 상품/주문/정산을 정확히 본다. ✅
-- 소소: `orderItem.sellerId = product.sellerId ?? 0` — 판매자 없는(시드) 상품 주문 시 0으로 고아화될 엣지.
+- ~~소소: `orderItem.sellerId = product.sellerId ?? 0` — 판매자 없는(시드) 상품 주문 시 0으로 고아화될 엣지.~~
+  → **해소(2026-07-28, §7-5)**: `?? 0` 대신 **null** 저장(컬럼 nullable 화). 0이 위험했던 진짜 이유는
+  `order.paid` 리스너가 sellerId별 Shipment 를 만드는데 `shipments.seller_id` 는 NOT NULL + FK 라
+  존재하지 않는 셀러 0으로 삽입 시 FK 위반 → **리스너가 재시도 루프**에 빠지는 것. 이제 리스너·정산
+  집계 모두 null 을 건너뛴다(셀러 없는 상품은 배송 주체·정산 대상이 없다는 의미 그대로).
 
 ## 6. 프론트 판정 ↔ 백엔드 인가 불일치 가능성
 
@@ -80,4 +84,5 @@
    - 로그인은 IP당 10회/5분 제한이라 계정당 1회만 로그인하고 토큰을 재사용하며, `beforeAll`에서 `rate:login:*`를 비운다(안 그러면 연속 두 번째 실행이 429).
    - `jest.config.ts` → `jest.config.cjs`: Node 22.18+ 타입 스트리핑이 `export default`를 보고 ESM으로 판정해 `__dirname`이 사라지는 문제(로컬에서 jest가 config 파싱 단계에서 죽음)를 확장자로 못 박아 해결.
 4. ✅ **`approve()` 트랜잭션화** — `DataSource` 주입 후 `seller.update`와 `user.save`를 단일 `dataSource.transaction()`으로 원자화. 정합성 케이스 테스트 추가. (Step 0 완료, commit `84a83f4`)
-5. ⏸ `orderItem.sellerId ?? 0` 고아 방지 가드 — Step 3(주문/배송) 착수 시 함께 처리.
+5. ✅ `orderItem.sellerId ?? 0` 고아 방지 가드 — null 저장으로 해소(§5 참고). 주문/배송 왕복과 함께
+   `seller-product-lifecycle.e2e.spec.ts`(배송 왕복 테스트)로 검증. (2026-07-28)

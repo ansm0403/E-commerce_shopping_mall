@@ -53,7 +53,7 @@
 > 아울러 **승인=게시**가 되면서 `approve()`가 DRAFT 상품을 PUBLISHED로 승격한다(승인 즉시 상점 노출·주문 가능).
 > 왕복 검증: `backend-e2e/src/backend/seller-product-lifecycle.e2e.spec.ts`. 상세는 `01-seller-core.md` §1-A②.
 
-### ③ 전체 주문 관리
+### ③ 전체 주문 관리 — ✅ 구현 완료 (2026-07-28)
 - **연계 백엔드 (이미 존재)**
   | 메서드/경로 | 파일 |
   |---|---|
@@ -62,6 +62,13 @@
   | `PATCH /admin/orders/:orderNumber/deliver` | `order.controller.ts:111` |
 - **변경 대상 (프론트)**: `service/admin-order.ts`(신규), `hooks/admin-order-query-options.ts`(신규), `(admin)/admin/orders/page.tsx`(stub→목록/필터), `(admin)/admin/orders/[orderNumber]/page.tsx`(stub→상세 + 배송완료 처리).
 - **산출물**: 관리자가 전체 주문을 조회·필터하고 상세에서 `deliver` 처리.
+- **구현 메모 (2026-07-28)**
+  - 상태 탭 기본값 = `shipped`(배송완료 처리 대상 = "처리할 것"), 전체는 `all` 명시.
+  - 배송완료 처리는 **상세 화면에서 배송건(셀러) 단위** — `deliver`에 `sellerId`를 주면 해당 건만,
+    생략하면 SHIPPED 전부. 헤더의 "모두 완료 처리" 버튼은 SHIPPED 가 2건 이상일 때만 노출.
+  - 주문 상태 라벨·금액 포맷은 `service/seller-order.ts` 것을 공유(중복 정의 금지).
+  - `deliver`는 DemoAccountGuard 적용 — 403 은 화면 배너에 백엔드 message 그대로 표시.
+  - e2e 는 §1-A③ 배송 왕복 테스트가 겸한다(관리자 deliver·상세 조회 포함).
 
 ### ④ 정산 확인/지급
 - **선결**: Phase 1과 동일한 ⚠ 정산 이중 prefix 버그 수정 선반영.

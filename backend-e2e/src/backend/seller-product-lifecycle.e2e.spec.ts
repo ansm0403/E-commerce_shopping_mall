@@ -9,6 +9,7 @@ import {
   createUser,
   e2ePrefix,
   makeEmails,
+  simulatePaidOrder,
   E2E_PASSWORD,
 } from '../support/db';
 import { resetLoginRateLimits } from '../support/redis';
@@ -267,6 +268,110 @@ describe('셀러 상품 라이프사이클 (HTTP e2e)', () => {
     expect(approve.status).toBe(200);
     expect(approve.data.approvalStatus).toBe('approved');
     expect(approve.data.status).toBe('published');
+  }, 60_000);
+
+  it('배송 왕복: 출고(셀러) → 배송완료(관리자) → 구매확정(구매자) → 정산 PENDING 자동 생성', async () => {
+    // ① 상품 준비(등록→승인=게시) 후 구매자가 주문
+    const create = await axios.post(
+      '/products',
+      {
+        name: productName('배송 왕복'),
+        description: 'e2e: 배송/정산 체인 검증',
+        price: 30000,
+        brand: 'e2e브랜드',
+        stockQuantity: 5,
+      },
+      auth(seller.accessToken),
+    );
+    const productId = create.data.id as number;
+    await axios.patch(`/admin/products/${productId}/approve`, {}, auth(admin.accessToken));
+
+    const cart = await axios.post('/cart/items', { productId, quantity: 2 }, auth(buyer.accessToken));
+    const cartItem = cart.data.items.find((i: any) => i.productId === productId);
+    const order = await axios.post(
+      '/orders',
+      {
+        cartItemIds: [cartItem.id],
+        shippingAddress: '서울시 테스트구 e2e로 1',
+        recipientName: 'e2e구매자',
+        recipientPhone: '01000000000',
+      },
+      auth(buyer.accessToken),
+    );
+    const orderNumber = order.data.orderNumber as string;
+
+    // ② 결제 완료 시뮬레이션 (order.paid 리스너 결과물 재현 — preparing + shipment 생성)
+    await simulatePaidOrder(ds, orderNumber);
+
+    // ③ 셀러 주문 목록 — 내 items/shipments 만 실려 오고 출고 대기 상태다
+    const sellerOrders = await axios.get('/seller/orders', {
+      ...auth(seller.accessToken),
+      params: { page: 1, take: 20, status: 'preparing' },
+    });
+    expect(sellerOrders.status).toBe(200);
+    const mine = sellerOrders.data.data.find((o: any) => o.orderNumber === orderNumber);
+    expect(mine).toBeDefined();
+    expect(mine.shipments).toHaveLength(1);
+    expect(mine.shipments[0].status).toBe('preparing');
+
+    // 구매자 토큰으로는 셀러 주문 API 자체가 막힌다 (RolesGuard)
+    const forbidden = await axios.get('/seller/orders', auth(buyer.accessToken));
+    expect(forbidden.status).toBe(403);
+
+    // ④ 출고 전 구매확정은 불가 (DELIVERED 만 확정 가능)
+    const confirmEarly = await axios.patch(`/orders/${orderNumber}/confirm`, {}, auth(buyer.accessToken));
+    expect(confirmEarly.status).toBe(400);
+
+    // ⑤ 셀러 출고 — 단일 셀러 주문이라 주문 전체가 SHIPPED 로 동기화된다
+    const ship = await axios.patch(
+      `/seller/orders/${orderNumber}/ship`,
+      { trackingNumber: '1234-5678-9012', carrier: 'e2e택배' },
+      auth(seller.accessToken),
+    );
+    expect(ship.status).toBe(200);
+    expect(ship.data.status).toBe('shipped');
+    expect(ship.data.shipments[0].status).toBe('shipped');
+    expect(ship.data.shipments[0].trackingNumber).toBe('1234-5678-9012');
+
+    // 중복 출고는 400 (PREPARING 배송건만 출고 가능)
+    const shipTwice = await axios.patch(
+      `/seller/orders/${orderNumber}/ship`,
+      { trackingNumber: '0000', carrier: 'e2e택배' },
+      auth(seller.accessToken),
+    );
+    expect(shipTwice.status).toBe(400);
+
+    // ⑥ 관리자 배송완료 — 전 배송건 DELIVERED → 주문도 DELIVERED
+    const deliver = await axios.patch(`/admin/orders/${orderNumber}/deliver`, {}, auth(admin.accessToken));
+    expect(deliver.status).toBe(200);
+    expect(deliver.data.status).toBe('delivered');
+
+    // 관리자 상세에서도 배송건 상태가 보인다
+    const adminDetail = await axios.get(`/admin/orders/${orderNumber}`, auth(admin.accessToken));
+    expect(adminDetail.status).toBe(200);
+    expect(adminDetail.data.shipments[0].status).toBe('delivered');
+
+    // ⑦ 구매자 구매확정 → order.completed 이벤트 → 정산 PENDING 자동 생성
+    const confirm = await axios.patch(`/orders/${orderNumber}/confirm`, {}, auth(buyer.accessToken));
+    expect(confirm.status).toBe(200);
+    expect(confirm.data.status).toBe('completed');
+
+    // 리스너는 비동기(withRetry)라 정산 레코드를 폴링으로 확인
+    let settlements: any[] = [];
+    for (let i = 0; i < 20; i++) {
+      settlements = await ds.query(
+        `SELECT * FROM settlements WHERE order_number = $1`,
+        [orderNumber],
+      );
+      if (settlements.length > 0) break;
+      await new Promise((r) => setTimeout(r, 250));
+    }
+    expect(settlements).toHaveLength(1);
+    expect(settlements[0].seller_id).toBe(sellerId);
+    expect(Number(settlements[0].amount)).toBe(60000); // 30,000 × 2
+    expect(Number(settlements[0].commission_amount)).toBe(6000); // 10%
+    expect(Number(settlements[0].settlement_amount)).toBe(54000);
+    expect(settlements[0].status).toBe('pending');
   }, 60_000);
 
   it('승인된 상품 수정 = 재심사: PENDING 으로 돌아가되 게시 상태는 유지된다', async () => {
