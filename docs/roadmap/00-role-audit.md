@@ -73,7 +73,7 @@
 ## 7. 조치 권장 (우선순위 — 착수 전)
 
 1. ✅ **정산 `v1/` 이중 prefix 수정** — `settlement.controller.ts` `SellerSettlementController`를 `@Controller('seller/settlements')`로 수정. `AdminSettlementController`는 이미 `admin/settlements`로 정상이었음. (Step 0 완료, commit `84a83f4`)
-2. ✅ **승인 후 토큰 갱신 전략 결정** — 백엔드 무변경. Step 1 프론트(셀러 신청 상태 페이지)에서 `status=approved`인데 토큰에 SELLER가 없으면 `/auth/refresh` 1회 자동 트리거 + 실패 시 재로그인 안내로 결정. (Step 0 방침 확정)
+2. ✅ **승인 후 토큰 갱신 전략 결정 → 구현 완료** — 백엔드 무변경. `status=approved`인데 토큰에 SELLER가 없으면 `/auth/refresh` 1회 자동 트리거 + 실패 시 재로그인 안내. (방침 Step 0 확정 → `(main)/my/seller-apply`의 `useSellerRoleSync`로 구현, 2026-07-27. 토큰 payload 판독은 신규 `frontend/src/lib/jwt.ts`, 갱신 큐는 axios 인터셉터의 `refreshAccessToken` 공유)
 3. ❌→**Step 1으로 이관** **비데모 ADMIN으로 승인 플로우 실검증** — service 레벨 통합 테스트는 `seller.integration.spec.ts`에 완비. HTTP 가드·DemoAccountGuard·토큰 staleness까지 포함한 supertest e2e는 Step 1 셀러 온보딩 UI 구현과 함께 진행.
 4. ✅ **`approve()` 트랜잭션화** — `DataSource` 주입 후 `seller.update`와 `user.save`를 단일 `dataSource.transaction()`으로 원자화. 정합성 케이스 테스트 추가. (Step 0 완료, commit `84a83f4`)
 5. ⏸ `orderItem.sellerId ?? 0` 고아 방지 가드 — Step 3(주문/배송) 착수 시 함께 처리.

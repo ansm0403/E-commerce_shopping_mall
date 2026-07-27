@@ -9,7 +9,7 @@
 
 ## 1-A. 필수 (시연 핵심)
 
-### ① 셀러 신청 / 승인 상태 확인  ← 플로우 진입점
+### ① 셀러 신청 / 승인 상태 확인  ← 플로우 진입점 — ✅ 구현 완료 (2026-07-27)
 - **연계 백엔드 (이미 존재)**
   | 메서드/경로 | 역할 | 파일 |
   |---|---|---|
@@ -22,6 +22,13 @@
   - `hooks/seller-query-options.ts` (신규): 내 셀러 상태 조회
   - `(main)/my/seller-apply/page.tsx` (현재 stub→신청 폼 + 신청완료/심사중/반려 상태 표시)
 - **산출물**: 일반 사용자가 셀러 신청 → 본인 신청 상태(pending/approved/rejected)를 확인. 승인 전까지 셀러 메뉴는 잠금/안내.
+- **구현 메모**
+  - shared 타입은 Step 1에서 만든 것(`ApplySellerRequest`·`SellerApplication`·`SellerStatus`)을 그대로 재사용 — **shared·백엔드 무변경**.
+  - 화면 4분기: 미신청 / pending / approved / rejected. `GET /seller/me`는 신청 이력이 없으면 **404**를 주는데 이건 에러가 아니라 "아직 신청 안 함"이므로 훅에서 `null`로 바꿔 정상 상태로 다룬다(404를 에러로 두면 화면이 실패 뷰로 빠진다).
+  - **§7-2(토큰 staleness) 해소**: `status=approved`인데 토큰 payload에 `seller`가 없으면 `/auth/refresh`를 **1회만** 자동 트리거(`useSellerRoleSync`). 신규 `lib/jwt.ts`가 액세스 토큰을 base64url 디코드해 `roles`를 읽는다 — **서명 검증이 아니라 "내 토큰이 낡았나"를 UI가 알기 위한 용도**이며 인가는 여전히 백엔드 몫. 갱신 큐는 axios 인터셉터의 `refreshAccessToken`을 export해 공유하므로 401 재발급과 경합하지 않는다. 실패 시 재시도 없이 재로그인을 안내한다(refresh 토큰까지 만료된 상황에서 루프가 최악이라).
+  - 선택 필드(`contactEmail`·`contactPhone`)는 빈 문자열이면 **전송 직전에 키를 제거**한다 — 백엔드가 `@IsOptional() @IsEmail()`이라 빈 문자열을 보내면 400.
+  - 반려 → 재신청 시 이전 신청 내용을 프리필하되 **은행 3필드는 응답에 없어(@Exclude) 재입력**받는다. 백엔드 `apply()`가 REJECTED 행을 PENDING으로 되돌리며 사유를 지운다.
+  - 진입 링크가 코드베이스에 아예 없어서 헤더 `UserMenu`에 항목 추가(역할에 따라 "셀러 신청"/"셀러 센터").
 
 ### ② 셀러 상품 등록 / 내 상품 관리  (승인된 셀러)
 - **연계 백엔드 (이미 존재)**
