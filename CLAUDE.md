@@ -52,6 +52,7 @@
 - 구매자 커머스 전 구간: 회원/인증 → 카테고리/상품/검색 → 장바구니 → 주문 → PortOne 결제 → 주문조회/취소/구매확정 → 리뷰/위시리스트/문의.
 - 관리자 **대시보드**(KPI·주문추이·보안·퍼널 차트) — `(admin)/admin/dashboard` 실구현.
 - 관리자 **감사 로그 조회** — `(admin)/admin/audit-logs` 실구현(트리아지 3버킷 요약 + 포렌식 검색: 필터·표·페이지네이션). 백엔드 `GET /v1/admin/audit-logs` 연결, 행위자 닉네임/이메일 보강. 상세 `docs/roadmap/ex-audit-log-admin.md`.
+- 관리자 **셀러 승인/반려** — `(admin)/admin/sellers` 실구현(상태 탭·목록·페이지네이션 + 승인/반려 모달, 반려 사유 필수). 백엔드 `GET /v1/seller/applications`·`PATCH .../approve|reject` 연결. 승인은 seller.status 변경 + SELLER 역할 부여가 한 트랜잭션. 이때 `UserModel.password`에 `@Exclude()`를 추가해 `relations:['user']` 응답에서 해시가 새던 것을 차단(중첩 2단 직렬화로 검증). 상세 `docs/roadmap/02-admin-core.md` §2-A①.
 - 셀러 **백엔드 워크플로 완성**: 신청→pending→승인/반려(SellerEntity, 은행정보 @Exclude, 감사로그).
 - 결제/정산/감사 백엔드 모듈 존재.
 - **관측성/알림(계획 외 삽입)**: Sentry 에러추적(프론트/백) + Slack 알림 3종 연동 완료. 트러블슈팅 회고 `docs/roadmap/ex-sentry-slack.md`.
@@ -59,7 +60,7 @@
 
 **비어 있음 / 스켈레톤**
 - **셀러 프론트** `(main)/seller/*` 전부 stub: 대시보드/상품/상품등록/주문/정산/문의.
-- **관리자 하위 페이지** stub: `orders`, `products`(승인), `categories`, `sellers`(승인), `settlements`. (dashboard·audit-logs는 실구현)
+- **관리자 하위 페이지** stub: `orders`, `products`(승인), `categories`, `settlements`. (dashboard·audit-logs·sellers는 실구현)
 - **정산** 프론트 스켈레톤(백엔드만 존재).
 - **인프라**: nginx 미도입(Vercel→EC2 프록시 우회 중).
 
