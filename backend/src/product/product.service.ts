@@ -199,6 +199,26 @@ export class ProductService {
     );
   }
 
+  /**
+   * 셀러: 본인 상품 단건 조회 (수정 화면용).
+   * 공개 findOne 은 미승인·HIDDEN·DISCONTINUED 를 404 로 숨기므로 셀러가 자기 상품을
+   * 수정하려면 상태와 무관하게 읽을 수 있는 별도 경로가 필요하다.
+   */
+  async findMyProduct(id: number, userId: number): Promise<ProductEntity> {
+    const seller = await this.getApprovedSeller(userId);
+    const product = await this.productRepository.findOne({
+      where: { id },
+      relations: ['images', 'category', 'tags'],
+    });
+    if (!product) {
+      throw new NotFoundException(`상품 ID ${id}를 찾을 수 없습니다.`);
+    }
+    if (product.sellerId !== seller.id) {
+      throw new ForbiddenException('본인의 상품만 조회할 수 있습니다.');
+    }
+    return product;
+  }
+
   /** 셀러: 상품 등록 (approvalStatus = PENDING) */
   async create(dto: CreateProductDto, userId: number): Promise<ProductEntity> {
     const seller = await this.getApprovedSeller(userId);
@@ -250,16 +270,56 @@ export class ProductService {
         ...(dto.salesType !== undefined && { salesType: dto.salesType }),
       });
 
-      // EC1: 승인된 상품을 수정하면 재검토가 필요하므로 approvalStatus를 PENDING으로 초기화
-      if (product.approvalStatus === ApprovalStatus.APPROVED) {
+      // EC1: 승인된 상품을 수정하면 재검토가 필요하므로 approvalStatus를 PENDING으로 초기화.
+      //      반려된 상품도 수정 = 재제출로 보고 PENDING 으로 되돌린다 — 셀러 신청이
+      //      반려 후 재신청 가능한 것과 대칭(이전에는 REJECTED 가 영구 사망이었다).
+      if (
+        product.approvalStatus === ApprovalStatus.APPROVED ||
+        product.approvalStatus === ApprovalStatus.REJECTED
+      ) {
         product.approvalStatus = ApprovalStatus.PENDING;
         product.approvedAt = null;
+        product.rejectionReason = null;
       }
 
       return manager.save(product);
     });
 
     // 캐시 무효화 (상세 + 목록)
+    await this.redisService.delCache(`products:detail:${id}`);
+    await this.redisService.delCacheByPattern('products:list:*');
+
+    return saved;
+  }
+
+  /**
+   * 셀러: 판매 상태만 변경 (게시/숨김/단종).
+   * 일반 update() 와 분리한 이유 — update() 는 내용 수정 = 재심사(EC1)로 approvalStatus 를
+   * PENDING 으로 되돌리는데, 게시/숨김 토글은 심사 대상이 아니므로 approvalStatus 를
+   * 건드리지 않는 별도 경로가 필요하다. DRAFT·SOLD_OUT 은 시스템이 관리하는 상태라
+   * DTO(@IsIn)에서 이미 걸러진다.
+   */
+  async updateStatus(id: number, status: ProductStatus, userId: number): Promise<ProductEntity> {
+    const seller = await this.getApprovedSeller(userId);
+
+    const saved = await this.dataSource.transaction(async (manager) => {
+      const product = await manager.findOne(ProductEntity, { where: { id } });
+      if (!product) {
+        throw new NotFoundException(`상품 ID ${id}를 찾을 수 없습니다.`);
+      }
+      if (product.sellerId !== seller.id) {
+        throw new ForbiddenException('본인의 상품만 상태를 변경할 수 있습니다.');
+      }
+      // 게시는 관리자 승인이 전제 — 승인 전(PENDING)·반려(REJECTED) 상품은 게시 불가
+      if (status === ProductStatus.PUBLISHED && product.approvalStatus !== ApprovalStatus.APPROVED) {
+        throw new BadRequestException('관리자 승인이 완료된 상품만 게시할 수 있습니다.');
+      }
+
+      product.status = status;
+      return manager.save(product);
+    });
+
+    // 캐시 무효화: 숨김/게시가 구매자 목록·상세에 즉시 반영돼야 한다
     await this.redisService.delCache(`products:detail:${id}`);
     await this.redisService.delCacheByPattern('products:list:*');
 
@@ -385,6 +445,11 @@ export class ProductService {
       entity.approvalStatus = ApprovalStatus.APPROVED;
       entity.approvedAt = new Date();
       entity.rejectionReason = null;
+      // 승인 = 게시. 단 DRAFT 일 때만 — 재승인(수정 재심사) 시 셀러가 골라둔
+      // HIDDEN/DISCONTINUED 를 관리자가 덮어쓰지 않는다.
+      if (entity.status === ProductStatus.DRAFT) {
+        entity.status = ProductStatus.PUBLISHED;
+      }
       return manager.save(entity);
     });
 

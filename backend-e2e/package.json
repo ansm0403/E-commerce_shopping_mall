@@ -14,8 +14,7 @@
         ],
         "options": {
           "jestConfig": "backend-e2e/jest.config.cjs",
-          "passWithNoTests": true,
-          "runInBand": true
+          "passWithNoTests": true
         }
       }
     }

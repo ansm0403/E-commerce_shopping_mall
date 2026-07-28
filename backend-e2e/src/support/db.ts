@@ -18,15 +18,31 @@ import * as bcrypt from 'bcrypt';
 
 loadEnv({ path: join(__dirname, '../../../.env') });
 
-export const E2E_EMAIL_PREFIX = 'e2e-seller-flow-';
 export const E2E_PASSWORD = 'E2eTest123!';
 
-export const emails = {
-  buyerApprove: `${E2E_EMAIL_PREFIX}buyer-approve@test.local`,
-  buyerReject: `${E2E_EMAIL_PREFIX}buyer-reject@test.local`,
-  admin: `${E2E_EMAIL_PREFIX}admin@test.local`,
-  demoAdmin: `${E2E_EMAIL_PREFIX}demo-admin@test.local`,
-};
+/**
+ * 스펙 파일마다 자기 이름공간(suite)을 갖는다.
+ *
+ * jest 는 테스트 파일을 기본적으로 병렬 실행한다. 스펙들이 같은 계정을 공유하면
+ * 한쪽의 beforeAll 청소가 다른 쪽 계정을 지워 버린다 — runInBand 설정 하나에
+ * 정합성을 걸어두는 대신, 이름공간을 나눠 스펙끼리 독립시킨다.
+ */
+export function e2ePrefix(suite: string): string {
+  return `e2e-${suite}-`;
+}
+
+export function makeEmails(suite: string) {
+  const p = e2ePrefix(suite);
+  return {
+    buyerApprove: `${p}buyer-approve@test.local`,
+    buyerReject: `${p}buyer-reject@test.local`,
+    admin: `${p}admin@test.local`,
+    demoAdmin: `${p}demo-admin@test.local`,
+    seller: `${p}seller@test.local`,
+    sellerB: `${p}seller-b@test.local`,
+    buyer: `${p}buyer@test.local`,
+  };
+}
 
 export function createDataSource(): DataSource {
   return new DataSource({
@@ -67,9 +83,131 @@ export async function createUser(
   return user.id;
 }
 
-/** 이 스위트가 만든 계정과 그에 딸린 레코드를 전부 지운다(실행 전·후 모두 호출). */
-export async function cleanupE2eData(ds: DataSource): Promise<void> {
-  const like = `${E2E_EMAIL_PREFIX}%`;
+/**
+ * 승인 대기 상품 1건 생성.
+ * `isEvent` 는 NOT NULL 인데 DB 기본값이 없어 반드시 넣어야 하고,
+ * status/approval_status 는 엔티티 기본값(draft/pending)에 맡긴다.
+ */
+export async function createPendingProduct(
+  ds: DataSource,
+  opts: { name: string; sellerId?: number | null },
+): Promise<number> {
+  const [product] = await ds.query(
+    `INSERT INTO products (name, description, price, brand, "stockQuantity", "isEvent", seller_id)
+     VALUES ($1, 'e2e 검증용 상품입니다.', 19900, 'e2e브랜드', 10, false, $2)
+     RETURNING id`,
+    [opts.name, opts.sellerId ?? null],
+  );
+  return product.id;
+}
+
+/**
+ * 승인된 셀러 1명 프로비저닝(sellers 테이블 직접 삽입).
+ * 신청→승인 왕복 자체는 seller-approval 스펙이 HTTP 로 검증하므로,
+ * 상품 라이프사이클 스펙은 "이미 승인된 셀러"에서 출발한다.
+ * businessNumber 는 unique 라 스위트별로 다른 값을 넘겨야 한다.
+ */
+export async function createApprovedSeller(
+  ds: DataSource,
+  opts: { userId: number; businessName: string; businessNumber: string },
+): Promise<number> {
+  const [seller] = await ds.query(
+    `INSERT INTO sellers (user_id, "businessName", "businessNumber", "representativeName",
+                          "businessAddress", "bankName", "bankAccountNumber", "bankAccountHolder",
+                          status, "approvedAt")
+     VALUES ($1, $2, $3, 'e2e대표', '서울시 테스트구 e2e로 1', 'e2e은행', '000-00-000000', 'e2e대표',
+             'approved', NOW())
+     RETURNING id`,
+    [opts.userId, opts.businessName, opts.businessNumber],
+  );
+  return seller.id;
+}
+
+/**
+ * 결제 완료를 시뮬레이션한다 — PortOne 웹훅 없이 order.paid 리스너의 결과물을 재현:
+ * orders → preparing(+paid_at), payments → paid, 셀러별 shipments(preparing) 생성.
+ * (이벤트를 밖에서 쏠 수 없으므로 DB 로 만들고, 검증 대상인 출고→배송완료→구매확정은 HTTP 로 태운다)
+ */
+export async function simulatePaidOrder(ds: DataSource, orderNumber: string): Promise<void> {
+  const [order] = await ds.query(`SELECT id FROM orders WHERE order_number = $1`, [orderNumber]);
+  if (!order) throw new Error(`주문 ${orderNumber} 을 찾을 수 없습니다.`);
+
+  await ds.query(
+    `UPDATE orders SET status = 'preparing', paid_at = NOW() WHERE id = $1`,
+    [order.id],
+  );
+  await ds.query(
+    `UPDATE payments SET status = 'paid', paid_at = NOW() WHERE order_id = $1`,
+    [order.id],
+  );
+  // 셀러별 배송건 — sellerId=null(셀러 없는 상품)은 리스너와 동일하게 제외(§7-5)
+  await ds.query(
+    `INSERT INTO shipments (order_id, seller_id, status)
+     SELECT DISTINCT $1::int, seller_id, 'preparing'::shipments_status_enum FROM order_items
+     WHERE order_id = $1 AND seller_id IS NOT NULL
+     ON CONFLICT DO NOTHING`,
+    [order.id],
+  );
+}
+
+/**
+ * e2e 계정이 만든 주문·결제·배송·정산·장바구니를 정리한다.
+ * products 삭제 전에 불러야 한다 — order_items.product_id FK 가 상품 삭제를 막는다.
+ */
+export async function cleanupE2eOrders(ds: DataSource, suite: string): Promise<void> {
+  const like = `${e2ePrefix(suite)}%`;
+  const orderIds: Array<{ id: number }> = await ds.query(
+    `SELECT o.id FROM orders o JOIN users u ON u.id = o.user_id WHERE u.email LIKE $1`,
+    [like],
+  );
+  if (orderIds.length > 0) {
+    const ids = orderIds.map((r) => r.id);
+    await ds.query(`DELETE FROM settlements WHERE order_id = ANY($1)`, [ids]);
+    await ds.query(`DELETE FROM shipments WHERE order_id = ANY($1)`, [ids]);
+    await ds.query(`DELETE FROM payments WHERE order_id = ANY($1)`, [ids]);
+    await ds.query(`DELETE FROM order_items WHERE order_id = ANY($1)`, [ids]);
+    await ds.query(`DELETE FROM orders WHERE id = ANY($1)`, [ids]);
+  }
+  // 장바구니(실패한 테스트가 남긴 잔여물 포함)
+  await ds.query(
+    `DELETE FROM cart_items WHERE cart_id IN
+       (SELECT c.id FROM carts c JOIN users u ON u.id = c.user_id WHERE u.email LIKE $1)`,
+    [like],
+  );
+  await ds.query(
+    `DELETE FROM carts WHERE user_id IN (SELECT id FROM users WHERE email LIKE $1)`,
+    [like],
+  );
+}
+
+/**
+ * 셀러 없는(published/approved, seller_id NULL) 상품 1건 생성 — 시드 상품과 같은 형태.
+ * §7-5(무셀러 상품 주문 시 orderItem.sellerId=null, shipment/정산 미생성) 검증용.
+ * 실제 시드 상품을 쓰면 재고 차감 등으로 시드 데이터가 오염되므로 e2e 접두 상품을 따로 만든다.
+ */
+export async function createOwnerlessPublishedProduct(
+  ds: DataSource,
+  opts: { name: string; price?: number; stock?: number },
+): Promise<number> {
+  const [product] = await ds.query(
+    `INSERT INTO products (name, description, price, brand, "stockQuantity", "isEvent",
+                           seller_id, status, approval_status, approved_at)
+     VALUES ($1, 'e2e 무셀러 상품', $2, 'e2e브랜드', $3, false,
+             NULL, 'published'::products_status_enum, 'approved'::products_approval_status_enum, NOW())
+     RETURNING id`,
+    [opts.name, opts.price ?? 5000, opts.stock ?? 10],
+  );
+  return product.id;
+}
+
+/** 이름 접두로 e2e 상품을 지운다(계정과 무관하게 남을 수 있어 별도 정리). */
+export async function cleanupE2eProducts(ds: DataSource, suite: string): Promise<void> {
+  await ds.query(`DELETE FROM products WHERE name LIKE $1`, [`${e2ePrefix(suite)}%`]);
+}
+
+/** 해당 스펙이 만든 계정과 그에 딸린 레코드를 전부 지운다(실행 전·후 모두 호출). */
+export async function cleanupE2eData(ds: DataSource, suite: string): Promise<void> {
+  const like = `${e2ePrefix(suite)}%`;
   const ids: Array<{ id: number }> = await ds.query(
     `SELECT id FROM users WHERE email LIKE $1`,
     [like],

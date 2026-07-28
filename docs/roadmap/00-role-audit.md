@@ -60,7 +60,11 @@
 - 주문 생성: `orderItem.sellerId = product.sellerId` (`order.service.ts:150`).
 - 셀러 주문 조회: `items.sellerId = seller.id`로 필터 (`order.service.ts:308`).
 - → 기준이 **SellerEntity.id로 일관** → 셀러가 자기 상품/주문/정산을 정확히 본다. ✅
-- 소소: `orderItem.sellerId = product.sellerId ?? 0` — 판매자 없는(시드) 상품 주문 시 0으로 고아화될 엣지.
+- ~~소소: `orderItem.sellerId = product.sellerId ?? 0` — 판매자 없는(시드) 상품 주문 시 0으로 고아화될 엣지.~~
+  → **해소(2026-07-28, §7-5)**: `?? 0` 대신 **null** 저장(컬럼 nullable 화). 0이 위험했던 진짜 이유는
+  `order.paid` 리스너가 sellerId별 Shipment 를 만드는데 `shipments.seller_id` 는 NOT NULL + FK 라
+  존재하지 않는 셀러 0으로 삽입 시 FK 위반 → **리스너가 재시도 루프**에 빠지는 것. 이제 리스너·정산
+  집계 모두 null 을 건너뛴다(셀러 없는 상품은 배송 주체·정산 대상이 없다는 의미 그대로).
 
 ## 6. 프론트 판정 ↔ 백엔드 인가 불일치 가능성
 
@@ -80,4 +84,19 @@
    - 로그인은 IP당 10회/5분 제한이라 계정당 1회만 로그인하고 토큰을 재사용하며, `beforeAll`에서 `rate:login:*`를 비운다(안 그러면 연속 두 번째 실행이 429).
    - `jest.config.ts` → `jest.config.cjs`: Node 22.18+ 타입 스트리핑이 `export default`를 보고 ESM으로 판정해 `__dirname`이 사라지는 문제(로컬에서 jest가 config 파싱 단계에서 죽음)를 확장자로 못 박아 해결.
 4. ✅ **`approve()` 트랜잭션화** — `DataSource` 주입 후 `seller.update`와 `user.save`를 단일 `dataSource.transaction()`으로 원자화. 정합성 케이스 테스트 추가. (Step 0 완료, commit `84a83f4`)
-5. ⏸ `orderItem.sellerId ?? 0` 고아 방지 가드 — Step 3(주문/배송) 착수 시 함께 처리.
+5. ✅ `orderItem.sellerId ?? 0` 고아 방지 가드 — null 저장으로 해소(§5 참고). 주문/배송 왕복과 함께
+   `seller-product-lifecycle.e2e.spec.ts`(배송 왕복 테스트)로 검증. (2026-07-28)
+   - **기존 데이터 치유**: 개발 DB에 `seller_id=0` 잔존 행 1건이 실존했다(2026-06-14 시드 상품 346
+     주문 `ORD-20260614-6C663J5P`, status=paid 인데 shipments 0건 = 당시 리스너가 FK 위반으로 Shipment
+     생성에 실패한 정황 — 잠복 버그의 실증). `UPDATE order_items SET seller_id=NULL WHERE seller_id=0`
+     으로 치유(2026-07-28). ⚠ **운영 DB 반영 시 같은 UPDATE 를 먼저 돌려야 한다**(synchronize 는
+     스키마만 바꾸고 데이터는 안 고친다).
+   - 엣지 e2e(`seller-edge-cases.e2e.spec.ts`): 무셀러 상품 주문 시 null 저장·shipment/정산 미생성,
+     무셀러 전용 주문은 deliver 대상이 없어 404(주문이 PREPARING 에 갇히는 한계 — 실서비스라면
+     플랫폼 직배송 주체 필요)까지 명세로 고정.
+6. ⏸ **부분 출고 후 환불 구멍(발견만, 미수정)** — `payment.service.ts cancelPayment/cancelPaymentByAdmin`
+   은 주문이 PAID·PREPARING 이면 환불을 허용하고 shipments 를 전부 삭제한다. 그런데 멀티셀러 주문은
+   일부 셀러가 이미 SHIPPED 여도 주문 status 가 PREPARING 에 머무르므로(전원 출고 시에만 SHIPPED),
+   **배송 중인 물건이 있는 주문이 통째로 환불·취소될 수 있다**. 수정하려면 환불 전 shipment 중
+   SHIPPED/DELIVERED 존재 여부 검사(400) 필요. 결제 모듈(기존 코드) + PortOne 외부 호출이라
+   e2e 로 재현 불가 — 코드 리뷰로 확인했고, 결제 트랙 정비 시 처리할 것.

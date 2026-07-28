@@ -5,6 +5,16 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { SellerStatus, type SellerApplicationWithUser } from '@shopping-mall/shared';
 import { useSellerApplicationsQuery } from '../../../../../hooks/admin-seller-query-options';
 import { sellerStatusLabel } from '../../../../../service/admin-seller';
+import {
+  actionButton,
+  AdminPagination,
+  BADGE_TONE,
+  cardStyle,
+  formatDateTime,
+  tableStyle,
+  tdStyle,
+  thStyle,
+} from '../../components/table-ui';
 import SellerActionModal, { type SellerAction } from './SellerActionModal';
 import { DEFAULT_SELLER_STATUS } from './SellerFilters';
 
@@ -143,29 +153,7 @@ export default function SellerTable() {
         </tbody>
       </table>
 
-      {meta && meta.total > 0 && (
-        <div style={footerStyle}>
-          <span>
-            총 {meta.total.toLocaleString('ko-KR')}건 · {meta.page} / {meta.lastPage} 페이지
-          </span>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button
-              style={pageBtn(meta.page <= 1)}
-              disabled={meta.page <= 1}
-              onClick={() => goPage(meta.page - 1)}
-            >
-              ← 이전
-            </button>
-            <button
-              style={pageBtn(!meta.hasNextPage)}
-              disabled={!meta.hasNextPage}
-              onClick={() => goPage(meta.page + 1)}
-            >
-              다음 →
-            </button>
-          </div>
-        </div>
-      )}
+      <AdminPagination meta={meta} onPageChange={goPage} />
 
       {target && (
         <SellerActionModal
@@ -178,84 +166,8 @@ export default function SellerTable() {
   );
 }
 
-/** 'YYYY-MM-DD HH:mm:ss' (KST). 백엔드는 UTC 인스턴트를 준다. */
-function formatDateTime(value: string | Date): string {
-  return new Date(value).toLocaleString('sv-SE', { timeZone: 'Asia/Seoul' });
-}
-
-const cardStyle: React.CSSProperties = {
-  background: '#ffffff',
-  borderRadius: '12px',
-  boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)',
-  overflow: 'hidden',
-};
-
-const tableStyle: React.CSSProperties = {
-  width: '100%',
-  borderCollapse: 'collapse',
-  fontSize: '13px',
-};
-
-const thStyle: React.CSSProperties = {
-  textAlign: 'left',
-  padding: '10px 12px',
-  background: '#f8fafc',
-  color: '#475569',
-  fontWeight: 600,
-  borderBottom: '1px solid #e2e8f0',
-  whiteSpace: 'nowrap',
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: '10px 12px',
-  borderBottom: '1px solid #f1f5f9',
-  color: '#0f172a',
-  verticalAlign: 'top',
-};
-
-const badge = (bg: string, color: string): React.CSSProperties => ({
-  display: 'inline-block',
-  padding: '2px 8px',
-  borderRadius: '999px',
-  fontSize: '12px',
-  fontWeight: 600,
-  background: bg,
-  color,
-});
-
 function statusBadge(status: string): React.CSSProperties {
-  if (status === SellerStatus.APPROVED) return badge('#dcfce7', '#16a34a');
-  if (status === SellerStatus.REJECTED) return badge('#fee2e2', '#dc2626');
-  return badge('#fef3c7', '#b45309');
+  if (status === SellerStatus.APPROVED) return BADGE_TONE.approved;
+  if (status === SellerStatus.REJECTED) return BADGE_TONE.rejected;
+  return BADGE_TONE.pending;
 }
-
-const actionButton = (color: string): React.CSSProperties => ({
-  fontSize: '12px',
-  fontWeight: 600,
-  padding: '5px 12px',
-  border: `1px solid ${color}`,
-  background: '#ffffff',
-  color,
-  borderRadius: '6px',
-  cursor: 'pointer',
-});
-
-const footerStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  padding: '12px 16px',
-  fontSize: '13px',
-  color: '#475569',
-};
-
-const pageBtn = (disabled: boolean): React.CSSProperties => ({
-  fontSize: '13px',
-  fontWeight: 600,
-  padding: '6px 12px',
-  border: '1px solid #cbd5e1',
-  background: disabled ? '#f1f5f9' : '#ffffff',
-  color: disabled ? '#94a3b8' : '#0f172a',
-  borderRadius: '6px',
-  cursor: disabled ? 'default' : 'pointer',
-});

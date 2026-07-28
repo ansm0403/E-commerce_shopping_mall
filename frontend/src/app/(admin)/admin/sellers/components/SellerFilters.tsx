@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { filterBarStyle, tabStyle } from '../../components/table-ui';
 
 /**
  * 상태 탭 — 진실 원천은 URL(useSearchParams).
@@ -18,26 +19,6 @@ const TABS = [
   { value: 'all', label: '전체' },
 ] as const;
 
-const containerStyle: React.CSSProperties = {
-  display: 'flex',
-  gap: '8px',
-  padding: '10px 12px',
-  background: '#ffffff',
-  borderRadius: '12px',
-  boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)',
-};
-
-const tabStyle = (active: boolean): React.CSSProperties => ({
-  fontSize: '13px',
-  fontWeight: 600,
-  padding: '7px 16px',
-  border: `1px solid ${active ? '#2563eb' : '#cbd5e1'}`,
-  background: active ? '#eff6ff' : '#ffffff',
-  color: active ? '#2563eb' : '#475569',
-  borderRadius: '999px',
-  cursor: 'pointer',
-});
-
 export default function SellerFilters() {
   const router = useRouter();
   const pathname = usePathname();
@@ -53,7 +34,7 @@ export default function SellerFilters() {
   };
 
   return (
-    <div style={containerStyle}>
+    <div style={filterBarStyle}>
       {TABS.map(({ value, label }) => (
         <button key={value} style={tabStyle(current === value)} onClick={() => select(value)}>
           {label}

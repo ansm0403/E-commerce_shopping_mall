@@ -1,4 +1,6 @@
 export * from './product.js';
+export * from './admin-product.js';
+export * from './seller-product.js';
 export * from './category.js';
 export * from './categories/beauty.js';
 export * from './categories/book.js';

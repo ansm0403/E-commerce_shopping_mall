@@ -12,6 +12,8 @@ import { AppModule } from './app/app.module';
 import qs from 'qs';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
+import express from 'express';
+import { join } from 'path';
 
 async function bootstrap() {
   // ⏱ 프로세스 타임존을 UTC 고정.
@@ -68,6 +70,12 @@ async function bootstrap() {
   });
 
   const expressApp = app.getHttpAdapter().getInstance();
+
+  // 상품 이미지 정적 서빙 — multer diskStorage 가 './uploads'(CWD 기준)에 저장하므로 같은 기준으로 맞춘다.
+  // 글로벌 prefix(v1)를 타지 않아 http://localhost:4000/uploads/<filename> 으로 열린다.
+  // ⚠ 로컬 디스크 저장이라 컨테이너 재배포 시 파일이 유실된다(S3 등 외부 스토리지 전환 전까지의 한계).
+  expressApp.use('/uploads', express.static(join(process.cwd(), 'uploads')));
+
   expressApp.set('query parser', (str: string) => {
     return qs.parse(str, {
       allowDots: false,       // a.b.c 형식 비활성화

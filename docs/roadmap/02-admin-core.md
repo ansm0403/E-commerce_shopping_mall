@@ -27,7 +27,7 @@
   - pending이 아닌 행은 액션 버튼을 감춘다(백엔드 400과 이중 방어). 승인/반려의 `DemoAccountGuard` 403은 모달 안에 인라인으로 표시.
   - 승인 성공 ≠ 신청자가 즉시 셀러 기능 사용 가능. 인가는 토큰의 역할 기준이라 기존 액세스 토큰은 여전히 buyer — 모달 안내문에 명시했고, 실제 해소는 Phase 1 §A①(토큰 staleness 처리)에서 한다.
 
-### ② 상품 승인/반려
+### ② 상품 승인/반려 — ✅ 구현 완료 (2026-07-28)
 - **연계 백엔드 (이미 존재)**
   | 메서드/경로 | 파일 |
   |---|---|
@@ -36,8 +36,24 @@
   | `PATCH /admin/products/:id/reject` | `product.controller.ts:174` |
 - **변경 대상 (프론트)**: `service/admin-product.ts`(신규), `hooks/admin-product-query-options.ts`(신규), `(admin)/admin/products/page.tsx`(stub→승인 대기 목록 + 승인/반려).
 - **산출물**: 셀러가 등록한 상품의 `approvalStatus`(pending→approved/rejected)를 관리자가 전환.
+- **구현 메모**
+  - shared 신규 `product/admin-product.ts` — `ApprovalStatus`·`SalesType`(같은 폴더 `ProductStatus`의 `as const` 스타일 준수), `AdminProduct`(ProductResponseDto와 1:1), `AdminProductQuery`, `RejectProductRequest`.
+  - **실제 응답을 찍어보고 타입 3건을 교정했다** (서버에 직접 요청해 확인):
+    · `price`가 **문자열**로 온다(`"1760000.00"`) — TypeORM decimal이 문자열을 주고 `@Serialize`의 `plainToInstance`는 값을 변환하지 않는다. 타입을 `number | string`으로 두고 `formatPrice`가 양쪽을 받는다.
+    · `tags`는 **목록 응답에 실려 오지 않는다** — `findAllAdmin`의 relations가 `['images','category','seller']`뿐이라 `excludeExtraneousValues`가 지운다. optional로 선언.
+    · 이미지 필드는 `sortOrder`이지 기존 공개용 `ProductImage`의 `displayOrder`가 아니다 → `AdminProductImage`를 별도로 뒀다.
+  - ⚠ `findAllAdmin`은 `categoryId·status·approvalStatus·sellerId`만 필터로 쓴다. `ProductQueryDto`에 `keyword`/`tags`가 있어도 admin 경로에서는 **무시**되므로 검색창을 만들지 않았다(동작하지 않는 입력을 두지 않는다).
+  - 시드 상품은 `sellerId=null`이라 표에 "셀러 없음"으로 표시된다(`products.seller_id` nullable).
+  - 표 스타일이 감사로그→셀러→상품으로 세 번 복제될 참이라 `(admin)/admin/components/table-ui.tsx`로 스타일·`AdminPagination`만 추출하고 셀러 화면도 옮겼다. 컬럼 구성이 화면마다 크게 달라 표 컴포넌트 자체는 일반화하지 않았다. (audit-logs는 metadata 펼치기 등 자기 사정이 있어 그대로 뒀다)
+  - **e2e 추가**: `backend-e2e/src/backend/admin-product-approval.e2e.spec.ts` — buyer 403 / 데모 관리자 조회 200·승인 403 / 비데모 ADMIN 승인 200 + `approvedAt` 기록 / 중복 승인 400 / 반려 사유 필수 400 / `approvalStatus` 필터 실효성. 두 e2e 스펙이 계정을 공유하면 병렬 실행 시 서로의 데이터를 지우므로 **스펙별 이름공간**(`makeEmails(suite)`)으로 독립시켰다(`runInBand` 없이도 통과 확인).
 
-### ③ 전체 주문 관리
+> ✅ **해소됨 (2026-07-28, §1-A② 작업에서) — 반려된 상품을 셀러가 재제출할 수 있다.**
+> `update()`의 EC1을 넓혀 **REJECTED도 수정 시 PENDING 복귀 + rejectionReason 초기화**로 바꿨다(셀러 신청의
+> 반려→재신청과 대칭). 관리자가 반려를 직접 뒤집는 경로는 여전히 없다 — 되살리는 길은 셀러의 수정=재제출뿐.
+> 아울러 **승인=게시**가 되면서 `approve()`가 DRAFT 상품을 PUBLISHED로 승격한다(승인 즉시 상점 노출·주문 가능).
+> 왕복 검증: `backend-e2e/src/backend/seller-product-lifecycle.e2e.spec.ts`. 상세는 `01-seller-core.md` §1-A②.
+
+### ③ 전체 주문 관리 — ✅ 구현 완료 (2026-07-28)
 - **연계 백엔드 (이미 존재)**
   | 메서드/경로 | 파일 |
   |---|---|
@@ -46,17 +62,32 @@
   | `PATCH /admin/orders/:orderNumber/deliver` | `order.controller.ts:111` |
 - **변경 대상 (프론트)**: `service/admin-order.ts`(신규), `hooks/admin-order-query-options.ts`(신규), `(admin)/admin/orders/page.tsx`(stub→목록/필터), `(admin)/admin/orders/[orderNumber]/page.tsx`(stub→상세 + 배송완료 처리).
 - **산출물**: 관리자가 전체 주문을 조회·필터하고 상세에서 `deliver` 처리.
+- **구현 메모 (2026-07-28)**
+  - 상태 탭 기본값 = `shipped`(배송완료 처리 대상 = "처리할 것"), 전체는 `all` 명시.
+  - 배송완료 처리는 **상세 화면에서 배송건(셀러) 단위** — `deliver`에 `sellerId`를 주면 해당 건만,
+    생략하면 SHIPPED 전부. 헤더의 "모두 완료 처리" 버튼은 SHIPPED 가 2건 이상일 때만 노출.
+  - 주문 상태 라벨·금액 포맷은 `service/seller-order.ts` 것을 공유(중복 정의 금지).
+  - `deliver`는 DemoAccountGuard 적용 — 403 은 화면 배너에 백엔드 message 그대로 표시.
+  - e2e 는 §1-A③ 배송 왕복 테스트가 겸한다(관리자 deliver·상세 조회 포함).
 
-### ④ 정산 확인/지급
-- **선결**: Phase 1과 동일한 ⚠ 정산 이중 prefix 버그 수정 선반영.
+### ④ 정산 확인/지급 — ✅ 구현 완료 (2026-07-28)
+- ~~**선결**: 정산 이중 prefix 버그 수정~~ → 이미 해소돼 있었다(§1-A④ 메모 참고).
 - **연계 백엔드 (이미 존재)**
   | 메서드/경로 | 파일 |
   |---|---|
   | `GET /admin/settlements` | `backend/src/settlement/settlement.controller.ts:53` |
   | `PATCH /admin/settlements/:id/confirm` | `settlement.controller.ts:59` |
   | `PATCH /admin/settlements/:id/pay` | `settlement.controller.ts:66` |
-- **변경 대상 (프론트)**: `service/settlement.ts`(Phase 1과 공유, admin 함수 추가), `(admin)/admin/settlements/page.tsx`(stub→목록 + 확정/지급).
+- **변경 대상 (프론트)**: `service/admin-settlement.ts`(신규), `hooks/admin-settlement-query-options.ts`(신규), `(admin)/admin/settlements/page.tsx`(stub→목록 + 확정/지급).
 - **산출물**: 관리자가 정산 건을 확정(confirm)하고 지급(pay) 처리.
+- **구현 메모 (2026-07-28)**
+  - **백엔드 보강 2건**: ① `confirm`/`pay`에 `DemoAccountGuard` 추가(다른 관리자 변이와 일관성 —
+    데모 계정은 조회만). ② `SettlementResponseDto`의 BaseModel 상속 제거 + id/createdAt/updatedAt
+    재선언(직렬화 함정, §1-A④ 메모).
+  - 상태 탭 기본값 = `pending`("처리할 것"), 전이는 2단계 강제: PENDING→confirm→CONFIRMED→pay→PAID.
+    건너뛰기/중복은 백엔드 400 — e2e 로 고정(`seller-product-lifecycle.e2e.spec.ts` 정산 API 테스트).
+  - DoD 충족: 셀러 신청 승인 → 상품 승인 → 주문 → 배송완료 → 구매확정 → 정산 확정·지급이
+    전부 HTTP e2e 한 파일에서 이어진다.
 
 ---
 
