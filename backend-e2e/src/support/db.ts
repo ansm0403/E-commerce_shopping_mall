@@ -39,6 +39,7 @@ export function makeEmails(suite: string) {
     admin: `${p}admin@test.local`,
     demoAdmin: `${p}demo-admin@test.local`,
     seller: `${p}seller@test.local`,
+    sellerB: `${p}seller-b@test.local`,
     buyer: `${p}buyer@test.local`,
   };
 }
@@ -177,6 +178,26 @@ export async function cleanupE2eOrders(ds: DataSource, suite: string): Promise<v
     `DELETE FROM carts WHERE user_id IN (SELECT id FROM users WHERE email LIKE $1)`,
     [like],
   );
+}
+
+/**
+ * 셀러 없는(published/approved, seller_id NULL) 상품 1건 생성 — 시드 상품과 같은 형태.
+ * §7-5(무셀러 상품 주문 시 orderItem.sellerId=null, shipment/정산 미생성) 검증용.
+ * 실제 시드 상품을 쓰면 재고 차감 등으로 시드 데이터가 오염되므로 e2e 접두 상품을 따로 만든다.
+ */
+export async function createOwnerlessPublishedProduct(
+  ds: DataSource,
+  opts: { name: string; price?: number; stock?: number },
+): Promise<number> {
+  const [product] = await ds.query(
+    `INSERT INTO products (name, description, price, brand, "stockQuantity", "isEvent",
+                           seller_id, status, approval_status, approved_at)
+     VALUES ($1, 'e2e 무셀러 상품', $2, 'e2e브랜드', $3, false,
+             NULL, 'published'::products_status_enum, 'approved'::products_approval_status_enum, NOW())
+     RETURNING id`,
+    [opts.name, opts.price ?? 5000, opts.stock ?? 10],
+  );
+  return product.id;
 }
 
 /** 이름 접두로 e2e 상품을 지운다(계정과 무관하게 남을 수 있어 별도 정리). */

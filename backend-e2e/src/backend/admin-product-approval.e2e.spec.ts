@@ -8,7 +8,6 @@ import {
   createUser,
   e2ePrefix,
   makeEmails,
-  E2E_PASSWORD,
 } from '../support/db';
 import { resetLoginRateLimits } from '../support/redis';
 
@@ -29,11 +28,8 @@ const productName = (label: string) => `${e2ePrefix(SUITE)}${label}`;
  * 전제: postgres·redis + `yarn nx serve backend` (support/global-setup.ts)
  */
 
-async function login(email: string) {
-  const res = await axios.post('/auth/login', { email, password: E2E_PASSWORD });
-  expect(res.status).toBe(201);
-  return { accessToken: res.data.accessToken as string };
-}
+// 로그인은 공용 헬퍼 사용 — 스펙 병렬 실행 시 IP 레이트리밋(10회/5분)을 429 재시도로 흡수한다
+import { login } from '../support/login';
 
 const auth = (token: string) => ({ headers: { Authorization: `Bearer ${token}` } });
 

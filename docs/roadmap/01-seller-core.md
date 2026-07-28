@@ -85,6 +85,11 @@
     첫 장이 대표). 이미지 단계 실패는 "등록 실패"가 아니라 "이미지만 추가 못 함"으로 안내(`ImageUploadError`).
   - **FormData 함정**: axios 인스턴스가 `Content-Type: application/json`을 고정하므로 업로드 요청에서만
     `headers: { 'Content-Type': undefined }`로 지워 브라우저가 multipart boundary를 붙이게 한다.
+  - **업로드 fileFilter (엣지 검증에서 추가, 2026-07-28)**: `/uploads` 정적 서빙을 뚫으면서 비이미지
+    차단이 없으면 `.html`·`.svg` 업로드가 same-origin 저장형 XSS 벡터가 된다(프록시 덕에 프론트
+    도메인으로 서빙됨). multer `fileFilter`로 확장자+mimetype 화이트리스트(jpg/jpeg/png/gif/webp/avif,
+    **svg 제외** — 스크립트 가능) 적용 + helmet 의 `X-Content-Type-Options: nosniff` 와 조합.
+    위장 업로드 4종(html/확장자 위장/mimetype 위장/svg) 차단을 `seller-edge-cases.e2e.spec.ts`로 고정.
   - **SellerGuard 신설**: `(main)/seller/layout.tsx`에 부착(기존엔 가드 없음). AdminGuard를 본떴고,
     승인 직후 낡은 토큰은 `useSellerRoleSync`(§7-2와 동일 큐)로 refresh 1회 자동 해소. 비-셀러는
     `/my/seller-apply`로 안내.

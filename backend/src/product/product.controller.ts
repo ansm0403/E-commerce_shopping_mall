@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -175,6 +176,23 @@ export class ProductController {
         },
       }),
       limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+      // 업로드 파일은 /uploads 로 정적 서빙되므로(main.ts) 이미지 외 확장자를 막지 않으면
+      // .html 등이 same-origin 으로 열리는 저장형 XSS 벡터가 된다. 확장자+mimetype 화이트리스트
+      // (스크립트를 품을 수 있는 svg 는 제외) + helmet 의 X-Content-Type-Options: nosniff 조합으로 방어.
+      fileFilter: (_req, file, cb) => {
+        const extOk = /\.(jpe?g|png|gif|webp|avif)$/i.test(file.originalname);
+        const mimeOk = /^image\/(jpeg|png|gif|webp|avif)$/.test(file.mimetype);
+        if (extOk && mimeOk) {
+          cb(null, true);
+        } else {
+          cb(
+            new BadRequestException(
+              '이미지 파일(jpg·jpeg·png·gif·webp·avif)만 업로드할 수 있습니다.',
+            ),
+            false,
+          );
+        }
+      },
     }),
   )
   addImage(

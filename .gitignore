@@ -64,3 +64,6 @@ claude_logs/
 .claude/.slack-webhook
 
 docs/etc
+
+# 상품 이미지 업로드(multer diskStorage) — 런타임 산출물이라 커밋 금지
+uploads/
