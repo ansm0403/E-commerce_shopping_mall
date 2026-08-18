@@ -56,6 +56,7 @@ import { AuthModule } from '../auth/auth.module';
     ProductSeedService,
     ProductEventListener,
   ],
-  exports: [TypeOrmModule, ProductService],
+  // ProductSeedService: SeedModule 배치(SEED_PRODUCTS=true)가 재사용 — HTTP 엔드포인트 없이 시드 가능
+  exports: [TypeOrmModule, ProductService, ProductSeedService],
 })
 export class ProductModule {}

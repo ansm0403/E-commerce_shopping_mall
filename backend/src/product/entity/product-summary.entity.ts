@@ -15,7 +15,7 @@ export enum ProductSummaryStatus {
  * - 매 열람마다 LLM 을 부르지 않고 이 테이블에 캐시한다. 리뷰 변경 시 status='stale' 로만
  *   표시(LLM 0회)하고, 다음 열람 때 백그라운드에서 재생성한다(SWR). 읽는 사람은 절대 동기 대기하지 않는다.
  * - ⚠ ProductEntity 에 컬럼을 더하지 않고 별도 테이블로 분리 — 상품 핵심 row·목록 캐시(핫 경로)를
- *   요약 쓰기로 건드리지 않기 위함. 스키마는 synchronize 자동 반영(운영은 수동 DDL 필요).
+ *   요약 쓰기로 건드리지 않기 위함. 스키마는 마이그레이션으로 관리(0번 Init 에 포함, 2026-08-17~).
  * - reviewCountAtGen/promptVersion 은 default 를 둬 콜드 INSERT(productId+status 만)로도 행을
  *   만들 수 있게 한다 — 재생성 트리거의 INSERT-as-CAS(동시 1건 선점)에 필요.
  */

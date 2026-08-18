@@ -58,6 +58,11 @@ COPY --from=builder --chown=nestjs:nodejs /app/shared ./shared
 # multer DiskStorage가 부팅 시 mkdir './uploads' 호출 → /app은 root 소유라 권한 부여 필요
 RUN mkdir -p /app/uploads && chown nestjs:nodejs /app/uploads
 
+# 배포 버전 식별: 빌드 시 --build-arg GIT_SHA=$(git rev-parse --short HEAD) 로 주입.
+# /v1/health 가 version 으로 노출한다. 미주입 시 'unknown'.
+ARG GIT_SHA=unknown
+ENV APP_VERSION=${GIT_SHA}
+
 USER nestjs
 EXPOSE 4000
 CMD ["node", "backend/dist/main.js"]

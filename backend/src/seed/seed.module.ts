@@ -6,6 +6,7 @@ import { SellerEntity } from '../seller/entity/seller.entity';
 import { ReviewEntity } from '../review/entity/review.entity';
 import { ProductEntity } from '../product/entity/product.entity';
 import { InquiryEntity } from '../inquiry/entity/inquiry.entity';
+import { ProductModule } from '../product/product.module';
 import { DashboardSeedService } from './dashboard.seed.service';
 import { ReviewSeedService } from './review.seed.service';
 import { InquirySeedService } from './inquiry.seed.service';
@@ -25,6 +26,8 @@ import { InquirySeedService } from './inquiry.seed.service';
       ProductEntity,
       InquiryEntity,
     ]),
+    // SEED_PRODUCTS=true 배치 경로에서 ProductSeedService 를 쓰기 위함
+    ProductModule,
   ],
   providers: [DashboardSeedService, ReviewSeedService, InquirySeedService],
 })

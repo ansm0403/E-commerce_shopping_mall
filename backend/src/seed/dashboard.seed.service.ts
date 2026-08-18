@@ -14,6 +14,7 @@ import {
   addHours,
   addDays,
 } from './seed-helpers';
+import { ProductSeedService } from '../common/seeds/product.seed';
 import { ReviewSeedService, SeedProductRef } from './review.seed.service';
 import { InquirySeedService } from './inquiry.seed.service';
 
@@ -46,6 +47,7 @@ export class DashboardSeedService implements OnApplicationBootstrap {
     private readonly sellerRepo: Repository<SellerEntity>,
     private readonly reviewSeedService: ReviewSeedService,
     private readonly inquirySeedService: InquirySeedService,
+    private readonly productSeedService: ProductSeedService,
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
@@ -70,6 +72,24 @@ export class DashboardSeedService implements OnApplicationBootstrap {
         console.log('    재실행하려면 SEED_RESET=true 를 추가하세요.\n');
         process.exit(0);
         return;
+      }
+
+      // SEED_PRODUCTS=true: 상품 시드를 배치 경로로 실행 (HTTP 엔드포인트·관리자 토큰 불필요).
+      // alreadySeeded 게이트 *뒤*에 두어, no-op 재실행이 TRUNCATE products CASCADE 를
+      // 때리는 사고를 막는다. 카테고리는 부팅 시드가 만드는데, 완전히 빈 DB에서 이 배치만
+      // 단독 실행하면 라이프사이클 훅 순서상 아직 없을 수 있어 명시적으로 검사한다.
+      if (process.env['SEED_PRODUCTS'] === 'true') {
+        const [{ count: categoryCount }] = (await this.ds.query(
+          'SELECT count(*)::int AS count FROM categories',
+        )) as [{ count: number }];
+        if (categoryCount === 0) {
+          throw new Error(
+            'SEED_PRODUCTS: categories 가 비어 있습니다. ' +
+              '서버를 한 번 정상 부팅해 부팅 시드(roles/categories)를 먼저 실행하세요.',
+          );
+        }
+        const { message } = await this.productSeedService.seedProducts();
+        console.log(`  ✓ ${message}`);
       }
 
       const { userIds, sellerIds } = await this.seedUsers();
