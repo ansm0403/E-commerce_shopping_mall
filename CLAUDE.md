@@ -31,7 +31,7 @@
 - **인증**: JWT(access 15m) + refresh(7d, 해시 저장 + Redis 검증/블랙리스트). 이메일 인증·비번 재설정·로그인 레이트리밋(Redis) 포함.
 - **역할 3종** `Role = buyer | seller | admin`(`user/entity/role.entity.ts`). User↔Role 다대다.
 - **가드/데코레이터**: `JwtAuthGuard`, `RolesGuard`, `DemoAccountGuard` / `@Roles()`, `@User()`, `@Auditable()`.
-- **DB 스키마**: `synchronize: NODE_ENV!=='production'`. **마이그레이션 없음** — 엔티티 수정으로 스키마 관리(운영 반영 시 주의).
+- **DB 스키마**: **TypeORM 마이그레이션으로만 변경**(2026-08-18 도입, synchronize 전면 off). 절차: 엔티티 수정 → `nx run @shopping-mall/backend:migration:generate --name=<이름>` → `src/database/migrations/index.ts` **명시적 등록**(글롭은 nx 단일 번들이라 조용히 실패) → `migration:run`. CLI DataSource는 `src/database/data-source.ts`(cwd=backend 필수). 상세 `docs/roadmap/ex-db-migration.md`.
 - 공통 엔티티 `BaseModel`(id/createdAt/updatedAt). 페이지네이션 page/cursor 둘 다 지원(`common/`).
 - **인프라 모듈** `intrastructure/`(오타 그대로): `redis/`, `emailVerify/`(SMTP), `ai/`(LLM 클라이언트 — 프로바이더 비종속 `LlmClient`, 현재 Gemini `@google/genai`, 추후 Claude). 이벤트 `EventEmitterModule`, 레이트리밋 `ThrottlerModule`(전역 100req/60s), 감사로그 `audit/`.
 - **결제**: PortOne(iamport) 연동 + 웹훅(`payment/`).

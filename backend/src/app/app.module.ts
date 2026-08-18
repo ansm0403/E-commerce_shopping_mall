@@ -64,7 +64,11 @@ import { AssistantModule } from '../admin/assistant/assistant.module';
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DB,
       autoLoadEntities: true,
-      synchronize: process.env.NODE_ENV !== 'production',
+      // 스키마는 마이그레이션으로만 변경한다 (2026-08-17 도입 — docs/roadmap/ex-db-migration.md).
+      // 절차: 엔티티 수정 → nx run @shopping-mall/backend:migration:generate --name=<이름>
+      //       → src/database/migrations/index.ts 에 등록 → migration:run
+      // 실행은 앱 부팅이 아니라 배포 절차의 명시적 단계(§4-0-1 결정)이므로 migrationsRun 도 두지 않는다.
+      synchronize: false,
     }),
     TypeOrmModule.forFeature([RoleEntity, CategoryEntity]),
     AuthModule,

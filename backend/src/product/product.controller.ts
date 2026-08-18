@@ -137,10 +137,12 @@ export class ProductController {
     return this.productService.remove(id, req.user.sub);
   }
 
-  // Admin 전용: 시드 데이터 삽입
+  // Admin 전용: 시드 데이터 삽입 (TRUNCATE products CASCADE — 파괴적).
+  // 2026-08-18 가드 복구: 운영 부트스트랩은 이제 배치 경로(SEED_PRODUCTS=true)를 쓰므로
+  // 이 엔드포인트가 무인증일 이유가 없다. (docs/roadmap/ex-db-migration.md §4-0)
   @Post('seed')
-  // @UseGuards(JwtAuthGuard, RolesGuard)
-  // @Roles(Role.ADMIN)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   async seed() {
     try {
       return await this.productSeedService.seedProducts();
