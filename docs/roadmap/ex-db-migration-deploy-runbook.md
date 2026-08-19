@@ -273,3 +273,5 @@ docker compose -f docker-compose.prod.yaml logs --tail=50 backend
 | `docker-compose: command not found` | EC2 는 `docker compose`(공백) 만 있다 |
 | health 에 version 이 안 보임 | pull 안 된 구 이미지. §6 [멈춤] 참조 |
 | 시드가 "이미 있다"며 스킵 | 정상 멱등 동작. 갈아엎으려면 `-e SEED_RESET=true` 추가 |
+| 부팅 크래시 루프: `Cannot find module '@google/genai'` | **실제 발생(2026-08-19).** Dockerfile prod-deps 가 루트 package.json 만 focus 하므로 backend 에만 실버전으로 선언된 의존성은 이미지에 안 들어간다. `247a93a` 에서 루트 승격으로 해소 — 새 의존성 추가 시 **루트에 실버전 + backend 는 `*`** 관례를 지킬 것 |
+| EC2 의 ~/Shopping-mall 소스를 고쳤는데 반영 안 됨 | compose 는 `image:`(Hub pull) 방식이라 **EC2 체크아웃(4월자 잔재)은 컨테이너와 무관**. 수정은 항상 로컬 → 재빌드 → push → pull 경로로만 반영된다 |

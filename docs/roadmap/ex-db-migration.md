@@ -199,6 +199,7 @@ DB를 비운 뒤 데이터를 되살릴 수단이 이미 코드에 상당히 갖
   - **`.env.example` 보강**: `DEMO_ADMIN_*`/`DEMO_LOGIN_ENABLED` 추가(LLM 3종은 기존재)
   - **0번 마이그레이션에 `CREATE EXTENSION IF NOT EXISTS "uuid-ossp"` 수동 추가** — refresh_tokens uuid 기본값의 자기완결성(드라이버 자동 설치 의존 제거). 확장 없는 빈 DB에서 실측 검증
   - **런북 작성**: `ex-db-migration-deploy-runbook.md` — 0~9단계 복붙 명령 + [정상]/[멈춤] 기준 + 트러블슈팅/복구
+- **EC2 반영 1차 시도 (2026-08-19, 사용자 직접)**: §1~§5 성공(빌드·푸시·리셋·migrate — DB 는 신 스키마 완료) → §6 에서 **부팅 크래시 루프**: `Cannot find module '@google/genai'`. 원인 = Dockerfile prod-deps 가 루트 package.json 만 `yarn workspaces focus --production` 하는데, 이 패키지만 backend 에 실버전으로 선언돼 있었다(유일 케이스). 06-14 구 이미지는 AI 도입 이전이라 2개월 잠복. **`247a93a`** 로 루트 승격 해소. 부수 확인: EC2 `~/Shopping-mall` 의 소스 체크아웃은 4월자 잔재로 **컨테이너와 무관**(compose 는 `image:` pull) — 정리 대상. dangling 이미지 prune 으로 895MB 회수
 - **다음 = 계획 4단계(EC2 반영)**: `src/migrate.ts` 엔트리포인트(§4-0-1) + `scripts/deploy.sh` + 잔가지 2건(시드 가드·.env.example) + 이미지 태그 2종 + DB 리셋(**사용자 확인 후**) + migration:run + seed
 
 ### 4-0-1. 결정 ② 상세 — 마이그레이션은 "배포 절차의 단계"로 (2026-08-17 확정)
