@@ -282,6 +282,29 @@ Phase 3 설계 중 발견한 미해결 문제. **DB 리셋 전에 실측값을 �
 >   sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT action, ip_address, count(*) FROM audit_logs GROUP BY 1,2 ORDER BY 3 DESC LIMIT 20;"'
 > ```
 
+### 5-1b. 트랙 종료 검증 (2026-08-19) — nginx 착수 관문 통과
+
+배포 직후 **Vercel 프록시 경유**(실사용 경로)로 스모크 테스트. 3주간 깨져 있던 화면 전부 복구 확인:
+
+| 구분 | 엔드포인트 | 결과 |
+|---|---|---|
+| 공개 | `/products`, `/products/:id`, `/products/:id/review-summary`, `/categories` | 전부 **200** |
+| 관리자(데모 로그인) | `/admin/dashboard/kpi`, `/admin/audit-logs`, `/admin/products`, `/seller/applications`, `/admin/orders`, `/admin/settlements` | 전부 **200** |
+| 셀러(seller1@seed.com) | `/products/my`, `/seller/orders`, `/seller/settlements`, `/seller/settlements/summary`, `/seller/me` | 전부 **200** |
+
+- **AI 리뷰 요약이 운영에서 첫 동작**: `status:"fresh"` + 실제 생성된 한국어 요약 → 신규 테이블 3개 중 `product_summaries` + Gemini 연동이 운영에서 정상. `LLM_PROVIDER` 는 EC2 .env 에 없지만 기본값 `'gemini'`([ai.module.ts:25](../../backend/src/intrastructure/ai/ai.module.ts#L25))라 무해
+- 트래픽 흘린 뒤 backend 로그 **에러 0건**, 3개 컨테이너 healthy
+- → **"사이트가 멀쩡히 도는 걸 확인한 뒤 nginx로" (§6 원칙) 충족. DB 트랙 종료.**
+
+### 5-1c. 이 트랙에서 파킹한 과제 (nginx 착수를 막지 않음)
+
+1. `scripts/deploy.sh` — 이번 수동 완주를 스크립트화(§4-0-1 순서대로). CI/CD 는 그 후, nginx 뒤
+2. **Dockerfile prod-deps 구조 수정** — `247a93a` 는 루트 승격 우회책. 근본은 `backend/package.json` 을 복사해 워크스페이스를 focus 하는 것. 지금은 backend 고유 실버전 의존성이 0개라 잠복 중
+3. EC2 `~/Shopping-mall` 의 4월자 소스 체크아웃 정리(compose 는 `image:` pull 이라 미사용 잔재 — 혼란 원인)
+4. 리뷰·문의 날짜 분포(전량 실행 시각에 몰림) — data-guide §4-3
+5. `/uploads` diskStorage 휘발성(컨테이너 재생성 시 유실) — nginx 정적 서빙 설계와 함께 보는 게 자연스러움
+6. 사용자 본인 계정(kirianir@naver.com) 재가입 — 리셋으로 사라진 유일한 실계정
+
 ### 5-2. Phase 3 (nginx) — 의제 E부터 재개
 
 `docs/roadmap/03-infra-nginx.md`를 v2로 보강하는 작업이 중단된 상태.
