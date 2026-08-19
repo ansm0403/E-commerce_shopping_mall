@@ -194,7 +194,7 @@
     }
   },
   "dependencies": {
-    "@google/genai": "^2.8.0",
+    "@google/genai": "*",
     "@nestjs/axios": "*",
     "@nestjs/common": "*",
     "@nestjs/config": "*",

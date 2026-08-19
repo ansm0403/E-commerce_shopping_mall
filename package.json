@@ -78,6 +78,7 @@
     "dependencies": {
         "@emotion/react": "^11.14.0",
         "@emotion/styled": "^11.14.1",
+        "@google/genai": "^2.8.0",
         "@hookform/resolvers": "^5.2.2",
         "@nestjs/axios": "^4.0.1",
         "@nestjs/common": "^11.0.0",

@@ -2210,6 +2210,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@google/genai@npm:*":
+  version: 2.17.1
+  resolution: "@google/genai@npm:2.17.1"
+  dependencies:
+    google-auth-library: "npm:^10.3.0"
+    p-retry: "npm:^4.6.2"
+    protobufjs: "npm:^7.5.4"
+    ws: "npm:^8.18.0"
+  peerDependencies:
+    "@modelcontextprotocol/sdk": ^1.25.2
+  peerDependenciesMeta:
+    "@modelcontextprotocol/sdk":
+      optional: true
+  checksum: 10c0/f94efe55f23a10a1b54d0297a607747acc98d5ad1e26a4dabbc7a81869ef68bc15b2c056517b7870fa866fdb6aa77c7c39e8ce407e89dcac26ec363fb6a96aa2
+  languageName: node
+  linkType: hard
+
 "@google/genai@npm:^2.8.0":
   version: 2.8.0
   resolution: "@google/genai@npm:2.8.0"
@@ -6181,7 +6198,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@shopping-mall/backend@workspace:backend"
   dependencies:
-    "@google/genai": "npm:^2.8.0"
+    "@google/genai": "npm:*"
     "@nestjs/axios": "npm:*"
     "@nestjs/common": "npm:*"
     "@nestjs/config": "npm:*"
@@ -6250,6 +6267,7 @@ __metadata:
     "@eslint/compat": "npm:^1.1.1"
     "@eslint/eslintrc": "npm:^2.1.1"
     "@eslint/js": "npm:^9.8.0"
+    "@google/genai": "npm:^2.8.0"
     "@hookform/resolvers": "npm:^5.2.2"
     "@nestjs/axios": "npm:^4.0.1"
     "@nestjs/common": "npm:^11.0.0"
