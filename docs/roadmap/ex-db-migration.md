@@ -200,7 +200,7 @@ DB를 비운 뒤 데이터를 되살릴 수단이 이미 코드에 상당히 갖
   - **0번 마이그레이션에 `CREATE EXTENSION IF NOT EXISTS "uuid-ossp"` 수동 추가** — refresh_tokens uuid 기본값의 자기완결성(드라이버 자동 설치 의존 제거). 확장 없는 빈 DB에서 실측 검증
   - **런북 작성**: `ex-db-migration-deploy-runbook.md` — 0~9단계 복붙 명령 + [정상]/[멈춤] 기준 + 트러블슈팅/복구
 - **EC2 반영 1차 시도 (2026-08-19, 사용자 직접)**: §1~§5 성공(빌드·푸시·리셋·migrate — DB 는 신 스키마 완료) → §6 에서 **부팅 크래시 루프**: `Cannot find module '@google/genai'`. 원인 = Dockerfile prod-deps 가 루트 package.json 만 `yarn workspaces focus --production` 하는데, 이 패키지만 backend 에 실버전으로 선언돼 있었다(유일 케이스). 06-14 구 이미지는 AI 도입 이전이라 2개월 잠복. **`247a93a`** 로 루트 승격 해소. 부수 확인: EC2 `~/Shopping-mall` 의 소스 체크아웃은 4월자 잔재로 **컨테이너와 무관**(compose 는 `image:` pull) — 정리 대상. dangling 이미지 prune 으로 895MB 회수
-- **다음 = 계획 4단계(EC2 반영)**: `src/migrate.ts` 엔트리포인트(§4-0-1) + `scripts/deploy.sh` + 잔가지 2건(시드 가드·.env.example) + 이미지 태그 2종 + DB 리셋(**사용자 확인 후**) + migration:run + seed
+- **✅ 계획 4단계(EC2 반영) 완료 (2026-08-19)**: genai 수정(`247a93a`) 재빌드·재푸시(두 태그 동일 다이제스트 `4e38cec…`) → pull → up(70초 만에 healthy) → **§6 검증 통과**(`ps` healthy + health `version:"247a93a"` 단언) → 부팅 시드(3/27) → §7 시드 배치(상품 349·유저 26·주문 369·audit 1,889·리뷰 1,812·문의 13) → §8-1 전 항목 일치(합성값 오염 0) → **Vercel 프록시 경유 외부 검증**(홈 200, `/api/products` 실데이터, `/api/health` 버전 일치). 2개월 드리프트 해소 — 운영이 최신 코드+신 스키마+시드 데이터로 가동. 남은 것: §8-2 브라우저 화면 확인(사용자) + 본인 계정 재가입. `scripts/deploy.sh` 는 이번 수동 완주 경험을 스크립트화하는 후속 과제로 이월
 
 ### 4-0-1. 결정 ② 상세 — 마이그레이션은 "배포 절차의 단계"로 (2026-08-17 확정)
 
