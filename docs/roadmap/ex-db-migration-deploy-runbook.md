@@ -13,7 +13,7 @@
 
 | # | 확인 | 방법 |
 |---|---|---|
-| 1 | **백업 존재** — EC2와 로컬 이중 보관 | 로컬: `ls ~/Desktop/fullstack/db-backups/20260817/` → 4개 파일. EC2: §2에서 재확인 |
+| 1 | **백업 존재** — EC2와 로컬 이중 보관 | 로컬: `ls ~/Desktop/fullstack/db-backups/20260817/` → 4개 파일. EC2: §2에서 재확인. ※ 용도는 데이터 복원이 아니라 **.env 사본(§3 사고 대비) + 보험** — 데이터 복구는 §9-C 대로 "다시 시드"가 1순위 |
 | 2 | **이 트랙의 코드 변경분이 커밋돼 있다** | `git status` 에서 backend/·Dockerfile 변경이 안 보여야 함(PR_DRAFT.md, eval results 중간본 등 의도적 미커밋 문서는 남아 있어도 됨). 이미지는 커밋이 아니라 현재 파일로 빌드되지만, "어느 코드가 배포됐나"를 :sha 태그로 증명하려면 코드 커밋 후 빌드가 원칙 |
 | 3 | 로컬 리허설 완료 | 이미 완료(2026-08-18) |
 | 3-1 | **이 트랙 코드가 main 에 머지됨** | PR **#30**(`feat/db-migration`) 머지 → `git checkout main && git pull`. §1 의 GIT_SHA 는 **그때의 main tip**(스쿼시 커밋)이다. 커밋을 로컬에만 두고 빌드하면 "배포된 코드가 어디에도 없는" 상태가 되므로 머지를 먼저 한다 |
@@ -251,17 +251,20 @@ docker compose -f docker-compose.prod.yaml logs --tail=50 backend
 - `FRONTEND_URL environment variable is required` → .env 손상. §3 편집 중 실수 여부 확인
 - DB 접속 에러 → postgres 상태(`ps`) 확인
 
-**C. 완전 복구 (모든 것을 되돌리고 싶다)**
-```bash
-# 리셋 직전 상태(구 스키마 + 구 데이터)로 복원
-docker compose -f docker-compose.prod.yaml stop backend
-docker compose -f docker-compose.prod.yaml exec -T postgres \
-  sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "DROP SCHEMA public CASCADE;" -c "CREATE SCHEMA public;"'
-docker compose -f docker-compose.prod.yaml exec -T postgres \
-  sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < ~/db-backup-20260817/shopping_mall_full_20260817.sql
-docker compose -f docker-compose.prod.yaml up -d
-# 참고: 구 이미지 코드로의 롤백은 사실상 무의미(2개월 전 코드) — 복구는 "데이터"만, 코드는 전진(fix-forward)이 원칙
-```
+**C. 복구 — 1순위는 백업 복원이 아니라 "다시 시드"다**
+
+이 배포의 데이터는 **전부 시드로 재현 가능**하다(그렇게 설계했다). 중간에 뭔가 꼬였으면
+백업을 만질 게 아니라 **§4 로 돌아가 §4→§7 을 처음부터 다시 돌리는 것**이 가장 빠르고
+확실한 복구다(로컬 리허설에서 두 번 검증된 경로, 소요 ~10분).
+
+백업(`~/db-backup-20260817/`)의 실질 용도는 데이터 복원이 아니라:
+- **`ec2.env.backup`** — §3 에서 .env 편집을 망쳤을 때의 **유일한 복구 수단**(운영 전용
+  시크릿은 시드로 못 되살린다). 백업 중 가장 가치 있는 파일이다
+- 감사로그 원본 rows 보존(포렌식·nginx 문서용) + "판단이 틀렸을 경우"의 보험
+
+구 DB 덤프 복원은 **최후 수단**이다 — 구 스키마로 돌아가는 것이라 새 이미지와 호환되지
+않고(신 코드가 기대하는 테이블 부재), 구 이미지(2개월 전 코드)로 함께 돌아가야만 의미가
+있는데 그 상태를 원할 일이 없다. 코드는 전진(fix-forward)이 원칙.
 
 **D. 자주 하는 실수**
 | 증상 | 원인 |
