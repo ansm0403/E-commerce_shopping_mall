@@ -1,0 +1,258 @@
+{
+  "runAt": "2026-07-25T20:40:05.851Z",
+  "model": "gemini-3.1-flash-lite",
+  "goldenSetVersion": 1,
+  "filter": {
+    "only": [
+      "easy-reviews-negative"
+    ],
+    "difficulty": null
+  },
+  "aborted": false,
+  "summary": {
+    "executed": 1,
+    "toolAccuracy": {
+      "pass": 1,
+      "total": 1,
+      "pct": 100
+    },
+    "trapRulePass": {
+      "pass": 0,
+      "total": 0
+    },
+    "byDifficulty": {
+      "easy": "1/1"
+    },
+    "apiRoundTrips": 2,
+    "usageTotal": {
+      "inputTokens": 6435,
+      "outputTokens": 163,
+      "cachedTokens": 0
+    },
+    "errors": 0
+  },
+  "cases": [
+    {
+      "id": "easy-reviews-negative",
+      "difficulty": "easy",
+      "behavior": "answer",
+      "question": "부정적인 리뷰들 핵심만 요약해줘",
+      "status": "pass",
+      "violations": [],
+      "judgePending": false,
+      "expected": {
+        "type": "tool_call",
+        "tools": [
+          "summarize_reviews"
+        ],
+        "argsContain": {
+          "maxRating": 2
+        }
+      },
+      "actual": {
+        "toolCalls": [
+          {
+            "name": "summarize_reviews",
+            "args": {
+              "maxRating": 2
+            },
+            "result": {
+              "count": 30,
+              "reviews": [
+                {
+                  "rating": 1,
+                  "comment": "배송도 느리고 품질도 기대 이하였어요.",
+                  "productId": 251,
+                  "createdAt": "2026-06-15T15:24:56.118Z"
+                },
+                {
+                  "rating": 1,
+                  "comment": "사진과 실물이 좀 달라서 아쉬웠습니다.",
+                  "productId": 201,
+                  "createdAt": "2026-06-15T15:24:56.118Z"
+                },
+                {
+                  "rating": 1,
+                  "comment": "가격 대비 만족스럽지 못했습니다.",
+                  "productId": 223,
+                  "createdAt": "2026-06-15T15:24:56.118Z"
+                },
+                {
+                  "rating": 1,
+                  "comment": "사진과 실물이 좀 달라서 아쉬웠습니다.",
+                  "productId": 4,
+                  "createdAt": "2026-06-15T15:24:56.118Z"
+                },
+                {
+                  "rating": 1,
+                  "comment": "생각보다 별로였어요. 다시 살 것 같진 않네요.",
+                  "productId": 342,
+                  "createdAt": "2026-06-15T15:24:56.118Z"
+                },
+                {
+                  "rating": 1,
+                  "comment": "사진과 실물이 좀 달라서 아쉬웠습니다.",
+                  "productId": 342,
+                  "createdAt": "2026-06-15T15:24:56.118Z"
+                },
+                {
+                  "rating": 2,
+                  "comment": "가격 대비 만족스럽지 못했습니다.",
+                  "productId": 343,
+                  "createdAt": "2026-06-15T15:24:56.118Z"
+                },
+                {
+                  "rating": 2,
+                  "comment": "가격 대비 만족스럽지 못했습니다.",
+                  "productId": 343,
+                  "createdAt": "2026-06-15T15:24:56.118Z"
+                },
+                {
+                  "rating": 1,
+                  "comment": "배송도 느리고 품질도 기대 이하였어요.",
+                  "productId": 344,
+                  "createdAt": "2026-06-15T15:24:56.118Z"
+                },
+                {
+                  "rating": 1,
+                  "comment": "배송도 느리고 품질도 기대 이하였어요.",
+                  "productId": 345,
+                  "createdAt": "2026-06-15T15:24:56.118Z"
+                },
+                {
+                  "rating": 2,
+                  "comment": "사진과 실물이 좀 달라서 아쉬웠습니다.",
+                  "productId": 3,
+                  "createdAt": "2026-06-15T15:24:56.118Z"
+                },
+                {
+                  "rating": 2,
+                  "comment": "생각보다 별로였어요. 다시 살 것 같진 않네요.",
+                  "productId": 8,
+                  "createdAt": "2026-06-15T15:24:56.118Z"
+                },
+                {
+                  "rating": 2,
+                  "comment": "가격 대비 만족스럽지 못했습니다.",
+                  "productId": 8,
+                  "createdAt": "2026-06-15T15:24:56.118Z"
+                },
+                {
+                  "rating": 2,
+                  "comment": "생각보다 별로였어요. 다시 살 것 같진 않네요.",
+                  "productId": 10,
+                  "createdAt": "2026-06-15T15:24:56.118Z"
+                },
+                {
+                  "rating": 2,
+                  "comment": "가격 대비 만족스럽지 못했습니다.",
+                  "productId": 14,
+                  "createdAt": "2026-06-15T15:24:56.118Z"
+                },
+                {
+                  "rating": 2,
+                  "comment": "배송도 느리고 품질도 기대 이하였어요.",
+                  "productId": 14,
+                  "createdAt": "2026-06-15T15:24:56.118Z"
+                },
+                {
+                  "rating": 2,
+                  "comment": "생각보다 별로였어요. 다시 살 것 같진 않네요.",
+                  "productId": 20,
+                  "createdAt": "2026-06-15T15:24:56.118Z"
+                },
+                {
+                  "rating": 1,
+                  "comment": "생각보다 별로였어요. 다시 살 것 같진 않네요.",
+                  "productId": 21,
+                  "createdAt": "2026-06-15T15:24:56.118Z"
+                },
+                {
+                  "rating": 2,
+                  "comment": "생각보다 별로였어요. 다시 살 것 같진 않네요.",
+                  "productId": 27,
+                  "createdAt": "2026-06-15T15:24:56.118Z"
+                },
+                {
+                  "rating": 2,
+                  "comment": "가격 대비 만족스럽지 못했습니다.",
+                  "productId": 27,
+                  "createdAt": "2026-06-15T15:24:56.118Z"
+                },
+                {
+                  "rating": 1,
+                  "comment": "사진과 실물이 좀 달라서 아쉬웠습니다.",
+                  "productId": 19,
+                  "createdAt": "2026-06-15T15:24:56.118Z"
+                },
+                {
+                  "rating": 2,
+                  "comment": "배송도 느리고 품질도 기대 이하였어요.",
+                  "productId": 26,
+                  "createdAt": "2026-06-15T15:24:56.118Z"
+                },
+                {
+                  "rating": 1,
+                  "comment": "가격 대비 만족스럽지 못했습니다.",
+                  "productId": 26,
+                  "createdAt": "2026-06-15T15:24:56.118Z"
+                },
+                {
+                  "rating": 1,
+                  "comment": "가격 대비 만족스럽지 못했습니다.",
+                  "productId": 34,
+                  "createdAt": "2026-06-15T15:24:56.118Z"
+                },
+                {
+                  "rating": 2,
+                  "comment": "사진과 실물이 좀 달라서 아쉬웠습니다.",
+                  "productId": 35,
+                  "createdAt": "2026-06-15T15:24:56.118Z"
+                },
+                {
+                  "rating": 1,
+                  "comment": "사진과 실물이 좀 달라서 아쉬웠습니다.",
+                  "productId": 35,
+                  "createdAt": "2026-06-15T15:24:56.118Z"
+                },
+                {
+                  "rating": 1,
+                  "comment": "배송도 느리고 품질도 기대 이하였어요.",
+                  "productId": 36,
+                  "createdAt": "2026-06-15T15:24:56.118Z"
+                },
+                {
+                  "rating": 1,
+                  "comment": "배송도 느리고 품질도 기대 이하였어요.",
+                  "productId": 40,
+                  "createdAt": "2026-06-15T15:24:56.118Z"
+                },
+                {
+                  "rating": 1,
+                  "comment": "가격 대비 만족스럽지 못했습니다.",
+                  "productId": 41,
+                  "createdAt": "2026-06-15T15:24:56.118Z"
+                },
+                {
+                  "rating": 2,
+                  "comment": "가격 대비 만족스럽지 못했습니다.",
+                  "productId": 251,
+                  "createdAt": "2026-06-15T15:24:56.118Z"
+                }
+              ]
+            }
+          }
+        ],
+        "reply": "부정적인 리뷰(평점 2점 이하) 30건을 분석한 결과, 주요 불만 사항은 다음과 같습니다.\n\n* **제품 품질 및 이미지 차이:** 상품 품질이 기대에 미치지 못하며, 웹사이트에 게시된 사진과 실제 제품의 모습이 달라 실망했다는 의견이 많습니다.\n* **가성비 부족:** 가격 대비 전반적인 품질이나 만족도가 떨어진다는 지적이 있습니다.\n* **배송 관련:** 배송이 지연되는 점에 대한 불만이 확인됩니다.\n* **재구매 의사 부족:** 전반적으로 기대치보다 낮은 만족도로 인해 재구매 의사가 낮게 나타나고 있습니다.",
+        "usage": {
+          "inputTokens": 6435,
+          "outputTokens": 163,
+          "cachedTokens": 0,
+          "thoughtsTokens": 0,
+          "totalTokens": 6598
+        }
+      },
+      "apiRoundTrips": 2
+    }
+  ]
+}
