@@ -1,0 +1,45 @@
+# ⚠ nginx 로컬 연습 전용(E 주제 2) — 연습 종료 후 삭제해도 되는 파일.
+# 운영 미니어처: nginx(호스트 8080→80) → backend(운영 이미지) → 기존 로컬 postgres/redis 재사용.
+# 실행: docker compose -f docker-compose.nginx-practice.yaml up -d
+
+name: nginx-practice
+
+services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:80"            # 호스트 8080 (윈도우 80 충돌 회피). 운영에선 80/443
+    volumes:
+      # 결정 7: nginx.conf 통째 교체가 아니라 conf.d/default.conf 만 :ro 바인드
+      - ./nginx/default.bootstrap.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      backend:
+        condition: service_healthy   # backend 이름이 해석 가능해진 뒤에 nginx 시작
+
+  backend:
+    image: ansmoon/shopping-mall-backend:latest   # EC2에 올라간 것과 같은 08-19 빌드(247a93a)
+    ports:
+      - "4000:4000"          # 운영의 "옛 문" 재현 — 5단계(폐쇄) 전 상태. 실험 2에서 직접 접속 대조용
+    env_file:
+      - ./backend/.env       # JWT 시크릿 등 (운영 compose 와 같은 방식)
+    environment:
+      - NODE_ENV=production
+      - POSTGRES_HOST=postgres   # .env 의 localhost:15432 를 컨테이너 세계 기준으로 덮어쓰기
+      - POSTGRES_PORT=5432
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - SENTRY_DSN=              # 연습 트래픽이 Sentry 에 흘러가지 않게 비활성(no-op)
+      - TRUST_PROXY_HOPS=1       # 로컬은 프록시 1홉(nginx뿐). 운영(Vercel+nginx) 값은 주제 4에서 확정
+    healthcheck:                 # 운영 compose 와 동일
+      test: ["CMD-SHELL", "curl -f http://localhost:4000/v1/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    # 실험 2-B: trust proxy 코드가 든 로컬 빌드 dist 를 이미지 위에 덮기
+    volumes:
+      - ./backend/dist:/app/backend/dist:ro
+
+networks:
+  default:
+    name: shopping-mall-local-network   # 기존 로컬 postgres/redis 가 사는 네트워크에 합류
+    external: true                      # 새로 만들지 말고 있는 것을 쓴다

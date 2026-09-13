@@ -67,3 +67,7 @@ docs/etc
 
 # 상품 이미지 업로드(multer diskStorage) — 런타임 산출물이라 커밋 금지
 uploads/
+
+# nginx 런타임 설정 디렉터리(EC2 에서 bootstrap/최종본을 cp 해 넣는 곳) + certbot 산출물 — 커밋 금지
+nginx/conf.d/
+certbot/

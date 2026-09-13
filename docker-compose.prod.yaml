@@ -1,4 +1,10 @@
-## AWS 배포용 docker compose 파일
+## AWS 배포용 docker compose 파일 — nginx/HTTPS 도입판 (Phase 3, 2026-09)
+##
+## 형상: nginx(80/443) → backend(4000, 내부 전용) → postgres / redis
+## 운영 절차는 docs/roadmap/03-infra-nginx-runbook.md 를 따른다.
+##
+## ⚠ 이 파일은 "새 EC2(nginx 포함)" 전용이다. nginx 없이 4000 을 직접 노출하던 구 EC2 에
+##   그대로 올리면 SG(80/443 미개방) 때문에 서비스가 끊긴다.
 
 services:
   postgres:
@@ -29,8 +35,8 @@ services:
   backend:
     image: ansmoon/shopping-mall-backend:latest
     restart: unless-stopped
-    ports:
-      - "4000:4000"
+    # ports 없음 — 4000 은 compose 네트워크 안에서 nginx 만 부른다 (결정 6: 4000 비공개).
+    # 호스트에서 직접 확인이 필요하면: docker compose -f docker-compose.prod.yaml exec backend curl -s localhost:4000/v1/health
     env_file:
       - .env
     environment:
@@ -39,6 +45,14 @@ services:
       - POSTGRES_PORT=5432
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      # nginx 가 앞에 있으므로 X-Forwarded-For 의 "맨 끝 1홉"(= nginx 가 덧붙인 소켓 IP)을 손님으로 본다.
+      # 이 값이 없으면 모든 요청이 nginx 컨테이너 IP 로 찍혀 로그인 레이트리밋(IP당 10회/5분)을
+      # 전 세계가 공유하게 된다 — nginx 와 한 세트로 반드시 1. (2 이상은 위조 가능 — 로컬 실측)
+      - TRUST_PROXY_HOPS=1
+    volumes:
+      # 셀러 상품 이미지(multer diskStorage → /app/uploads) 를 호스트에 보존 — 컨테이너 재생성에도 유지.
+      # 호스트 디렉터리는 컨테이너 유저(uid 999 nestjs / gid 999 nodejs) 소유여야 쓰기 가능.
+      - ./uploads:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -49,6 +63,36 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"    # 인증서 발급 전(부트스트랩 conf)에는 443 에 아무도 안 듣지만 포트 개방 자체는 무해
+    volumes:
+      # 결정 7: nginx.conf 는 이미지 기본값 그대로, conf.d/ 만 우리가 준다(:ro).
+      # 파일 단위가 아니라 디렉터리 단위로 바인드하는 이유: bootstrap → 최종본 교체를 cp 로 해도
+      # 컨테이너가 항상 새 내용을 보게 하기 위해(파일 바인드는 inode 가 바뀌면 옛 내용을 계속 본다).
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      # certbot 과 공유: 검증 파일(webroot) 은 읽기, 인증서 디렉터리는 통째(결정 13) 읽기
+      - ./certbot/www:/var/www/certbot:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+    # 6시간마다 reload — certbot 이 갱신해 둔 인증서를 재적재 (결정 14). 그 전엔 exec nginx -g 로 정상 기동.
+    command: sh -c '(while :; do sleep 6h; nginx -s reload; done) & exec nginx -g "daemon off;"'
+    depends_on:
+      backend:
+        condition: service_healthy   # backend 이름이 해석돼야 upstream 이 성립 → 그 뒤에 기동
+
+  certbot:
+    image: certbot/certbot
+    restart: unless-stopped
+    volumes:
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+    # 12시간마다 renew 시도 — 만료 30일 전부터만 실제 갱신, 그 전엔 "not yet due" 로 조용히 지나간다 (결정 14).
+    # 최초 발급은 이 루프가 아니라 런북 §8 의 `run --rm --entrypoint certbot certbot certonly ...` 로 한다.
+    entrypoint: sh -c 'while :; do certbot renew --quiet; sleep 12h; done'
 
 networks:
   default:

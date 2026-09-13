@@ -71,6 +71,15 @@ async function bootstrap() {
 
   const expressApp = app.getHttpAdapter().getInstance();
 
+  // 리버스 프록시(nginx/Vercel) 뒤에서 X-Forwarded-For 로 실제 클라이언트 IP 를 복원한다.
+  // TRUST_PROXY_HOPS 미설정(기본)이면 완전 비활성 = 기존 동작 그대로 — 프록시 없이 4000 이
+  // 직접 노출된 현 운영 상태에서 XFF 헤더 위조로 IP 를 속일 수 없어야 하므로 env 로만 켠다.
+  // (nginx 전환 4단계에서 EC2 env 에 TRUST_PROXY_HOPS 를 넣어 활성화 — docs/roadmap 참고)
+  const trustProxyHops = Number(process.env.TRUST_PROXY_HOPS);
+  if (Number.isInteger(trustProxyHops) && trustProxyHops > 0) {
+    expressApp.set('trust proxy', trustProxyHops);
+  }
+
   // 상품 이미지 정적 서빙 — multer diskStorage 가 './uploads'(CWD 기준)에 저장하므로 같은 기준으로 맞춘다.
   // 글로벌 prefix(v1)를 타지 않아 http://localhost:4000/uploads/<filename> 으로 열린다.
   // ⚠ 로컬 디스크 저장이라 컨테이너 재배포 시 파일이 유실된다(S3 등 외부 스토리지 전환 전까지의 한계).
