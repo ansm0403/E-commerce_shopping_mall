@@ -31,7 +31,11 @@
 
 ---
 
-## 1. [로컬] 코드 커밋·머지 → 이미지 빌드 + 태그 2종 + 푸시
+## 1. [로컬] 이미지 빌드 + 태그 2종 + 푸시
+
+> ✅ **코드 커밋·푸시는 2026-09-13 에 완료됐다** — `c6006ca`(이 트랙 본체) 포함 3커밋이 **main 에 직푸시**됨
+> (PR 없이 진행하기로 결정). 따라서 아래 1-1 은 **이미 끝난 단계**이고, 지금 할 일은 1-2(빌드·푸시)뿐이다.
+> 이 트랙 산출물을 더 고친 뒤 배포할 때만 1-1 을 다시 쓴다.
 
 **왜 새 이미지가 필요한가**: 현재 Hub 의 `247a93a` 에는 `TRUST_PROXY_HOPS` 코드가 없다. 그 이미지를 nginx 뒤에 두면
 모든 손님이 nginx 컨테이너 IP 로 보여 **로그인 레이트리밋을 전 세계가 공유**한다(로컬 실험 2-A 에서 재현). 반드시 새 빌드.
@@ -39,19 +43,18 @@
 ```bash
 cd ~/Desktop/fullstack/shopping_mall
 
-# 1-1. 브랜치에 이 트랙 산출물만 담아 PR → main 머지 (DB 트랙과 동일 원칙: 배포 코드는 main 에 있어야 한다)
-git checkout -b feat/nginx-https
-git add backend/src/main.ts nginx/default.bootstrap.conf nginx/default.conf docker-compose.prod.yaml \
-        docker-compose.nginx-practice.yaml .gitignore docs/roadmap/03-infra-nginx-runbook.md
-git status --short          # 위 파일들만 스테이징됐는지 눈으로 확인(PR_DRAFT.md·eval 결과물·docs/learning 은 제외)
-git commit -m "feat(infra): nginx/HTTPS 도입 — env 게이트 trust proxy, nginx conf 2종, 운영 compose 갱신, 런북"
-git push -u origin feat/nginx-https
-# → GitHub 에서 PR 생성·머지(스쿼시) 후:
-git checkout main && git pull
+# 1-1. (완료됨 — 재작업 시에만) main 에서 이 트랙 산출물만 담아 커밋·푸시
+#      ⚠ PR_DRAFT.md(파일 자체가 "커밋 금지" 명시)·.yarn/install-state.gz 는 제외한다
+# git add backend/src/main.ts nginx/ docker-compose.prod.yaml \
+#         docker-compose.nginx-practice.yaml .gitignore docs/roadmap/03-infra-nginx-runbook.md
+# git commit -m "feat(infra): ..." && git push origin main
 
-# 1-2. 빌드 + 푸시 (⚠ 20분 내외)
+# 1-2. 최신 main 인지 확인한 뒤 빌드 + 푸시 (⚠ 20분 내외)
+git checkout main && git pull
+git status --short          # .yarn/install-state.gz 와 PR_DRAFT.md 외에는 깨끗해야 한다
+
 GIT_SHA=$(git rev-parse --short HEAD)
-echo $GIT_SHA               # 이 값을 메모 — 아래 §6, §8, §9 에서 "버전 단언"에 계속 쓴다
+echo $GIT_SHA               # 현재 7925788 — 이 값을 메모. §6·§8·§9 의 "버전 단언"에 계속 쓴다
 
 docker build --build-arg GIT_SHA=$GIT_SHA \
   -t ansmoon/shopping-mall-backend:latest \
