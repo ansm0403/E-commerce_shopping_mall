@@ -79,7 +79,7 @@ EC2 → **인스턴스 시작**:
 | 이름 | `shopping-mall` | |
 | AMI | **Ubuntu Server 24.04 LTS (x86_64)** | 구 EC2 와 동일 |
 | 인스턴스 유형 | **t3.small** (2 vCPU / 2GB) | 구 EC2 와 동일. §0-4 크레딧이 빠듯하면 t3.micro(1GB)+스왑도 가능하나 이미지 1.85GB·postgres·nginx 동거라 small 권장 |
-| 키 페어 | **새로 생성** `shoppingApp-key-v2` (RSA, .pem) | 다운로드된 파일을 `~/.ssh/shoppingApp-key-v2.pem` 으로 이동 후 `chmod 400` |
+| 키 페어 | **새로 생성** `shoppingApp-key-v2` (RSA, .pem) | 다운로드된 파일을 `~/.ssh/shoppingApp-key-v2.pem` 으로 이동. ⚠ **Windows 는 `chmod 400` 이 듣지 않는다** — 아래 PowerShell 로 권한을 좁혀야 한다(안 하면 `UNPROTECTED PRIVATE KEY FILE` 로 키가 무시됨) |
 | 네트워크 → 보안그룹 | **새로 생성** `shopping-mall-sg`, 인바운드 규칙 3개(아래) | **4000 은 만들지 않는다** |
 | 스토리지 | **20 GiB gp3** | 구 EC2 는 루트 19G(52% 사용) + DB 전용 5G 였다. 데이터가 mock(67MB) 이라 이번엔 루트 하나로 간다(선택: 부록 A 로 분리 가능) |
 
@@ -90,6 +90,14 @@ EC2 → **인스턴스 시작**:
 | SSH | 22 | **내 IP** | 관리. 집 IP 가 바뀌면 이 규칙만 갱신 |
 | HTTP | 80 | 0.0.0.0/0 | certbot 검증 + https 리다이렉트 |
 | HTTPS | 443 | 0.0.0.0/0 | 실서비스 |
+
+**[Windows] 키 파일 권한 좁히기** (PowerShell. `.ssh` 폴더에서 상속된 권한 + 옛 계정의 고아 SID 를 제거하고 본인만 읽기):
+
+```powershell
+$key = "$env:USERPROFILE\.ssh\shoppingApp-key-v2.pem"
+icacls $key /inheritance:r /grant:r "$($env:USERDOMAIN)\$($env:USERNAME):(R)"
+icacls $key      # → "<PC명>\<계정>:(R)" 한 줄만 남아야 정상
+```
 
 **탄력적 IP**: EC2 → 네트워크 및 보안 → **탄력적 IP** → 할당(리전 서울) → **작업 → 탄력적 IP 주소 연결** → 위 인스턴스.
 할당된 주소를 메모: 이후 이 문서에서 **`<EIP>`** 로 부른다.
@@ -442,6 +450,11 @@ docker compose -f docker-compose.prod.yaml exec nginx nginx -s reload
 **H. Cloudflare 에서 526/525 또는 인증서 발급이 계속 404** — 주황 구름. 회색(DNS only)으로.
 
 **I. Vercel 전환 후 로그인만 실패(401/네트워크 에러)** — BFF 가 `API_PROXY_TARGET` 을 빌드 시점에 읽는다. Redeploy 를 캐시 없이 했는지 확인. 값 끝에 `/v1` 이 빠지지 않았는지(`https://api.ansmoon.dev/v1`).
+
+**K. [Windows] `Permission denied (publickey)` / `UNPROTECTED PRIVATE KEY FILE` / `Connection closed by ... port 22`**
+세 증상 모두 같은 원인 — 키 파일 권한이 넓어 OpenSSH 가 키를 **무시**한 것이다(서버·키 자체 문제가 아님). §2 의 "[Windows] 키 파일 권한 좁히기" 를 실행한다.
+확인: `icacls $key` 출력이 `<PC명>\<계정>:(R)` **한 줄뿐**이어야 한다. `(I)` 표시(상속)나 `UNKNOWN\UNKNOWN`(옛 계정의 고아 SID)가 보이면 아직 안 고쳐진 것.
+실측(2026-09-14): `.ssh` 폴더에서 상속된 SYSTEM/Administrators/사용자/고아SID 4개가 원인이었고, 위 명령으로 해소됨.
 
 **J. 자주 하는 실수**
 | 증상 | 원인 |
