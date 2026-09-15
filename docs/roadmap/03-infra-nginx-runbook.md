@@ -469,8 +469,7 @@ docker compose -f docker-compose.prod.yaml exec nginx nginx -s reload
 # ① 백엔드 로그에 이 줄이 있으면 확정
 docker compose -f docker-compose.prod.yaml logs backend --since 30m | grep "Not allowed by CORS"
 # ② [로컬] Origin 만 바꿔 재현 — 임시 주소는 500, 운영 도메인은 400(빈 body 검증 = 핸들러 도달)
-curl -s -o /dev/null -w "%{http_code}
-" -X POST https://api.ansmoon.dev/v1/auth/register -H "Content-Type: application/json" -H "Origin: https://shopping-mall-frontend-dusky.vercel.app" -d '{}'
+curl -s -o /dev/null -w "%{http_code}\n" -X POST https://api.ansmoon.dev/v1/auth/register -H "Content-Type: application/json" -H "Origin: https://shopping-mall-frontend-dusky.vercel.app" -d '{}'
 ```
 처방: **운영 도메인으로 다시 확인한다.** 임시 주소를 허용 목록에 넣는 건 해시가 매번 바뀌어 무의미하다.
 
