@@ -355,6 +355,10 @@ Vercel → 프로젝트 → **Settings → Environment Variables** → `API_PROX
 
 배포 `Ready` 후 **브라우저**(이제부터는 브라우저가 맞다 — Vercel 사이트는 same-origin 이라 HSTS 무관):
 
+> ⚠ **반드시 운영 도메인 `https://shopping-mall-frontend-dusky.vercel.app` 에서 확인한다.** Vercel 배포 화면의 "Visit" 이 여는
+> `...-<해시>-sangmoons-projects.vercel.app` 은 **배포 1건짜리 임시 주소**라 백엔드 `CORS_ORIGINS` 에 없다 → 브라우저가 `Origin` 을
+> 붙이는 **POST 만 500**(로그인·회원가입·주문)이고 GET(목록·상세)은 멀쩡해 보여 오판하기 쉽다(실측 2026-09-15, §13-L).
+
 | 확인 | 기대 | 이게 검증하는 것 |
 |---|---|---|
 | 상점 목록·상품 상세 | 이미지 포함 정상 | rewrites → https 경로 |
@@ -415,6 +419,7 @@ curl -s https://api.ansmoon.dev/v1/health   # version == 새 GIT_SHA
 | 12-4 | `frontend/next.config.js:176-179` 주석 정정 — "nginx 전환 시 rewrites 제거" 는 v1 설계(폐기). 실제로는 유지 + 값만 교체 | 문서 v2 와 함께 |
 | 12-5 | `03-infra-nginx.md` v2 작성 + 외부 액션 체크리스트 (결정 16개·로컬 실측·이관 통합 사유·trust proxy 결정 변천) | E·F 종료 산출물 |
 | 12-6 | `scripts/deploy.sh`(§10 표준 절차 스크립트화), Dockerfile prod-deps 구조 | DB 트랙 파킹 승계 |
+| 12-7 | CORS 거부를 500 이 아니라 **403** 으로(`main.ts` origin 콜백의 `cb(new Error)` → `ForbiddenException`) + `main.ts:54` 주석 정정("프록시라 CORS 무의미"는 오판 — Next rewrites 는 `Origin` 을 그대로 전달한다) | §13-L 실측. 문서 v2 와 함께 |
 
 ---
 
@@ -455,6 +460,19 @@ docker compose -f docker-compose.prod.yaml exec nginx nginx -s reload
 세 증상 모두 같은 원인 — 키 파일 권한이 넓어 OpenSSH 가 키를 **무시**한 것이다(서버·키 자체 문제가 아님). §2 의 "[Windows] 키 파일 권한 좁히기" 를 실행한다.
 확인: `icacls $key` 출력이 `<PC명>\<계정>:(R)` **한 줄뿐**이어야 한다. `(I)` 표시(상속)나 `UNKNOWN\UNKNOWN`(옛 계정의 고아 SID)가 보이면 아직 안 고쳐진 것.
 실측(2026-09-14): `.ssh` 폴더에서 상속된 SYSTEM/Administrators/사용자/고아SID 4개가 원인이었고, 위 명령으로 해소됨.
+
+**L. §9 후 GET 은 되는데 POST(로그인·회원가입·주문)만 500 `Internal server error`**
+원인은 nginx 도 이관도 아니고 **CORS** 다. 확인 중인 브라우저 주소가 운영 도메인이 아니라 배포별 임시 주소(`...-<해시>-sangmoons-projects.vercel.app`)면,
+브라우저가 POST 에만 붙이는 `Origin` 헤더가 `CORS_ORIGINS` 와 달라 백엔드 cors 미들웨어가 거부하고 그 에러가 500 으로 나간다(GET 은 same-origin 이라 `Origin` 을 안 붙여 통과).
+확인 두 가지:
+```bash
+# ① 백엔드 로그에 이 줄이 있으면 확정
+docker compose -f docker-compose.prod.yaml logs backend --since 30m | grep "Not allowed by CORS"
+# ② [로컬] Origin 만 바꿔 재현 — 임시 주소는 500, 운영 도메인은 400(빈 body 검증 = 핸들러 도달)
+curl -s -o /dev/null -w "%{http_code}
+" -X POST https://api.ansmoon.dev/v1/auth/register -H "Content-Type: application/json" -H "Origin: https://shopping-mall-frontend-dusky.vercel.app" -d '{}'
+```
+처방: **운영 도메인으로 다시 확인한다.** 임시 주소를 허용 목록에 넣는 건 해시가 매번 바뀌어 무의미하다.
 
 **J. 자주 하는 실수**
 | 증상 | 원인 |
