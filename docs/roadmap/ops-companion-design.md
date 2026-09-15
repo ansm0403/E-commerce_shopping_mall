@@ -1,15 +1,20 @@
-# Ops Companion — 설계 문서 (v1)
+# Ops Companion — 설계 문서 (v2 · 코드 대조 완료)
 
+> **v1 → v2 (2026-09-15)**: v1 은 쇼핑몰 코드를 보지 못한 상태에서 쓴 설계도였다.
+> v2 는 실제 저장소·백엔드 코드와 대조해 `[확인 필요]` **14건 중 10건을 확정**했고,
+> nginx/HTTPS 트랙([03-infra-nginx.md](./03-infra-nginx.md) v2 · 2026-09-15 완주)의 결과를 반영했다.
+> 남은 **4건은 "설치 시점에 공식 문서로 확인해야 하는 것"** 이라 의도적으로 남겼다 —
+> ① 라이브러리 버전(§2) ② 내비게이션 라이브러리 선택(§4.1) ③ Sentry webhook 서명 검증(§5.1) ④ 소스맵 업로드 가이드(§6).
+>
+> **가장 큰 변경**: refresh token 이 "있으면 연동, 없으면 Phase 2 로 미룸" 이라는 **선택 과제에서
+> Phase 0 필수 + 백엔드 변경 동반으로 승격**됐다(§5.5). accessToken 수명이 15분이라, refresh 없이는
+> Phase 0 의 DoD("앱 재시작 후에도 로그인 유지")를 애초에 만족할 수 없기 때문이다.
+>
 > **이 문서를 읽는 Claude Code에게**
 >
-> 이 문서는 기존 쇼핑몰 프로젝트에 연동되는 새 React Native 앱 "Ops Companion"의 설계도다.
-> 작성 시점에 실제 쇼핑몰 프로젝트의 코드 구조를 확인하지 못했으므로, 문서 곳곳에
-> `[확인 필요: ...]` 마커가 있다. **작업을 시작하기 전에 반드시 아래 순서를 따라라.**
->
-> 1. 현재 저장소(모노레포 여부 포함)의 전체 구조를 파악한다.
-> 2. 이 문서의 모든 `[확인 필요]` 마커를 실제 프로젝트와 대조하여 확정하거나 수정한다.
-> 3. 수정된 내용을 이 문서에 반영해 v2로 갱신한 뒤, 사용자에게 차이점을 요약 보고한다.
-> 4. 그 후에만 Phase 0 구현을 시작한다.
+> 1. 구현 전 **§11(물려받은 전제)과 §5.5(모바일 토큰 전략)를 먼저 읽어라.** 백엔드를 먼저 손대야 앱이 성립한다.
+> 2. 남은 `[확인 필요]` 4건은 설치 시점에 공식 문서로 확인해 채워라(위 ①~④).
+> 3. Phase DoD 게이트를 지켜라 — 이전 Phase 의 DoD 를 만족하기 전에 다음 Phase 코드를 쓰지 않는다.
 >
 > **사용자 컨텍스트**: 사용자는 React Native 경험이 없는 신입/초보 개발자다.
 > 구현 시 각 단계에서 "무엇을 왜 하는지"를 설명하며 진행하고, 한 번에 큰 변경을
@@ -78,9 +83,16 @@ Sentry는 이 전 과정이 도는 동안 "앱 자체의 건강"
 | AI | 외부 AI API (Claude / Gemini 등) | **호출은 반드시 백엔드 경유** (7장 보안 원칙) |
 | 백엔드 | 기존 NestJS 재사용 | 신규 엔드포인트만 추가 (6장) |
 
-`[확인 필요: 기존 프로젝트가 모노레포인지, 패키지 매니저(npm/yarn/pnpm)는 무엇인지,
-공유 타입 패키지(예: @shopping-mall/shared)가 실재하는지 확인하고 앱 워크스페이스
-추가 방식을 결정하라.]`
+**확정(2026-09-15)**: 기존 프로젝트는 **Nx 21 + Yarn berry 4.10.3 모노레포**이며, `package.json` 의 workspaces 는
+`['packages/*', 'frontend', 'frontend-e2e', 'backend', 'backend-e2e', 'shared', 'mocks']` 다.
+공유 타입 패키지 **`@shopping-mall/shared` 는 실재**한다(빌드 산출물 `dist` 를 소비하므로 앱에서 쓰기 전 `nx build shared` 가 선행돼야 한다).
+
+- ⭕ **Metro 에 유리한 조건**: `.yarnrc.yml` 의 `nodeLinker: node-modules` — **Yarn PnP 가 아니다.**
+  PnP 였다면 Metro 번들러가 모듈을 못 찾아 초기 세팅이 크게 어려웠을 것이다.
+- ⚠ 다만 `nmHoistingLimits: none` 으로 의존성이 루트에 호이스팅되므로, Metro 설정에
+  **`watchFolders`(저장소 루트) + `nodeModulesPaths`(앱·루트 양쪽)** 를 명시해야 한다.
+- **Nx 타깃 편입 여부 — v1 에서는 하지 않는다.** 워크스페이스에만 추가해 의존성/타입을 공유하고
+  실행은 Expo CLI 로 한다(Expo+Metro 와 Nx 조합은 설정 부담이 크고, 첫 RN 프로젝트의 학습 목표와 무관하다).
 
 `[확인 필요: 라이브러리 버전은 문서에 고정하지 않았다. 설치 시점의 Expo SDK 최신
 안정 버전과 그에 호환되는 버전을 공식 문서로 확인해 선택하라.]`
@@ -116,8 +128,17 @@ Sentry는 이 전 과정이 도는 동안 "앱 자체의 건강"
 1. 앱은 DB에 직접 접속하지 않는다. 항상 백엔드 API를 경유한다.
 2. Sentry API 토큰, AI API 키를 **앱 코드/환경변수에 절대 넣지 않는다**.
    앱 바이너리는 디컴파일로 노출된다. 키는 백엔드에만 둔다.
-3. 앱에 넣어도 되는 것: 백엔드 base URL, Sentry **DSN**(이건 공개되어도 되는 값이지만
-   `[확인 필요: DSN 취급 정책을 팀 기준으로 확정]`).
+3. 앱에 넣어도 되는 것: 백엔드 base URL, Sentry **DSN**.
+   **확정(2026-09-15)**: DSN 은 공개돼도 되는 값이고 이미 쇼핑몰 프론트/백엔드에 포함돼 운영 중이다 → **앱에 포함 OK**.
+
+### 3.1-1 백엔드 접속 정보 (2026-09-15 확정)
+
+- **Base URL: `https://api.ansmoon.dev/v1`** — EC2 의 nginx 가 TLS 를 종단하고 `backend:4000` 으로 프록시한다.
+  ⚠ 이 문서의 모든 `/ops/*` 경로는 **실제로 `/v1/ops/*`** 다(NestJS 전역 prefix `v1`).
+- **앱은 Vercel 을 거치지 않고 nginx 에 직접 붙는다.** 여기서 따라오는 3가지:
+  - **CORS 는 앱과 무관하다** — 모바일은 `Origin` 헤더를 보내지 않으므로 백엔드 `CORS_ORIGINS` 검사에 걸리지 않는다(웹 전용 이슈).
+  - **클라이언트 IP 가 정확히 기록된다** — 앱은 nginx 기준 1홉이라 `TRUST_PROXY_HOPS=1` 에서 진짜 IP 가 남는다(웹 경로의 IP 복원 과제와 무관).
+  - **Android 평문 차단이 해소됐다** — 백엔드 HTTPS 확보가 이 앱의 선행조건이었고, Phase 0 DoD 의 "실기기(안드로이드)" 가 성립하는 근거다.
 
 ### 3.2 백엔드가 프록시(중개자)여야 하는 이유 (구현 근거)
 
@@ -141,8 +162,9 @@ Expo Push Service ──→ 사용자 기기
 알림 탭 → 앱이 딥링크 해석 → 인시던트 상세 화면 직행
 ```
 
-`[확인 필요: 현재 Sentry 프로젝트에 Slack 연동/알림 규칙이 어떻게 설정되어 있는지
-확인. 기존 Slack 알림 규칙을 복제해 webhook 액션을 추가하는 방식을 우선 검토하라.]`
+**확정(2026-09-15)**: 쇼핑몰 Sentry 는 **새 이슈 발생 시 Slack `#sentry-errors` 알림**이 가도록 이미 연동돼 있다.
+⚠ 단 이 연동은 Incoming Webhook 이 아니라 **Sentry 의 Slack OAuth 통합**이다([ex-sentry-slack.md](./ex-sentry-slack.md) 참조).
+따라서 "기존 규칙을 복제해 webhook 액션만 추가" 가 아니라, **알림 규칙에 webhook 액션을 새로 구성**해야 한다.
 
 ### 3.4 AI 분석 파이프라인 (Phase 3)
 
@@ -155,8 +177,8 @@ NestJS:
      - 시스템 지시: "아래 JSON 스키마로만 응답하라" (스키마는 5.4절)
      - few-shot: 평가에서 '승인'된 과거 분석 상위 N개 (Phase 4 이후 활성화)
      - 인시던트 데이터
-  3) AI API 호출 (스트리밍 여부는 [확인 필요: 기존 assistant SSE 인프라 재사용
-     가능한지 확인 후 결정])
+  3) AI API 호출 — **기존 인프라 재사용**(아래 "재사용 가능한 기존 자산" 표).
+     스트리밍이 필요하면 `POST /v1/admin/assistant/stream` 의 SSE-over-POST 방식을 그대로 쓴다
   4) 응답 JSON 파싱 + 스키마 검증 (zod 등). 실패 시 1회 재시도 → 그래도 실패면
      구조화 실패 상태로 응답 (앱은 fallback UI 표시)
   5) 분석 결과 저장 (5.4 데이터 모델)
@@ -167,6 +189,17 @@ NestJS:
 **AI 응답 방어 처리(중요)**: AI는 스키마를 어길 수 있다. 파싱 실패 시 앱 화면이
 깨지지 않도록 (a) 백엔드에서 검증, (b) 앱에서 optional 필드 방어 렌더링,
 (c) 실패 상태 전용 UI를 반드시 구현한다. 이 방어 처리 자체가 포트폴리오 어필 포인트다.
+
+**재사용 가능한 기존 자산 (2026-09-15 확인)** — Phase 3·4 가 크게 단축된다:
+
+| 자산 | 위치 | 이 앱에서의 쓸모 |
+|---|---|---|
+| 프로바이더 비종속 `LlmClient` | `backend/src/intrastructure/ai/` | AI 호출부를 새로 짤 필요 없음(현재 Gemini, 교체 가능) |
+| SSE 스트리밍 | `POST /v1/admin/assistant/stream` | **nginx 통과 검증 완료** — 백엔드가 `X-Accel-Buffering: no` 를 보내고 nginx 는 `proxy_read_timeout 300s` 다 |
+| tool use(구조화 호출) · PII 스크럽 | `backend/src/admin/assistant/` | 스키마 강제·민감정보 마스킹 선례 |
+| eval 하네스(골든셋 + LLM-judge) | `backend/eval/` | **Phase 4 의 "few-shot 전/후 품질 비교" 를 이 하네스로 수치화**할 수 있다 |
+
+⚠ **제약**: 현재 LLM 은 Gemini 무료티어라 **RPM 15** 제한이 있다. 분석 요청 빈도·재시도 설계에 반영할 것.
 
 ---
 
@@ -212,10 +245,11 @@ RootNavigator (AuthContext의 user 유무로 분기)
 ### 4.3 화면별 상세 스펙
 
 #### S1. LoginScreen (Phase 0)
-- 이메일/비밀번호 → 기존 백엔드 로그인 API 호출.
-  `[확인 필요: 기존 로그인 엔드포인트 경로, 요청/응답 필드(accessToken,
-  refreshToken 유무)를 실제 코드에서 확인해 반영하라.]`
-- 성공 시: SecureStore에 토큰 저장 → AuthContext.user 세팅 → 자동으로 AppTabs 전환.
+- 이메일/비밀번호 → **`POST /v1/auth/login`**.
+  **확정된 계약(2026-09-15)**: 응답 body 는 `{ accessToken, expiresIn, tokenType, user }` 이고
+  refreshToken 은 기본적으로 **httpOnly 쿠키로만** 내려온다. 앱은 **`X-Client: mobile` 헤더**를 붙여
+  body 로도 refreshToken 을 받는다(§5.5 — 백엔드 변경 동반).
+- 성공 시: **accessToken·refreshToken 을 모두 SecureStore 에 저장** → AuthContext.user 세팅 → 자동으로 AppTabs 전환.
 - Phase 2 추가: 저장된 세션이 있으면 생체 인증(Face ID/지문)으로 잠금 해제.
   - **생체 인증은 서버/DB와 무관하다.** 지문·얼굴 대조는 기기 보안 칩 안에서만
     일어나고, 앱은 성공/실패(true/false) 결과만 받는다. 생체 데이터는 서버로
@@ -266,17 +300,21 @@ RootNavigator (AuthContext의 user 유무로 분기)
 
 | 메서드/경로 | 용도 | Phase |
 |---|---|---|
-| `GET /ops/incidents` | Sentry API 프록시. 인시던트 목록(축약형) | 0 |
-| `GET /ops/incidents/:id` | 인시던트 상세(스택트레이스, breadcrumbs 포함) | 1 |
-| `POST /ops/devices` | 기기 Expo push token 등록 | 1 |
-| `POST /ops/webhooks/sentry` | Sentry webhook 수신 → 푸시 발송 | 1 |
-| `POST /ops/incidents/:id/analysis` | AI 분석 생성(또는 캐시된 분석 반환) | 3 |
-| `GET /ops/analyses/pending` | 평가 대기 중인 분석 목록 | 4 |
-| `POST /ops/analyses/:id/review` | 평가 저장 (verdict, rating) | 4 |
+| `GET /v1/ops/incidents` | Sentry API 프록시. 인시던트 목록(축약형) | 0 |
+| `GET /v1/ops/incidents/:id` | 인시던트 상세(스택트레이스, breadcrumbs 포함) | 1 |
+| `POST /v1/ops/devices` | 기기 Expo push token 등록 | 1 |
+| `POST /v1/ops/webhooks/sentry` | Sentry webhook 수신 → 푸시 발송 | 1 |
+| `POST /v1/ops/incidents/:id/analysis` | AI 분석 생성(또는 캐시된 분석 반환) | 3 |
+| `GET /v1/ops/analyses/pending` | 평가 대기 중인 분석 목록 | 4 |
+| `POST /v1/ops/analyses/:id/review` | 평가 저장 (verdict, rating) | 4 |
 
-- 인증: 기존 JWT 가드 재사용. `[확인 필요: 기존 가드/데코레이터 명칭과
-  관리자 권한 체크 방식을 확인해 동일하게 적용하라.]`
-- webhook 엔드포인트는 JWT 대신 서명/시크릿 검증
+- **인증 확정(2026-09-15)**: `@UseGuards(JwtAuthGuard, RolesGuard)` + `@Roles(Role.ADMIN)`.
+  `Role` 은 `buyer | seller | admin`(`backend/src/user/entity/role.entity.ts`).
+  ⚠ **데모 관리자 계정 주의** — 쓰기성 동작에는 `DemoAccountGuard` 가 걸려 차단될 수 있으니,
+  앱 테스트는 데모 계정이 아닌 실제 관리자 계정으로 한다.
+- webhook 엔드포인트는 JWT 대신 **서명/시크릿 검증**.
+  ⚠ 이 엔드포인트는 `api.ansmoon.dev` 로 **전 세계에 공개**된다. 서명 검증을 붙이기 전까지는
+  전역 `ThrottlerModule` 보호를 벗기지 말 것(`@SkipThrottle()` 금지 — PortOne 웹훅이 그렇게 돼 있어 같은 실수를 하기 쉽다).
   `[확인 필요: Sentry webhook 서명 검증 방식을 공식 문서로 확인하라.]`
 
 ### 5.2 응답 축약 원칙
@@ -296,8 +334,11 @@ interface IncidentSummary {
 
 ### 5.3 신규 DB 테이블 (기존 쇼핑몰 DB에 추가)
 
-`[확인 필요: 기존 ORM(TypeORM/Prisma 등)과 마이그레이션 방식을 확인해 동일한
-방식으로 작성하라.]`
+**확정(2026-09-15)**: **TypeORM** 이며 `synchronize` 는 전면 off — 스키마는 **마이그레이션으로만** 바꾼다.
+절차: 엔티티 작성 → `nx run @shopping-mall/backend:migration:generate --name=<이름>` →
+⚠ **`backend/src/database/migrations/index.ts` 에 명시적으로 등록**(글롭은 nx 단일 번들이라 **조용히 실패**한다) → `migration:run`.
+운영 반영은 `docker compose -f docker-compose.prod.yaml run --rm backend node backend/dist/migrate.js`
+(기존 컨테이너 `exec` 가 아니다 — migrate.js 는 **새 이미지 안**에 있다). 상세: [ex-db-migration.md](./ex-db-migration.md)
 
 > **생체 인증 관련 주의:** 생체 인증(Phase 2)을 위한 신규 컬럼/테이블은 추가하지
 > 않는다. 생체 대조는 기기 내에서만 처리되고 서버로 어떤 생체 데이터도 전송되지
@@ -347,10 +388,42 @@ suggestedFix에는 반드시 구체적 코드 수정 예시 포함."
 - queryKey 규칙: `['incidents']`, `['incident', id]`, `['analysis', incidentId]`,
   `['reviews', 'pending']`
 - staleTime 기본 5분. 인시던트 목록은 1분(실시간성 높음).
-- axios 인스턴스 1개를 `src/lib/api.ts`에 두고, 요청 인터셉터에서 SecureStore의
-  토큰을 Authorization 헤더에 자동 첨부. 401 응답 시 로그아웃 처리
-  (refresh token 흐름은 `[확인 필요: 기존 백엔드에 refresh 엔드포인트가 있으면
-  연동, 없으면 Phase 2 이후 과제로 미룸]`).
+- axios 인스턴스 1개를 `src/lib/api.ts` 에 두고, 요청 인터셉터에서 SecureStore 의
+  accessToken 을 `Authorization: Bearer` 로 자동 첨부. **401 응답 시에는 곧바로 로그아웃하지 말고
+  refresh 를 1회 시도**한 뒤, 그것도 실패하면 로그아웃한다(아래 토큰 전략).
+
+### 5.6 모바일 토큰 전략 — **Phase 0 필수 · 백엔드 변경 동반** (2026-09-15 확정)
+
+**문제**: 백엔드에 `POST /v1/auth/refresh` 가 **있지만 httpOnly 쿠키만 읽는다**
+(`backend/src/auth/auth.controller.ts:151` — `req.cookies?.refreshToken`). 웹은 Vercel 의 BFF 가
+백엔드의 `Set-Cookie` 를 받아 자기 도메인 쿠키로 다시 구워주지만, **앱에는 그 중간 서버가 없다.**
+accessToken 수명이 **15분**이므로 refresh 없이는 앱이 15분마다 로그아웃되고, Phase 0 의 DoD
+("앱 재시작 후에도 로그인 유지")를 만족할 수 없다.
+
+**확정안 — ① 헤더 분기** (대안이었던 ② 앱 전용 엔드포인트, ③ 전면 body 반환은 기각):
+
+```
+앱 → 요청 헤더에 X-Client: mobile
+백엔드 → 그 헤더가 있으면 login / refresh 응답 body 에 refreshToken 을 함께 담는다
+         (헤더가 없으면 지금 그대로 = 웹 동작 100% 불변)
+앱 → accessToken · refreshToken 을 expo-secure-store(OS Keychain/Keystore)에 저장
+     401 → refreshToken 으로 /v1/auth/refresh 호출 → 새 토큰 쌍 저장 → 원요청 재시도
+```
+
+선정 이유: 엔드포인트를 한 벌로 유지해 로직 중복이 없고, **웹 코드를 한 줄도 건드리지 않으며**,
+백엔드가 이미 `x-device-id` 헤더를 받아 기기별 토큰을 관리하는 전례가 있어 구조가 자연스럽다
+(`auth.controller.ts:148`, CORS `allowedHeaders` 에도 등록되어 있다).
+
+**백엔드 작업 항목** (앱 코드보다 **먼저** 해야 한다):
+
+1. `login` / `refresh` / (필요 시 `register`) 응답에서 `X-Client: mobile` 이면 body 에 `refreshToken` 추가
+2. `refresh` 가 **쿠키가 없으면 body/헤더의 refreshToken 도 받아들이도록** 확장
+3. CORS `allowedHeaders` 에 `x-client` 추가(웹에는 영향 없음. 앱은 CORS 무관이지만 일관성을 위해)
+4. 회귀 확인: **웹에서 로그인 → 새로고침 유지 → 로그아웃**이 그대로 동작하는지(쿠키 경로 불변)
+
+**보안 노트**: 앱에서 SecureStore 는 웹의 httpOnly 쿠키에 대응하는 보호 수단이다(OS 보안 저장소이므로
+일반 앱 코드/디컴파일로 꺼내기 어렵다). **AsyncStorage 에 토큰을 저장하면 안 된다**(평문 저장).
+백엔드는 refreshToken 을 해시로만 저장하고 Redis 블랙리스트로 검증하므로, 앱도 이 구조를 그대로 재사용한다.
 
 ---
 
@@ -384,8 +457,10 @@ pay-as-you-go/spend limit을 0으로 두어 한도 초과 시 과금 대신 수�
 
 ## 8. 폴더 구조 제안 (앱)
 
-`[확인 필요: 모노레포라면 apps/ops-companion 등 기존 컨벤션에 맞춰 위치 결정.
-아래는 앱 내부 구조 제안이며, Expo Router 채택 시 app/ 디렉토리 규칙이 우선한다.]`
+**확정(2026-09-15)**: 기존 저장소는 **루트 레벨 디렉터리 컨벤션**이다
+(`backend/` `frontend/` `shared/` `backend-e2e/` — `apps/` 는 없고 `packages/` 는 `.gitkeep` 만 있는 빈 디렉터리).
+→ 앱은 **루트에 `ops-companion/`** 으로 두고 `package.json` 의 workspaces 배열에 `'ops-companion'` 을 추가한다.
+아래는 앱 내부 구조 제안이며, Expo Router 채택 시 `app/` 디렉토리 규칙이 우선한다.
 
 ```
 ops-companion/
@@ -409,7 +484,7 @@ ops-companion/
 │   │   ├── analysis/
 │   │   └── review/             # 스와이프 카드 스택
 │   ├── components/             # 공용 UI (Badge, Card, Skeleton...)
-│   └── types/                  # [확인 필요: 공유 패키지 있으면 그쪽으로]
+│   └── types/                  # 앱 전용 타입만. 백·프론트 공용은 @shopping-mall/shared 로
 └── app.json / eas.json
 ```
 
@@ -425,10 +500,13 @@ ops-companion/
 것을 막는 것이 이 문서의 최우선 목표 중 하나다.)
 
 ### Phase 0 — 뼈대 (RN 기본기 + 백엔드 재사용)
-- 구현: Expo 프로젝트 생성, AuthContext + SecureStore 로그인, axios 인터셉터,
-  `GET /ops/incidents` 백엔드 프록시, S1/S2/S6 화면, Sentry 기본 설치
-- DoD: 실기기(안드로이드)에서 로그인 → 인시던트 목록 조회 → 앱 재시작 후에도
-  로그인 유지 → 로그아웃이 전부 동작. 의도적 에러 1건이 Sentry 대시보드에 보임.
+- **0-A. 백엔드 먼저** (§5.6): `X-Client: mobile` 헤더 분기로 login/refresh 가 body 에 refreshToken 을
+  주도록 확장 + **웹 회귀 확인**. 이것이 안 되면 앱은 15분마다 로그아웃되므로 아래를 시작하지 않는다.
+- **0-B. 앱**: Expo 프로젝트 생성, AuthContext + SecureStore 로그인/자동 refresh, axios 인터셉터,
+  `GET /v1/ops/incidents` 백엔드 프록시, S1/S2/S6 화면, Sentry 기본 설치
+- DoD: 실기기(안드로이드)에서 로그인 → 인시던트 목록 조회 → **accessToken 만료(15분) 후에도 자동 갱신으로 계속 사용** →
+  앱 재시작 후에도 로그인 유지 → 로그아웃이 전부 동작. 의도적 에러 1건이 Sentry 대시보드에 보임.
+  **웹 쇼핑몰의 로그인/로그아웃도 변함없이 동작**(0-A 회귀 확인).
 
 ### Phase 1 — "웹이 아닌 진짜 앱" (푸시 + 딥링크)
 - 구현: push token 등록, Sentry webhook → 백엔드 → Expo 푸시, 딥링크 3상태
@@ -456,16 +534,16 @@ ops-companion/
 
 ### 명시적 비목표 (v1에서 하지 않는 것)
 - iOS 스토어 배포(EAS 내부 배포 링크로 충분), 다국어, 다크모드 완성도,
-  오프라인 평가 큐(확장 항목), 음성 입력(대화 중 언급되었으나 v1 범위 밖.
-  Phase 4 완료 후 별도 검토), refresh token(기존 백엔드에 있을 때만).
+  오프라인 평가 큐(확장 항목), 음성 입력(대화 중 언급되었으나 v1 범위 밖. Phase 4 완료 후 별도 검토).
+  ※ refresh token 은 **비목표에서 제외됐다** — Phase 0 필수로 승격(§5.6).
 
 ---
 
 ## 10. Claude Code 작업 지침 요약
 
-1. **먼저 탐색**: 저장소 구조, 백엔드 인증 코드, 기존 service/ 레이어,
-   Sentry 설정, 공유 타입 패키지를 읽고 이 문서의 모든 `[확인 필요]`를 해소한 v2
-   문서를 만들어 사용자에게 보고하라.
+1. ~~**먼저 탐색**~~ → **완료(2026-09-15)**: 저장소 구조·백엔드 인증 코드·Sentry 설정·공유 타입 패키지를
+   대조해 이 v2 문서를 만들었다. 다시 탐색할 필요는 없고, **§11(물려받은 전제) → §5.6(토큰 전략) →
+   Phase 0 순서로 읽고 바로 착수**하면 된다. 남은 `[확인 필요]` 4건만 설치 시점에 확인한다.
 2. **작게 진행**: Phase 0 안에서도 "Expo 생성 → 로그인 → 목록" 단위로 나눠
    각 단계마다 사용자가 실기기로 확인하게 하라.
 3. **설명하며 진행**: 사용자는 RN 초보다. 새 개념(예: Expo Router, SecureStore)이
@@ -474,3 +552,33 @@ ops-companion/
    버전 호환은 반드시 설치 시점의 공식 문서로 확인하라.
 5. **DoD 게이트**: 각 Phase의 DoD를 사용자와 함께 체크한 후에만 다음 Phase로
    넘어가라.
+6. **백엔드 배포 절차를 지켜라**: `ops` 모듈 등 백엔드를 고치면
+   로컬 이미지 빌드(`:latest` + `:<sha>` 2태그) → push → EC2 `pull` →
+   (마이그레이션이 있으면 `run --rm ... migrate.js`) → `up -d` →
+   **`nginx -t && nginx -s reload` (필수)** → `/v1/health` 의 `version` 단언.
+   **마지막 reload 를 빠뜨리면 502 가 난다**(nginx 가 backend 이름→IP 를 시작 시 1회만 캐시하기 때문).
+   전체 절차: [03-infra-nginx-runbook.md](./03-infra-nginx-runbook.md) §10
+
+---
+
+## 11. nginx/HTTPS 트랙에서 물려받은 전제 (2026-09-15)
+
+> 이 앱의 **선행조건이었던 백엔드 HTTPS 가 확보된 상태**다. 배경은 [03-infra-nginx.md](./03-infra-nginx.md)(v2).
+
+| 항목 | 값 / 주의 |
+|---|---|
+| Base URL | **`https://api.ansmoon.dev/v1`** (Let's Encrypt 인증서, 자동 갱신 구성 완료) |
+| 서버 | EC2 `15.164.185.156`(새 AWS 계정, 서울). 컨테이너 5개: postgres · redis · backend · nginx · certbot |
+| 포트 | 외부 공개는 **22(내 IP만) / 80 / 443** 뿐. **4000 은 열려 있지 않다** — 앱은 반드시 도메인으로 접속 |
+| 업로드 크기 | nginx `client_max_body_size 10m` — 앱에서 이미지 업로드 시 상한 |
+| SSE | `proxy_read_timeout 300s` + 백엔드의 `X-Accel-Buffering: no` → **스트리밍 응답이 프록시를 통과함이 검증됨** |
+| 배포 | 백엔드 변경 시 **마지막에 nginx reload 필수**(§10-6) |
+
+**레이트리밋 주의 (앱 설계에 영향)**
+
+- 전역 `ThrottlerModule`: **100 req / 60초**. 인시던트 목록 폴링 주기·pull-to-refresh 연타를 이 한도 안에서 설계할 것.
+- 로그인 IP 제한: **10회 / 5분**. 앱은 nginx 기준 1홉이라 **진짜 IP 로 기록**되므로,
+  개발 중 로그인 실패를 반복하면 **본인 IP 가 5분간 잠긴다**(웹과 달리 Vercel IP 뒤에 숨지 않는다).
+
+**앱과 무관한 것** — 웹 전용 이슈라 신경 쓸 필요 없다: CORS(`Origin` 미전송), Vercel rewrites/BFF,
+웹 경로의 클라이언트 IP 복원 과제([03-infra-nginx.md](./03-infra-nginx.md) §10 의 12-1).
