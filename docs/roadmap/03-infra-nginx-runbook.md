@@ -10,7 +10,8 @@
 > 예상 소요: 실작업 2~3시간 + 관찰 며칠. 가장 긴 구간은 이미지 빌드(~20분)와 DNS 전파 대기(수분~수십분).
 > 설계 근거·결정 16개·로컬 연습 실측은 `03-infra-nginx.md`(v2, 작성 예정) 에 정리한다. 이 문서는 "손"만 담당.
 >
-> **표기**: `[로컬]` = 내 PC Git Bash / `[구EC2]` = 43.201.118.88 / `[신EC2]` = 새 계정 인스턴스 / `[콘솔]` = 웹 UI 외부 액션
+> **표기**: `[로컬]` = 내 PC(PowerShell/Git Bash) / `[구EC2]` = 43.201.118.88 / `[신EC2]` = **15.164.185.156**(탄력적 IP, 2026-09-14 할당) / `[콘솔]` = 웹 UI 외부 액션
+> ⚠ 아래 명령의 `<EIP>` 는 **플레이스홀더**다. 그대로 붙여넣지 말고 `15.164.185.156` 으로 바꿔 입력한다(§13-M).
 
 ---
 
@@ -369,10 +370,18 @@ Vercel → 프로젝트 → **Settings → Environment Variables** → `API_PROX
 
 ```bash
 # [신EC2] 전환 직후 IP 관찰 — 로그인 레이트리밋 키에 "무엇"이 찍히는지
-ssh -i ~/.ssh/shoppingApp-key-v2.pem ubuntu@<EIP> 'cd ~/Shopping-mall && docker compose -f docker-compose.prod.yaml exec redis redis-cli --scan --pattern "rate:login:*"'
+ssh -i ~/.ssh/shoppingApp-key-v2.pem ubuntu@15.164.185.156 'cd ~/Shopping-mall && docker compose -f docker-compose.prod.yaml exec -T redis redis-cli --scan --pattern "rate:login:*"'
 ```
 
-- **[정상]** `rate:login:<Vercel/AWS 대역 IP>` — ⚠ **아직 진짜 손님 IP 가 아닌 게 정상이다.** 이 단계(4a)는 "수송로만" 바꾼 것이라 기록 IP 의 의미는 구 EC2 시절과 동일하다. 진짜 IP 복원은 §12-1(4b)에서 한다. 단, `rate:login:172.x.x.x`(nginx 컨테이너 IP)가 보이면 **[멈춤]** — `TRUST_PROXY_HOPS=1` 이 안 먹은 것(§1 이미지·compose 확인)
+> ⚠ 두 가지 주의. ① ssh 로 **원격 실행**할 때는 `exec` 에 **`-T`** 를 붙인다(TTY 가 없어 `the input device is not a TTY` 로 실패).
+> EC2 에 접속한 상태에서 직접 칠 때는 `-T` 없이도 된다. ② 이 키는 **TTL 이 5분**이라, 로그인 후 시간이 지나면 사라진다 —
+> **빈 결과는 실패가 아니다.** 로그인 직후 곧바로 확인하거나, 아래처럼 실제 경로로 한 번 두드린 뒤 본다:
+> ```bash
+> curl -s -o /dev/null -w "%{http_code}\n" -X POST https://shopping-mall-frontend-dusky.vercel.app/api/auth/login -H "Content-Type: application/json" -d '{"email":"probe@test.local","password":"wrong"}'   # → 401
+> ```
+> 확인 후 탐침 키는 지운다: `... redis-cli del "rate:login:<관찰된 IP>" "login:attempts:probe@test.local"`
+
+- **[정상]** `rate:login:<Vercel/AWS 대역 IP>` — **실측 2026-09-15: `rate:login:13.217.205.204`(통과)**. 같은 시점에 `refresh:<userId>:<uuid>` 키가 있으면 로그인 성공까지 확인된 것 — ⚠ **아직 진짜 손님 IP 가 아닌 게 정상이다.** 이 단계(4a)는 "수송로만" 바꾼 것이라 기록 IP 의 의미는 구 EC2 시절과 동일하다. 진짜 IP 복원은 §12-1(4b)에서 한다. 단, `rate:login:172.x.x.x`(nginx 컨테이너 IP)가 보이면 **[멈춤]** — `TRUST_PROXY_HOPS=1` 이 안 먹은 것(§1 이미지·compose 확인)
 
 ---
 
@@ -472,6 +481,12 @@ docker compose -f docker-compose.prod.yaml logs backend --since 30m | grep "Not 
 curl -s -o /dev/null -w "%{http_code}\n" -X POST https://api.ansmoon.dev/v1/auth/register -H "Content-Type: application/json" -H "Origin: https://shopping-mall-frontend-dusky.vercel.app" -d '{}'
 ```
 처방: **운영 도메인으로 다시 확인한다.** 임시 주소를 허용 목록에 넣는 건 해시가 매번 바뀌어 무의미하다.
+
+**M. `Identity file ... not accessible` / `Could not resolve hostname <eip>`**
+둘 다 명령을 **엉뚱한 곳/그대로** 친 경우다.
+- `Identity file /home/ubuntu/.ssh/...-v2.pem not accessible` → **이미 EC2 안**에서 `ssh ...` 를 다시 친 것이다(키는 내 PC 에만 있다).
+  EC2 안이면 `ssh ... '<명령>'` 의 **작은따옴표 안쪽만** 실행하면 된다. 프롬프트가 `ubuntu@ip-172-31-...:~$` 면 EC2 안, `PS C:\...>` 면 내 PC.
+- `Could not resolve hostname <eip>` → `<EIP>` 플레이스홀더를 그대로 입력했다. `15.164.185.156` 으로 바꾼다.
 
 **J. 자주 하는 실수**
 | 증상 | 원인 |
