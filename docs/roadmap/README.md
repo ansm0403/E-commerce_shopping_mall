@@ -42,7 +42,7 @@
 | **1** | [01-seller-core.md](./01-seller-core.md) | 셀러 핵심: 상품 등록·관리, 주문/배송, 정산 조회 | 최우선 |
 | **2** | [02-admin-core.md](./02-admin-core.md) | 관리자 핵심: 셀러 승인, 상품 승인, 주문 관리, 정산 지급 | 높음 |
 | **2-2** | [02-2-buyer-mypage.md](./02-2-buyer-mypage.md) | 구매자 마이페이지: 프로필·위시리스트·내 문의·비밀번호 | 높음 |
-| **3** | [03-infra-nginx.md](./03-infra-nginx.md) | nginx 도입으로 Vercel→EC2 프록시 우회 대체 | 중간 |
+| **3** | [03-infra-nginx.md](./03-infra-nginx.md) **(v2 · 완주)** + [런북](./03-infra-nginx-runbook.md) | nginx 리버스 프록시 + HTTPS(`api.ansmoon.dev`) + AWS 계정 이관 | ✅ 2026-09-15 |
 
 "필수 기능 우선" 원칙: 각 Phase 안에서도 **(A) 필수 = 시연에 반드시 필요** / **(B) 후순위**로 나눈다.
 카테고리 관리·문의 답변 등은 후순위.
@@ -62,7 +62,7 @@
 | **3. 주문/배송** | 셀러 주문·배송 처리 + 관리자 전체 주문 관리 | 01 ③ + 02-A ③ |
 | **4. 정산** | 셀러 정산 조회 + 관리자 정산 확정/지급 (prefix는 Step 0에서 해결) | 01 ④ + 02-A ④ |
 | **5. 후순위 화면** | 셀러 대시보드 요약 → 관리자 감사로그 → 카테고리·문의(가장 후순위) | 01-B / 02-B |
-| **6. 인프라** | nginx 리버스 프록시 + 4000 비공개 + TLS | [03-infra-nginx](./03-infra-nginx.md) |
+| ✅ **6. 인프라** | nginx 리버스 프록시 + 4000 비공개 + TLS **(완료 2026-09-15)** — 새 AWS 계정 EC2 에 nginx+certbot 구축, `https://api.ansmoon.dev` 전환. 남은 것은 [v2 §10](./03-infra-nginx.md) 후속 과제 | [03-infra-nginx](./03-infra-nginx.md) · [런북](./03-infra-nginx-runbook.md) |
 | **7. 주문 입력 리팩터링** | createOrder `cartItemIds → items[]` 분리 (셀러·주문 흐름 안정화 후) | 메모리 `order_input_refactor` |
 
 각 Step DoD는 "구매자/셀러/관리자 한 흐름으로 끊김 없이 동작"이며, Step 1~4가 끝나면 셀러↔관리자 양방향 시나리오가 완성된다.
