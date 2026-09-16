@@ -66,7 +66,9 @@ async function bootstrap() {
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-device-id', 'x-idempotency-key'],
+    // x-client: RN 앱이 토큰 응답 방식을 고르는 헤더(auth.controller buildTokenResponse).
+    // 앱은 Origin 을 안 보내 CORS 와 무관하지만 일관성을 위해 등록(웹 영향 없음).
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-device-id', 'x-idempotency-key', 'x-client'],
   });
 
   const expressApp = app.getHttpAdapter().getInstance();
