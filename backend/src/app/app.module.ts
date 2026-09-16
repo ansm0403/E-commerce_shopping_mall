@@ -29,6 +29,7 @@ import { AdminModule } from '../admin/admin.module';
 import { SeedModule } from '../seed/seed.module';
 import { AiModule } from '../intrastructure/ai/ai.module';
 import { AssistantModule } from '../admin/assistant/assistant.module';
+import { OpsModule } from '../ops/ops.module';
 
 @Module({
   imports: [
@@ -87,6 +88,8 @@ import { AssistantModule } from '../admin/assistant/assistant.module';
     AdminModule,
     AiModule.forRoot(),
     AssistantModule,
+    // RN Ops Companion 백엔드(Sentry 인시던트 프록시). 키 없으면 비활성(503)이지만 모듈은 항상 뜬다.
+    OpsModule,
     ...(process.env['NODE_SEED'] === 'true' ? [SeedModule] : []),
   ],
   controllers: [AppController],

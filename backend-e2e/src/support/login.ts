@@ -12,10 +12,13 @@ import { E2E_PASSWORD } from './db';
  * (개발 DB 전용 하네스라 리밋 초기화가 안전하다 — support/redis.ts 참고)
  */
 
-/** 로그인 원응답(쿠키 등 헤더가 필요한 스펙용). 201 이 아닐 때까지 최대 3회 재시도. */
-export async function loginRaw(email: string): Promise<AxiosResponse> {
+/**
+ * 로그인 원응답(쿠키 등 헤더가 필요한 스펙용). 201 이 아닐 때까지 최대 3회 재시도.
+ * headers 로 `X-Client: mobile` 등을 얹을 수 있다(모바일 토큰 경로 스펙용).
+ */
+export async function loginRaw(email: string, headers: Record<string, string> = {}): Promise<AxiosResponse> {
   for (let attempt = 0; ; attempt++) {
-    const res = await axios.post('/auth/login', { email, password: E2E_PASSWORD });
+    const res = await axios.post('/auth/login', { email, password: E2E_PASSWORD }, { headers });
     if (res.status === 201) return res;
     if (res.status === 429 && attempt < 3) {
       await resetLoginRateLimits();

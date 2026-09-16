@@ -36,7 +36,8 @@
 - **인프라 모듈** `intrastructure/`(오타 그대로): `redis/`, `emailVerify/`(SMTP), `ai/`(LLM 클라이언트 — 프로바이더 비종속 `LlmClient`, 현재 Gemini `@google/genai`, 추후 Claude). 이벤트 `EventEmitterModule`, 레이트리밋 `ThrottlerModule`(전역 100req/60s), 감사로그 `audit/`.
 - **결제**: PortOne(iamport) 연동 + 웹훅(`payment/`).
 - **AI 어시스턴트**: `admin/assistant/`(관리자 자연어 질의 → tool use로 기존 서비스 호출, SSE 스트리밍). 상세 `docs/roadmap/ex-ai-assistant.md`.
-- 모듈: auth, user, seller, category, product, review, cart, order, payment, settlement, inquiry, wish-list, audit, admin(+assistant), common, intrastructure(+ai), seed, data.
+- 모듈: auth, user, seller, category, product, review, cart, order, payment, settlement, inquiry, wish-list, audit, admin(+assistant), common, intrastructure(+ai), seed, data, **ops**(RN 운영 앱 전용 — Sentry 인시던트 프록시).
+- **모바일 클라이언트 분기**: 요청 헤더 `X-Client: mobile` 이면 `login`/`refresh` 응답 body 에 refreshToken 을 함께 담고, `refresh`/`logout` 은 `쿠키 ?? body.refreshToken` 순으로 읽는다(RN 앱엔 쿠키를 구워줄 BFF 가 없음). 헤더 없으면 웹 동작 100% 불변. `auth.controller.ts buildTokenResponse`. 상세 `docs/roadmap/ops-companion-design.md` §5.6.
 
 ## 4. 프론트 컨벤션 (`frontend/src`)
 - **App Router + 라우트 그룹**: `(auth)`(로그인/회원가입/이메일인증), `(main)`(상점·구매·`/my/*`·`/seller/*`), `(admin)`(`/admin/*`).
@@ -62,6 +63,8 @@
 - 결제/정산/감사 백엔드 모듈 존재.
 - **관측성/알림(계획 외 삽입)**: Sentry 에러추적(프론트/백) + Slack 알림 3종 연동 완료. 트러블슈팅 회고 `docs/roadmap/ex-sentry-slack.md`.
 - **관리자 AI 어시스턴트(계획 외 삽입)**: `(admin)/admin/assistant` — 자연어로 사내 데이터 질의 → **tool use(function calling)** 로 기존 서비스 호출. 프로바이더 비종속(현재 Gemini 무료티어, 추후 Claude) + SSE 스트리밍 + 멀티턴(대화 DB 영속화). **도구 6종**: get_sales_summary·get_order_stats·query_audit_logs·get_product_info(정형) + summarize_reviews·summarize_inquiries(비정형 RAG, Phase 5a — 상품/카테고리(하위)·기간 필터). PII는 디스패처에서 마스킹/projection/scrubText 처리(도구 결과는 직렬화 인터셉터 미경유 → @Exclude 무력). **구매자 상품 리뷰 자동 요약(Phase 5c)**: 어시스턴트와 별개로 상품 상세에 AI 리뷰 요약을 캐시(`product_summaries` 테이블)+노출 — 리뷰 변경 이벤트로 stale 표시 + 다음 열람 시 SWR 백그라운드 재생성(`GET /v1/products/:id/review-summary`, public; throttle 10분 + 동시 1건 CAS 락, LLM 키 없으면 no-op). 상세 `docs/roadmap/ex-ai-assistant.md`. **프롬프트 캐싱·usage(Phase 6 a·b·c)**: system 정적/동적 분리 + usage 노출 + Gemini implicit 측정/explicit 스캐폴드(off). 무료티어는 explicit 캐싱 불가(캐시 storage 쿼터=0) → 진짜 $ 절감은 추후 Claude+`cache_control` 전환(env 한 줄). 측정 수치·검증 서사는 문서 §8-12. **평가(Phase 7 + A-1)**: 골든셋 20문항 + 규칙 러너 + LLM-judge로 도구 선택·응답 태도·충실성 자동 채점, 프롬프트 1줄 수정→재측정으로 eval 루프 완주(도구 선택 94.1→100%, judge 무회귀 — 서사 문서 §8-13~15). (Phase 0~4 + 5a + 5c + 6a·b·c + 7 + A-1 완료, 다음=Phase 6b)
+
+- **RN Ops Companion 백엔드 Phase 0-A(2026-09-17)**: `X-Client: mobile` 토큰 분기(위) + `ops/` 모듈 `GET /v1/ops/incidents`(admin 전용, Sentry Web API 프록시 → `IncidentSummary` 5필드 축약, Redis 60s 캐시 `X-Cache` 헤더, `SENTRY_AUTH_TOKEN`/`SENTRY_ORG_SLUG` 없으면 503 no-op). DB 변경 없음. e2e `mobile-token-and-ops.e2e.spec.ts`. 앱 코드는 미착수. 상세 `docs/roadmap/ops-companion-design.md`.
 
 **비어 있음 / 스켈레톤**
 - **셀러 프론트** `(main)/seller/*` 중 stub: 대시보드/문의. (상품 목록·등록·수정, 주문/배송, 정산은 실구현, 신청 화면 `my/seller-apply`도 실구현)

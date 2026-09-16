@@ -322,7 +322,7 @@ RootNavigator (AuthContext의 user 유무로 분기)
 
 | 메서드/경로 | 용도 | Phase |
 |---|---|---|
-| `GET /v1/ops/incidents` | Sentry API 프록시. 인시던트 목록(축약형) | 0 |
+| `GET /v1/ops/incidents` | Sentry API 프록시. 인시던트 목록(축약형) — ✅ **구현 완료(2026-09-17)**: `backend/src/ops/`, admin 전용, Redis 60s 캐시(`X-Cache` HIT·MISS 헤더), 키 미설정 시 503 | 0 |
 | `GET /v1/ops/incidents/:id` | 인시던트 상세(스택트레이스, breadcrumbs 포함) | 1 |
 | `POST /v1/ops/devices` | 기기 Expo push token 등록 | 1 |
 | ~~`POST /v1/ops/webhooks/sentry`~~ | ~~Sentry webhook 수신~~ → **폐기(2026-09-16)**. §3.3 의 폴링 스케줄러로 대체 | 1 |
@@ -446,7 +446,8 @@ accessToken 수명이 **15분**이므로 refresh 없이는 앱이 15분마다 �
 백엔드가 이미 `x-device-id` 헤더를 받아 기기별 토큰을 관리하는 전례가 있어 구조가 자연스럽다
 (`auth.controller.ts:148`, CORS `allowedHeaders` 에도 등록되어 있다).
 
-**백엔드 작업 항목** (앱 코드보다 **먼저** 해야 한다):
+**백엔드 작업 항목** (앱 코드보다 **먼저** 해야 한다) — ✅ **전부 완료(2026-09-17, 0-A)**. 구현 메모:
+`register` 는 토큰을 발급하지 않아(이메일 인증 후 로그인) 분기 대상이 아니었고, 대신 **`logout` 도 `쿠키 ?? body.refreshToken`** 을 받도록 맞췄다 — 앱이 body 로 넘기지 않으면 서버 쪽 refreshToken 이 7일간 살아남기 때문. 회귀 고정: 컨트롤러 단위 테스트 9건 + HTTP e2e `backend-e2e/src/backend/mobile-token-and-ops.e2e.spec.ts`.
 
 1. `login` / `refresh` / (필요 시 `register`) 응답에서 `X-Client: mobile` 이면 body 에 `refreshToken` 추가
 2. `refresh` 가 **쿠키가 없으면 body/헤더의 refreshToken 도 받아들이도록** 확장
@@ -552,6 +553,7 @@ ops-companion/
 ### Phase 0 — 뼈대 (RN 기본기 + 백엔드 재사용)
 - **0-A. 백엔드 먼저** (§5.6): `X-Client: mobile` 헤더 분기로 login/refresh 가 body 에 refreshToken 을
   주도록 확장 + **웹 회귀 확인**. 이것이 안 되면 앱은 15분마다 로그아웃되므로 아래를 시작하지 않는다.
+  ✅ **완료(2026-09-17)** — 토큰 분기 + `GET /v1/ops/incidents` 프록시(§5.1) 로컬 검증·e2e 통과. 운영 배포는 별도 승인 후.
 - **0-B. 앱**: Expo 프로젝트 생성, AuthContext + SecureStore 로그인/자동 refresh, axios 인터셉터,
   `GET /v1/ops/incidents` 백엔드 프록시, S1/S2/S6 화면, Sentry 기본 설치
 - DoD: 실기기(안드로이드)에서 로그인 → 인시던트 목록 조회 → **accessToken 만료(15분) 후에도 자동 갱신으로 계속 사용** →
