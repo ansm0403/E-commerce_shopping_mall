@@ -387,7 +387,9 @@ ssh -i ~/.ssh/shoppingApp-key-v2.pem ubuntu@15.164.185.156 'cd ~/Shopping-mall &
 
 ## 10. 관찰 기간 (3~7일) + UptimeRobot
 
-- [콘솔·UptimeRobot] 무료 계정 → New Monitor → HTTP(s) → URL `https://api.ansmoon.dev/v1/health`, 간격 5분, 알림 이메일 `kirianir@naver.com` (결정 15 — LE 만료 경고 메일과 이중 안전망)
+- [콘솔·UptimeRobot] 무료 계정 → New Monitor → HTTP(s) → URL `https://api.ansmoon.dev/v1/health`, 간격 5분, 알림 이메일 `kirianir@naver.com` — ✅ 완료(2026-09-15)
+  - ⚠ **결정 15 의 "LE 만료 경고 메일과 이중 안전망"은 무효다.** LE 만료 메일은 2025-06 폐지됐고, UptimeRobot 무료는 인증서를 검사하지 않는다. [03-infra-nginx.md §7-2 정정](./03-infra-nginx.md) 참조
+  - 📏 **실측(2026-09-16)**: 서비스 중단 → 인시던트 확정까지 **5분 33초**. 다운타임 기록은 실제보다 그만큼 짧게 남는다. 알림 메일이 **스팸함**으로 가므로 발신 주소 등록 필요. 상세는 [관측 지도 §3-1 ③](./ex-observability-map.md)
 - 매일 한 번: Sentry `#sentry-errors` 채널 조용한지, UptimeRobot 100% 인지
 - 이 기간 동안 **구 EC2 는 손대지 않는다**(롤백 대상). 새 EC2 에 문제가 있으면 §9 롤백 → 원인 수정 → 재전환
 

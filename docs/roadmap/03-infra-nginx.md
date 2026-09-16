@@ -50,7 +50,7 @@
 | 12 | certbot **webroot** 방식, 최초 1회 **부트스트랩** | 인증서가 없으면 443 설정의 nginx 는 **기동 자체가 안 된다**(ssl_certificate 파일 부재) → 80 전용 conf 로 먼저 띄우고 → 발급 → 최종 conf 로 교체·reload. 이 닭-달걀 때문에 conf 파일을 **2종**으로 나눴다 |
 | 13 | 인증서는 `./certbot/conf` ↔ `/etc/letsencrypt` **디렉터리 통째** 마운트 | `live/` 안은 `../../archive/...` **심링크**다. live 만 마운트하면 링크가 끊겨 nginx 가 인증서를 못 읽는다 |
 | 14 | 갱신 = certbot 사이드카(12h `renew` 루프) + nginx 6h `reload` 루프 | 갱신은 만료 30일 전부터만 실제 동작(그 전엔 "not yet due"). 갱신된 파일을 nginx 가 다시 읽어야 하므로 reload 가 짝이다 |
-| 15 | 갱신 실패 감지 = LE 만료 경고 메일(`kirianir@naver.com`) + UptimeRobot 무료 | 자동화는 조용히 실패하는 게 가장 위험하다. 두 겹으로 감시 |
+| 15 | ~~갱신 실패 감지 = LE 만료 경고 메일 + UptimeRobot 무료~~ ⛔ **무효(2026-09-16)** — 전제 두 개가 모두 틀렸다(§7-2 정정) | 취지("자동화는 조용히 실패하는 게 가장 위험하다")는 옳으나 **수단이 둘 다 존재하지 않았다.** 대책은 [관측 지도 §7 ③](./ex-observability-map.md) |
 
 ### B. nginx 설정을 어떻게 쓸 것인가
 
@@ -233,7 +233,15 @@ curl -s https://api.ansmoon.dev/v1/health                                   # ve
 
 ### 7-2. 인증서 자동 갱신
 
-certbot 사이드카가 12시간마다 `renew` 를 시도하고(만료 30일 전부터 실제 갱신), nginx 는 6시간마다 `reload` 로 새 인증서를 재적재한다. **감시 2겹**: LE 만료 경고 메일 + UptimeRobot(`https://api.ansmoon.dev/v1/health`).
+certbot 사이드카가 12시간마다 `renew` 를 시도하고(만료 30일 전부터 실제 갱신), nginx 는 6시간마다 `reload` 로 새 인증서를 재적재한다.
+
+> ⚠ **정정 (2026-09-16)** — 이 자리에 원래 *"감시 2겹: LE 만료 경고 메일 + UptimeRobot"* 이라고 적었으나 **둘 다 틀렸다.**
+> ① **Let's Encrypt 는 2025-06-04 자로 만료 알림 메일 서비스를 종료**했다([공지](https://letsencrypt.org/2025/06/26/expiration-notification-service-has-ended)). `--email` 로 넣은 주소는 계정용이고 만료 메일은 오지 않는다.
+> ② UptimeRobot **무료 플랜은 HTTPS 모니터의 인증서를 검사하지 않는다** — 만료 *전* 경고가 없다.
+> ③ 갱신 루프는 `renew --quiet` 라 **실패해도 로그가 남지 않는다**(certbot 컨테이너 로그 0바이트 실측).
+>
+> 즉 현재 인증서 감시는 2겹이 아니라 **사실상 0겹**이다. 갱신이 실패해도 만료일에 API 가 죽기 전까지 아무도 모른다.
+> 대책과 우선순위는 [ex-observability-map.md §3-1 ④ · §7 ③](./ex-observability-map.md). 런북 §10 의 결정 15 도 같은 이유로 무효다.
 
 ### 7-3. uploads 휘발 문제 (이월 과제 해소)
 
@@ -306,7 +314,7 @@ certbot 사이드카가 12시간마다 `renew` 를 시도하고(만료 30일 전
 | 7 | **A레코드** `api` → 탄력적 IP, **DNS only(회색 구름)** | Cloudflare DNS | ✅ 완료 |
 | 8 | LE 등록 이메일 지정 (`kirianir@naver.com`) | certbot 명령 인자 | ✅ 완료 |
 | 9 | **`API_PROXY_TARGET`** → `https://api.ansmoon.dev/v1` + **캐시 없이 재배포** | Vercel → Settings → Environment Variables | ✅ 완료 |
-| 10 | UptimeRobot 모니터 등록 (`/v1/health`, 5분, 메일 알림) | UptimeRobot | ⬜ **미완** |
+| 10 | UptimeRobot 모니터 등록 (`/v1/health`, 5분, 메일 알림) | UptimeRobot | ✅ 완료 (2026-09-15). 탐지 **5분 33초** 실측 — ⚠ 알림 메일이 **스팸함**으로 가므로 발신 주소 등록 필요([관측 지도 §7 ①](./ex-observability-map.md)) |
 | 11 | 구 EC2 **중지 → 종료** + EBS 삭제 확인 + **탄력적 IP 릴리스** | 구 AWS 계정 | ⬜ **미완 (과금 중)** |
 | 12 | PortOne 웹훅 등록 (V2 / 테스트 / json) | admin.portone.io | ⬜ 보류(12-2) |
 

@@ -29,6 +29,12 @@
 | `#claude-hooks` | Claude Code `Stop`/`Notification` 훅 | `.claude/notify-slack.mjs`가 stdin 이벤트 → POST | gitignore된 `.claude/.slack-webhook` |
 | `#sentry-errors` | Sentry 새 이슈 생성 | **Sentry ↔ Slack OAuth 통합**(웹훅 아님) | Sentry 측 통합에 저장 |
 
+> ⛔ **이 채널은 2026-09-16 현재 끊겨 있다.** Sentry 의 Slack 통합은 **Team 플랜 이상**에서만 쓸 수 있고,
+> 여기 기록된 연동은 계정 생성 직후 **14일 체험 기간** 동안만 유효했다. 체험이 끝나며 조용히 비활성이 됐고
+> **그 사실을 아무도 알아채지 못한 채 수개월이 지났다**(의도적으로 새 이슈를 만들어 본 뒤에야 드러남).
+> 대체안은 "Sentry 가 Slack 에 쏘게 하기"가 아니라 **백엔드가 Incoming Webhook 으로 직접 쏘기**다 —
+> 그건 무료이고 아래 두 채널에서 이미 검증된 방식이다. 상세는 [ex-observability-map.md §7 ②](./ex-observability-map.md).
+
 > ⚑ `#sentry-errors`만 **Incoming Webhook이 아니라 Sentry의 Slack 통합(OAuth)**으로 동작한다.
 > 나머지 둘은 채널별 Incoming Webhook URL을 직접 POST한다. 이 차이가 초기 혼란 지점이었다.
 

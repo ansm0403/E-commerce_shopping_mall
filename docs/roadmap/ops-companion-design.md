@@ -1,19 +1,25 @@
-# Ops Companion — 설계 문서 (v2 · 코드 대조 완료)
+# Ops Companion — 설계 문서 (v2.1 · 관측 실측 반영)
 
 > **v1 → v2 (2026-09-15)**: v1 은 쇼핑몰 코드를 보지 못한 상태에서 쓴 설계도였다.
 > v2 는 실제 저장소·백엔드 코드와 대조해 `[확인 필요]` **14건 중 10건을 확정**했고,
 > nginx/HTTPS 트랙([03-infra-nginx.md](./03-infra-nginx.md) v2 · 2026-09-15 완주)의 결과를 반영했다.
-> 남은 **4건은 "설치 시점에 공식 문서로 확인해야 하는 것"** 이라 의도적으로 남겼다 —
-> ① 라이브러리 버전(§2) ② 내비게이션 라이브러리 선택(§4.1) ③ Sentry webhook 서명 검증(§5.1) ④ 소스맵 업로드 가이드(§6).
+>
+> **v2 → v2.1 (2026-09-16)**: 관측 체계 실측([ex-observability-map.md](./ex-observability-map.md))의 결과를 반영했다.
+> 변경 셋 — ① **푸시 파이프라인을 webhook 수신에서 API 폴링으로 전환**(§3.3, Sentry 무료 플랜 실측 근거)
+> ② **Sentry 무료 플랜 경계선 확정**(§6 — 이 계획에 영향 없음) ③ **§11 에 전제 4건 갱신**(그중 하나는 이미 해소됨).
+>
+> 남은 `[확인 필요]` 는 **3건**이고 전부 "설치 시점에 공식 문서로 확인해야 하는 것" 이다 —
+> ① 라이브러리 버전(§2) ② 내비게이션 라이브러리 선택(§4.1) ③ 소스맵 업로드 가이드(§6).
+> *(v2 의 ③ "Sentry webhook 서명 검증" 은 폴링 전환으로 **과제 자체가 사라졌다**.)*
 >
 > **가장 큰 변경**: refresh token 이 "있으면 연동, 없으면 Phase 2 로 미룸" 이라는 **선택 과제에서
-> Phase 0 필수 + 백엔드 변경 동반으로 승격**됐다(§5.5). accessToken 수명이 15분이라, refresh 없이는
+> Phase 0 필수 + 백엔드 변경 동반으로 승격**됐다(**§5.6**). accessToken 수명이 15분이라, refresh 없이는
 > Phase 0 의 DoD("앱 재시작 후에도 로그인 유지")를 애초에 만족할 수 없기 때문이다.
 >
 > **이 문서를 읽는 Claude Code에게**
 >
-> 1. 구현 전 **§11(물려받은 전제)과 §5.5(모바일 토큰 전략)를 먼저 읽어라.** 백엔드를 먼저 손대야 앱이 성립한다.
-> 2. 남은 `[확인 필요]` 4건은 설치 시점에 공식 문서로 확인해 채워라(위 ①~④).
+> 1. 구현 전 **§11(물려받은 전제)과 §5.6(모바일 토큰 전략)을 먼저 읽어라.** 백엔드를 먼저 손대야 앱이 성립한다.
+> 2. 남은 `[확인 필요]` 3건은 설치 시점에 공식 문서로 확인해 채워라(위 ①~③).
 > 3. Phase DoD 게이트를 지켜라 — 이전 Phase 의 DoD 를 만족하기 전에 다음 Phase 코드를 쓰지 않는다.
 >
 > **사용자 컨텍스트**: 사용자는 React Native 경험이 없는 신입/초보 개발자다.
@@ -150,11 +156,11 @@ Sentry는 이 전 과정이 도는 동안 "앱 자체의 건강"
 ### 3.3 푸시 알림 파이프라인 (Phase 1)
 
 ```
-Sentry (쇼핑몰 프로젝트에 이미 연동됨)
-   │  webhook (신규 인시던트/알림 규칙 발동 시)
+NestJS 스케줄러 (1~2분 간격)
+   │  GET https://sentry.io/api/0/organizations/<slug>/issues/?statsPeriod=…
+   │  마지막으로 본 lastSeen 커서 이후의 새 이슈만 골라낸다
    ▼
-NestJS: POST /ops/webhooks/sentry  ← 신규 엔드포인트
-   │  1) payload 검증  2) 인시던트 요약 저장(선택)  3) 푸시 발송
+NestJS: 인시던트 요약 저장 → 푸시 발송
    ▼
 Expo Push Service ──→ 사용자 기기
    │  알림 payload에 딥링크 데이터 포함: { incidentId: "..." }
@@ -162,9 +168,25 @@ Expo Push Service ──→ 사용자 기기
 알림 탭 → 앱이 딥링크 해석 → 인시던트 상세 화면 직행
 ```
 
-**확정(2026-09-15)**: 쇼핑몰 Sentry 는 **새 이슈 발생 시 Slack `#sentry-errors` 알림**이 가도록 이미 연동돼 있다.
-⚠ 단 이 연동은 Incoming Webhook 이 아니라 **Sentry 의 Slack OAuth 통합**이다([ex-sentry-slack.md](./ex-sentry-slack.md) 참조).
-따라서 "기존 규칙을 복제해 webhook 액션만 추가" 가 아니라, **알림 규칙에 webhook 액션을 새로 구성**해야 한다.
+**⚠ 설계 변경 — webhook 수신에서 폴링으로 (2026-09-16)**
+
+v2 까지는 `POST /ops/webhooks/sentry` 로 **Sentry 가 우리를 호출**하는 구조였다. 이를 **우리가 Sentry API 를 조회**하는 폴링으로 바꾼다. 근거는 [ex-observability-map.md §5-1](./ex-observability-map.md) 의 실측이다.
+
+| 항목 | 실측 결과 |
+|---|---|
+| Sentry **Web API** 조회 | ✅ **무료 플랜에서 동작**(`/organizations/` 200, `/organizations/<slug>/issues/` 200) |
+| Sentry **Slack 통합** | ❌ Team 플랜 이상 — 2026-07 체험 기간에만 동작했고 현재 **끊겨 있다** |
+| 알림 룰의 **webhook 액션** | `확인 필요` — 폴링으로 대체하므로 막지 않는다 |
+
+폴링으로 바꾸면서 얻는 것이 더 많다.
+
+- **서명 검증 과제가 통째로 사라진다.** §5.1 에 `[확인 필요]` 로 남아 있던 "Sentry webhook 서명 검증 방식"을 조사할 필요가 없고, `api.ansmoon.dev` 에 전 세계로 열리는 엔드포인트를 하나 덜 만든다.
+- **이슈 그룹핑·중복 제거를 직접 만들 필요가 없다.** Sentry 가 이미 묶어 둔 이슈를 그대로 읽는다. 자체 지문 설계와 upsert 를 구현하는 1.5~2 일치 작업이 빠진다.
+- **Sentry 플랜 정책 변화에 덜 흔들린다.** 이번에 Slack 통합이 조용히 끊긴 것이 그 사례다.
+
+잃는 것은 폴링 주기만큼의 지연뿐이고, 단일 개발자용 운영 앱에서 1~2 분은 의미가 없다. 무료 플랜의 API 레이트리밋도 백엔드 한 대의 분당 1회 조회로는 닿지 않는다.
+
+> 💡 `#sentry-errors` Slack 알림을 되살리는 것도 이 폴링 루프에 얹으면 된다. Slack **Incoming Webhook** 은 무료이고 이미 두 채널(`#deployments`·`#claude-hooks`)에서 쓰고 있다. Sentry 의 Slack 통합을 다시 사는 대신 **우리가 직접 쏜다**([ex-observability-map.md §7 ②](./ex-observability-map.md)).
 
 ### 3.4 AI 분석 파이프라인 (Phase 3)
 
@@ -248,7 +270,7 @@ RootNavigator (AuthContext의 user 유무로 분기)
 - 이메일/비밀번호 → **`POST /v1/auth/login`**.
   **확정된 계약(2026-09-15)**: 응답 body 는 `{ accessToken, expiresIn, tokenType, user }` 이고
   refreshToken 은 기본적으로 **httpOnly 쿠키로만** 내려온다. 앱은 **`X-Client: mobile` 헤더**를 붙여
-  body 로도 refreshToken 을 받는다(§5.5 — 백엔드 변경 동반).
+  body 로도 refreshToken 을 받는다(§5.6 — 백엔드 변경 동반).
 - 성공 시: **accessToken·refreshToken 을 모두 SecureStore 에 저장** → AuthContext.user 세팅 → 자동으로 AppTabs 전환.
 - Phase 2 추가: 저장된 세션이 있으면 생체 인증(Face ID/지문)으로 잠금 해제.
   - **생체 인증은 서버/DB와 무관하다.** 지문·얼굴 대조는 기기 보안 칩 안에서만
@@ -303,7 +325,7 @@ RootNavigator (AuthContext의 user 유무로 분기)
 | `GET /v1/ops/incidents` | Sentry API 프록시. 인시던트 목록(축약형) | 0 |
 | `GET /v1/ops/incidents/:id` | 인시던트 상세(스택트레이스, breadcrumbs 포함) | 1 |
 | `POST /v1/ops/devices` | 기기 Expo push token 등록 | 1 |
-| `POST /v1/ops/webhooks/sentry` | Sentry webhook 수신 → 푸시 발송 | 1 |
+| ~~`POST /v1/ops/webhooks/sentry`~~ | ~~Sentry webhook 수신~~ → **폐기(2026-09-16)**. §3.3 의 폴링 스케줄러로 대체 | 1 |
 | `POST /v1/ops/incidents/:id/analysis` | AI 분석 생성(또는 캐시된 분석 반환) | 3 |
 | `GET /v1/ops/analyses/pending` | 평가 대기 중인 분석 목록 | 4 |
 | `POST /v1/ops/analyses/:id/review` | 평가 저장 (verdict, rating) | 4 |
@@ -312,10 +334,9 @@ RootNavigator (AuthContext의 user 유무로 분기)
   `Role` 은 `buyer | seller | admin`(`backend/src/user/entity/role.entity.ts`).
   ⚠ **데모 관리자 계정 주의** — 쓰기성 동작에는 `DemoAccountGuard` 가 걸려 차단될 수 있으니,
   앱 테스트는 데모 계정이 아닌 실제 관리자 계정으로 한다.
-- webhook 엔드포인트는 JWT 대신 **서명/시크릿 검증**.
-  ⚠ 이 엔드포인트는 `api.ansmoon.dev` 로 **전 세계에 공개**된다. 서명 검증을 붙이기 전까지는
-  전역 `ThrottlerModule` 보호를 벗기지 말 것(`@SkipThrottle()` 금지 — PortOne 웹훅이 그렇게 돼 있어 같은 실수를 하기 쉽다).
-  `[확인 필요: Sentry webhook 서명 검증 방식을 공식 문서로 확인하라.]`
+- ~~webhook 엔드포인트는 JWT 대신 서명/시크릿 검증~~ → **불필요해졌다(2026-09-16)**. 폴링으로 바꾸면서
+  공개 수신 엔드포인트 자체가 없어졌으므로 서명 검증 조사도, `ThrottlerModule` 예외 고민도 사라진다(§3.3).
+  대신 **Sentry API 토큰이 새 비밀값으로 늘어난다** — 백엔드 환경변수에만 두고 앱에는 절대 내려보내지 않는다(§7).
 
 ### 5.2 응답 축약 원칙
 
@@ -361,7 +382,18 @@ ops_reviews
   - verdict('approved'|'rejected'), rating(int 1~5, nullable)
   - comment(text, nullable), createdAt
   - (analysisId, reviewerId) 유니크
+
+ops_poll_state                       ← v2.1 추가 (§3.3 폴링 전환에 따른 필수 테이블)
+  - id, source('sentry'), lastSeenAt(timestamp), lastIssueId(string, nullable)
+  - updatedAt
+  - source 유니크 (행 1개만 존재)
 ```
+
+> ⚠ **`ops_poll_state` 를 빠뜨리면 폴링이 성립하지 않는다.** "어디까지 봤는지"를 기억하지 못하면
+> 매 주기마다 같은 이슈를 새 인시던트로 오인해 **푸시가 무한 반복된다.** 커서를 Redis 에만 두는 것도
+> 위험하다 — Redis 가 재시작되면 커서를 잃고 같은 사고가 난다. **DB 에 둬야 한다.**
+> 푸시 발송 자체도 `(incidentId, userId)` 기준으로 멱등하게 만들어, 커서가 틀어져도 중복 발송이
+> 한 번으로 눌리게 하는 것이 안전하다(쇼핑몰의 정산 리스너가 쓰는 멱등 패턴과 같은 접근).
 
 `promptVersion`을 저장하는 이유: Phase 4에서 "프롬프트 v1 vs v2의 승인율"을
 비교할 수 있게 하기 위함. 이것이 "평가 데이터로 시스템을 개선했다"는 서사의
@@ -442,6 +474,21 @@ accessToken 수명이 **15분**이므로 refresh 없이는 앱이 15분마다 �
 pay-as-you-go/spend limit을 0으로 두어 한도 초과 시 과금 대신 수집 중단되게 한다.
 무한 루프성 에러(렌더 루프 안 throw 등)를 조심한다.
 
+**무료 플랜 경계선 (2026-09-16 실측 — 이 계획에 영향 없음)**
+
+| 기능 | 무료 | 이 앱에서 |
+|---|---|---|
+| SDK 수집·그룹핑·소스맵·Release Health·커스텀 span | ✅ | **위 표 전부 그대로 가능**. 역할 B 는 영향 없음 |
+| Web API 조회 | ✅ | 역할 A(§3.3·§5.1) 그대로 |
+| 이메일·앱 내 알림 | ✅ | 앱 푸시가 붙기 전까지의 보조 통로 |
+| Slack 등 서드파티 통합 | ❌ Team 이상 | 안 쓴다. Slack 은 백엔드가 Incoming Webhook 으로 직접 쏜다 |
+
+⚠ **쿼터는 두 프로젝트가 나눠 쓴다.** 앱 전용 프로젝트를 새로 만들어도 월 5,000 errors 는
+조직 전체 한도다. 쇼핑몰과 앱이 같은 5K 를 나눠 쓰므로, 앱의 `beforeSend` 노이즈 필터(Phase 2)는
+"있으면 좋은 것"이 아니라 **쿼터 방어 장치**다.
+
+전체 관측 체계에서 이 앱이 놓이는 자리는 [ex-observability-map.md §6](./ex-observability-map.md) 참조.
+
 ---
 
 ## 7. 보안 원칙 (전 Phase 공통)
@@ -451,7 +498,10 @@ pay-as-you-go/spend limit을 0으로 두어 한도 초과 시 과금 대신 수�
 2. JWT는 SecureStore에만 저장. AsyncStorage 금지.
 3. 로그아웃 시 SecureStore 토큰 삭제 확인.
 4. beforeSend에서 이벤트 내 PII(이메일/전화번호) 마스킹.
-5. webhook은 서명 검증 없이는 처리하지 않는다.
+5. ~~webhook은 서명 검증 없이는 처리하지 않는다.~~ → **이 앱에는 수신 webhook 이 없다**(v2.1 폴링 전환, §3.3).
+   대신 지켜야 할 것: **Sentry API 토큰을 응답에 실어 보내지 않는다.** 백엔드가 Sentry 응답을 §5.2 의
+   축약형으로 가공해 내려보내므로, raw JSON 을 그대로 프록시하지 말 것(토큰은 아니어도 불필요한 내부 정보가 샌다).
+   원칙 자체는 쇼핑몰의 PortOne 웹훅에 여전히 유효하다([03-infra-nginx.md §10 의 12-3](./03-infra-nginx.md)).
 
 ---
 
@@ -509,8 +559,8 @@ ops-companion/
   **웹 쇼핑몰의 로그인/로그아웃도 변함없이 동작**(0-A 회귀 확인).
 
 ### Phase 1 — "웹이 아닌 진짜 앱" (푸시 + 딥링크)
-- 구현: push token 등록, Sentry webhook → 백엔드 → Expo 푸시, 딥링크 3상태
-  (포그라운드/백그라운드/종료) 처리, S3 상세 화면
+- 구현: push token 등록, **Sentry API 폴링 스케줄러**(§3.3 — webhook 아님) → 백엔드 → Expo 푸시,
+  딥링크 3상태(포그라운드/백그라운드/종료) 처리, S3 상세 화면
 - DoD: 쇼핑몰에서 에러 발생 → 폰 푸시 수신 → 탭 → (앱이 꺼져 있어도) 해당
   인시던트 상세로 진입. 이 데모가 영상으로 녹화 가능해야 함.
 
@@ -542,8 +592,8 @@ ops-companion/
 ## 10. Claude Code 작업 지침 요약
 
 1. ~~**먼저 탐색**~~ → **완료(2026-09-15)**: 저장소 구조·백엔드 인증 코드·Sentry 설정·공유 타입 패키지를
-   대조해 이 v2 문서를 만들었다. 다시 탐색할 필요는 없고, **§11(물려받은 전제) → §5.6(토큰 전략) →
-   Phase 0 순서로 읽고 바로 착수**하면 된다. 남은 `[확인 필요]` 4건만 설치 시점에 확인한다.
+   대조해 이 문서를 만들었다. 다시 탐색할 필요는 없고, **§11(물려받은 전제) → §5.6(토큰 전략) →
+   Phase 0 순서로 읽고 바로 착수**하면 된다. 남은 `[확인 필요]` **3건**만 설치 시점에 확인한다.
 2. **작게 진행**: Phase 0 안에서도 "Expo 생성 → 로그인 → 목록" 단위로 나눠
    각 단계마다 사용자가 실기기로 확인하게 하라.
 3. **설명하며 진행**: 사용자는 RN 초보다. 새 개념(예: Expo Router, SecureStore)이
@@ -582,3 +632,45 @@ ops-companion/
 
 **앱과 무관한 것** — 웹 전용 이슈라 신경 쓸 필요 없다: CORS(`Origin` 미전송), Vercel rewrites/BFF,
 웹 경로의 클라이언트 IP 복원 과제([03-infra-nginx.md](./03-infra-nginx.md) §10 의 12-1).
+
+---
+
+## 11-1. 관측 트랙에서 물려받은 전제 (2026-09-16 실측 갱신)
+
+> 근거는 전부 [ex-observability-map.md](./ex-observability-map.md) 의 실측이다. 네 건 중 하나는 **이미 해소**됐고, 둘은 **착수 전에 처리**해야 하며, 하나는 **설계 자체의 한계**다.
+
+### ✅ 해소됨 — `PROTOCOL` / `HOST` 지뢰
+
+v2 에서 "RN 이 먼저 밟을 지뢰"로 지목했던 항목이다. 구 `.env` 의 `PROTOCOL=http` / `HOST=localhost:4000` 잔재 때문에 커서 페이지네이션의 `next` URL 이 `http://localhost:4000/...` 로 만들어지는 문제였다([common.service.ts:397](../../backend/src/common/common.service.ts#L397)). 웹은 `nextCursor` 만 쓰고 `next` 를 따라가지 않아 드러나지 않았다.
+
+**EC2 환경변수 실측 결과 이미 교정돼 있다**: `PROTOCOL=https`, `HOST=api.ansmoon.dev`. 앱이 `next` 를 따라가도 안전하다. [03-infra-nginx.md §10 의 12-8](./03-infra-nginx.md) 은 완료로 봐도 된다.
+
+### ⚠ 착수 전 처리 — 앱이 볼 인시던트가 반쪽이다
+
+| 문제 | 앱에 미치는 영향 | 선행 작업 |
+|---|---|---|
+| **쇼핑몰 프론트의 API 실패가 Sentry 에 안 잡힌다** | 백엔드가 죽어도 **프론트 쪽 인시던트가 0건**이라 앱 피드에 아무것도 안 뜬다. 대조군 실험 2회 재현 | [블로그 글 §7](../blog/sentry-axios-silent-failure.md) 의 axios 리포터 적용 |
+| **`/v1/health` 가 DB·Redis 를 안 본다** | postgres 만 죽는 장애를 앱이 인지할 수단이 없다. health 는 200 을 유지한다(실측) | health 에 readiness 추가([관측 지도 §7 ⑤](./ex-observability-map.md)) |
+
+즉 **앱을 먼저 만들면 앱이 볼 것이 백엔드 예외뿐이다.** 관측 지도 §7 의 ④·⑤ 를 Phase 0 착수 전에 처리하는 편이 낫다.
+
+### ⚠ 착수 전 처리 — Sentry API 토큰
+
+폴링(§3.3)에 쓸 **Sentry 개인 인증 토큰**이 새 비밀값으로 늘어난다. 필요한 권한은 `org:read` · `project:read` · `event:read` 이고, **백엔드 환경변수에만** 둔다(§3.1 절대 규칙 2). 조직 슬러그도 함께 환경변수로 뺀다.
+
+### ⛔ 설계의 구조적 한계 — 백엔드가 죽으면 이 앱도 죽는다
+
+§3.1 의 절대 규칙 1("앱은 항상 백엔드 API 를 경유한다")은 보안상 옳지만 **대가가 있다.**
+
+```
+EC2 다운 → 백엔드 사망 → 폴링 스케줄러 정지 + 앱의 모든 요청 실패
+        → 푸시가 나갈 수 없다 → 온콜 앱이 가장 심각한 장애에서 먹통
+```
+
+2026-09-16 에 실제로 16분간 이 상황이 있었다. **그래서 UptimeRobot 메일을 P1 통로로 계속 유지해야 한다** — 우리 인프라 밖에 있는 유일한 감시자이기 때문이다([관측 지도 §4-1](./ex-observability-map.md)).
+
+이 한계를 없애려면 앱이 UptimeRobot API 를 **직접** 호출해야 하는데, 그러면 API 키가 앱 바이너리에 들어가 절대 규칙 2 를 위반한다. **v1 에서는 한계를 받아들이고 문서에 명시하는 쪽을 택한다.** 면접에서 "왜 이렇게 했나"를 설명할 수 있는 종류의 트레이드오프이므로, 숨기지 말고 이 문단을 근거로 말하면 된다.
+
+### 📌 폴링 주기와 레이트리밋 — 혼동 주의
+
+§11 의 "전역 `ThrottlerModule` 100 req/60초" 는 **앱이 백엔드를 부를 때**의 한도다. §3.3 의 폴링 스케줄러는 **백엔드가 Sentry 를 부르는** 바깥 방향이라 이 한도와 무관하다. 폴링이 신경 쓸 것은 Sentry 쪽 레이트리밋인데, 백엔드 한 대가 1~2분에 1회 조회하는 정도로는 닿지 않는다.
