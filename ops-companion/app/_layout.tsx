@@ -1,0 +1,76 @@
+/**
+ * 루트 레이아웃 — 앱 전체를 감싸는 껍데기 (설계 §4.1 RootNavigator).
+ *
+ * Expo Router 는 `app/` 아래 **파일 경로가 곧 화면 경로**가 되는 파일 기반 내비게이션이다.
+ * `_layout.tsx` 는 그 폴더의 공통 껍데기이고, 여기 있는 Provider 들이 모든 화면을 감싼다.
+ *
+ * 로그인 분기는 화면 이동 명령이 아니라 **렌더 분기**다(설계 §4.1):
+ * user 가 없으면 (auth) 스택만, 있으면 (tabs) 만 Stack 에 등록한다. 등록되지 않은 경로는
+ * 아예 존재하지 않으므로, 로그아웃 직후 이전 화면이 남는 상태가 생기지 않는다.
+ */
+import { useEffect } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
+import { initSentry } from '../src/lib/sentry';
+import { colors } from '../src/theme';
+
+initSentry();
+
+// staleTime 기본 5분(설계 §5.5). 목록 쿼리는 자기 쪽에서 1분으로 좁힌다.
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { staleTime: 5 * 60_000, refetchOnWindowFocus: false } },
+});
+
+function RootNavigator() {
+  const { user, isBooting } = useAuth();
+
+  if (isBooting) {
+    // SecureStore 복원 + /auth/me 검증이 끝나기 전. 이 시간이 없으면 로그인 상태인데도
+    // 로그인 화면이 한 번 번쩍이고 지나간다.
+    return (
+      <View style={styles.booting}>
+        <ActivityIndicator color={colors.accent} size="large" />
+      </View>
+    );
+  }
+
+  return (
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
+      {user ? (
+        <Stack.Screen name="(tabs)" />
+      ) : (
+        <Stack.Screen name="(auth)/login" />
+      )}
+    </Stack>
+  );
+}
+
+export default function RootLayout() {
+  useEffect(() => {
+    // 다크 배경 고정 — 운영 화면은 야간에 보는 일이 많다.
+  }, []);
+
+  return (
+    <SafeAreaProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <StatusBar style="light" />
+          <RootNavigator />
+        </AuthProvider>
+      </QueryClientProvider>
+    </SafeAreaProvider>
+  );
+}
+
+const styles = StyleSheet.create({
+  booting: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.background,
+  },
+});

@@ -557,6 +557,9 @@ ops-companion/
   ⚠ 운영 검증 중 **기존 버그**를 재현해 함께 고쳤다: access 토큰에 `jti` 가 없어 같은 사용자·같은 초 발급 토큰이 문자열까지 동일 → 웹 로그아웃이 블랙리스트에 넣은 토큰과 겹치면 **앱이 방금 받은 토큰이 401**. 앱은 로그인/갱신이 잦아 이 충돌을 웹보다 자주 만난다. 수정 = `accessPayload.jti = crypto.randomUUID()`.
 - **0-B. 앱**: Expo 프로젝트 생성, AuthContext + SecureStore 로그인/자동 refresh, axios 인터셉터,
   `GET /v1/ops/incidents` 백엔드 프록시, S1/S2/S6 화면, Sentry 기본 설치
+  ✅ **코드 완료(2026-09-18)** — `ops-companion/`(워크스페이스 추가). 실기기 확인은 사용자 몫으로 남음(DoD 게이트).
+  **설치 시점 실측으로 확정된 `[확인 필요]` 3건**: Expo SDK **57**(expo 57.0.23 / RN 0.86.3 / React 19.2.3) · 내비게이션 = **Expo Router 57**(파일 기반, 예상대로 기본값) · Sentry = **@sentry/react-native 7.11.x**(`expo install` 이 SDK 호환 버전으로 고정 — npm `latest` 8.27 을 쓰면 안 된다).
+  구현 메모: Reanimated 4 는 `react-native-worklets` 를 peer 로 요구해 따로 설치해야 했다. Metro 는 모노레포용으로 `watchFolders`(루트) + `nodeModulesPaths`(앱·루트) 만 지정한다 — `disableHierarchicalLookup` 은 expo-doctor 가 권장값 위반으로 잡아 뺐다.
 - DoD: 실기기(안드로이드)에서 로그인 → 인시던트 목록 조회 → **accessToken 만료(15분) 후에도 자동 갱신으로 계속 사용** →
   앱 재시작 후에도 로그인 유지 → 로그아웃이 전부 동작. 의도적 에러 1건이 Sentry 대시보드에 보임.
   **웹 쇼핑몰의 로그인/로그아웃도 변함없이 동작**(0-A 회귀 확인).

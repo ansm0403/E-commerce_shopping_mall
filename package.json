@@ -72,7 +72,8 @@
         "backend",
         "backend-e2e",
         "shared",
-        "mocks"
+        "mocks",
+        "ops-companion"
     ],
     "packageManager": "yarn@4.10.3",
     "dependencies": {
