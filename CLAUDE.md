@@ -17,7 +17,7 @@
 - `frontend/`    — Next.js 앱 (`@shopping-mall/frontend`)
 - `shared/`      — 프론트·백 공용 TS 타입/DTO 인터페이스 (`@shopping-mall/shared`, 빌드 후 `dist/` 소비)
 - `backend-e2e/` — 백엔드 e2e 테스트
-- `ops-companion/` — **RN 운영 앱**(Expo SDK 57 + Expo Router, `@shopping-mall/ops-companion`). 워크스페이스에는 있지만 **Nx 타깃은 아니다** — 실행은 Expo CLI(`cd ops-companion && yarn start`). 상세 `ops-companion/README.md`
+- `ops-companion/` — **RN 운영 앱**(Expo SDK 57 + Expo Router, `@shopping-mall/ops-companion`). 워크스페이스에는 있지만 **Nx 타깃은 아니다** — 실행은 Expo CLI(`cd ops-companion && yarn start`). 실행법 `ops-companion/README.md`, RN 입문자용 코드 해설 `docs/learning/ops-companion/`
 - `docs/`        — 설계·운영 문서 (데이터 흐름 문서는 §7 규칙 준수, 로드맵은 `docs/roadmap/`)
 - 루트: `nx.json`, `docker-compose.{yaml,local,prod}.yaml`, `Dockerfile`(백엔드)·`Dockerfile.frontend`·`Dockerfile.dev`, `Makefile`
 
