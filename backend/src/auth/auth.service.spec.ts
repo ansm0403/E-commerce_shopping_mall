@@ -185,6 +185,30 @@ describe('AuthService', () => {
       expect(result.user.roles).toContain(Role.BUYER);
     });
 
+    /**
+     * 회귀 방지 — access 토큰에 jti 가 없으면 같은 사용자·같은 초 발급 토큰이 문자열까지 같아진다.
+     * 로그아웃 블랙리스트 키가 토큰 문자열이라, 직전에 로그아웃한 토큰과 겹치면 새 토큰이 401 이 된다
+     * (2026-09-18 운영 검증 중 재현). refresh 는 tokenId(uuid) 가 이미 그 역할을 한다.
+     */
+    it('access 토큰 payload 에 발급마다 다른 jti 가 들어간다', async () => {
+      usersRepository.findOne.mockResolvedValue(mockUser);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      redisService.resetLoginAttempts.mockResolvedValue(undefined);
+
+      await service.login(dto, mockContext);
+      await service.login(dto, mockContext);
+
+      const accessPayloads = jwtService.sign.mock.calls
+        .map(([payload]) => payload)
+        .filter((p) => p.type === 'access');
+
+      expect(accessPayloads).toHaveLength(2);
+      for (const payload of accessPayloads) {
+        expect(payload.jti).toEqual(expect.any(String));
+      }
+      expect(accessPayloads[0].jti).not.toBe(accessPayloads[1].jti);
+    });
+
     it('실패: 존재하지 않는 유저 → UnauthorizedException', async () => {
       usersRepository.findOne.mockResolvedValue(null);
 

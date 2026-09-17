@@ -28,6 +28,16 @@ interface JwtPayload {
   type: 'access' | 'refresh';
   tokenId?: string;
   isDemo?: boolean;
+  /**
+   * 토큰 고유 ID(JWT 표준 클레임). access 토큰에만 넣는다.
+   *
+   * 없으면 같은 사용자에게 같은 초에 발급된 access 토큰은 payload 가 완전히 같아
+   * **서명까지 동일한 문자열**이 된다. 로그아웃 블랙리스트는 토큰 문자열을 키로 쓰므로
+   * (`blacklist:<token>`), 로그아웃 직후 1초 안에 발급된 새 토큰이 남의 블랙리스트에
+   * 걸려 401 이 된다 — 2026-09-18 운영 검증 중 실제 재현(웹 로그아웃 → 모바일 refresh).
+   * refresh 토큰은 tokenId(uuid)가 이미 있어 같은 문제가 없다.
+   */
+  jti?: string;
 }
 
 interface LoginContext {
@@ -315,12 +325,14 @@ export class AuthService {
     const tokenId = crypto.randomUUID();
 
     // Access Token
+    // jti: 발급마다 다른 값 → 같은 초에 발급돼도 토큰 문자열이 겹치지 않는다(JwtPayload.jti 주석 참고).
     const accessPayload: JwtPayload = {
       sub: user.id,
       email: user.email,
       type: 'access',
       roles: user.roles?.map((r) => r.name) ?? [],
       isDemo: user.isDemo ?? false,
+      jti: crypto.randomUUID(),
     };
 
     const accessToken = this.jwtService.sign(accessPayload, {

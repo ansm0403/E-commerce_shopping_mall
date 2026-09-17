@@ -28,7 +28,7 @@
 ## 3. 백엔드 컨벤션 (`backend/src`)
 - **모듈러 모놀리식**. 기능별 폴더 = NestJS 모듈(`*.module/controller/service.ts` + `dto/` + `entity/`).
 - 글로벌 prefix **`/v1`**, 포트 **4000**(`main.ts`). 전역 `ValidationPipe({transform:true})` + `ClassSerializerInterceptor`(`@Exclude()`로 민감필드 차단).
-- **인증**: JWT(access 15m) + refresh(7d, 해시 저장 + Redis 검증/블랙리스트). 이메일 인증·비번 재설정·로그인 레이트리밋(Redis) 포함.
+- **인증**: JWT(access 15m) + refresh(7d, 해시 저장 + Redis 검증/블랙리스트). 이메일 인증·비번 재설정·로그인 레이트리밋(Redis) 포함. access payload 에 **`jti`(uuid) 필수** — 블랙리스트 키가 토큰 문자열이라, jti 가 없으면 같은 사용자·같은 초 발급 토큰이 문자열까지 같아져 로그아웃 직후 재발급분이 401 이 된다(2026-09-18 운영 재현 후 수정).
 - **역할 3종** `Role = buyer | seller | admin`(`user/entity/role.entity.ts`). User↔Role 다대다.
 - **가드/데코레이터**: `JwtAuthGuard`, `RolesGuard`, `DemoAccountGuard` / `@Roles()`, `@User()`, `@Auditable()`.
 - **DB 스키마**: **TypeORM 마이그레이션으로만 변경**(2026-08-18 도입, synchronize 전면 off). 절차: 엔티티 수정 → `nx run @shopping-mall/backend:migration:generate --name=<이름>` → `src/database/migrations/index.ts` **명시적 등록**(글롭은 nx 단일 번들이라 조용히 실패) → `migration:run`. CLI DataSource는 `src/database/data-source.ts`(cwd=backend 필수). 상세 `docs/roadmap/ex-db-migration.md`.

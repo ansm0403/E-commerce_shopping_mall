@@ -553,7 +553,8 @@ ops-companion/
 ### Phase 0 — 뼈대 (RN 기본기 + 백엔드 재사용)
 - **0-A. 백엔드 먼저** (§5.6): `X-Client: mobile` 헤더 분기로 login/refresh 가 body 에 refreshToken 을
   주도록 확장 + **웹 회귀 확인**. 이것이 안 되면 앱은 15분마다 로그아웃되므로 아래를 시작하지 않는다.
-  ✅ **완료(2026-09-17)** — 토큰 분기 + `GET /v1/ops/incidents` 프록시(§5.1) 로컬 검증·e2e 통과. 운영 배포는 별도 승인 후.
+  ✅ **완료(2026-09-18 운영 배포·검증)** — 토큰 분기 + `GET /v1/ops/incidents` 프록시(§5.1). 운영(`c90b51a`)에서 웹 회귀·모바일 경로·ops 200/캐시 HIT 확인.
+  ⚠ 운영 검증 중 **기존 버그**를 재현해 함께 고쳤다: access 토큰에 `jti` 가 없어 같은 사용자·같은 초 발급 토큰이 문자열까지 동일 → 웹 로그아웃이 블랙리스트에 넣은 토큰과 겹치면 **앱이 방금 받은 토큰이 401**. 앱은 로그인/갱신이 잦아 이 충돌을 웹보다 자주 만난다. 수정 = `accessPayload.jti = crypto.randomUUID()`.
 - **0-B. 앱**: Expo 프로젝트 생성, AuthContext + SecureStore 로그인/자동 refresh, axios 인터셉터,
   `GET /v1/ops/incidents` 백엔드 프록시, S1/S2/S6 화면, Sentry 기본 설치
 - DoD: 실기기(안드로이드)에서 로그인 → 인시던트 목록 조회 → **accessToken 만료(15분) 후에도 자동 갱신으로 계속 사용** →
