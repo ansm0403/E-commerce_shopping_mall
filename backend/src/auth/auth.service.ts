@@ -5,6 +5,7 @@ import {
   ForbiddenException,
   HttpException,
   HttpStatus,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -142,19 +143,29 @@ export class AuthService {
       userAgent: context.userAgent,
     });
 
-    
-
     // 이메일 인증 메일 전송
-    await this.emailService.sendVerificationEmail(
+    // 발송 실패는 provider 가 예외 대신 { success:false } 로 돌려준다(Sentry 보고는 provider 가 함).
+    // 유저는 이미 저장됐으므로 가입 자체는 성공으로 두되, 쿨다운을 걸지 않아
+    // 사용자가 곧바로 재발송을 누를 수 있게 한다.
+    const { success: emailSent } = await this.emailService.sendVerificationEmail(
       savedUser.email,
       verificationToken,
     );
+
+    if (!emailSent) {
+      return {
+        message:
+          '회원가입은 완료되었지만 인증 메일 발송에 실패했습니다. 잠시 후 인증 메일 재발송을 눌러주세요.',
+        emailSent: false,
+      };
+    }
 
     // 재발송 쿨다운 설정 (3분)
     await this.redisService.setEmailVerificationCooldown(savedUser.id);
 
     return {
       message: '회원가입이 완료되었습니다. 이메일을 확인해주세요.',
+      emailSent: true,
     };
   }
 
@@ -655,10 +666,18 @@ export class AuthService {
       3600, // 1시간
     );
 
-    await this.emailService.sendVerificationEmail(
+    const { success } = await this.emailService.sendVerificationEmail(
       user.email,
       verificationToken,
     );
+
+    // 실패를 "발송되었습니다"로 덮으면 사용자는 오지 않을 메일을 기다리게 된다.
+    // 쿨다운도 걸지 않아 복구 후 바로 재시도할 수 있게 한다.
+    if (!success) {
+      throw new ServiceUnavailableException(
+        '인증 메일 발송에 실패했습니다. 잠시 후 다시 시도해주세요.',
+      );
+    }
 
     // 재발송 쿨다운 설정 (3분)
     await this.redisService.setEmailVerificationCooldown(user.id);

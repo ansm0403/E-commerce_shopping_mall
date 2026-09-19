@@ -45,7 +45,7 @@ const mockRedisService = {
 };
 
 const mockEmailService = {
-  sendVerificationEmail: jest.fn().mockResolvedValue(undefined),
+  sendVerificationEmail: jest.fn().mockResolvedValue({ success: true }),
 };
 
 describe('Auth Integration Tests', () => {

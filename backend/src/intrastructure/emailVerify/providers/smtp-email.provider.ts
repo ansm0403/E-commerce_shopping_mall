@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
+import * as Sentry from '@sentry/nestjs';
 import { Transporter } from 'nodemailer';
 import {
   IEmailProvider,
@@ -45,6 +46,14 @@ export class SmtpEmailProvider implements IEmailProvider {
       };
     } catch (error) {
       console.error('이메일 전송 실패:', error);
+      // 호출부는 실패를 HttpException(503 등)으로 바꿔 응답하는데, SentryGlobalFilter 는
+      // HttpException 을 상태코드와 무관하게 "예상된 에러"로 보고 캡처하지 않는다.
+      // 원본 SMTP 에러(535 인증 실패 등)가 살아 있는 여기서 직접 보고해야 알림이 온다.
+      // (2026-09-19: 네이버 "SMTP 사용"이 90일 미사용으로 꺼져 가입 메일이 조용히 실패)
+      Sentry.captureException(error, {
+        tags: { area: 'email', provider: 'smtp' },
+        extra: { subject: options.subject },
+      });
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),

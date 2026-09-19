@@ -6,6 +6,7 @@ import {
   BadRequestException,
   ForbiddenException,
   HttpException,
+  ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
@@ -86,7 +87,7 @@ describe('AuthService', () => {
     // 기본값을 통과로 두지 않으면 undefined가 반환돼 모든 테스트가 429로 끝난다.
     redisService.checkRateLimit.mockResolvedValue(true);
     auditService = { log: jest.fn().mockResolvedValue(undefined) };
-    emailService = { sendVerificationEmail: jest.fn().mockResolvedValue(undefined) };
+    emailService = { sendVerificationEmail: jest.fn().mockResolvedValue({ success: true }) };
 
     jwtService = {
       sign: jest.fn().mockReturnValue('mock-jwt-token'),
@@ -149,6 +150,8 @@ describe('AuthService', () => {
       const result = await service.register(dto, mockContext);
 
       expect(result.message).toContain('회원가입이 완료');
+      expect(result.emailSent).toBe(true);
+      expect(redisService.setEmailVerificationCooldown).toHaveBeenCalledWith(1);
       // roles에 BUYER가 설정됐는지 확인
       const userPassedToSave = usersRepository.save.mock.calls[0][0];
       expect(userPassedToSave.roles).toContain(mockBuyerRole);
@@ -160,6 +163,60 @@ describe('AuthService', () => {
 
       await expect(service.register(dto, mockContext)).rejects.toThrow(BadRequestException);
       expect(usersRepository.save).not.toHaveBeenCalled();
+    });
+
+    /**
+     * 회귀 방지 — 2026-09-19 운영: 네이버 SMTP 535 로 메일이 안 갔는데도 "이메일을 확인해주세요"
+     * 응답 + 3분 쿨다운이 걸려, 사용자는 오지 않을 메일을 기다리고 재발송도 막혔다.
+     */
+    it('메일 발송 실패: 가입은 유지하되 emailSent=false, 쿨다운 미설정', async () => {
+      usersRepository.exists.mockResolvedValue(false);
+      usersRepository.create.mockReturnValue({ ...dto });
+      roleRepository.findOne.mockResolvedValue(mockBuyerRole);
+      usersRepository.save.mockResolvedValue({ id: 1, ...dto });
+      emailService.sendVerificationEmail.mockResolvedValue({ success: false, error: '535' });
+
+      const result = await service.register(dto, mockContext);
+
+      expect(usersRepository.save).toHaveBeenCalled();
+      expect(result.emailSent).toBe(false);
+      expect(result.message).toContain('발송에 실패');
+      expect(redisService.setEmailVerificationCooldown).not.toHaveBeenCalled();
+    });
+  });
+
+  // ─── resendVerificationEmail ─────────────────────────────
+  describe('resendVerificationEmail', () => {
+    const unverifiedUser = { ...mockUser, isEmailVerified: false };
+
+    beforeEach(() => {
+      usersRepository.findOne.mockResolvedValue(unverifiedUser);
+      redisService.getEmailVerificationCooldown.mockResolvedValue(0);
+    });
+
+    it('성공: 발송 후 쿨다운 설정', async () => {
+      const result = await service.resendVerificationEmail(unverifiedUser.email, '127.0.0.1');
+
+      expect(result.message).toContain('발송되었습니다');
+      expect(redisService.setEmailVerificationCooldown).toHaveBeenCalledWith(unverifiedUser.id);
+    });
+
+    it('메일 발송 실패: 503 + 쿨다운 미설정 ("발송되었습니다"로 덮지 않는다)', async () => {
+      emailService.sendVerificationEmail.mockResolvedValue({ success: false, error: '535' });
+
+      await expect(
+        service.resendVerificationEmail(unverifiedUser.email, '127.0.0.1'),
+      ).rejects.toThrow(ServiceUnavailableException);
+      expect(redisService.setEmailVerificationCooldown).not.toHaveBeenCalled();
+    });
+
+    it('쿨다운 중: BadRequestException, 메일 미발송', async () => {
+      redisService.getEmailVerificationCooldown.mockResolvedValue(120);
+
+      await expect(
+        service.resendVerificationEmail(unverifiedUser.email, '127.0.0.1'),
+      ).rejects.toThrow(BadRequestException);
+      expect(emailService.sendVerificationEmail).not.toHaveBeenCalled();
     });
   });
 

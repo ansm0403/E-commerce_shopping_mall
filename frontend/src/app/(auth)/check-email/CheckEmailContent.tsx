@@ -8,6 +8,8 @@ import { useResendVerificationMutation } from '@/hook/useAuthMutation'
 export default function CheckEmailContent() {
   const searchParams = useSearchParams()
   const email = searchParams.get('email')
+  // 가입은 됐지만 인증 메일 발송이 실패한 경우(RegisterForm 이 sent=0 을 붙여 보냄)
+  const sendFailed = searchParams.get('sent') === '0'
   const resendMutation = useResendVerificationMutation()
   const [resendMessage, setResendMessage] = useState<string | null>(null)
 
@@ -18,8 +20,14 @@ export default function CheckEmailContent() {
     try {
       const response = await resendMutation.mutateAsync(email)
       setResendMessage(response.data.message)
-    } catch {
-      setResendMessage('재발송에 실패했습니다. 잠시 후 다시 시도해주세요.')
+    } catch (error) {
+      // 서버 메시지(쿨다운 남은 시간, 발송 실패 등)를 그대로 보여준다 — 고정 문구로 덮으면
+      // "3분 후 재발송 가능"과 "메일 서버 장애"를 사용자가 구분할 수 없다
+      const axiosErr = error as { response?: { data?: { message?: unknown } } }
+      const message = axiosErr?.response?.data?.message
+      setResendMessage(
+        typeof message === 'string' ? message : '재발송에 실패했습니다. 잠시 후 다시 시도해주세요.',
+      )
     }
   }
 
@@ -33,7 +41,13 @@ export default function CheckEmailContent() {
         <h1 className="text-xl font-bold">이메일을 확인해주세요</h1>
 
         <p className="text-sm text-gray-500 text-center leading-relaxed">
-          {email ? (
+          {sendFailed ? (
+            <>
+              회원가입은 완료되었지만 인증 메일 발송에 실패했습니다.
+              <br />
+              잠시 후 아래 <span className="font-medium text-gray-700">인증 메일 재발송</span>을 눌러주세요.
+            </>
+          ) : email ? (
             <>
               <span className="font-medium text-gray-700">{email}</span>
               으로 인증 메일을 보냈습니다.

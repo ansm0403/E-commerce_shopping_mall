@@ -15,4 +15,6 @@ export interface RegisterRequest {
  */
 export interface RegisterResponse {
   message: string;
+  /** 인증 메일 발송 성공 여부. false 면 가입은 됐지만 메일이 안 간 것 — 재발송 유도 */
+  emailSent: boolean;
 }
