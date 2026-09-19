@@ -1,5 +1,6 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { authStorage } from '../../../src/service/auth-storage';
+import { reportApiError } from './report-api-error';
 
 const baseConfig = {
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -24,6 +25,16 @@ publicClient.interceptors.request.use(
     return config;
   },
   (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// 공개 API 실패(네트워크·5xx)를 Sentry 로. refresh 요청도 이 클라이언트로 나가므로 여기서 함께 잡힌다.
+// 동작은 그대로 — 관측만 한 겹 덧대고 에러는 호출부(TanStack Query)로 그대로 넘긴다.
+publicClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    reportApiError(error, 'public');
     return Promise.reject(error);
   }
 );
@@ -136,6 +147,7 @@ authClient.interceptors.response.use(
 
     // Refresh API 엔드포인트는 interceptor 로직에서 제외
     if (originalRequest?.url?.includes(REFRESH_API_ENDPOINT)) {
+      reportApiError(error, 'auth'); // 401 은 리포터가 걸러낸다
       return Promise.reject(error);
     }
 
@@ -153,7 +165,7 @@ authClient.interceptors.response.use(
         if (typeof window !== 'undefined') {
           window.location.href = '/login';
         }
-        return Promise.reject(error);
+        return Promise.reject(error); // 401 만료는 정상 흐름 → 보내지 않는다
       }
 
       try {
@@ -178,6 +190,7 @@ authClient.interceptors.response.use(
       }
     }
 
+    reportApiError(error, 'auth'); // 5xx·네트워크 실패가 여기로 온다(4xx 는 리포터가 버린다)
     return Promise.reject(error);
   }
 );
