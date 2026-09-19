@@ -1,5 +1,8 @@
 # Dependencies
+# 루트만이 아니라 모든 하위 워크스페이스의 node_modules 제외
+# (`node_modules` 한 줄은 루트만 잡아서 ops-companion 등 3GB+ 가 빌드 컨텍스트로 전송됐다)
 node_modules
+**/node_modules
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -40,7 +43,10 @@ jspm_packages/
 .yarn-integrity
 
 # dotenv environment variables file
+# (루트 패턴은 루트만 잡는다 — backend/.env 등 하위 워크스페이스의 .env 도 builder 중간 레이어에 들어가지 않게 **/ 로도 제외)
 .env
+**/.env
+**/.env.*
 .env.local
 .env.development.local
 .env.test.local
@@ -93,3 +99,6 @@ docs/
 
 # Frontend (Vercel에서 배포, 백엔드 빌드에 불필요)
 frontend/
+
+# RN 운영 앱 (Expo 로 별도 실행, 백엔드 이미지에 불필요 — .env 까지 빌드 컨텍스트에 들어가던 것 차단)
+ops-companion/

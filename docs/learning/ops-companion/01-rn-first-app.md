@@ -3,7 +3,7 @@
 > 대상: **React Native 를 처음 접한다고 가정**. React(웹)와 백엔드 지식은 있다고 본다.
 > 원본 설계: [`docs/roadmap/ops-companion-design.md`](../../roadmap/ops-companion-design.md) §2·§4·§5.5·§5.6·§6·§7
 > 짝지어 읽을 코드: [ops-companion/](../../../ops-companion/) — 특히 [api.ts](../../../ops-companion/src/lib/api.ts) · [token-storage.ts](../../../ops-companion/src/lib/token-storage.ts) · [AuthContext.tsx](../../../ops-companion/src/contexts/AuthContext.tsx) · [_layout.tsx](../../../ops-companion/app/_layout.tsx)
-> 작성 시점: 2026-09-18 (커밋 `1b662a5`) · 실기기 확인 후 갱신: 2026-09-20 (커밋 `c610b77` 다음의 ops-companion Phase 0 마무리 커밋)
+> 작성 시점: 2026-09-18 (커밋 `1b662a5`) · 실기기 확인 후 갱신: 2026-09-20 (커밋 `f54ba5e`)
 
 ---
 
@@ -81,7 +81,7 @@ Sentry API 를 호출하려면 **인증 토큰**이 필요하다. 그 토큰을 
 
 실기기에 올리기 전 코드를 다시 읽다가 **버그 두 개**를 찾아 고쳤다. 둘 다 기기 없이 한 검사(`tsc`·번들·doctor)로는 절대 안 잡히는 종류다. 6-5, 6-6 에 있다.
 
-> 갱신(2026-09-20, `c610b77` 다음의 ops-companion Phase 0 마무리 커밋): "실기기 미확인"을 확인 결과로 바꿨다.
+> 갱신(2026-09-20, `f54ba5e`): "실기기 미확인"을 확인 결과로 바꿨다.
 
 <br>
 
@@ -424,7 +424,7 @@ roles: (data.roles ?? []).map((role) => (typeof role === 'string' ? role : role.
 
 이 한 줄이 없으면 앱을 재시작한 뒤 프로필의 권한 칸이 `[object Object]` 로 보인다(6-6).
 
-> 갱신(2026-09-20, `c610b77` 다음의 ops-companion Phase 0 마무리 커밋): `fetchMe` 정규화를 추가했다.
+> 갱신(2026-09-20, `f54ba5e`): `fetchMe` 정규화를 추가했다.
 
 ## 3-5. _layout.tsx — 로그인 여부로 화면을 가른다
 
@@ -449,7 +449,7 @@ return (
 
 차이가 왜 중요한가. 이동 명령 방식이면 로그아웃했을 때 "이전 화면이 뒤에 남아 있다가 뒤로 가기로 다시 보이는" 문제가 생긴다. 렌더 분기 방식이면 **등록되지 않은 화면은 아예 존재하지 않으므로** 그런 상태가 만들어지지 않는다.
 
-> 갱신(2026-09-20, `c610b77` 다음의 ops-companion Phase 0 마무리 커밋): 조건부 `<Stack.Screen>` 을 `Stack.Protected` 로 바꿨다. 처음 코드로는 로그인해도 화면이 넘어가지 않았다.
+> 갱신(2026-09-20, `f54ba5e`): 조건부 `<Stack.Screen>` 을 `Stack.Protected` 로 바꿨다. 처음 코드로는 로그인해도 화면이 넘어가지 않았다.
 
 이 파일은 Provider 를 씌우는 자리이기도 하다. 바깥부터 순서대로다.
 
@@ -569,7 +569,7 @@ export function sendSentryTestError(): string | undefined {
 
 앱을 죽이지 않고 `captureException` 으로 **직접** 보낸다. 확인하려는 것은 "앱 → Sentry" 통로뿐이고, 운영 앱이 테스트 때문에 꺼질 이유는 없다. 개발 모드에서는 전송이 꺼져 있으므로 `yarn start --no-dev --minify` 로 켜서 누른다(7-1).
 
-> 갱신(2026-09-20, `c610b77` 다음의 ops-companion Phase 0 마무리 커밋): 테스트 전송 함수와 프로필 버튼을 추가했다.
+> 갱신(2026-09-20, `f54ba5e`): 테스트 전송 함수와 프로필 버튼을 추가했다.
 
 ## 3-9. metro.config.js — 모노레포라서 필요한 설정
 

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useAuth } from '../../../../contexts/AuthContext';
 
 export default function DemoModeBanner() {
@@ -23,7 +24,7 @@ export default function DemoModeBanner() {
         🎭 <strong>데모 모드</strong> — 포트폴리오 시연용 관리자 계정입니다.
         카테고리 수정/삭제, 주문 상태 변경, 셀러 승인 등 일부 기능은 제한됩니다.
       </span>
-      <a
+      <Link
         href="/"
         style={{
           color: '#92400e',
@@ -33,7 +34,7 @@ export default function DemoModeBanner() {
         }}
       >
         체험 종료
-      </a>
+      </Link>
     </div>
   );
 }

@@ -558,7 +558,7 @@ ops-companion/
 - **0-B. 앱**: Expo 프로젝트 생성, AuthContext + SecureStore 로그인/자동 refresh, axios 인터셉터,
   `GET /v1/ops/incidents` 백엔드 프록시, S1/S2/S6 화면, Sentry 기본 설치
   ✅ **코드 완료(2026-09-18)** — `ops-companion/`(워크스페이스 추가).
-  ✅ **실기기 DoD 통과(2026-09-19~20, `c610b77` 다음의 ops-companion Phase 0 마무리 커밋)** — 안드로이드 Expo Go. 아래 DoD 전 항목을 화면 + 운영 nginx 로그로 대조했다(자동 갱신 = 로그인 15분 22초 뒤 `/auth/me 401 → /auth/refresh 201 → 재시도 304` 같은 초). Sentry 는 앱 전용 프로젝트 `ops-companion` 을 만들고 `--no-dev` 모드에서 테스트 이벤트 도착 확인.
+  ✅ **실기기 DoD 통과(2026-09-19~20, `f54ba5e`)** — 안드로이드 Expo Go. 아래 DoD 전 항목을 화면 + 운영 nginx 로그로 대조했다(자동 갱신 = 로그인 15분 22초 뒤 `/auth/me 401 → /auth/refresh 201 → 재시도 304` 같은 초). Sentry 는 앱 전용 프로젝트 `ops-companion` 을 만들고 `--no-dev` 모드에서 테스트 이벤트 도착 확인.
   실기기 전 코드 재검토로 **버그 2건**을 잡았다: ① 조건부 `<Stack.Screen>` 은 Expo Router 에서 라우트를 빼지 못해 로그인 후에도 화면이 안 바뀜 → `Stack.Protected guard` ② `/auth/me` 의 roles 가 객체 배열(login 은 문자열 배열) → 재시작 후 권한 표시 깨짐 → 앱 `fetchMe` 에서 정규화. 경위는 학습 노트 1편 6-5~6-9.
   **설치 시점 실측으로 확정된 `[확인 필요]` 3건**: Expo SDK **57**(expo 57.0.23 / RN 0.86.3 / React 19.2.3) · 내비게이션 = **Expo Router 57**(파일 기반, 예상대로 기본값) · Sentry = **@sentry/react-native 7.11.x**(`expo install` 이 SDK 호환 버전으로 고정 — npm `latest` 8.27 을 쓰면 안 된다).
   구현 메모: Reanimated 4 는 `react-native-worklets` 를 peer 로 요구해 따로 설치해야 했다. Metro 는 모노레포용으로 `watchFolders`(루트) + `nodeModulesPaths`(앱·루트) 만 지정한다 — `disableHierarchicalLookup` 은 expo-doctor 가 권장값 위반으로 잡아 뺐다.
