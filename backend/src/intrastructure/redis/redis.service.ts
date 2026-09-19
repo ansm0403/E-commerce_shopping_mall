@@ -6,6 +6,12 @@ import { REDIS_CLIENT } from './redis.module';
 export class RedisService {
   constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis) {}
 
+  // ===== 연결 확인 (GET /v1/health readiness) =====
+  /** 연결이 끊겨 있으면 ioredis 는 에러 대신 재연결까지 대기한다 — 제한시간은 호출하는 쪽이 건다. */
+  async ping(): Promise<string> {
+    return this.redis.ping();
+  }
+
   // ===== 로그인 시도 횟수 관리 =====
   async incrementLoginAttempts(email: string): Promise<number> {
     const key = `login:attempts:${email}`;
