@@ -196,6 +196,9 @@ const nextConfig = {
 
   // 개발 환경에서 Hot Reload 개선
   ...(process.env.NODE_ENV === 'development' && {
+    // 파일 첫 줄 //@ts-check + strict 라 매개변수 타입이 없으면 TS7006.
+    // CI(Node 24)에서 jest 가 jest.config.ts 를 ts-node 로 읽을 때 next/jest 가 이 파일까지 타입검사한다.
+    /** @param {import('webpack').Configuration} config */
     webpackDevMiddleware: config => {
       config.watchOptions = {
         poll: 1000,
