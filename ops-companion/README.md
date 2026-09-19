@@ -2,7 +2,7 @@
 
 쇼핑몰 백엔드를 재사용하는 관리자용 온콜 앱. 설계는 [docs/roadmap/ops-companion-design.md](../docs/roadmap/ops-companion-design.md) 가 진실의 원천이고, 이 문서는 **실행 방법만** 적는다.
 
-현재 상태: **Phase 0-B 뼈대** — 로그인, 인시던트 목록, 프로필. 푸시·딥링크·AI 분석·평가는 Phase 1 이후.
+현재 상태: **Phase 0 완료(2026-09-20, 실기기 DoD 통과)** — 로그인, 인시던트 목록, 프로필. 푸시·딥링크·AI 분석·평가는 Phase 1 이후.
 
 ## 처음 한 번
 
@@ -28,6 +28,19 @@ yarn start          # = expo start. 터미널에 QR 코드가 뜬다
 데모 관리자 계정도 조회는 되지만, 쓰기 동작이 막혀 있어 Phase 1 이후에는 실계정을 쓰는 편이 낫다.
 
 > ⚠ 로그인은 IP 당 10회 / 5분 제한이 있다. 비밀번호를 반복해서 틀리면 5분간 잠긴다.
+
+> ⚠ 코드를 바꿨는데 화면이 그대로면, Expo Go 가 백그라운드의 옛 화면을 되살린 것이다. 최근 앱 목록에서 앱 카드와 Expo Go 카드를 둘 다 닫고 QR 을 다시 찍는다.
+
+## Sentry 연결 확인
+
+개발 모드(`yarn start`)에서는 Sentry 가 꺼져 있다(쿼터 보호). 확인할 때만 배포판처럼 띄운다.
+
+```bash
+# .env 에 EXPO_PUBLIC_SENTRY_DSN 을 넣은 뒤
+yarn start --no-dev --minify --clear
+```
+
+프로필 탭에서 "Sentry: 켜짐" 을 확인하고 **Sentry 테스트 에러 보내기** 를 누른다. Sentry 의 `ops-companion` 프로젝트 Issues 에 "Sentry 연결 테스트" 가 뜨면 된다.
 
 ## 로컬 백엔드에 붙이려면
 

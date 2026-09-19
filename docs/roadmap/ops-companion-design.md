@@ -557,7 +557,9 @@ ops-companion/
   ⚠ 운영 검증 중 **기존 버그**를 재현해 함께 고쳤다: access 토큰에 `jti` 가 없어 같은 사용자·같은 초 발급 토큰이 문자열까지 동일 → 웹 로그아웃이 블랙리스트에 넣은 토큰과 겹치면 **앱이 방금 받은 토큰이 401**. 앱은 로그인/갱신이 잦아 이 충돌을 웹보다 자주 만난다. 수정 = `accessPayload.jti = crypto.randomUUID()`.
 - **0-B. 앱**: Expo 프로젝트 생성, AuthContext + SecureStore 로그인/자동 refresh, axios 인터셉터,
   `GET /v1/ops/incidents` 백엔드 프록시, S1/S2/S6 화면, Sentry 기본 설치
-  ✅ **코드 완료(2026-09-18)** — `ops-companion/`(워크스페이스 추가). 실기기 확인은 사용자 몫으로 남음(DoD 게이트).
+  ✅ **코드 완료(2026-09-18)** — `ops-companion/`(워크스페이스 추가).
+  ✅ **실기기 DoD 통과(2026-09-19~20, `c610b77` 다음의 ops-companion Phase 0 마무리 커밋)** — 안드로이드 Expo Go. 아래 DoD 전 항목을 화면 + 운영 nginx 로그로 대조했다(자동 갱신 = 로그인 15분 22초 뒤 `/auth/me 401 → /auth/refresh 201 → 재시도 304` 같은 초). Sentry 는 앱 전용 프로젝트 `ops-companion` 을 만들고 `--no-dev` 모드에서 테스트 이벤트 도착 확인.
+  실기기 전 코드 재검토로 **버그 2건**을 잡았다: ① 조건부 `<Stack.Screen>` 은 Expo Router 에서 라우트를 빼지 못해 로그인 후에도 화면이 안 바뀜 → `Stack.Protected guard` ② `/auth/me` 의 roles 가 객체 배열(login 은 문자열 배열) → 재시작 후 권한 표시 깨짐 → 앱 `fetchMe` 에서 정규화. 경위는 학습 노트 1편 6-5~6-9.
   **설치 시점 실측으로 확정된 `[확인 필요]` 3건**: Expo SDK **57**(expo 57.0.23 / RN 0.86.3 / React 19.2.3) · 내비게이션 = **Expo Router 57**(파일 기반, 예상대로 기본값) · Sentry = **@sentry/react-native 7.11.x**(`expo install` 이 SDK 호환 버전으로 고정 — npm `latest` 8.27 을 쓰면 안 된다).
   구현 메모: Reanimated 4 는 `react-native-worklets` 를 peer 로 요구해 따로 설치해야 했다. Metro 는 모노레포용으로 `watchFolders`(루트) + `nodeModulesPaths`(앱·루트) 만 지정한다 — `disableHierarchicalLookup` 은 expo-doctor 가 권장값 위반으로 잡아 뺐다.
 - DoD: 실기기(안드로이드)에서 로그인 → 인시던트 목록 조회 → **accessToken 만료(15분) 후에도 자동 갱신으로 계속 사용** →
@@ -659,6 +661,8 @@ v2 에서 "RN 이 먼저 밟을 지뢰"로 지목했던 항목이다. 구 `.env`
 | **`/v1/health` 가 DB·Redis 를 안 본다** | postgres 만 죽는 장애를 앱이 인지할 수단이 없다. health 는 200 을 유지한다(실측) | health 에 readiness 추가([관측 지도 §7 ⑤](./ex-observability-map.md)) |
 
 즉 **앱을 먼저 만들면 앱이 볼 것이 백엔드 예외뿐이다.** 관측 지도 §7 의 ④·⑤ 를 Phase 0 착수 전에 처리하는 편이 낫다.
+
+> **진행(2026-09-20)**: 두 건 모두 코드 완료, Phase 1 착수 전 **jti 수정(`cedd6e1`)과 한 번의 배포로 묶기로** 했다. ④ 프론트 `reportApiError`(네트워크·5xx 만, 4xx·취소·비axios 에러 제외 — 단위 9건) ⑤ `GET /v1/health` 가 DB `SELECT 1` + Redis `PING`(각 2초 제한, 병렬)을 보고 하나라도 실패하면 **503** + `checks` 필드(단위 5건). 배포 상태는 관측 지도 §7 표를 본다.
 
 ### ⚠ 착수 전 처리 — Sentry API 토큰
 

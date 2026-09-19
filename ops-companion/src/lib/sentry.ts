@@ -28,3 +28,18 @@ export function setSentryUser(userId: number | null): void {
   if (!SENTRY_DSN) return;
   Sentry.setUser(userId === null ? null : { id: String(userId) });
 }
+
+/**
+ * Sentry 연결 확인용 테스트 이벤트(Phase 0 DoD "의도적 에러 1건이 대시보드에 보인다").
+ * 크래시를 일으키지 않고 captureException 으로 직접 보낸다 — 파이프라인(앱→Sentry)만 확인하면 되고,
+ * 운영 앱이 테스트 때문에 죽을 이유는 없다. 개발 모드(__DEV__)에서는 init 의 enabled:false 때문에
+ * 전송되지 않으므로 `yarn start --no-dev --minify` 로 실행해서 누른다.
+ */
+export function isSentryActive(): boolean {
+  return Boolean(SENTRY_DSN) && !__DEV__;
+}
+
+export function sendSentryTestError(): string | undefined {
+  if (!isSentryActive()) return undefined;
+  return Sentry.captureException(new Error(`[ops-companion] Sentry 연결 테스트 ${new Date().toISOString()}`));
+}

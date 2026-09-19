@@ -5,8 +5,14 @@
  * `_layout.tsx` 는 그 폴더의 공통 껍데기이고, 여기 있는 Provider 들이 모든 화면을 감싼다.
  *
  * 로그인 분기는 화면 이동 명령이 아니라 **렌더 분기**다(설계 §4.1):
- * user 가 없으면 (auth) 스택만, 있으면 (tabs) 만 Stack 에 등록한다. 등록되지 않은 경로는
+ * user 가 없으면 (auth) 만, 있으면 (tabs) 만 라우트로 남긴다. 남지 않은 경로는
  * 아예 존재하지 않으므로, 로그아웃 직후 이전 화면이 남는 상태가 생기지 않는다.
+ *
+ * ⚠ 이 분기는 반드시 `Stack.Protected guard` 로 해야 한다. Expo Router 는 app/ 폴더의 파일을
+ * 기준으로 라우트를 **전부** 등록하고, 자식 `<Stack.Screen>` 은 옵션·순서만 정한다.
+ * 그래서 `{user ? <Screen a/> : <Screen b/>}` 처럼 그리지 않는 것만으로는 라우트가 사라지지 않아
+ * 로그인에 성공해도 로그인 화면에 그대로 머문다(expo-router/build/useScreens.js useSortedScreens —
+ * guard=false 인 Screen 만 protectedScreens 로 걸러진다).
  */
 import { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
@@ -40,11 +46,12 @@ function RootNavigator() {
 
   return (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
-      {user ? (
+      <Stack.Protected guard={user !== null}>
         <Stack.Screen name="(tabs)" />
-      ) : (
+      </Stack.Protected>
+      <Stack.Protected guard={user === null}>
         <Stack.Screen name="(auth)/login" />
-      )}
+      </Stack.Protected>
     </Stack>
   );
 }

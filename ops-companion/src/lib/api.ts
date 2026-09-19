@@ -113,9 +113,25 @@ export async function login(email: string, password: string): Promise<LoginRespo
   return data;
 }
 
+/**
+ * GET /auth/me 는 login 응답과 달리 User 엔티티를 그대로 내려준다 — roles 가 `{ name: 'admin' }`
+ * 객체 배열이다(login 은 문자열 배열). 앱 안에서는 AuthUser 한 형태로 통일한다.
+ * 안 하면 앱 재시작(부팅 시 /auth/me) 후 프로필의 권한 칸이 "[object Object]" 로 보인다.
+ */
+type MeResponse = Omit<AuthUser, 'roles' | 'isDemo'> & {
+  roles?: Array<string | { name: string }>;
+  isDemo?: boolean;
+};
+
 export async function fetchMe(): Promise<AuthUser> {
-  const { data } = await api.get<AuthUser>('/auth/me');
-  return data;
+  const { data } = await api.get<MeResponse>('/auth/me');
+  return {
+    id: data.id,
+    email: data.email,
+    nickName: data.nickName,
+    isDemo: data.isDemo ?? false,
+    roles: (data.roles ?? []).map((role) => (typeof role === 'string' ? role : role.name)),
+  };
 }
 
 /**

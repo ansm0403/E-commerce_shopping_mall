@@ -241,8 +241,8 @@ RN 앱 계획이 여기 걸려 있어 **직접 호출해 확인했다.**
 | **①** | **UptimeRobot 메일 스팸 해제** | **5분.** 유일한 P1 통로가 스팸함에 있다. 탐지·발송은 이미 정상이라 배달만 고치면 된다 | 발신 주소를 안전한 보낸사람으로 등록. 모니터 설정의 알림 지연 옵션도 함께 확인 |
 | **②** | **Slack `#sentry-errors` 복구 — 백엔드 직접 발송** | **1시간.** P2 통로가 완전히 끊겨 있다. Sentry 플랜에 다시 묶이지 않는 방식으로 되살린다 | 백엔드 예외 필터·에러 지점에서 Incoming Webhook으로 POST. 채널당 초당 1건이므로 묶음·억제 장치 포함. 무엇을 어떤 기준으로 보낼지 우리가 정한다 |
 | **③** | **인증서 감시 복원** | §3 ④. 유일한 감시가 사실상 0겹. 11-13부터 30일이 골든타임 | (a) 사이드카 `--quiet` 제거 (b) cron으로 `openssl x509 -checkend` 돌려 D-20 이하면 알림 (c) [03-infra-nginx.md:236](./03-infra-nginx.md#L236)·런북 결정 15의 "LE 메일" 서술 정정 |
-| **④** | **프론트 API 실패를 Sentry로** | §3 ②·§9-3. 가장 큰 사각지대. **수정 코드가 이미 준비돼 있다** | [블로그 글 §7](../blog/sentry-axios-silent-failure.md)의 리포터를 적용하고 §11의 프로브로 재측정 |
-| **⑤** | **health에 DB·Redis readiness 추가** | §3 ⑤⑥⑦ 세 줄을 한 번에 UptimeRobot이 잡게 됨 | `SELECT 1` + Redis `PING`, 실패 시 503. compose healthcheck가 같은 URL이라 DB가 죽으면 backend도 unhealthy가 된다. 그게 맞는 표시다 |
+| **④** | **프론트 API 실패를 Sentry로** | §3 ②·§9-3. 가장 큰 사각지대. **수정 코드가 이미 준비돼 있다** | [블로그 글 §7](../blog/sentry-axios-silent-failure.md)의 리포터를 적용하고 §11의 프로브로 재측정. **코드 완료(2026-09-20)** — [report-api-error.ts](../../frontend/src/lib/axios/report-api-error.ts). 블로그 코드에 axios 에러가 아닌 것(로그아웃 중 요청 차단 `Error`) 제외를 더했다. 배포 후 §11 프로브 재측정 대기 |
+| **⑤** | **health에 DB·Redis readiness 추가** | §3 ⑤⑥⑦ 세 줄을 한 번에 UptimeRobot이 잡게 됨 | `SELECT 1` + Redis `PING`, 실패 시 503. compose healthcheck가 같은 URL이라 DB가 죽으면 backend도 unhealthy가 된다. 그게 맞는 표시다. **코드 완료(2026-09-20)** — [app.service.ts](../../backend/src/app/app.service.ts) `checkReadiness`. 각 2초 제한(ioredis 는 끊기면 에러 대신 매달린다), 503 은 예외가 아니라 상태 코드로만(Sentry 폭주 방지), `@SkipThrottle`. 배포 대기 |
 | **⑥** | **docker 로그 로테이션** | §3 ⑤. postgres가 루트 디스크 위라 로그 폭주 = DB 사망 | `/etc/docker/daemon.json`에 `max-size: 10m, max-file: 3` → docker 재시작. **실환경 조작이라 별도 승인 필요** |
 | **⑦** | **프론트 외부 감시** | §3 ⑧. UptimeRobot 무료 50개 중 1개만 사용 중. 0원 | 모니터 추가. 키워드 모니터로 페이지 문자열까지 보면 "빈 200"도 잡힌다 |
 | **⑧** | **AWS 크레딧 잔액·구 EC2 종료** | §5-2. 관측이 아니라 비용이지만 금액이 가장 크다 | Billing에서 크레딧 만료일 확인 + 구 계정 EC2 종료·EIP 릴리스 |

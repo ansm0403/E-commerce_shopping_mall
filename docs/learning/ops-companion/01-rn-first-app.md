@@ -3,7 +3,7 @@
 > 대상: **React Native 를 처음 접한다고 가정**. React(웹)와 백엔드 지식은 있다고 본다.
 > 원본 설계: [`docs/roadmap/ops-companion-design.md`](../../roadmap/ops-companion-design.md) §2·§4·§5.5·§5.6·§6·§7
 > 짝지어 읽을 코드: [ops-companion/](../../../ops-companion/) — 특히 [api.ts](../../../ops-companion/src/lib/api.ts) · [token-storage.ts](../../../ops-companion/src/lib/token-storage.ts) · [AuthContext.tsx](../../../ops-companion/src/contexts/AuthContext.tsx) · [_layout.tsx](../../../ops-companion/app/_layout.tsx)
-> 작성 시점: 2026-09-18 (커밋 `1b662a5`)
+> 작성 시점: 2026-09-18 (커밋 `1b662a5`) · 실기기 확인 후 갱신: 2026-09-20 (커밋 `c610b77` 다음의 ops-companion Phase 0 마무리 커밋)
 
 ---
 
@@ -66,7 +66,22 @@ Sentry API 를 호출하려면 **인증 토큰**이 필요하다. 그 토큰을 
 
 남은 한 건은 저장소 루트의 `package-lock.json` 경고인데, 2026-04 부터 있던 파일이라 이 앱과 무관하다.
 
-**아직 확인 못 한 것**: 실제 안드로이드 기기에서의 동작이다. 이건 사람이 직접 해야 하고, 7장에 절차가 있다.
+**실기기(안드로이드 + Expo Go)에서도 전부 통과했다(2026-09-19~20).** 사람이 화면으로 본 것에 더해, 운영 서버의 nginx 접근 로그로 요청이 실제로 오갔는지 대조했다.
+
+| 확인 항목 | 화면에서 본 것 | 서버 로그 근거 |
+|---|---|---|
+| 관리자 로그인 | 목록 화면으로 넘어감 | `POST /auth/login 201` |
+| 인시던트 목록 | "조용합니다"(24시간 0건) | `GET /ops/incidents 200` |
+| 당겨서 새로고침 | 새로고침 표시가 돎 | 당길 때마다 `GET /ops/incidents 304`(내용이 같다는 정상 응답) |
+| 15분 뒤 자동 갱신 | 로그아웃되지 않음 | 로그인 15분 22초 뒤 `GET /auth/me 401` → `POST /auth/refresh 201` → 재시도 `304`, 모두 같은 초 |
+| 재시작 후 로그인 유지 | 탭 화면으로 바로 시작 | 부팅 때 `GET /auth/me 200` |
+| 로그아웃 | 로그인 화면, 다시 열어도 로그인 화면 | `POST /auth/logout 201` |
+| Sentry 로 에러 전송 | 이벤트 ID 알림 | Sentry 대시보드에 테스트 이슈 도착 |
+| 웹 쇼핑몰 회귀 | 로그인·로그아웃 정상 | 브라우저 쪽 `refresh`·`logout`·`login` 201 |
+
+실기기에 올리기 전 코드를 다시 읽다가 **버그 두 개**를 찾아 고쳤다. 둘 다 기기 없이 한 검사(`tsc`·번들·doctor)로는 절대 안 잡히는 종류다. 6-5, 6-6 에 있다.
+
+> 갱신(2026-09-20, `c610b77` 다음의 ops-companion Phase 0 마무리 커밋): "실기기 미확인"을 확인 결과로 바꿨다.
 
 <br>
 
@@ -401,6 +416,16 @@ useEffect(() => {
 
 `cancelled` 플래그도 있는데, 확인이 끝나기 전에 화면이 사라지면 결과를 버리기 위한 것이다. 사라진 컴포넌트의 상태를 바꾸면 경고가 뜬다.
 
+부팅 때 부르는 `fetchMe` 는 서버 응답을 그대로 넘기지 않고 **모양을 맞춰서** 넘긴다. 로그인 응답의 `roles` 는 `['buyer', 'admin']` 인데, `/auth/me` 는 DB 엔티티를 그대로 돌려줘서 `[{ id: 1, name: 'buyer', ... }]` 이기 때문이다.
+
+```ts
+roles: (data.roles ?? []).map((role) => (typeof role === 'string' ? role : role.name)),
+```
+
+이 한 줄이 없으면 앱을 재시작한 뒤 프로필의 권한 칸이 `[object Object]` 로 보인다(6-6).
+
+> 갱신(2026-09-20, `c610b77` 다음의 ops-companion Phase 0 마무리 커밋): `fetchMe` 정규화를 추가했다.
+
 ## 3-5. _layout.tsx — 로그인 여부로 화면을 가른다
 
 [`app/_layout.tsx`](../../../ops-companion/app/_layout.tsx)
@@ -408,14 +433,23 @@ useEffect(() => {
 ```tsx
 return (
   <Stack screenOptions={{ headerShown: false }}>
-    {user ? <Stack.Screen name="(tabs)" /> : <Stack.Screen name="(auth)/login" />}
+    <Stack.Protected guard={user !== null}>
+      <Stack.Screen name="(tabs)" />
+    </Stack.Protected>
+    <Stack.Protected guard={user === null}>
+      <Stack.Screen name="(auth)/login" />
+    </Stack.Protected>
   </Stack>
 );
 ```
 
+**`Stack.Protected`** 는 `guard` 가 거짓인 동안 그 안의 화면을 **라우트 목록에서 실제로 빼는** Expo Router 의 장치다. 처음에는 `{user ? <A/> : <B/>}` 로 썼는데 이건 동작하지 않는다. 이유는 6-5 에 있다.
+
 **여기가 설계 문서가 강조한 부분이다.** 로그인 성공 후 `router.push('/incidents')` 같은 **이동 명령을 쓰지 않는다.** 대신 `user` 가 있으면 탭 화면만, 없으면 로그인 화면만 등록한다.
 
 차이가 왜 중요한가. 이동 명령 방식이면 로그아웃했을 때 "이전 화면이 뒤에 남아 있다가 뒤로 가기로 다시 보이는" 문제가 생긴다. 렌더 분기 방식이면 **등록되지 않은 화면은 아예 존재하지 않으므로** 그런 상태가 만들어지지 않는다.
+
+> 갱신(2026-09-20, `c610b77` 다음의 ops-companion Phase 0 마무리 커밋): 조건부 `<Stack.Screen>` 을 `Stack.Protected` 로 바꿨다. 처음 코드로는 로그인해도 화면이 넘어가지 않았다.
 
 이 파일은 Provider 를 씌우는 자리이기도 하다. 바깥부터 순서대로다.
 
@@ -494,6 +528,8 @@ queryClient.clear();
 
 이게 없으면 다음 사람이 로그인했을 때 **이전 사용자가 보던 목록이 잠깐 보인다.** TanStack Query 가 캐시를 들고 있기 때문이다.
 
+프로필 화면에는 Sentry 켜짐/꺼짐 표시와 **"Sentry 테스트 에러 보내기"** 버튼도 있다. 3-8 에서 설명한다.
+
 ## 3-8. sentry.ts — 앱 자신의 에러 수집
 
 [`src/lib/sentry.ts`](../../../ops-companion/src/lib/sentry.ts)
@@ -519,6 +555,21 @@ export function initSentry(): void {
 **키가 없으면 그냥 넘어간다.** 이건 이 저장소의 일관된 관례다. 백엔드의 Sentry, AI 클라이언트, 이메일 모듈이 전부 같은 방식이라, 키 없이도 개발할 수 있다.
 
 `enabled: !__DEV__` 는 개발 중 에러를 보내지 않겠다는 뜻이다. **무료 플랜의 월 5,000건 한도를 조직 전체가 나눠 쓰기 때문이다.** 개발하면서 나는 에러까지 올리면 쇼핑몰 쪽 몫까지 잡아먹는다.
+
+**DSN** 은 "에러를 이 프로젝트로 보내라"는 주소다. 보내기 전용 공개값이라 앱 번들에 들어가도 된다. 이 키로는 Sentry 데이터를 읽을 수 없다. 백엔드에만 두는 `SENTRY_AUTH_TOKEN`(읽기용 비밀값)과 헷갈리지 말자.
+
+설정이 틀려도 앱은 조용히 잘 돈다. 그래서 **일부러 한 건 보내 보는 것**으로만 연결을 확인할 수 있다. 그 용도의 함수가 있다.
+
+```ts
+export function sendSentryTestError(): string | undefined {
+  if (!isSentryActive()) return undefined;
+  return Sentry.captureException(new Error(`[ops-companion] Sentry 연결 테스트 ${new Date().toISOString()}`));
+}
+```
+
+앱을 죽이지 않고 `captureException` 으로 **직접** 보낸다. 확인하려는 것은 "앱 → Sentry" 통로뿐이고, 운영 앱이 테스트 때문에 꺼질 이유는 없다. 개발 모드에서는 전송이 꺼져 있으므로 `yarn start --no-dev --minify` 로 켜서 누른다(7-1).
+
+> 갱신(2026-09-20, `c610b77` 다음의 ops-companion Phase 0 마무리 커밋): 테스트 전송 함수와 프로필 버튼을 추가했다.
 
 ## 3-9. metro.config.js — 모노레포라서 필요한 설정
 
@@ -659,7 +710,7 @@ sequenceDiagram
 
 <br>
 
-# 6장. 실제로 밟은 함정 네 개
+# 6장. 실제로 밟은 함정
 
 문서에 없던, 만들면서 걸린 것들이다.
 
@@ -697,6 +748,50 @@ Metro 설정에 중복 패키지를 막는 옵션(`disableHierarchicalLookup`)�
 
 **교훈**: 새 폴더를 만들면 의도한 파일이 실제로 커밋됐는지 `git status` 로 확인한다.
 
+> 아래 6-5~6-9 는 실기기 확인 단계(2026-09-19~20)에서 추가됐다.
+
+## 6-5. 조건부 `<Stack.Screen>` 으로는 화면이 안 바뀐다
+
+처음 코드는 `{user ? <Stack.Screen name="(tabs)"/> : <Stack.Screen name="(auth)/login"/>}` 였다. 웹 React 감각으로는 "안 그린 화면은 없는 것"이라 맞아 보인다.
+
+**Expo Router 는 그렇게 동작하지 않는다.** 라우트 목록은 `app/` 폴더의 **파일**로 이미 전부 정해져 있다. `<Stack.Screen>` 은 그 목록에 옵션과 순서를 붙이는 설명서일 뿐이다. 설명서에서 빼도 파일은 여전히 라우트로 남는다. 그래서 로그인에 성공해도 로그인 화면에 그대로 머문다.
+
+라우트를 실제로 빼는 방법은 `Stack.Protected guard` 다. 설치된 라이브러리의 소스(`expo-router/build/useScreens.js` 의 `useSortedScreens`)를 열어 보면, `guard` 가 거짓인 화면만 따로 걸러내는 코드가 있다.
+
+**교훈**: 파일 기반 라우터에서는 "화면이 있는가"를 파일이 정한다. 코드로 조건을 걸려면 라우터가 제공하는 장치를 써야 한다.
+
+## 6-6. 같은 "사용자" 인데 엔드포인트마다 모양이 다르다
+
+로그인 응답의 `user.roles` 는 문자열 배열이고, `GET /auth/me` 의 `roles` 는 객체 배열이다. 백엔드의 `getMe` 가 DB 엔티티를 그대로 돌려주기 때문이다.
+
+앱을 처음 켤 때는 로그인 응답을 쓰니 멀쩡하다. **재시작하면** 부팅이 `/auth/me` 를 쓰므로 그때부터 권한 칸이 `[object Object]` 가 된다. 한 번 로그인해서 보는 테스트로는 안 드러나는 버그다.
+
+타입스크립트도 못 잡는다. `api.get<AuthUser>(...)` 의 제네릭은 "이렇게 생겼을 것"이라는 **약속**일 뿐, 실제 응답을 검사하지 않는다. 그래서 `fetchMe` 에서 응답 모양을 직접 맞춘다(3-4).
+
+## 6-7. QR 을 다시 찍어도 옛 코드가 보인다
+
+Metro 를 옵션만 바꿔 다시 띄우고 QR 을 찍었는데, 새로 넣은 버튼이 안 보였다. PC 쪽 번들에는 새 코드가 분명히 들어 있었다.
+
+원인은 Expo Go 다. **여는 주소가 이미 열려 있는 앱과 같으면 새로 불러오지 않고, 백그라운드의 화면을 앞으로 가져온다.** PC 의 IP 와 포트가 그대로라 QR 주소도 이전과 똑같았다. 안드로이드는 Expo Go 로 연 앱을 최근 앱 목록에 **별도 카드**로 띄워서 더 헷갈린다.
+
+**해결**: 최근 앱 목록에서 앱 카드와 Expo Go 카드를 둘 다 밀어서 닫고 QR 을 다시 찍는다.
+
+토큰은 이때도 살아남는다. 토큰은 JS 번들이 아니라 **기기의 SecureStore** 에 있기 때문이다. 웹 페이지를 새로 배포해도 브라우저 쿠키가 남는 것과 같다. 진짜 "빌드"(설치 파일을 만드는 것)는 Phase 2 의 EAS 빌드에서 처음 한다.
+
+## 6-8. 개발 모드에서는 Sentry 를 시험할 수 없다
+
+3-8 의 `enabled: !__DEV__` 때문에 `yarn start` 로 띄운 앱은 에러를 보내지 않는다. 의도한 동작이지만, "연결이 되는지" 시험할 때는 걸림돌이다.
+
+`yarn start --no-dev --minify` 로 띄우면 `__DEV__` 가 `false` 가 되어 배포판처럼 동작한다. 설치 파일을 따로 만들지 않아도 Expo Go 안에서 Sentry 전송을 확인할 수 있다. `.env` 값은 번들을 만들 때 박히므로, DSN 을 바꿨다면 `--clear` 로 캐시도 지운다.
+
+## 6-9. `expo install --fix` 뒤에는 중복을 확인한다
+
+`expo-doctor` 가 패치 버전 세 개가 SDK 권장값보다 낮다고 잡아서 `npx expo install --fix` 로 올렸다. 그랬더니 이번에는 **같은 패키지가 두 벌** 깔렸다는 경고가 떴다. `expo-linking` 이 옛 `expo-constants` 를 자기 폴더 안에 따로 들고 있었던 것이다.
+
+네이티브 모듈은 앱 하나에 한 벌만 들어갈 수 있어서, 실제 빌드(Phase 2)에서 문제가 된다. 저장소 루트에서 `yarn dedupe expo-constants` 로 합쳤다.
+
+**교훈**: 버전을 올린 뒤에는 `expo-doctor` 를 한 번 더 돌린다. 한 경고를 고치면 다른 경고가 생길 수 있다.
+
 <br>
 
 ---
@@ -715,16 +810,30 @@ yarn start               # QR 코드가 뜬다
 
 안드로이드 기기에 Play 스토어에서 **Expo Go** 를 설치하고 QR 을 찍는다. PC 와 기기가 **같은 Wi-Fi** 에 있어야 한다. 안 붙으면 `yarn start --tunnel` 을 쓴다.
 
+Sentry 전송을 시험할 때만 이렇게 띄운다(6-8). `.env` 에 `EXPO_PUBLIC_SENTRY_DSN` 이 있어야 한다.
+
+```bash
+yarn start --no-dev --minify --clear
+```
+
+프로필 탭에서 "Sentry: 켜짐" 을 확인하고 **Sentry 테스트 에러 보내기** 를 누른다. Sentry 의 Issues 에서 프로젝트를 `ops-companion` 으로 걸러 "Sentry 연결 테스트" 를 찾는다.
+
 ## 7-2. 확인 항목 (Phase 0 완료 기준)
 
 설계 문서가 정한 게이트다. 이걸 통과해야 다음 단계로 간다.
 
-- [ ] 관리자 계정으로 로그인된다
-- [ ] 인시던트 목록이 보인다
-- [ ] 당겨서 새로고침이 된다
-- [ ] **15분이 지나도 계속 쓸 수 있다** (자동 갱신 확인 — 앱을 열어둔 채 20분 뒤 새로고침)
-- [ ] 앱을 완전히 종료했다 다시 열어도 로그인 상태다
-- [ ] 로그아웃하면 로그인 화면으로 돌아가고, 다시 열어도 로그인 화면이다
+- [x] 관리자 계정으로 로그인된다
+- [x] 인시던트 목록이 보인다
+- [x] 당겨서 새로고침이 된다
+- [x] **15분이 지나도 계속 쓸 수 있다** (자동 갱신 확인 — 로그인 후 15분 넘게 지나서 아무 요청이나 한 번 보낸다. 앱을 앞에 켜두든 뒤로 보내든 상관없다. 타이머는 앱이 아니라 토큰에 붙어 있다)
+- [x] 앱을 완전히 종료했다 다시 열어도 로그인 상태다
+- [x] 로그아웃하면 로그인 화면으로 돌아가고, 다시 열어도 로그인 화면이다
+- [x] 테스트 에러 한 건이 Sentry 대시보드에 보인다
+- [x] 웹 쇼핑몰의 로그인·로그아웃이 그대로 동작한다
+
+2026-09-19~20 에 전 항목 통과(근거는 0-4).
+
+**화면만으로 판단하기 어려우면 서버 로그를 본다.** 목록이 비어 있으면 새로고침이 진짜 요청을 보냈는지 화면으로는 알 수 없다. 운영 서버의 nginx 로그에서 `okhttp`(안드로이드 앱의 요청 표시)로 거르면 요청이 시간순으로 보인다.
 
 **로그인은 IP 당 10회/5분 제한이 있다.** 비밀번호를 반복해서 틀리지 않도록 주의한다.
 
@@ -738,6 +847,8 @@ yarn start               # QR 코드가 뜬다
 | 목록이 403 | 그 계정에 관리자 권한이 없다 |
 | 목록이 503 | 백엔드에 Sentry 키가 설정되지 않았다 |
 | 목록이 502 | 백엔드는 떴는데 Sentry 조회에 실패했다 |
+| 코드를 바꿨는데 화면이 그대로 | Expo Go 가 옛 화면을 되살린 것. 최근 앱에서 앱·Expo Go 카드를 닫고 QR 을 다시 찍는다(6-7) |
+| Sentry: 꺼짐 | DSN 이 비었거나 개발 모드다. `--no-dev` 로 띄운다(6-8) |
 
 <br>
 

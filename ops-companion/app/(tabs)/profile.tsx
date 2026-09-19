@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { API_BASE_URL, APP_VERSION } from '../../src/lib/config';
+import { isSentryActive, sendSentryTestError } from '../../src/lib/sentry';
 import { colors, spacing } from '../../src/theme';
 
 function Field({ label, value }: { label: string; value: string }) {
@@ -28,6 +29,17 @@ export default function ProfileScreen() {
   const { user, signOut } = useAuth();
   const queryClient = useQueryClient();
   const [isSigningOut, setIsSigningOut] = useState(false);
+
+  function handleSentryTest() {
+    const eventId = sendSentryTestError();
+    Alert.alert(
+      eventId ? '전송했습니다' : '전송하지 않았습니다',
+      eventId
+        ? `Sentry 이슈 목록에서 "Sentry 연결 테스트" 를 찾으세요.
+이벤트 ID: ${eventId}`
+        : 'DSN 이 비어 있거나 개발 모드입니다. .env 에 DSN 을 넣고 yarn start --no-dev --minify 로 실행하세요.',
+    );
+  }
 
   async function handleSignOut() {
     setIsSigningOut(true);
@@ -53,7 +65,12 @@ export default function ProfileScreen() {
       <View style={styles.card}>
         <Field label="앱 버전" value={APP_VERSION} />
         <Field label="서버" value={API_BASE_URL} />
+        <Field label="Sentry" value={isSentryActive() ? '켜짐' : '꺼짐 (DSN 없음 또는 개발 모드)'} />
       </View>
+
+      <Pressable style={styles.secondaryButton} onPress={handleSentryTest}>
+        <Text style={styles.secondaryText}>Sentry 테스트 에러 보내기</Text>
+      </Pressable>
 
       <Pressable style={styles.signOutButton} onPress={handleSignOut} disabled={isSigningOut}>
         {isSigningOut ? <ActivityIndicator color={colors.error} /> : <Text style={styles.signOutText}>로그아웃</Text>}
@@ -75,6 +92,14 @@ const styles = StyleSheet.create({
   field: { gap: spacing.xs },
   fieldLabel: { color: colors.textMuted, fontSize: 12 },
   fieldValue: { color: colors.text, fontSize: 15 },
+  secondaryButton: {
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+  },
+  secondaryText: { color: colors.textMuted, fontSize: 14 },
   signOutButton: {
     borderColor: colors.error,
     borderWidth: 1,
