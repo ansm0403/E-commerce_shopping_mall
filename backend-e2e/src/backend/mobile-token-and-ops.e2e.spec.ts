@@ -146,4 +146,41 @@ describe('모바일 토큰 전략 + ops 인시던트 조회 (HTTP e2e)', () => {
       expect(second.data).toEqual(first.data);
     });
   });
+
+  describe('C. GET /v1/ops/incidents/:id (Phase 1 — 푸시 딥링크의 도착지)', () => {
+    it('토큰 없음 → 401, buyer → 403', async () => {
+      expect((await axios.get('/ops/incidents/1')).status).toBe(401);
+      expect((await axios.get('/ops/incidents/1', auth(buyerToken))).status).toBe(403);
+    });
+
+    it('admin → 상세 축약형(민감 entry 없음) / 숫자가 아닌 id·없는 id 는 404 / 키 미설정 서버면 503', async () => {
+      const list = await axios.get('/ops/incidents', auth(adminMobile.accessToken));
+      if (list.status === 503) {
+        expect((await axios.get('/ops/incidents/1', auth(adminMobile.accessToken))).status).toBe(503);
+        return;
+      }
+
+      expect((await axios.get('/ops/incidents/not-a-number', auth(adminMobile.accessToken))).status).toBe(404);
+      expect((await axios.get('/ops/incidents/999999999999', auth(adminMobile.accessToken))).status).toBe(404);
+
+      // 최근 24h 에 이슈가 없는 조용한 날에는 상세를 확인할 대상이 없다 — 위 404 까지만 단언한다
+      if (list.data.length === 0) return;
+
+      const id = list.data[0].id;
+      const res = await axios.get(`/ops/incidents/${id}`, auth(adminMobile.accessToken));
+      expect(res.status).toBe(200);
+      expect(Object.keys(res.data).sort()).toEqual(
+        ['breadcrumbs', 'count', 'culprit', 'exception', 'firstSeen', 'id', 'lastSeen', 'level', 'project', 'status', 'title'],
+      );
+      expect(res.data.id).toBe(id);
+      expect(Array.isArray(res.data.breadcrumbs)).toBe(true);
+      expect(res.data.breadcrumbs.length).toBeLessThanOrEqual(30);
+      if (res.data.exception) {
+        expect(res.data.exception.frames.length).toBeLessThanOrEqual(30);
+        for (const frame of res.data.exception.frames) {
+          expect(Object.keys(frame).sort()).toEqual(['colNo', 'filename', 'function', 'inApp', 'lineNo']);
+        }
+      }
+    });
+  });
 });

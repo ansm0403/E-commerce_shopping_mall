@@ -20,9 +20,12 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen
-        name="incidents/index"
+        // 폴더 이름 = incidents/_layout.tsx 의 스택. 헤더는 그 스택이 그리므로(상세의 뒤로 가기 버튼)
+        // 탭 헤더는 끈다 — 안 끄면 헤더가 두 줄로 겹친다.
+        name="incidents"
         options={{
           title: '인시던트',
+          headerShown: false,
           tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>⚠</Text>,
         }}
       />
