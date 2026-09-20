@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/nextjs';
 import { AxiosError, AxiosHeaders, type InternalAxiosRequestConfig } from 'axios';
-import { reportApiError } from './report-api-error';
+import { reportApiError, resetApiErrorDedupe } from './report-api-error';
 
 jest.mock('@sentry/nextjs', () => ({ captureException: jest.fn() }));
 const capture = Sentry.captureException as jest.Mock;
@@ -22,7 +22,10 @@ function axiosError(opts: { status?: number; code?: string; url?: string }): Axi
 }
 
 describe('reportApiError', () => {
-  beforeEach(() => capture.mockClear());
+  beforeEach(() => {
+    capture.mockClear();
+    resetApiErrorDedupe();
+  });
 
   it('응답이 없는 네트워크 실패는 보낸다 — 백엔드가 죽은 상황', () => {
     reportApiError(axiosError({ code: 'ERR_NETWORK' }), 'public');
@@ -54,5 +57,60 @@ describe('reportApiError', () => {
   it('axios 에러가 아니면 보내지 않는다 — 로그아웃 중 요청 차단 Error 등', () => {
     reportApiError(new Error('Logging out...'), 'auth');
     expect(capture).not.toHaveBeenCalled();
+  });
+
+  describe('중복 억제 — 월 5,000건 쿼터 방어(2026-09-20 실측: 다운 1회 재현 = 16건)', () => {
+    afterEach(() => jest.useRealTimers());
+
+    it('같은 실패의 연타는 60초에 1건만 보낸다', () => {
+      jest.useFakeTimers().setSystemTime(new Date('2026-09-20T12:00:00Z'));
+
+      for (let i = 0; i < 8; i += 1) {
+        reportApiError(axiosError({ code: 'ERR_NETWORK', url: '/products?page=1' }), 'public');
+      }
+      expect(capture).toHaveBeenCalledTimes(1);
+
+      jest.advanceTimersByTime(59_000);
+      reportApiError(axiosError({ code: 'ERR_NETWORK', url: '/products?page=1' }), 'public');
+      expect(capture).toHaveBeenCalledTimes(1);
+
+      // 창이 지나면 다시 보낸다 — 장애가 계속되고 있다는 사실 자체는 알려야 한다
+      jest.advanceTimersByTime(2_000);
+      reportApiError(axiosError({ code: 'ERR_NETWORK', url: '/products?page=1' }), 'public');
+      expect(capture).toHaveBeenCalledTimes(2);
+    });
+
+    it('다른 엔드포인트·상태는 각각 1건씩 나간다 — 첫 화면 16건이 2건으로 줄어든다', () => {
+      jest.useFakeTimers().setSystemTime(new Date('2026-09-20T12:00:00Z'));
+
+      // 백엔드 다운 재현과 같은 패턴: 두 엔드포인트가 재시도까지 하며 반복 실패
+      for (let i = 0; i < 8; i += 1) {
+        reportApiError(axiosError({ code: 'ERR_NETWORK', url: '/products?page=1&take=8' }), 'public');
+        reportApiError(axiosError({ code: 'ERR_NETWORK', url: '/categories' }), 'public');
+      }
+
+      expect(capture).toHaveBeenCalledTimes(2);
+      expect(capture.mock.calls.map((c) => c[1].fingerprint[3])).toEqual(['/products', '/categories']);
+    });
+
+    it('새 이슈의 첫 이벤트는 절대 버리지 않는다 — RN 앱 푸시가 이 이벤트에 걸려 있다', () => {
+      jest.useFakeTimers().setSystemTime(new Date('2026-09-20T12:00:00Z'));
+
+      reportApiError(axiosError({ code: 'ERR_NETWORK', url: '/products' }), 'public');
+      capture.mockClear();
+
+      // 같은 창 안이지만 처음 보는 조합(경로·상태·클라이언트가 다름)이면 즉시 보낸다
+      reportApiError(axiosError({ status: 500, url: '/products' }), 'public');
+      reportApiError(axiosError({ code: 'ERR_NETWORK', url: '/orders' }), 'public');
+      reportApiError(axiosError({ code: 'ERR_NETWORK', url: '/products' }), 'auth');
+      expect(capture).toHaveBeenCalledTimes(3);
+    });
+
+    it('탭당 10건을 넘기면 더 보내지 않는다(장애 장기화 상한)', () => {
+      for (let i = 0; i < 15; i += 1) {
+        reportApiError(axiosError({ code: 'ERR_NETWORK', url: `/p${i}` }), 'public');
+      }
+      expect(capture).toHaveBeenCalledTimes(10);
+    });
   });
 });
