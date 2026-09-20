@@ -605,9 +605,18 @@ FCM V1 서비스 계정 키 등록이 따라온다(사용자가 콘솔에서 직
 폰 알림 수신(`🚨 e-commerse-backend` / `Error: listen EADDRINUSE …`) → **탭 → 인시던트 상세 진입**.
 `ops_push_log` 에 (incident 7736291868, user 1) 1건, 커서 04:14:00 → 04:14:53 전진 확인.
 
-**남은 DoD 1건 = cold start.** 개발 빌드는 앱이 죽었다 켜질 때 PC 의 Metro 에서 번들을 다시 받아야 하므로
-"앱이 꺼져 있어도" 장면은 번들이 내장된 **preview 빌드**로 찍는다(`eas build -p android --profile preview`).
-preview 는 `eas.json` 의 env 로 **운영 백엔드**를 가리키므로, 그 전에 백엔드 운영 배포(§10-6)가 필요하다.
+**DoD 전 항목 통과(2026-09-20).** 위에 더해 ① **앱 완전 종료 상태에서도** 알림 탭 → 상세 직행
+② **로그아웃 상태**에서 탭 → 로그인 화면 → 로그인 후 그 상세로 이동(pending deep link)
+③ 쿨다운 실측(후보 2건 → 발송 1통)까지 확인했다.
+데모 영상은 번들이 내장된 **preview 빌드**로 찍는 것이 정직하다 — 개발 빌드의 cold start 는
+PC 의 Metro 에 의존한다(`eas build -p android --profile preview`, 키스토어 재생성 탓에 기존 앱 삭제 후 설치).
+
+**운영 배포 완료(2026-09-20, main `6a609a9`)**: 이미지 2태그 → EC2 pull → 마이그레이션
+`OpsPushTables1789877464959` 1건 적용(운영 DB 에 표 3개 생성 확인) → `up -d` → `nginx -t && -s reload` →
+검증(health `version=6a609a9`, `/v1/ops/incidents/:id`·`POST /v1/ops/devices` 401=라우트 존재,
+`/products`·`/categories` 200). 운영 폴러는 첫 주기에 커서만 심었다(설계대로 발송 없음).
+⚠ 운영 DB 에는 기기 토큰이 없다 — 앱을 운영에 붙이고 `kirianir@naver.com` 으로 한 번 로그인해야 등록된다.
+⚠ 로컬·운영 백엔드를 동시에 켜 두면 같은 Sentry 를 각자 폴링해 알림이 두 번 올 수 있다(커서·push_log 가 DB 별).
 
 **개발 빌드 착수에서 실제로 걸린 것 4건**(학습 노트 2편 6-8~6-11):
 ① Expo Go 는 초기 경로를 빈 문자열로, 개발 빌드는 `/` 로 준다 → 루트 `app/index.tsx` 가 없어 Unmatched Route.

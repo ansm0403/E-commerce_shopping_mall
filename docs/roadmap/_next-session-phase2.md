@@ -26,19 +26,20 @@
 **브랜치**: `feat/ops-pager` = `f247aba` (원격에 푸시됨, PR 미생성). main 은 `6352975`.
 직전 세션에서 이 브랜치를 재사용하며 force-push 했다(옛 커밋 5개는 PR #31 squash 로 main 에 들어가 있다).
 
-**Phase 1 결과**: DoD 사실상 통과. 실기기(안드로이드 개발 빌드 + 로컬 백엔드)에서
-로그인 → 알림 권한 → 토큰 등록 → `푸시 발송: 이슈 1건 → 알림 1통` → **폰 수신 → 탭 → 인시던트 상세 진입** 확인.
+**Phase 1 은 DoD 전 항목 통과로 끝났다**(2026-09-20, 실기기 = 안드로이드 개발 빌드). 확인한 것:
+토큰 등록 → 폰 알림 수신 → 탭 → 상세 진입 / **앱 완전 종료 상태에서도 탭 → 상세 직행** /
+**로그아웃 상태에서 탭 → 로그인 화면 → 로그인 후 그 상세로 이동**(pending deep link) /
+같은 이슈 쿨다운(후보 2건 → 발송 1통).
 
-**Phase 1 에서 남은 2건 — Phase 2 의 앞머리에서 처리한다**
-1. **cold start 확인**(앱 완전 종료 후 알림 탭 → 상세 직행). 개발 빌드는 종료 후 재실행 때 PC 의
-   Metro 에서 번들을 다시 받으므로 이 장면을 정직하게 찍을 수 없다. **preview 빌드**가 필요하고,
-   preview 는 `eas.json` env 로 **운영 백엔드**를 가리키므로 **백엔드 운영 배포가 선행**이다.
-2. **미로그인 pending deep link** 확인(로그아웃 상태에서 알림 탭 → 로그인 → 그 상세로 이동).
-   코드는 `ops-companion/src/features/push/usePushRouting.ts` 에 있고 실기기 확인만 안 했다.
+**운영 배포도 완료됐다** — main `6a609a9`. 이미지 2태그 → EC2 pull → 마이그레이션
+`OpsPushTables1789877464959` 1건 적용(운영 DB 에 ops_device_tokens·ops_poll_state·ops_push_log 생성) →
+up -d → nginx reload → 검증(health version `6a609a9`, `/v1/ops/incidents/:id`·`POST /v1/ops/devices` 가
+401 = 라우트 존재, `/products`·`/categories` 200). 운영 폴러는 첫 주기에 커서만 심었다(발송 없음).
 
-**운영 배포가 아직 안 됐다** — Phase 1 백엔드(상세 API·기기 등록·폴러·마이그레이션 3표)는 **로컬에만** 적용돼 있다.
-운영 EC2 는 `f54ba5e` 이미지로 돌고 있어서 `/v1/ops/incidents/:id` 와 `/v1/ops/devices` 가 없다.
-배포에는 **마이그레이션 실행이 포함**된다(`OpsPushTables1789877464959`).
+**그래서 Phase 2 는 아래 "이번 범위" 부터 바로 시작하면 된다.** 남은 선택 과제 하나:
+DoD 데모 영상을 찍으려면 **preview 빌드**(`eas build -p android --profile preview`)가 편하다 —
+번들이 APK 에 내장돼 PC 없이 동작하고 런처 화면도 없다. ⚠ 키스토어가 재생성됐으므로 설치 전
+기존 앱을 삭제해야 한다.
 
 **인프라 상태**
 - 앱: EAS 프로젝트 `@ansmoon/ops-companion`, projectId `b8880be3-f41f-481e-86b1-fcbc8690a60f`.
@@ -46,9 +47,14 @@
   FCM V1 서비스 계정 키는 expo.dev 에 업로드 완료(푸시 발송 성공이 증거).
 - ⚠ 사용자가 expo.dev 의 Android identifier 를 한 번 삭제했다가 `eas credentials` 로 키스토어를 재생성했다.
   그래서 **다음에 만든 APK 는 기존 앱을 삭제한 뒤 설치해야 한다**(서명 불일치).
-- 앱 `.env` 의 `EXPO_PUBLIC_API_BASE_URL` 이 **로컬 백엔드(`http://172.30.1.85:4000/v1`)** 를 가리킨다.
-  운영 주소는 그 위에 주석으로 있다. 운영 확인 때 되돌려라.
-- 로컬 백엔드가 4000 에 떠 있을 수 있다(로그: 임시 폴더의 `backend.log`). Metro 도 8081 에 떠 있을 수 있다.
+- 앱 `.env` 의 `EXPO_PUBLIC_API_BASE_URL` 은 **운영(`https://api.ansmoon.dev/v1`)** 으로 되돌려 두었다.
+  로컬 백엔드로 붙일 때는 PC 의 LAN IP 로 바꾸고 `yarn start --clear` 로 다시 띄운다
+  (`EXPO_PUBLIC_*` 는 번들을 만들 때 박히는 값이다).
+- ⚠ **로컬 백엔드와 운영 백엔드를 동시에 켜 두지 마라.** 둘이 같은 Sentry 를 각자 폴링하고
+  커서·발송기록이 DB 별로 따로여서, 같은 기기 토큰이 양쪽에 등록되면 알림이 두 번 온다.
+- ⚠ 운영 DB 에는 **기기 토큰이 없다**. 앱을 운영에 붙이고 `kirianir@naver.com` 으로 한 번
+  로그인해야 `ops_device_tokens` 에 등록되고 그때부터 운영 폴러가 알림을 보낸다
+  (로컬에서 받은 토큰은 로컬 DB 에만 있다 — 두 DB 는 계정도 표도 별개다).
 - 로컬 DB 관리자 = `demo-admin@portfolio.local`(루트 `.env` 의 `DEMO_ADMIN_PASSWORD`).
   운영 DB 관리자 = `kirianir@naver.com`. **로컬과 운영은 별개 DB** — 운영 계정은 로컬에 없다.
 
@@ -88,14 +94,12 @@
 - 커밋 메시지는 `git commit -F <파일>` 로 넘겨라. Bash 도구에서 PowerShell here-string(`@'…'@`)을 쓰면
   메시지 앞에 `@` 가 붙는다(직전 세션에서 실제로 겪어 amend 했다).
 
-## 운영 배포 (이번 Phase 앞머리에 필요)
+## 운영 배포 절차 (Phase 1 배포는 끝났다 — Phase 2 산출물을 올릴 때 다시 쓴다)
 반드시 사용자 승인을 받고 진행하라. 절차는 설계 §10-6 / `03-infra-nginx-runbook.md` §10:
 로컬에서 이미지 2태그 빌드(`:latest` + `:<sha>`) → push → EC2 `pull` →
 **마이그레이션 실행**(`docker compose -f docker-compose.prod.yaml run --rm backend node backend/dist/migrate.js`
 — 기존 컨테이너 `exec` 가 아니다) → `up -d` → **`nginx -t && nginx -s reload`(빠뜨리면 502)** →
-`/v1/health` 의 `version` 단언. 배포 후 `GET /v1/ops/incidents/:id` 200 과
-`POST /v1/ops/devices` 201 을 실제로 확인하라.
-운영 `.env` 에 푸시 관련 env 4개(`OPS_PUSH_ENABLED`·`OPS_PUSH_PROJECTS`·`OPS_PUSH_COOLDOWN_HOURS`·
+`/v1/health` 의 `version` 단언. 운영 `.env` 에 푸시 관련 env 4개(`OPS_PUSH_ENABLED`·`OPS_PUSH_PROJECTS`·`OPS_PUSH_COOLDOWN_HOURS`·
 `EXPO_ACCESS_TOKEN`)는 없어도 기본값으로 동작한다. 넣으려면 백업 후 추가하라.
 ⚠ 운영 배포 직후 폴러가 첫 주기에 커서를 심고(발송 없음) 그 다음 주기부터 발송한다.
 운영 Sentry 에 error 이슈가 쌓여 있으면 커서가 심긴 이후 **새로 갱신된 것만** 울린다.

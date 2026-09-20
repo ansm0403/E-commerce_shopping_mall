@@ -7,7 +7,7 @@
  * 백엔드가 그 토큰을 무효화한다(안 그러면 7일간 살아 있다).
  */
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../src/contexts/AuthContext';
@@ -58,8 +58,11 @@ export default function ProfileScreen() {
     }
   }
 
+  // ScrollView 로 감싼다 — Phase 1 에서 푸시 카드가 늘면서 내용이 화면보다 길어졌고,
+  // 고정 레이아웃이라 아래쪽 로그아웃 버튼이 화면 밖으로 잘렸다(2026-09-20 실기기).
   return (
     <SafeAreaView style={styles.screen} edges={['bottom']}>
+      <ScrollView contentContainerStyle={styles.content}>
       <View style={styles.card}>
         <Field label="계정" value={user?.email ?? '-'} />
         <Field label="닉네임" value={user?.nickName ?? '-'} />
@@ -92,12 +95,14 @@ export default function ProfileScreen() {
       <Pressable style={styles.signOutButton} onPress={handleSignOut} disabled={isSigningOut}>
         {isSigningOut ? <ActivityIndicator color={colors.error} /> : <Text style={styles.signOutText}>로그아웃</Text>}
       </Pressable>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.background, padding: spacing.md, gap: spacing.md },
+  screen: { flex: 1, backgroundColor: colors.background },
+  content: { padding: spacing.md, gap: spacing.md },
   card: {
     backgroundColor: colors.surface,
     borderColor: colors.border,
