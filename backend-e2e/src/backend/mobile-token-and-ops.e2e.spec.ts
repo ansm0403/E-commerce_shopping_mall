@@ -146,4 +146,97 @@ describe('모바일 토큰 전략 + ops 인시던트 조회 (HTTP e2e)', () => {
       expect(second.data).toEqual(first.data);
     });
   });
+
+  describe('C. GET /v1/ops/incidents/:id (Phase 1 — 푸시 딥링크의 도착지)', () => {
+    it('토큰 없음 → 401, buyer → 403', async () => {
+      expect((await axios.get('/ops/incidents/1')).status).toBe(401);
+      expect((await axios.get('/ops/incidents/1', auth(buyerToken))).status).toBe(403);
+    });
+
+    it('admin → 상세 축약형(민감 entry 없음) / 숫자가 아닌 id·없는 id 는 404 / 키 미설정 서버면 503', async () => {
+      const list = await axios.get('/ops/incidents', auth(adminMobile.accessToken));
+      if (list.status === 503) {
+        expect((await axios.get('/ops/incidents/1', auth(adminMobile.accessToken))).status).toBe(503);
+        return;
+      }
+
+      expect((await axios.get('/ops/incidents/not-a-number', auth(adminMobile.accessToken))).status).toBe(404);
+      expect((await axios.get('/ops/incidents/999999999999', auth(adminMobile.accessToken))).status).toBe(404);
+
+      // 최근 24h 에 이슈가 없는 조용한 날에는 상세를 확인할 대상이 없다 — 위 404 까지만 단언한다
+      if (list.data.length === 0) return;
+
+      const id = list.data[0].id;
+      const res = await axios.get(`/ops/incidents/${id}`, auth(adminMobile.accessToken));
+      expect(res.status).toBe(200);
+      expect(Object.keys(res.data).sort()).toEqual(
+        ['breadcrumbs', 'count', 'culprit', 'exception', 'firstSeen', 'id', 'lastSeen', 'level', 'project', 'status', 'title'],
+      );
+      expect(res.data.id).toBe(id);
+      expect(Array.isArray(res.data.breadcrumbs)).toBe(true);
+      expect(res.data.breadcrumbs.length).toBeLessThanOrEqual(30);
+      if (res.data.exception) {
+        expect(res.data.exception.frames.length).toBeLessThanOrEqual(30);
+        for (const frame of res.data.exception.frames) {
+          expect(Object.keys(frame).sort()).toEqual(['colNo', 'filename', 'function', 'inApp', 'lineNo']);
+        }
+      }
+    });
+  });
+
+  describe('D. POST /v1/ops/devices (Phase 1 — 기기 push token 등록)', () => {
+    const token = 'ExponentPushToken[e2e-mobile-ops-device-0001]';
+
+    const tokenRows = (userId: number) =>
+      ds.query(
+        `SELECT expo_push_token, platform, disabled_at FROM ops_device_tokens WHERE user_id = $1`,
+        [userId],
+      );
+    const adminId = async () =>
+      (await ds.query(`SELECT id FROM users WHERE email = $1`, [emails.admin]))[0].id as number;
+
+    it('토큰 없음 → 401, buyer → 403', async () => {
+      expect((await axios.post('/ops/devices', { expoPushToken: token, platform: 'android' })).status).toBe(401);
+      expect(
+        (await axios.post('/ops/devices', { expoPushToken: token, platform: 'android' }, auth(buyerToken))).status,
+      ).toBe(403);
+    });
+
+    it.each([
+      ['형식이 아닌 토큰', { expoPushToken: 'not-a-token', platform: 'android' }],
+      ['빈 토큰', { expoPushToken: '', platform: 'android' }],
+      ['알 수 없는 platform', { expoPushToken: token, platform: 'windows' }],
+      ['platform 누락', { expoPushToken: token }],
+    ])('%s 은 400 — 잘못된 값이 표에 쌓이면 발송이 통째로 실패한다', async (_label, body) => {
+      const res = await axios.post('/ops/devices', body, auth(adminMobile.accessToken));
+      expect(res.status).toBe(400);
+    });
+
+    it('admin 등록 → 201, 같은 토큰 재등록은 행을 늘리지 않는다(upsert) + disabled 해제', async () => {
+      const userId = await adminId();
+
+      const first = await axios.post(
+        '/ops/devices',
+        { expoPushToken: token, platform: 'android' },
+        auth(adminMobile.accessToken),
+      );
+      expect(first.status).toBe(201);
+      expect(first.data).toEqual({ registered: true });
+      expect(await tokenRows(userId)).toHaveLength(1);
+
+      // Expo 가 DeviceNotRegistered 를 준 상태를 만들어 두고 재등록 → 다시 발송 대상이 되어야 한다
+      await ds.query(`UPDATE ops_device_tokens SET disabled_at = NOW() WHERE user_id = $1`, [userId]);
+
+      const again = await axios.post(
+        '/ops/devices',
+        { expoPushToken: token, platform: 'android' },
+        auth(adminMobile.accessToken),
+      );
+      expect(again.status).toBe(201);
+
+      const rows = await tokenRows(userId);
+      expect(rows).toHaveLength(1);
+      expect(rows[0].disabled_at).toBeNull();
+    });
+  });
 });

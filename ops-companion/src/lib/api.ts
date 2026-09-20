@@ -161,3 +161,44 @@ export async function fetchIncidents(): Promise<IncidentSummary[]> {
   const { data } = await api.get<IncidentSummary[]>('/ops/incidents');
   return data;
 }
+
+export interface IncidentStackFrame {
+  filename: string | null;
+  function: string | null;
+  lineNo: number | null;
+  colNo: number | null;
+  /** true = 우리 코드, false = 라이브러리/런타임 */
+  inApp: boolean;
+}
+
+export interface IncidentBreadcrumb {
+  timestamp: string | null;
+  category: string | null;
+  level: string | null;
+  message: string | null;
+}
+
+export interface IncidentDetail extends IncidentSummary {
+  firstSeen: string;
+  culprit: string | null;
+  project: string | null;
+  status: string;
+  /** 최근 호출이 앞에 오는 상위 30 프레임. 예외 없는 이벤트면 null */
+  exception: { type: string | null; value: string | null; frames: IncidentStackFrame[] } | null;
+  /** 시간순(오래된 것 → 최근), 최근 30개 */
+  breadcrumbs: IncidentBreadcrumb[];
+}
+
+/** GET /v1/ops/incidents/:id — 스택트레이스·breadcrumbs 축약형(설계 §4.3 S3). 없는 id 는 404. */
+export async function fetchIncident(id: string): Promise<IncidentDetail> {
+  const { data } = await api.get<IncidentDetail>(`/ops/incidents/${encodeURIComponent(id)}`);
+  return data;
+}
+
+/**
+ * POST /v1/ops/devices — 이 기기로 푸시를 받겠다고 백엔드에 알린다(설계 §5.1).
+ * 앱이 켜질 때마다 불러도 안전하다(백엔드가 upsert).
+ */
+export async function registerDevice(expoPushToken: string, platform: 'ios' | 'android'): Promise<void> {
+  await api.post('/ops/devices', { expoPushToken, platform });
+}

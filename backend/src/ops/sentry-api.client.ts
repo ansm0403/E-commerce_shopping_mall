@@ -14,6 +14,71 @@ export interface SentryIssue {
 }
 
 /**
+ * 목록 조회에서 함께 오는 필드(2026-09-20 실측). 푸시 판정에 쓴다:
+ * project.slug 로 어느 서비스의 장애인지 가리고, substatus(new/escalating/regressed/ongoing)는
+ * 참고용으로만 본다 — 우리 판정 기준은 "우리가 이 이슈를 푸시한 적이 있는가"(ops_push_log)다.
+ */
+export interface SentryIssueListItem extends SentryIssue {
+  project?: { slug?: string } | null;
+  firstSeen?: string;
+  substatus?: string | null;
+  status?: string;
+}
+
+/** 단건 조회(GET /issues/{id}/)에서 추가로 읽는 필드 */
+export interface SentryIssueDetail extends SentryIssue {
+  firstSeen: string;
+  culprit?: string | null;
+  status?: string;
+  project?: { slug?: string } | null;
+}
+
+export interface SentryStackFrame {
+  filename?: string | null;
+  function?: string | null;
+  lineNo?: number | null;
+  colNo?: number | null;
+  inApp?: boolean;
+}
+
+export interface SentryBreadcrumb {
+  timestamp?: string | null;
+  category?: string | null;
+  level?: string | null;
+  message?: string | null;
+  type?: string | null;
+  data?: Record<string, unknown> | null;
+}
+
+/**
+ * GET /issues/{id}/events/latest/ — entries 는 type 으로 갈리는 배열이다(2026-09-20 실측:
+ * exception · breadcrumbs · request · debugmeta). 앞의 둘만 읽는다.
+ */
+export interface SentryEvent {
+  entries?: Array<
+    | {
+        type: 'exception';
+        data?: {
+          values?: Array<{
+            type?: string | null;
+            value?: string | null;
+            stacktrace?: { frames?: SentryStackFrame[] | null } | null;
+          }> | null;
+        };
+      }
+    | { type: 'breadcrumbs'; data?: { values?: SentryBreadcrumb[] | null } }
+    | { type: string; data?: unknown }
+  >;
+}
+
+/** Sentry 가 2xx 가 아닌 응답을 줬을 때. status 로 404(없는 이슈)를 구분한다 */
+export class SentryApiError extends Error {
+  constructor(readonly status: number) {
+    super(`Sentry API responded ${status}`);
+  }
+}
+
+/**
  * Sentry Web API 클라이언트 (읽기 전용).
  *
  * 비활성(no-op) 관례: SENTRY_AUTH_TOKEN / SENTRY_ORG_SLUG 가 없으면 isEnabled()=false 이고
@@ -49,16 +114,47 @@ export class SentryApiClient {
 
   /**
    * GET /organizations/{org}/issues/?statsPeriod=24h
-   * 실패 시 상태코드만 로그에 남기고 throw — 본문(Sentry 오류 메시지)은 클라이언트로 내려보내지 않는다.
+   * sort=date 는 "마지막 발생(lastSeen) 최신순" — 폴링은 이 순서가 있어야 커서와 맞물린다.
    */
-  async listIssues(statsPeriod: string): Promise<SentryIssue[]> {
+  async listIssues(
+    statsPeriod: string,
+    opts: { query?: string; limit?: number; sort?: 'date' | 'new' | 'freq' } = {},
+  ): Promise<SentryIssueListItem[]> {
+    const params = new URLSearchParams({ statsPeriod });
+    if (opts.query !== undefined) params.set('query', opts.query);
+    if (opts.limit !== undefined) params.set('limit', String(opts.limit));
+    if (opts.sort !== undefined) params.set('sort', opts.sort);
+
+    const body = await this.get(`/issues/?${params.toString()}`);
+    if (!Array.isArray(body)) {
+      this.logger.error('Sentry issues API 응답이 배열이 아님');
+      throw new Error('Sentry API returned unexpected payload');
+    }
+    return body as SentryIssueListItem[];
+  }
+
+  /** GET /organizations/{org}/issues/{id}/ — 조직 범위 경로라 남의 조직 이슈 id 는 404 다 */
+  async getIssue(issueId: string): Promise<SentryIssueDetail> {
+    return (await this.get(`/issues/${encodeURIComponent(issueId)}/`)) as SentryIssueDetail;
+  }
+
+  /** GET /organizations/{org}/issues/{id}/events/latest/ — 스택트레이스·breadcrumbs 의 원천 */
+  async getLatestEvent(issueId: string): Promise<SentryEvent> {
+    return (await this.get(`/issues/${encodeURIComponent(issueId)}/events/latest/`)) as SentryEvent;
+  }
+
+  /**
+   * 조직 범위 GET 공통부. 실패 시 상태코드만 로그에 남기고 SentryApiError 를 던진다 —
+   * 본문(Sentry 오류 메시지)은 클라이언트로 내려보내지 않는다.
+   */
+  private async get(path: string): Promise<unknown> {
     if (!this.isEnabled()) {
       throw new Error('SentryApiClient is disabled');
     }
 
     const url = `${SentryApiClient.BASE_URL}/organizations/${encodeURIComponent(
       this.orgSlug as string,
-    )}/issues/?statsPeriod=${encodeURIComponent(statsPeriod)}`;
+    )}${path}`;
 
     const res = await fetch(url, {
       headers: { Authorization: `Bearer ${this.token}` },
@@ -66,15 +162,9 @@ export class SentryApiClient {
     });
 
     if (!res.ok) {
-      this.logger.error(`Sentry issues API 실패: HTTP ${res.status}`);
-      throw new Error(`Sentry API responded ${res.status}`);
+      this.logger.error(`Sentry API 실패: HTTP ${res.status} (${path.split('?')[0]})`);
+      throw new SentryApiError(res.status);
     }
-
-    const body = (await res.json()) as unknown;
-    if (!Array.isArray(body)) {
-      this.logger.error('Sentry issues API 응답이 배열이 아님');
-      throw new Error('Sentry API returned unexpected payload');
-    }
-    return body as SentryIssue[];
+    return (await res.json()) as unknown;
   }
 }

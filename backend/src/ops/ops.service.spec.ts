@@ -1,8 +1,10 @@
 import { Test } from '@nestjs/testing';
-import { BadGatewayException, ServiceUnavailableException } from '@nestjs/common';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { BadGatewayException, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { OpsService } from './ops.service';
-import { SentryApiClient, SentryIssue } from './sentry-api.client';
+import { SentryApiClient, SentryApiError, SentryEvent, SentryIssue, SentryIssueDetail } from './sentry-api.client';
 import { RedisService } from '../intrastructure/redis/redis.service';
+import { OpsDeviceTokenEntity } from './entity/ops-device-token.entity';
 
 /** Sentry 실응답(2026-09-16 실측)에서 필요한 필드만 딴 샘플 — count 가 문자열인 점에 주의 */
 const issue = (over: Partial<SentryIssue> = {}): SentryIssue => ({
@@ -16,18 +18,26 @@ const issue = (over: Partial<SentryIssue> = {}): SentryIssue => ({
 
 describe('OpsService', () => {
   let service: OpsService;
-  let sentry: { isEnabled: jest.Mock; listIssues: jest.Mock };
+  let sentry: { isEnabled: jest.Mock; listIssues: jest.Mock; getIssue: jest.Mock; getLatestEvent: jest.Mock };
   let redis: { getCache: jest.Mock; setCache: jest.Mock };
+  let deviceTokens: { upsert: jest.Mock };
 
   beforeEach(async () => {
-    sentry = { isEnabled: jest.fn().mockReturnValue(true), listIssues: jest.fn() };
+    sentry = {
+      isEnabled: jest.fn().mockReturnValue(true),
+      listIssues: jest.fn(),
+      getIssue: jest.fn(),
+      getLatestEvent: jest.fn(),
+    };
     redis = { getCache: jest.fn().mockResolvedValue(null), setCache: jest.fn() };
+    deviceTokens = { upsert: jest.fn() };
 
     const module = await Test.createTestingModule({
       providers: [
         OpsService,
         { provide: SentryApiClient, useValue: sentry },
         { provide: RedisService, useValue: redis },
+        { provide: getRepositoryToken(OpsDeviceTokenEntity), useValue: deviceTokens },
       ],
     }).compile();
     service = module.get(OpsService);
@@ -84,5 +94,151 @@ describe('OpsService', () => {
     [undefined, 'error'],
   ])('level 매핑 %s → %s', (from, to) => {
     expect(OpsService.toLevel(from as string | undefined)).toBe(to);
+  });
+
+  describe('getIncident (상세)', () => {
+    const issueDetail = (): SentryIssueDetail => ({
+      ...issue({ id: '7742806116', title: 'AxiosError: Network Error', count: '12' }),
+      firstSeen: '2026-09-19T19:11:08Z',
+      culprit: 'GET /products',
+      status: 'unresolved',
+      project: { slug: 'e-commerse-frontend' },
+    });
+
+    /** 2026-09-20 실측 event 의 모양 — request/user 같은 민감 entry 가 함께 온다 */
+    const event = (): SentryEvent =>
+      ({
+        user: { email: 'buyer@example.com', ip_address: '1.2.3.4' },
+        entries: [
+          {
+            type: 'exception',
+            data: {
+              values: [
+                {
+                  type: 'AxiosError',
+                  value: 'Network Error (user kim@example.com)',
+                  stacktrace: {
+                    frames: [
+                      { filename: 'node_modules/axios/lib/adapters/xhr.js', function: 'dispatch', lineNo: 10, colNo: 1, inApp: false, vars: { secret: 'x' } },
+                      { filename: 'app:///_next/static/chunks/5585.js', function: 'y.onerror', lineNo: 1, colNo: 55048, inApp: true },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          {
+            type: 'breadcrumbs',
+            data: {
+              values: [
+                { type: 'default', timestamp: '2026-09-19T19:11:16.022Z', level: 'info', category: 'console', message: '문의: 010-1234-5678' },
+                { type: 'http', timestamp: '2026-09-19T19:11:16.023Z', level: 'info', category: 'xhr', message: null, data: { method: 'GET', status_code: 0, url: '/api/categories?token=abc' } },
+              ],
+            },
+          },
+          { type: 'request', data: { headers: [['Cookie', 'refreshToken=...']] } },
+        ],
+      }) as unknown as SentryEvent;
+
+    it('issue + 최신 event 를 합쳐 축약한다 — 프레임은 최근 호출이 앞, PII 스크럽, request/user 는 버린다', async () => {
+      sentry.getIssue.mockResolvedValue(issueDetail());
+      sentry.getLatestEvent.mockResolvedValue(event());
+
+      const { item, cached } = await service.getIncident('7742806116');
+
+      expect(cached).toBe(false);
+      expect(item).toEqual({
+        id: '7742806116',
+        title: 'AxiosError: Network Error',
+        level: 'error',
+        count: 12,
+        lastSeen: '2026-09-15T23:26:03Z',
+        firstSeen: '2026-09-19T19:11:08Z',
+        culprit: 'GET /products',
+        project: 'e-commerse-frontend',
+        status: 'unresolved',
+        exception: {
+          type: 'AxiosError',
+          value: 'Network Error (user k***@***)',
+          frames: [
+            { filename: 'app:///_next/static/chunks/5585.js', function: 'y.onerror', lineNo: 1, colNo: 55048, inApp: true },
+            { filename: 'node_modules/axios/lib/adapters/xhr.js', function: 'dispatch', lineNo: 10, colNo: 1, inApp: false },
+          ],
+        },
+        breadcrumbs: [
+          { timestamp: '2026-09-19T19:11:16.022Z', category: 'console', level: 'info', message: '문의: ***' },
+          { timestamp: '2026-09-19T19:11:16.023Z', category: 'xhr', level: 'info', message: 'GET /api/categories → 0' },
+        ],
+      });
+      expect(JSON.stringify(item)).not.toMatch(/refreshToken|1\.2\.3\.4|secret|token=abc/);
+      expect(redis.setCache).toHaveBeenCalledWith('ops:incident:7742806116', item, 60);
+    });
+
+    it('프레임·breadcrumb 은 최근 30개로 자른다', async () => {
+      const frames = Array.from({ length: 50 }, (_, i) => ({ filename: `f${i}.js`, lineNo: i, inApp: true }));
+      const crumbs = Array.from({ length: 43 }, (_, i) => ({ message: `c${i}` }));
+      sentry.getIssue.mockResolvedValue(issueDetail());
+      sentry.getLatestEvent.mockResolvedValue({
+        entries: [
+          { type: 'exception', data: { values: [{ type: 'E', value: 'v', stacktrace: { frames } }] } },
+          { type: 'breadcrumbs', data: { values: crumbs } },
+        ],
+      } as unknown as SentryEvent);
+
+      const { item } = await service.getIncident('1');
+
+      expect(item.exception?.frames).toHaveLength(30);
+      expect(item.exception?.frames[0].filename).toBe('f49.js'); // 최근 호출이 맨 앞
+      expect(item.breadcrumbs).toHaveLength(30);
+      expect(item.breadcrumbs[29].message).toBe('c42'); // 시간순 유지, 최근 것이 끝
+    });
+
+    it('예외 없는 event(메시지 이벤트)는 exception=null, breadcrumbs=[]', async () => {
+      sentry.getIssue.mockResolvedValue(issueDetail());
+      sentry.getLatestEvent.mockResolvedValue({ entries: [] });
+      const { item } = await service.getIncident('1');
+      expect(item.exception).toBeNull();
+      expect(item.breadcrumbs).toEqual([]);
+    });
+
+    it('캐시 HIT 이면 Sentry 를 부르지 않는다', async () => {
+      const hit = { id: '1' };
+      redis.getCache.mockResolvedValue(hit);
+      await expect(service.getIncident('1')).resolves.toEqual({ item: hit, cached: true });
+      expect(sentry.getIssue).not.toHaveBeenCalled();
+    });
+
+    it.each(['abc', '1/../../projects', '', '123456789012345678901'])(
+      'id 형식 오류(%p)는 Sentry 를 부르지 않고 404 — URL 경로 조작 차단',
+      async (bad) => {
+        await expect(service.getIncident(bad)).rejects.toBeInstanceOf(NotFoundException);
+        expect(sentry.getIssue).not.toHaveBeenCalled();
+      },
+    );
+
+    it('Sentry 404 → 404, 그 밖의 실패 → 502, 미설정 → 503', async () => {
+      sentry.getLatestEvent.mockResolvedValue({ entries: [] });
+      sentry.getIssue.mockRejectedValue(new SentryApiError(404));
+      await expect(service.getIncident('1')).rejects.toBeInstanceOf(NotFoundException);
+
+      sentry.getIssue.mockRejectedValue(new SentryApiError(500));
+      await expect(service.getIncident('1')).rejects.toBeInstanceOf(BadGatewayException);
+
+      sentry.isEnabled.mockReturnValue(false);
+      await expect(service.getIncident('1')).rejects.toBeInstanceOf(ServiceUnavailableException);
+    });
+  });
+
+  describe('registerDevice', () => {
+    it('(userId, 토큰) 기준 upsert — 앱이 켤 때마다 불러도 행이 늘지 않고 disabled 가 풀린다', async () => {
+      await expect(
+        service.registerDevice(27, { expoPushToken: 'ExponentPushToken[phone-A]', platform: 'android' }),
+      ).resolves.toEqual({ registered: true });
+
+      expect(deviceTokens.upsert).toHaveBeenCalledWith(
+        { userId: 27, expoPushToken: 'ExponentPushToken[phone-A]', platform: 'android', disabledAt: null },
+        { conflictPaths: ['userId', 'expoPushToken'] },
+      );
+    });
   });
 });

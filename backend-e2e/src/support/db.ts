@@ -217,6 +217,9 @@ export async function cleanupE2eData(ds: DataSource, suite: string): Promise<voi
   const userIds = ids.map((r) => r.id);
   // 자식 → 부모 순서. audit_logs·refresh_tokens 는 FK 가 없더라도 남기면 노이즈라 함께 정리.
   await ds.query(`DELETE FROM sellers WHERE user_id = ANY($1)`, [userIds]);
+  // ops_push_log 는 FK 가 없어(Sentry 이슈 id 기준 기록) 사용자 삭제로 지워지지 않는다.
+  // ops_device_tokens 는 user_id FK 가 ON DELETE CASCADE 라 아래 users 삭제로 함께 사라진다.
+  await ds.query(`DELETE FROM ops_push_log WHERE user_id = ANY($1)`, [userIds]);
   await ds.query(`DELETE FROM refresh_tokens WHERE "userId" = ANY($1)`, [userIds]);
   await ds.query(`DELETE FROM audit_logs WHERE "userId" = ANY($1)`, [userIds]);
   await ds.query(`DELETE FROM user_roles WHERE user_id = ANY($1)`, [userIds]);

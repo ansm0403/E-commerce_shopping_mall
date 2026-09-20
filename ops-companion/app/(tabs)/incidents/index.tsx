@@ -12,22 +12,11 @@ import { useCallback } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AxiosError } from 'axios';
+import { useRouter } from 'expo-router';
 import { useIncidents } from '../../../src/features/incidents/queries';
 import type { IncidentSummary } from '../../../src/lib/api';
+import { timeAgo } from '../../../src/lib/format';
 import { colors, levelColor, spacing } from '../../../src/theme';
-
-/** "3분 전" 같은 상대 시각. 운영 화면에서는 절대 시각보다 이쪽이 빨리 읽힌다. */
-function timeAgo(iso: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  if (Number.isNaN(diffMs)) return iso;
-
-  const minutes = Math.floor(diffMs / 60_000);
-  if (minutes < 1) return '방금';
-  if (minutes < 60) return `${minutes}분 전`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}시간 전`;
-  return `${Math.floor(hours / 24)}일 전`;
-}
 
 function errorMessage(error: unknown): string {
   const status = (error as AxiosError)?.response?.status;
@@ -38,8 +27,15 @@ function errorMessage(error: unknown): string {
 }
 
 function IncidentRow({ item }: { item: IncidentSummary }) {
+  const router = useRouter();
+
+  // 경로는 파일 경로에서 그룹 괄호 `(tabs)` 를 뺀 것이다: app/(tabs)/incidents/[id].tsx → /incidents/123
+  // push = 스택 위에 상세를 한 장 쌓는다. 뒤로 가기는 그 한 장을 걷어내 목록으로 돌아온다.
   return (
-    <View style={styles.row}>
+    <Pressable
+      style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
+      onPress={() => router.push({ pathname: '/incidents/[id]', params: { id: item.id } })}
+    >
       <View style={[styles.levelDot, { backgroundColor: levelColor[item.level] ?? colors.error }]} />
       <View style={styles.rowBody}>
         <Text style={styles.rowTitle} numberOfLines={2}>
@@ -49,7 +45,7 @@ function IncidentRow({ item }: { item: IncidentSummary }) {
           {item.count.toLocaleString()}회 · {timeAgo(item.lastSeen)}
         </Text>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -133,6 +129,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.md,
   },
+  rowPressed: { opacity: 0.6 },
   levelDot: { width: 10, height: 10, borderRadius: 5, marginTop: 6 },
   rowBody: { flex: 1, gap: spacing.xs },
   rowTitle: { color: colors.text, fontSize: 15, fontWeight: '600' },

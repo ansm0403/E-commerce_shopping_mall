@@ -323,8 +323,8 @@ RootNavigator (AuthContext의 user 유무로 분기)
 | 메서드/경로 | 용도 | Phase |
 |---|---|---|
 | `GET /v1/ops/incidents` | Sentry API 프록시. 인시던트 목록(축약형) — ✅ **구현 완료(2026-09-17)**: `backend/src/ops/`, admin 전용, Redis 60s 캐시(`X-Cache` HIT·MISS 헤더), 키 미설정 시 503 | 0 |
-| `GET /v1/ops/incidents/:id` | 인시던트 상세(스택트레이스, breadcrumbs 포함) | 1 |
-| `POST /v1/ops/devices` | 기기 Expo push token 등록 | 1 |
+| `GET /v1/ops/incidents/:id` | 인시던트 상세 — ✅ **구현 완료(2026-09-20, `0cc8301`)**: issue 단건 + 최신 event 를 합쳐 예외·스택(최근 호출이 앞, 30 프레임)·breadcrumbs(30개) 만 남긴다. request/user entry(헤더·쿠키·IP)는 읽지 않고 자유 텍스트는 `scrubText`. id 는 숫자만 받아 경로 조작 차단, 없는 이슈 404, Redis 60s 캐시 | 1 |
+| `POST /v1/ops/devices` | 기기 Expo push token 등록 — ✅ **구현 완료(2026-09-20)**: `(userId, 토큰)` upsert + Expo 토큰 정규식 검증. `DemoAccountGuard` 는 걸지 않는다(저장되는 것이 본인 기기 주소뿐이고, 막으면 데모 로그인으로 앱이 못 돈다) | 1 |
 | ~~`POST /v1/ops/webhooks/sentry`~~ | ~~Sentry webhook 수신~~ → **폐기(2026-09-16)**. §3.3 의 폴링 스케줄러로 대체 | 1 |
 | `POST /v1/ops/incidents/:id/analysis` | AI 분석 생성(또는 캐시된 분석 반환) | 3 |
 | `GET /v1/ops/analyses/pending` | 평가 대기 중인 분석 목록 | 4 |
@@ -387,7 +387,16 @@ ops_poll_state                       ← v2.1 추가 (§3.3 폴링 전환에 따
   - id, source('sentry'), lastSeenAt(timestamp), lastIssueId(string, nullable)
   - updatedAt
   - source 유니크 (행 1개만 존재)
+
+ops_push_log                         ← v2.2 추가 (2026-09-20 구현 시점, 아래 멱등 요구의 실체)
+  - id, incidentId(string), userId(int), lastPushedAt(timestamptz), pushCount(int)
+  - (incidentId, userId) 유니크
 ```
+
+> **구현 완료(2026-09-20)**: 위 3개 중 푸시 관련 3개를 마이그레이션 `OpsPushTables1789877464959` 로 만들었다
+> (`ops_device_tokens`·`ops_poll_state`·`ops_push_log`. `ops_analyses`·`ops_reviews` 는 Phase 3·4 몫).
+> `ops_device_tokens` 에는 설계에 없던 `disabledAt` 을 더했다 — Expo 가 `DeviceNotRegistered` 를 돌려준
+> 기기(앱 삭제)를 지우지 않고 표시만 해 두면, 재등록으로 되살아나고 발송 대상에서는 빠진다.
 
 > ⚠ **`ops_poll_state` 를 빠뜨리면 폴링이 성립하지 않는다.** "어디까지 봤는지"를 기억하지 못하면
 > 매 주기마다 같은 이슈를 새 인시던트로 오인해 **푸시가 무한 반복된다.** 커서를 Redis 에만 두는 것도
@@ -571,6 +580,44 @@ ops-companion/
   딥링크 3상태(포그라운드/백그라운드/종료) 처리, S3 상세 화면
 - DoD: 쇼핑몰에서 에러 발생 → 폰 푸시 수신 → 탭 → (앱이 꺼져 있어도) 해당
   인시던트 상세로 진입. 이 데모가 영상으로 녹화 가능해야 함.
+
+**⛔ 착수 시 확인된 전제 — Expo Go 로는 이 Phase 를 검증할 수 없다(2026-09-20)**
+
+SDK 53 부터 **안드로이드 Expo Go 에서 원격 푸시가 빠졌다**(공식 문서: *"Push notifications (remote
+notifications) functionality provided by expo-notifications is unavailable in Expo Go on Android from
+SDK 53. A development build is required"*). 로컬 알림과 권한·채널까지는 Expo Go 에서도 된다.
+→ **개발 빌드(EAS) 가 Phase 1 의 선행조건**이고, 거기에 Expo 계정·`eas init`·Firebase 프로젝트·
+FCM V1 서비스 계정 키 등록이 따라온다(사용자가 콘솔에서 직접 해야 하는 일). 절차는
+[ops-companion/README.md](../../ops-companion/README.md) "푸시 알림".
+
+**진행(2026-09-20)** — 작은 단계로 쪼개 진행 중이다.
+
+| 단계 | 내용 | 상태 |
+|---|---|---|
+| ① 상세 | `GET /ops/incidents/:id` + S3 화면 + 목록→상세 스택 | ✅ 실기기 확인(`0cc8301`, Expo Go 로 가능한 마지막 단계) |
+| ② 등록 | 표 3개 마이그레이션 + `POST /ops/devices` + 앱의 권한·채널·토큰 등록 | ✅ 코드·백엔드 e2e. 앱 쪽 실기기 확인은 개발 빌드 대기 |
+| ③ 발송 | 폴링 스케줄러(2분) + Expo Push + 멱등/쿨다운 | ✅ 코드·단위. **실데이터 스모크 통과**(가짜 토큰으로 후보 4건 → 발송 4통 → `DeviceNotRegistered` → 토큰 자동 비활성 + 선점 되돌림) |
+| ④ 딥링크 | 3상태 + 미로그인 시 pending deep link | ✅ 코드. 확인은 개발 빌드 대기 |
+| ⑤ 쿼터 | 프론트 리포터 중복 억제 | ✅ 코드·단위(다운 재현 16건 → 2건) |
+
+**확정한 푸시 기준**(대화로 합의, 2026-09-20)
+
+| 항목 | 결정 | 이유 |
+|---|---|---|
+| 레벨 | `error`·`fatal` 만 | warning·info 로 새벽에 폰이 울릴 이유가 없다 |
+| 프로젝트 | 쇼핑몰 프론트·백엔드만(`OPS_PUSH_PROJECTS`). **앱 자신 제외** | 앱이 죽어 푸시가 오고 그 푸시로 앱을 열어 또 죽는 되먹임 차단 |
+| 새 이슈 | 즉시 | — |
+| 재발 | 쿨다운 6시간(`OPS_PUSH_COOLDOWN_HOURS`) | "새 이슈만" 이면 같은 에러로 데모를 두 번 찍을 수 없고, 쿨다운이 없으면 514회 발생한 CORS 이슈가 주기마다 울린다 |
+| 멱등 | `ops_push_log` 의 `(incidentId, userId)` 유니크. `INSERT … ON CONFLICT … DO UPDATE … WHERE last_pushed_at < 기준` 한 문장으로 선점 | 커서가 틀어져도 중복 발송이 한 번으로 눌린다. 전송이 통째로 실패하면 선점을 되돌려 다음 주기에 재시도 |
+| 리포터 | 같은 fingerprint 60초 1건 + 탭당 10건 | 무작위 샘플링은 기각 — 새 이슈의 **첫 이벤트**가 버려지면 그 이슈로 도는 푸시를 놓친다 |
+
+**구현 중 밟은 함정 3건**
+
+1. 토큰 payload 의 사용자 id 는 `@User('sub')` 다(`@User('id')` 는 undefined → NOT NULL 위반 500).
+2. `string | null` 컬럼은 `type:` 을 명시해야 한다 — 리플렉션이 Object 로 보고 `migration:generate` 가 거부한다.
+3. **한 기기가 한 주기에 여러 알림을 받는다.** 발송 선점을 토큰으로 짝지었더니 마지막 이슈만
+   되돌려지고 앞의 것들은 기록이 남아 6시간 동안 다시 울리지 않았다(실데이터 스모크에서 발견).
+   메시지 **인덱스**로 짝짓는 것으로 고치고 회귀 테스트를 남겼다.
 
 ### Phase 2 — 관측성 심화 + 보안 UX
 - 구현: 소스맵 업로드(EAS 연동), Release Health, beforeSend(필터+PII),

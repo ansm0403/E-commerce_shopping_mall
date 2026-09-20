@@ -1,6 +1,7 @@
 /**
  * S6. ProfileScreen (설계 §4.3 S6).
  * Phase 0 범위: 로그인한 계정 정보, 앱 버전, 로그아웃. 생체 인증 토글은 Phase 2.
+ * Phase 1 추가: 푸시 등록 상태 — 알림이 안 올 때 "권한인지 개발 빌드인지"를 여기서 가린다.
  *
  * 로그아웃은 서버 세션까지 끊는다 — 앱은 쿠키가 없어서 refreshToken 을 body 로 보내야
  * 백엔드가 그 토큰을 무효화한다(안 그러면 7일간 살아 있다).
@@ -10,6 +11,8 @@ import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../src/contexts/AuthContext';
+import { usePush } from '../../src/features/push/PushContext';
+import { describeRegistration } from '../../src/lib/notifications';
 import { API_BASE_URL, APP_VERSION } from '../../src/lib/config';
 import { isSentryActive, sendSentryTestError } from '../../src/lib/sentry';
 import { colors, spacing } from '../../src/theme';
@@ -27,6 +30,7 @@ function Field({ label, value }: { label: string; value: string }) {
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
+  const { registration, retry } = usePush();
   const queryClient = useQueryClient();
   const [isSigningOut, setIsSigningOut] = useState(false);
 
@@ -67,6 +71,19 @@ export default function ProfileScreen() {
         <Field label="서버" value={API_BASE_URL} />
         <Field label="Sentry" value={isSentryActive() ? '켜짐' : '꺼짐 (DSN 없음 또는 개발 모드)'} />
       </View>
+
+      <View style={styles.card}>
+        <Field label="푸시 알림" value={describeRegistration(registration)} />
+        {registration?.status === 'registered' ? (
+          <Field label="기기 토큰" value={registration.token} />
+        ) : null}
+      </View>
+
+      {registration !== null && registration.status !== 'registered' ? (
+        <Pressable style={styles.secondaryButton} onPress={() => void retry()}>
+          <Text style={styles.secondaryText}>푸시 등록 다시 시도</Text>
+        </Pressable>
+      ) : null}
 
       <Pressable style={styles.secondaryButton} onPress={handleSentryTest}>
         <Text style={styles.secondaryText}>Sentry 테스트 에러 보내기</Text>

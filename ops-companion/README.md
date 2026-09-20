@@ -2,7 +2,7 @@
 
 쇼핑몰 백엔드를 재사용하는 관리자용 온콜 앱. 설계는 [docs/roadmap/ops-companion-design.md](../docs/roadmap/ops-companion-design.md) 가 진실의 원천이고, 이 문서는 **실행 방법만** 적는다.
 
-현재 상태: **Phase 0 완료(2026-09-20, 실기기 DoD 통과)** — 로그인, 인시던트 목록, 프로필. 푸시·딥링크·AI 분석·평가는 Phase 1 이후.
+현재 상태: **Phase 1 진행 중** — 로그인, 인시던트 목록, **인시던트 상세**, 프로필은 Expo Go 로 확인했다. 푸시·딥링크는 **개발 빌드**가 있어야 확인할 수 있다(아래). AI 분석·평가는 Phase 3 이후.
 
 ## 처음 한 번
 
@@ -30,6 +30,46 @@ yarn start          # = expo start. 터미널에 QR 코드가 뜬다
 > ⚠ 로그인은 IP 당 10회 / 5분 제한이 있다. 비밀번호를 반복해서 틀리면 5분간 잠긴다.
 
 > ⚠ 코드를 바꿨는데 화면이 그대로면, Expo Go 가 백그라운드의 옛 화면을 되살린 것이다. 최근 앱 목록에서 앱 카드와 Expo Go 카드를 둘 다 닫고 QR 을 다시 찍는다.
+
+## 푸시 알림 (Phase 1)
+
+⚠ **Expo Go 로는 원격 푸시를 받을 수 없다.** SDK 53 부터 안드로이드 Expo Go 에서 `expo-notifications` 의
+원격 푸시가 빠졌다(공식 문서: *"A development build is required to use push notifications"*).
+알림 권한 요청과 채널 생성까지는 Expo Go 에서도 동작하고, 프로필 탭의 "푸시 알림" 칸이 그 이유를 알려준다.
+
+### 개발 빌드 = 내 앱 전용 설치 파일
+
+Expo Go 대신 이 프로젝트만 담은 APK 를 한 번 만들어 설치한다. 그 뒤로는 지금처럼 `yarn start` + QR 로
+JS 만 갈아 끼우면 되고, 네이티브 패키지를 새로 추가할 때만 다시 빌드한다.
+
+**처음 한 번(계정·자격증명)**
+
+1. [expo.dev](https://expo.dev) 가입 → `eas login`
+2. `eas init` — 이미 완료(`extra.eas.projectId` 가 app.json 에 있다)
+3. [Firebase 콘솔](https://console.firebase.google.com)에서 프로젝트 생성 → **Android 앱 추가**
+   - 패키지 이름은 반드시 **`dev.ansmoon.opscompanion`** (app.json 의 `android.package`)
+   - `google-services.json` 을 내려받아 `ops-companion/` 에 두고 app.json 에 아래를 추가한다.
+     이 파일은 공개 식별자뿐이라 커밋해도 된다.
+     ```json
+     "android": { "googleServicesFile": "./google-services.json" }
+     ```
+4. Firebase **프로젝트 설정 → 서비스 계정 → 새 비공개 키 생성** → 받은 JSON 을 expo.dev 의
+   **Project settings → Credentials → FCM V1 service account key** 에 업로드
+   (⚠ 이 JSON 은 비밀값이다. `.gitignore` 가 `*-firebase-adminsdk-*.json` 을 막아 둔다)
+
+**빌드와 설치**
+
+```bash
+cd ops-companion
+eas build --platform android --profile development   # 10~20분, 끝나면 QR 로 APK 설치
+yarn start                                           # 설치된 앱으로 QR 을 찍는다
+```
+
+**확인**
+
+프로필 탭의 "푸시 알림" 이 `켜짐` 이면 기기 토큰이 백엔드에 등록된 것이다. 백엔드는 2분마다 Sentry 를
+확인해 **error·fatal** 인 새 이슈(또는 6시간 쿨다운이 지난 재발)를 이 기기로 보낸다.
+알림을 탭하면 해당 인시던트 상세로 들어간다 — 앱이 꺼져 있었어도 마찬가지다.
 
 ## Sentry 연결 확인
 
@@ -60,6 +100,7 @@ EXPO_PUBLIC_API_BASE_URL=http://192.168.0.10:4000/v1
 | `yarn android` | 안드로이드로 바로 열기 |
 | `yarn typecheck` | 타입 검사 |
 | `npx expo-doctor` | 설정·버전 호환 점검 |
+| `eas build -p android --profile development` | 개발 빌드(푸시 확인용 APK) |
 | `npx expo export --platform android` | 기기 없이 번들이 되는지만 확인 |
 
 ## 구조
@@ -69,10 +110,14 @@ app/                     # Expo Router — 파일 경로가 곧 화면 경로
 ├── _layout.tsx          # Provider + user 유무에 따른 렌더 분기
 ├── (auth)/login.tsx     # S1 로그인
 └── (tabs)/
+    ├── incidents/_layout.tsx # 목록 → 상세 스택(anchor=index)
     ├── incidents/index.tsx   # S2 인시던트 목록
+    ├── incidents/[id].tsx    # S3 인시던트 상세 (푸시 딥링크 도착지)
     └── profile.tsx           # S6 프로필
 src/
 ├── lib/api.ts           # axios 인스턴스 + 401 시 refresh 1회 재시도
+├── lib/notifications.ts # 알림 채널·권한·토큰 등록
+├── features/push/       # 등록 상태 Context + 딥링크 3상태 라우팅
 ├── lib/token-storage.ts # SecureStore 토큰 저장소
 ├── lib/sentry.ts        # Sentry init (DSN 없으면 no-op)
 ├── lib/config.ts        # 환경변수 읽기

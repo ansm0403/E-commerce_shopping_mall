@@ -26,8 +26,23 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "color": "#FF6B6B",
+          "defaultChannel": "incidents",
+          "enableBackgroundRemoteNotifications": false
+        }
+      ],
       "@sentry/react-native"
     ],
-    "scheme": "opscompanion"
+    "scheme": "opscompanion",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "b8880be3-f41f-481e-86b1-fcbc8690a60f"
+      }
+    },
+    "owner": "ansmoon"
   }
 }

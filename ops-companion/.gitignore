@@ -40,6 +40,11 @@ yarn-error.*
 /ios
 /android
 
+# FCM 서비스 계정 키 — **비밀값**. 이게 유출되면 남이 우리 앱 이름으로 푸시를 보낼 수 있다.
+# (google-services.json 은 공개 식별자뿐이라 커밋해도 된다 — Expo 공식 문서)
+*-firebase-adminsdk-*.json
+google-service-account*.json
+
 # 로컬 환경변수(.env.example 를 복사해서 쓴다)
 .env
 # 루트 .gitignore 의 `.env.*` 가 예시 파일까지 묻어버리므로 되살린다(backend/.env.example 와 같은 취급)
