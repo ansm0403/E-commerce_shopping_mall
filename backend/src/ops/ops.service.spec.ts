@@ -1,8 +1,10 @@
 import { Test } from '@nestjs/testing';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { BadGatewayException, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { OpsService } from './ops.service';
 import { SentryApiClient, SentryApiError, SentryEvent, SentryIssue, SentryIssueDetail } from './sentry-api.client';
 import { RedisService } from '../intrastructure/redis/redis.service';
+import { OpsDeviceTokenEntity } from './entity/ops-device-token.entity';
 
 /** Sentry 실응답(2026-09-16 실측)에서 필요한 필드만 딴 샘플 — count 가 문자열인 점에 주의 */
 const issue = (over: Partial<SentryIssue> = {}): SentryIssue => ({
@@ -18,6 +20,7 @@ describe('OpsService', () => {
   let service: OpsService;
   let sentry: { isEnabled: jest.Mock; listIssues: jest.Mock; getIssue: jest.Mock; getLatestEvent: jest.Mock };
   let redis: { getCache: jest.Mock; setCache: jest.Mock };
+  let deviceTokens: { upsert: jest.Mock };
 
   beforeEach(async () => {
     sentry = {
@@ -27,12 +30,14 @@ describe('OpsService', () => {
       getLatestEvent: jest.fn(),
     };
     redis = { getCache: jest.fn().mockResolvedValue(null), setCache: jest.fn() };
+    deviceTokens = { upsert: jest.fn() };
 
     const module = await Test.createTestingModule({
       providers: [
         OpsService,
         { provide: SentryApiClient, useValue: sentry },
         { provide: RedisService, useValue: redis },
+        { provide: getRepositoryToken(OpsDeviceTokenEntity), useValue: deviceTokens },
       ],
     }).compile();
     service = module.get(OpsService);
@@ -221,6 +226,19 @@ describe('OpsService', () => {
 
       sentry.isEnabled.mockReturnValue(false);
       await expect(service.getIncident('1')).rejects.toBeInstanceOf(ServiceUnavailableException);
+    });
+  });
+
+  describe('registerDevice', () => {
+    it('(userId, 토큰) 기준 upsert — 앱이 켤 때마다 불러도 행이 늘지 않고 disabled 가 풀린다', async () => {
+      await expect(
+        service.registerDevice(27, { expoPushToken: 'ExponentPushToken[phone-A]', platform: 'android' }),
+      ).resolves.toEqual({ registered: true });
+
+      expect(deviceTokens.upsert).toHaveBeenCalledWith(
+        { userId: 27, expoPushToken: 'ExponentPushToken[phone-A]', platform: 'android', disabledAt: null },
+        { conflictPaths: ['userId', 'expoPushToken'] },
+      );
     });
   });
 });

@@ -5,6 +5,8 @@ import {
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { RedisService } from '../intrastructure/redis/redis.service';
 import { scrubText } from '../common/utils/scrub-text';
 import {
@@ -17,6 +19,8 @@ import {
 } from './sentry-api.client';
 import { IncidentLevel, IncidentSummary } from './dto/incident-summary.dto';
 import { IncidentBreadcrumb, IncidentDetail, IncidentException } from './dto/incident-detail.dto';
+import { RegisterDeviceDto } from './dto/register-device.dto';
+import { OpsDeviceTokenEntity } from './entity/ops-device-token.entity';
 
 /**
  * Ops Companion(RN 운영 앱) 백엔드 — Phase 0: 인시던트 목록 조회 프록시.
@@ -47,7 +51,28 @@ export class OpsService {
   constructor(
     private readonly sentry: SentryApiClient,
     private readonly redisService: RedisService,
+    @InjectRepository(OpsDeviceTokenEntity)
+    private readonly deviceTokens: Repository<OpsDeviceTokenEntity>,
   ) {}
+
+  /**
+   * 기기 push token 등록. 앱은 켤 때마다 호출하므로 **upsert** 다 —
+   * (userId, expoPushToken) 유니크에 걸려 행이 늘지 않고, 앱을 지웠다 다시 깔아
+   * disabledAt 이 찍혀 있던 토큰도 되살아난다.
+   */
+  async registerDevice(userId: number, dto: RegisterDeviceDto): Promise<{ registered: true }> {
+    await this.deviceTokens.upsert(
+      {
+        userId,
+        expoPushToken: dto.expoPushToken,
+        platform: dto.platform,
+        disabledAt: null,
+      },
+      { conflictPaths: ['userId', 'expoPushToken'] },
+    );
+    this.logger.log(`push token 등록: user=${userId} platform=${dto.platform}`);
+    return { registered: true };
+  }
 
   isEnabled(): boolean {
     return this.sentry.isEnabled();

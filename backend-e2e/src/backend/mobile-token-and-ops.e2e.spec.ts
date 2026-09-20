@@ -183,4 +183,60 @@ describe('모바일 토큰 전략 + ops 인시던트 조회 (HTTP e2e)', () => {
       }
     });
   });
+
+  describe('D. POST /v1/ops/devices (Phase 1 — 기기 push token 등록)', () => {
+    const token = 'ExponentPushToken[e2e-mobile-ops-device-0001]';
+
+    const tokenRows = (userId: number) =>
+      ds.query(
+        `SELECT expo_push_token, platform, disabled_at FROM ops_device_tokens WHERE user_id = $1`,
+        [userId],
+      );
+    const adminId = async () =>
+      (await ds.query(`SELECT id FROM users WHERE email = $1`, [emails.admin]))[0].id as number;
+
+    it('토큰 없음 → 401, buyer → 403', async () => {
+      expect((await axios.post('/ops/devices', { expoPushToken: token, platform: 'android' })).status).toBe(401);
+      expect(
+        (await axios.post('/ops/devices', { expoPushToken: token, platform: 'android' }, auth(buyerToken))).status,
+      ).toBe(403);
+    });
+
+    it.each([
+      ['형식이 아닌 토큰', { expoPushToken: 'not-a-token', platform: 'android' }],
+      ['빈 토큰', { expoPushToken: '', platform: 'android' }],
+      ['알 수 없는 platform', { expoPushToken: token, platform: 'windows' }],
+      ['platform 누락', { expoPushToken: token }],
+    ])('%s 은 400 — 잘못된 값이 표에 쌓이면 발송이 통째로 실패한다', async (_label, body) => {
+      const res = await axios.post('/ops/devices', body, auth(adminMobile.accessToken));
+      expect(res.status).toBe(400);
+    });
+
+    it('admin 등록 → 201, 같은 토큰 재등록은 행을 늘리지 않는다(upsert) + disabled 해제', async () => {
+      const userId = await adminId();
+
+      const first = await axios.post(
+        '/ops/devices',
+        { expoPushToken: token, platform: 'android' },
+        auth(adminMobile.accessToken),
+      );
+      expect(first.status).toBe(201);
+      expect(first.data).toEqual({ registered: true });
+      expect(await tokenRows(userId)).toHaveLength(1);
+
+      // Expo 가 DeviceNotRegistered 를 준 상태를 만들어 두고 재등록 → 다시 발송 대상이 되어야 한다
+      await ds.query(`UPDATE ops_device_tokens SET disabled_at = NOW() WHERE user_id = $1`, [userId]);
+
+      const again = await axios.post(
+        '/ops/devices',
+        { expoPushToken: token, platform: 'android' },
+        auth(adminMobile.accessToken),
+      );
+      expect(again.status).toBe(201);
+
+      const rows = await tokenRows(userId);
+      expect(rows).toHaveLength(1);
+      expect(rows[0].disabled_at).toBeNull();
+    });
+  });
 });

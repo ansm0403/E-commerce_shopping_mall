@@ -13,6 +13,18 @@ export interface SentryIssue {
   lastSeen: string;
 }
 
+/**
+ * 목록 조회에서 함께 오는 필드(2026-09-20 실측). 푸시 판정에 쓴다:
+ * project.slug 로 어느 서비스의 장애인지 가리고, substatus(new/escalating/regressed/ongoing)는
+ * 참고용으로만 본다 — 우리 판정 기준은 "우리가 이 이슈를 푸시한 적이 있는가"(ops_push_log)다.
+ */
+export interface SentryIssueListItem extends SentryIssue {
+  project?: { slug?: string } | null;
+  firstSeen?: string;
+  substatus?: string | null;
+  status?: string;
+}
+
 /** 단건 조회(GET /issues/{id}/)에서 추가로 읽는 필드 */
 export interface SentryIssueDetail extends SentryIssue {
   firstSeen: string;
@@ -100,14 +112,25 @@ export class SentryApiClient {
     return Boolean(this.token && this.orgSlug);
   }
 
-  /** GET /organizations/{org}/issues/?statsPeriod=24h */
-  async listIssues(statsPeriod: string): Promise<SentryIssue[]> {
-    const body = await this.get(`/issues/?statsPeriod=${encodeURIComponent(statsPeriod)}`);
+  /**
+   * GET /organizations/{org}/issues/?statsPeriod=24h
+   * sort=date 는 "마지막 발생(lastSeen) 최신순" — 폴링은 이 순서가 있어야 커서와 맞물린다.
+   */
+  async listIssues(
+    statsPeriod: string,
+    opts: { query?: string; limit?: number; sort?: 'date' | 'new' | 'freq' } = {},
+  ): Promise<SentryIssueListItem[]> {
+    const params = new URLSearchParams({ statsPeriod });
+    if (opts.query !== undefined) params.set('query', opts.query);
+    if (opts.limit !== undefined) params.set('limit', String(opts.limit));
+    if (opts.sort !== undefined) params.set('sort', opts.sort);
+
+    const body = await this.get(`/issues/?${params.toString()}`);
     if (!Array.isArray(body)) {
       this.logger.error('Sentry issues API 응답이 배열이 아님');
       throw new Error('Sentry API returned unexpected payload');
     }
-    return body as SentryIssue[];
+    return body as SentryIssueListItem[];
   }
 
   /** GET /organizations/{org}/issues/{id}/ — 조직 범위 경로라 남의 조직 이슈 id 는 404 다 */
