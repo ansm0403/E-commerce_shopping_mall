@@ -20,11 +20,28 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import * as Notifications from 'expo-notifications';
 import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
+import { PushProvider } from '../src/features/push/PushContext';
+import { usePushRouting } from '../src/features/push/usePushRouting';
 import { initSentry } from '../src/lib/sentry';
 import { colors } from '../src/theme';
 
 initSentry();
+
+/**
+ * 앱을 보고 있는 동안 알림이 오면 어떻게 할지(설계 §4.2 ① 포그라운드).
+ * 기본값은 "아무것도 안 함" 이라 배너가 뜨지 않는다 — 온콜 앱에서는 보여야 한다.
+ * banner = 화면 위 배너, list = 알림 센터 목록.
+ */
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 // staleTime 기본 5분(설계 §5.5). 목록 쿼리는 자기 쪽에서 1분으로 좁힌다.
 const queryClient = new QueryClient({
@@ -33,6 +50,8 @@ const queryClient = new QueryClient({
 
 function RootNavigator() {
   const { user, isBooting } = useAuth();
+  // 알림 탭 → 상세 화면. 3상태(포그라운드/백그라운드/종료)를 이 훅이 전부 처리한다.
+  usePushRouting();
 
   if (isBooting) {
     // SecureStore 복원 + /auth/me 검증이 끝나기 전. 이 시간이 없으면 로그인 상태인데도
@@ -65,8 +84,10 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <StatusBar style="light" />
-          <RootNavigator />
+          <PushProvider>
+            <StatusBar style="light" />
+            <RootNavigator />
+          </PushProvider>
         </AuthProvider>
       </QueryClientProvider>
     </SafeAreaProvider>

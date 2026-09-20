@@ -194,3 +194,11 @@ export async function fetchIncident(id: string): Promise<IncidentDetail> {
   const { data } = await api.get<IncidentDetail>(`/ops/incidents/${encodeURIComponent(id)}`);
   return data;
 }
+
+/**
+ * POST /v1/ops/devices — 이 기기로 푸시를 받겠다고 백엔드에 알린다(설계 §5.1).
+ * 앱이 켜질 때마다 불러도 안전하다(백엔드가 upsert).
+ */
+export async function registerDevice(expoPushToken: string, platform: 'ios' | 'android'): Promise<void> {
+  await api.post('/ops/devices', { expoPushToken, platform });
+}
