@@ -37,7 +37,10 @@ async function ensureAndroidChannel(): Promise<void> {
     name: '장애 알림',
     // MAX = 화면 위로 떠오르는 헤드업 알림. 온콜 알림이라 놓치면 의미가 없다.
     importance: Notifications.AndroidImportance.MAX,
-    sound: 'default',
+    // ⚠ `sound` 는 **넣지 않는다**. 이 옵션은 앱에 번들된 사운드 **파일 이름**을 받는 자리라,
+    // 'default' 를 주면 "default 라는 파일이 없다"는 에러를 로그에 남긴다
+    // (expo-notifications/android/.../NotificationsChannelManager.java customSoundExists).
+    // 키가 없으면 네이티브가 Settings.System.DEFAULT_NOTIFICATION_URI(시스템 기본 소리)를 쓴다.
     vibrationPattern: [0, 250, 250, 250],
     lightColor: '#FF6B6B',
   });
