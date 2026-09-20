@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "227746351157",
+    "project_id": "ops-companion",
+    "storage_bucket": "ops-companion.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:227746351157:android:d32705a57c149fe707497c",
+        "android_client_info": {
+          "package_name": "dev.ansmoon.opscompanion"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDApzOmLMvSyQ9PpkGbwGaVti3Sn4MuG1Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
