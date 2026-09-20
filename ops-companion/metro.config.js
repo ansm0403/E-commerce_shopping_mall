@@ -20,4 +20,25 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, 'node_modules'),
 ];
 
+// watchFolders 를 루트로 열었으므로 **감시하지 않을 곳을 빼 줘야 한다.**
+//
+// 2026-09-20 에 실제로 겪은 일: `.yarn/cache` 가 2.9GB 까지 자라면서 파일 감시 초기화가
+// 240초 제한(@expo/metro-file-map Watcher.js MAX_WAIT_TIME)을 넘겨 실패했고,
+// 그 뒤 번들 요청이 HTTP 500(`DependencyGraph.js` 에서 undefined 읽기)으로 떨어졌다.
+// 앱에서는 아무 메시지 없이 **흰 화면**으로만 보여서 원인 짚기가 어려웠다.
+//
+// blockList 는 모듈 해석에서 빼는 동시에 파일맵 크롤링 대상에서도 빠진다
+// (metro/src/node-haste/DependencyGraph/createFileMap.js 의 getIgnorePattern → ignorePattern).
+// 아래는 전부 앱 번들과 무관한 산출물·캐시다.
+config.resolver.blockList = [
+  /[/\\]\.yarn[/\\]cache[/\\].*/, // Yarn berry 패키지 캐시(가장 큰 원인)
+  /[/\\]\.git[/\\].*/,
+  /[/\\]\.nx[/\\].*/,
+  /[/\\]backend[/\\]dist[/\\].*/,
+  /[/\\]frontend[/\\]\.next[/\\].*/,
+  /[/\\]shared[/\\]dist[/\\].*/,
+  /[/\\]docs[/\\].*/, // 포트폴리오 이미지 97MB
+  /[/\\]uploads[/\\].*/,
+];
+
 module.exports = config;
