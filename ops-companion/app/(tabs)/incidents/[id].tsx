@@ -7,11 +7,12 @@
  * 데이터는 GET /v1/ops/incidents/:id — 백엔드가 Sentry 의 issue + 최신 event 를 합쳐
  * 예외·스택(최근 호출이 앞)·breadcrumbs 만 남겨 준다. request 헤더·쿠키·사용자 IP 는 오지 않는다.
  *
- * "AI에게 원인 물어보기" 버튼은 Phase 3 에서 붙인다(그 전에는 숨김 — 설계 §4.3 S3).
+ * 맨 아래 "AI에게 원인 물어보기"(Phase 3) 는 /incidents/analysis/<id> 로 한 장 더 쌓는다 — S4 AnalysisScreen.
+ * 이 화면은 분석을 시작하지 않는다. 버튼을 눌러 들어간 화면이 요청한다(LLM 호출은 사용자가 원할 때만).
  */
 import { ActivityIndicator, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { AxiosError } from 'axios';
 import { useIncident } from '../../../src/features/incidents/queries';
 import type { IncidentBreadcrumb, IncidentStackFrame } from '../../../src/lib/api';
@@ -64,6 +65,7 @@ function BreadcrumbRow({ crumb }: { crumb: IncidentBreadcrumb }) {
 
 export default function IncidentDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const { data, isPending, isError, error, refetch, isRefetching } = useIncident(id);
 
   if (isPending) {
@@ -143,6 +145,14 @@ export default function IncidentDetailScreen() {
             <Text style={styles.empty}>기록된 행동이 없습니다.</Text>
           )}
         </View>
+
+        <Pressable
+          style={({ pressed }) => [styles.ctaButton, pressed && styles.ctaPressed]}
+          onPress={() => router.push({ pathname: '/incidents/analysis/[id]', params: { id } })}
+        >
+          <Text style={styles.ctaText}>AI에게 원인 물어보기</Text>
+          <Text style={styles.ctaHint}>스택트레이스와 직전 행동으로 원인·조치를 정리합니다</Text>
+        </Pressable>
       </ScrollView>
     </SafeAreaView>
   );
@@ -199,4 +209,16 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   retryText: { color: '#fff', fontWeight: '600' },
+  ctaButton: {
+    marginTop: spacing.md,
+    backgroundColor: colors.accent,
+    borderRadius: 12,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    alignItems: 'center',
+    gap: 2,
+  },
+  ctaPressed: { opacity: 0.85 },
+  ctaText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  ctaHint: { color: 'rgba(255,255,255,0.8)', fontSize: 12 },
 });

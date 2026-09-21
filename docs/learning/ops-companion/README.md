@@ -16,7 +16,7 @@
 | 1 | [01-rn-first-app](./01-rn-first-app.md) | RN 첫 앱 — 개념부터 우리 코드까지 | Phase 0 | `1b662a5` | ✅ |
 | 2 | [02-push-and-deeplink](./02-push-and-deeplink.md) | 푸시 알림과 딥링크 | Phase 1 | `6352975` | ✅ |
 | 3 | [03-observability-and-biometrics](./03-observability-and-biometrics.md) | 관측성 심화와 생체 인증 | Phase 2 | `4ead4ca` | ✅ |
-| 4 | — | AI 분석 화면 | Phase 3 | — | 예정 |
+| 4 | [04-ai-analysis](./04-ai-analysis.md) | AI 분석 — 스키마를 어겨도 깨지지 않게 | Phase 3 | `bd9f8b4` | ✅ (운영 배포 대기) |
 | 5 | — | 평가 루프(스와이프 카드) | Phase 4 | — | 예정 |
 
 편 번호 순서대로 읽는다. 뒤 편은 앞 편에서 설명한 개념을 다시 설명하지 않는다.
@@ -25,7 +25,7 @@
 
 | 파일 | 제목 | 성격 | 마지막 갱신 |
 |---|---|---|---|
-| [infra-story](./infra-story.md) | 인프라 이야기 — 우리 앱은 누구와 어떻게 일하는가 | **계속 고쳐 쓰는 문서** | 2026-09-21 (`4ead4ca`, Phase 2 종료) |
+| [infra-story](./infra-story.md) | 인프라 이야기 — 우리 앱은 누구와 어떻게 일하는가 | **계속 고쳐 쓰는 문서** | 2026-09-21 (`bd9f8b4`, Phase 3) |
 
 편 번호가 붙은 노트와 성격이 다르다.
 

@@ -2,8 +2,8 @@
 
 > 대상: **React Native 와 모바일 인프라를 처음 접한다고 가정**한다. 용어는 처음 나올 때 풀고, 맨 끝 [용어 사전](#용어-사전)에 다시 모았다.
 > 성격: **살아 있는 문서**다. 편 번호가 붙은 학습 노트(1편·2편…)는 Phase 가 끝난 시점의 기록이지만, 이 문서는 인프라가 늘거나 바뀔 때마다 고쳐 쓴다. 갱신 규칙은 [README](./README.md#부록--살아-있는-문서) 에 있다.
-> 짝지어 읽을 것: [2편 — 푸시 알림과 딥링크](./02-push-and-deeplink.md) · [3편 — 관측성 심화와 생체 인증](./03-observability-and-biometrics.md)(코드 중심) · [설계 문서](../../roadmap/ops-companion-design.md) §3(아키텍처) · [관측 지도](../../roadmap/ex-observability-map.md)
-> 기준 시점: 2026-09-21 (커밋 `4ead4ca`, Phase 2 종료)
+> 짝지어 읽을 것: [2편 — 푸시 알림과 딥링크](./02-push-and-deeplink.md) · [3편 — 관측성 심화와 생체 인증](./03-observability-and-biometrics.md) · [4편 — AI 분석](./04-ai-analysis.md)(코드 중심) · [설계 문서](../../roadmap/ops-companion-design.md) §3(아키텍처) · [관측 지도](../../roadmap/ex-observability-map.md)
+> 기준 시점: 2026-09-21 (커밋 `bd9f8b4`, Phase 3)
 
 ---
 
@@ -23,7 +23,7 @@ Phase 1 에서 갑자기 이름이 쏟아졌다. Firebase, FCM, Expo Push Servic
 |---|---|---|
 | 1장. 코드를 짜는 시간 | 고친 코드가 어떻게 폰에 도착하나 | Metro · Expo Go · 개발 빌드 |
 | 2장. 앱을 만드는 시간 | 설치 파일은 어디서 어떻게 만들어지나 | EAS Build · 키스토어 · Firebase(설정 파일) · **소스맵 업로드** |
-| 3장. 앱을 쓰는 시간 | 목록·상세 화면의 데이터는 어디서 오나 | nginx · 백엔드(EC2) · Redis · Sentry API |
+| 3장. 앱을 쓰는 시간 | 목록·상세 화면의 데이터는 어디서 오나, **AI 분석은 누가 부르나** | nginx · 백엔드(EC2) · Redis · Sentry API · **LLM API(Gemini)** |
 | 4장. 장애가 나는 시간 | 에러가 어떻게 폰을 울리나 | Sentry · 폴러 · Postgres · Expo Push · FCM |
 
 <br>
@@ -53,7 +53,7 @@ flowchart TB
     subgraph AWS["AWS EC2 (우리 서버)"]
         Nginx["nginx<br/>HTTPS 종단"]
         API["NestJS 백엔드<br/>ops 모듈 · 폴러"]
-        PG[("Postgres<br/>기기·커서·발송기록")]
+        PG[("Postgres<br/>기기·커서·발송기록·AI 분석")]
         Redis[("Redis<br/>60초 캐시")]
         Nginx --> API
         API --> PG
@@ -61,6 +61,7 @@ flowchart TB
     end
 
     Sentry["Sentry<br/>에러 수집 SaaS"]
+    LLM["LLM API<br/>(Gemini · 추후 Claude)"]
     Shop["쇼핑몰<br/>(Vercel 프론트 + 같은 백엔드)"]
     Phone["📱 폰의 Ops Companion"]
 
@@ -73,6 +74,7 @@ flowchart TB
     Shop -- "에러 이벤트" --> Sentry
     Phone -- "앱 자신의 에러(DSN)" --> Sentry
     API -- "2분마다 조회(API 토큰)" --> Sentry
+    API -- "인시던트 분석 요청(LLM 키)" --> LLM
     Phone -- "HTTPS + JWT" --> Nginx
     API -- "푸시 요청" --> Push
     Cred --> Push
@@ -309,7 +311,7 @@ dev.ansmoon.opscompanion @ 1.0.0 + 1
 
 # 3장. 앱을 쓰는 시간 — 화면의 데이터는 어디서 오나
 
-여기는 Phase 0 부터 있던 길이다. Phase 1 에서 상세 API 가 더해졌을 뿐 구조는 같다.
+여기는 Phase 0 부터 있던 길이다. Phase 1 에서 상세 API 가, Phase 3 에서 AI 분석(3-4)이 더해졌지만 **"앱은 백엔드만 부른다"** 는 구조는 같다.
 
 ```mermaid
 sequenceDiagram
@@ -362,7 +364,7 @@ sequenceDiagram
 > **JWT**: 로그인하면 받는 서명된 토큰. 요청마다 `Authorization: Bearer …` 로 실어 보낸다.
 > **SecureStore**: 기기의 보안 저장소(안드로이드 Keystore 기반). 토큰은 여기에만 둔다.
 
-앱 안에 있는 비밀값은 **우리 로그인 토큰이 전부**다. Sentry 토큰도, FCM 키도, AI API 키도 앱에는 없다. 이 원칙이 5장의 비밀값 지도로 이어진다.
+앱 안에 있는 비밀값은 **우리 로그인 토큰이 전부**다. Sentry 토큰도, FCM 키도, LLM 키도 앱에는 없다. 이 원칙이 5장의 비밀값 지도로 이어진다.
 
 ### 생체 잠금은 이 그림을 바꾸지 않는다
 
@@ -381,6 +383,51 @@ sequenceDiagram
 생체 데이터는 앱에도, 우리 백엔드에도, Sentry 에도 가지 않는다. 그래서 **서버 요청 0건, DB 테이블·컬럼 0개**다. "생체 잠금을 쓸지" 설정조차 SecureStore(기기)에만 둔다 — 서버에 동기화하는 순간 이 기능이 서버와 얽히고, 설계가 피하려던 것이 정확히 그것이다.
 
 잠금이 하는 일을 정확히 말하면 "서버에 재로그인"이 아니라, **이미 SecureStore 에 있는 JWT 를 꺼내 쓰기 전에 거치는 로컬 관문**이다.
+
+<br>
+
+---
+
+<br>
+
+## 3-4. AI 분석 — 앱이 아니라 백엔드가 LLM 을 부른다
+
+> **LLM(Large Language Model)**: 텍스트를 넣으면 텍스트를 내는 모델. 우리는 Gemini 를 HTTP API 로 부른다(추후 Claude 로 바꿀 수 있게 백엔드가 `LlmClient` 라는 한 겹을 두고 있다).
+
+상세 화면의 "AI에게 원인 물어보기"는 3-1 과 같은 이유로 **백엔드를 경유**한다. 다른 점은 백엔드가 읽기만 하는 게 아니라 **만들고 저장한다**는 것이다.
+
+```mermaid
+sequenceDiagram
+    participant App as 📱 앱
+    participant API as NestJS 백엔드
+    participant PG as Postgres (ops_analyses)
+    participant Sentry as Sentry Web API
+    participant LLM as LLM API (Gemini)
+
+    App->>API: POST /v1/ops/incidents/123/analysis (JWT)
+    API->>PG: 이 이슈의 최근 분석 있나
+    alt 있음
+        API-->>App: 저장된 결과 그대로 (LLM 호출 없음)
+    else 없음
+        API->>Sentry: 인시던트 상세 (3장의 길, Redis 캐시 경유)
+        API->>API: 프롬프트 조립 — 이메일·전화 마스킹
+        API->>LLM: "이 스키마의 JSON 으로만 답하라" + 인시던트 (LLM 키)
+        LLM-->>API: 텍스트
+        API->>API: JSON 검증 — 어겼으면 사유를 실어 1회 더
+        API->>PG: 저장 (ok | parse_failed, 프롬프트 버전, 걸린 시간)
+        API-->>App: 결과
+    end
+```
+
+세 가지가 3-1 의 원칙을 그대로 잇는다.
+
+- **① 키 은닉** — LLM 키는 백엔드 `.env` 에만 있다. 쇼핑몰 관리자 어시스턴트가 쓰던 바로 그 키라 새 비밀값은 늘지 않았다(5장).
+- **② 가공** — 무료티어로 보낸 입력은 학습에 쓰일 수 있다. 그래서 LLM 에 넣기 **전에** 제목·예외 메시지의 이메일·전화를 마스킹한다. 나가는 방향의 마스킹이 처음 생겼다.
+- **③ 완충** — 분석은 한 이슈에 한 번만 만들고 표에 저장한다. 같은 이슈를 다시 열면 LLM 을 부르지 않는다. Gemini 무료티어는 **분당 15회**라, 60초 캐시로는 부족해 백엔드가 분당 5건으로 스스로 제한한다.
+
+> **프롬프트 버전**: 저장된 각 분석이 어느 문구의 지시로 만들어졌는지 남기는 표식(지금은 전부 `v1`). Phase 4 에서 "문구를 바꿨더니 승인율이 올랐나"를 비교하는 축이다.
+
+**Postgres 표가 하나 늘었다.** 4-5 의 표 셋(푸시)에 `ops_analyses`(분석 결과이자 Phase 4 의 평가 대상)가 더해져 넷이다. 이 표는 Sentry 이슈 id 로만 이어지고 사용자 FK 가 없다 — 분석은 누가 요청했든 같은 이슈의 같은 답이기 때문이다.
 
 <br>
 
@@ -557,6 +604,7 @@ Sentry 프로젝트는 셋이다: `e-commerse-frontend`, `e-commerse-backend`, `
 | FCM **서비스 계정 키** | expo.dev 금고 | ❌ (백엔드에도 없다) | 남이 우리 앱 이름으로 푸시 발송 |
 | **키스토어** | expo.dev 금고 | ❌ | 남이 우리 앱의 "업데이트"를 만들 수 있다 |
 | JWT 서명 키 · DB 비밀번호 | 백엔드 `.env` (EC2) | ❌ | 인증 전체가 무너진다 |
+| **LLM API 키**(`GEMINI_API_KEY`) | 백엔드 `.env` (EC2) — 쇼핑몰 어시스턴트와 **같은 키** | ❌ | 남이 우리 쿼터로 LLM 을 쓴다(무료티어면 분당 15회를 소진시켜 분석·어시스턴트가 막힌다) |
 | 사용자 **JWT** | 폰의 SecureStore | ✅ (그 사용자 것만) | 그 사용자 권한만큼 |
 | `google-services.json` | 저장소 · 앱 | ✅ | 공개 식별자뿐 — 무해 |
 | Sentry **DSN** | 앱 · 프론트 | ✅ | 쓰기 전용 — 무해(가짜 이벤트로 쿼터를 깎을 수는 있다) |
@@ -582,7 +630,8 @@ Sentry 프로젝트는 셋이다: `e-commerse-frontend`, `e-commerse-backend`, `
 | **개발 PC / Metro** | 개발 빌드 앱(번들을 못 받는다) | preview·운영 빌드, 운영 서비스 전부 |
 | **Expo Push Service** | 푸시 발송 | 앱으로 직접 조회 |
 | **FCM** | 안드로이드 푸시 수신 | 위와 같음 |
-| **Sentry** | 인시던트 조회·푸시·에러 수집·crash-free 카드 전부 | 쇼핑몰 자체 |
+| **Sentry** | 인시던트 조회·푸시·에러 수집·crash-free 카드·**AI 분석**(상세를 못 읽는다) 전부 | 쇼핑몰 자체 |
+| **LLM API**(Gemini) 또는 키 만료·쿼터 소진 | **AI 분석만**(503 또는 실패). 이미 저장된 분석은 그대로 보인다 | 목록·상세·푸시·crash-free 전부. 관리자 어시스턴트는 같이 멈춘다(같은 키) |
 | **expo.dev 업로드 토큰 만료** | 새 빌드의 소스맵 업로드(스택이 압축 좌표로 남는다) | 나머지 전부. 빌드 자체는 성공한다 |
 | **Redis** | 캐시(매번 Sentry 를 부른다), 로그인 레이트리밋 | 조회 자체 |
 | **EC2 / 백엔드** | **앱의 모든 기능 + 푸시** | — |
@@ -614,6 +663,8 @@ Sentry 프로젝트는 셋이다: `e-commerse-frontend`, `e-commerse-backend`, `
 | 장애 감지 | **폴링**(2분) | Sentry webhook | webhook 통합은 유료 플랜. 폴링은 공개 엔드포인트·서명 검증이 필요 없다 |
 | Sentry 접근 | **백엔드 경유** | 앱이 직접 | 토큰 은닉 + 개인정보 가공 + 캐시 |
 | 쿼터 방어 | **중복 억제**(60초 1건) | 무작위 샘플링 | 새 이슈의 **첫 이벤트**가 버려지면 그 이슈로 도는 푸시를 놓친다 |
+| LLM 호출 위치 | **백엔드 경유** + 결과 저장 | 앱이 직접 | 키 은닉 · 보내기 전 마스킹 · 같은 이슈를 두 번 묻지 않음 · 저장해야 Phase 4 평가가 성립 |
+| LLM 응답 형식 | 프롬프트 지시 + **백엔드 검증·재시도·fallback** | 프로바이더 JSON 모드 | `LlmClient` 에 프로바이더 어휘를 넣지 않는다. 검증 경로가 실제로 실행되는 코드로 남는다 |
 
 **비용.** 전부 무료 등급 안에서 돈다.
 
@@ -621,6 +672,7 @@ Sentry 프로젝트는 셋이다: `e-commerse-frontend`, `e-commerse-backend`, `
 - Expo Push Service: 무료 계정에서 사용. 프로젝트당 초당 600건, 한 요청에 100건 한도(우리는 기기 한두 대라 닿지 않는다)
 - EAS Build: 무료 등급에 월 빌드 수 제한이 있다(정확한 수는 expo.dev 요금 페이지에서 확인)
 - Sentry: 조직 공용 월 5,000 errors. **쇼핑몰과 앱이 나눠 쓴다**
+- Gemini: 무료티어 **분당 15회**. 관리자 어시스턴트와 앱의 AI 분석이 나눠 쓴다(분석은 분당 5건으로 자체 제한)
 
 <br>
 
@@ -634,8 +686,8 @@ Sentry 프로젝트는 셋이다: `e-commerse-frontend`, `e-commerse-backend`, `
 
 | Phase | 더해질 인프라·연결 | 이 문서에서 고칠 곳 |
 |---|---|---|
-| **3** | **AI API**(현재 Gemini, 추후 Claude) — 백엔드가 호출한다. 키는 백엔드에만 | 0-1 지도 · 5장 비밀값 · 6장 의존성 |
-| **4** | few-shot 용 평가 데이터 — Postgres 표가 는다(`ops_analyses`, `ops_reviews`) | 4-5 표 |
+| **4** | 평가 데이터 — Postgres 표가 하나 더 는다(`ops_reviews`). few-shot 이 프롬프트 버전을 `v2` 로 올린다 | 3-4 · 4-5 표 |
+| 미정 | **LLM 을 Claude 로 전환** — 백엔드 `LLM_PROVIDER` 한 줄. 키가 하나 바뀐다 | 3-4 · 5장 |
 | 미정 | **preview/운영 빌드 배포** — 내부 배포 링크 또는 스토어 | 2-4 |
 | 미정 | **EAS Update**(설치 없이 JS 만 원격 교체하는 Expo 서비스) — 쓸지 아직 정하지 않았다 | 1장 |
 
@@ -670,9 +722,11 @@ Sentry 프로젝트는 셋이다: `e-commerse-frontend`, `e-commerse-backend`, `
 | **Gradle** | 안드로이드 빌드 도구. 우리는 직접 만지지 않는다(EAS 가 돌린다) (2-1) |
 | **Hermes** | React Native 용 JS 엔진. APK 안에서 우리 JS 를 실행한다 (1-1) |
 | **JWT** | 로그인하면 받는 서명된 토큰. 앱이 가진 유일한 비밀값 (3-3) |
+| **LLM** | Large Language Model. 텍스트를 넣으면 텍스트를 내는 모델. 우리는 Gemini 를 HTTP API 로 부른다 (3-4) |
 | **Metro** | React Native 번들러. 소스를 하나의 JS 로 묶어 폰에 건넨다 (1-2) |
 | **nginx** | 리버스 프록시. HTTPS 를 받아 풀고 백엔드로 넘긴다 (3-2) |
 | **projectId** | EAS 가 발급한 프로젝트 식별자. 푸시 토큰이 이 값에 묶인다 (4-4) |
+| **RPM** | requests per minute. Gemini 무료티어는 15. 초 단위의 벽이라 60초 캐시로는 부족하다 (3-4) |
 | **Sentry** | 에러 수집 SaaS. 같은 에러를 "이슈"로 묶어 준다 (4-6) |
 | **TLS 종단** | HTTPS 암호화를 nginx 가 풀어 주는 것 (3-2) |
 | **UptimeRobot** | 외부에서 주기적으로 서버를 찔러 보는 감시 서비스 (6장) |
@@ -692,6 +746,8 @@ Sentry 프로젝트는 셋이다: `e-commerse-frontend`, `e-commerse-backend`, `
 | **알림 채널** | 안드로이드에서 알림의 소리·중요도를 정하는 묶음. 없으면 알림이 표시되지 않는다 (4-4) |
 | **키스토어** | 앱 서명용 키가 든 파일. 같은 키로 서명된 APK 만 덮어 설치된다 (2-3) |
 | **폴링** | 상대가 알려 주길 기다리지 않고 주기적으로 물어보는 방식. webhook 의 반대 (4-5) |
+| **프롬프트** | LLM 에 넣는 텍스트. 역할·규칙(system)과 이번 질문(user)으로 나뉜다 (3-4) |
+| **프롬프트 버전** | 각 분석이 어느 문구로 만들어졌는지 남기는 표식. Phase 4 비교의 축 (3-4) |
 
 <br>
 
@@ -702,4 +758,5 @@ Sentry 프로젝트는 셋이다: `e-commerse-frontend`, `e-commerse-backend`, `
 | 날짜 | 커밋 | 무엇이 바뀌었나 |
 |---|---|---|
 | 2026-09-20 | `37ca6b0` | 첫 작성 — Phase 1 종료 시점. Metro · Expo Go · 개발 빌드 · EAS · Firebase/FCM · Expo Push · Sentry(역할 A·B) · nginx/EC2 · UptimeRobot |
+| 2026-09-21 | `bd9f8b4` | Phase 3 구현. **LLM API(Gemini) 노드**(0-1 지도) · **3-4 신설**(AI 분석 흐름 — 키 은닉·나가는 마스킹·저장으로 완충) · 비밀값 지도에 LLM 키(새 키는 아님) · 의존성 표에 LLM 행(분석만 멈춘다) · 7장에 호출 위치·응답 형식 결정 · Gemini RPM 비용 · 용어 4개(LLM·RPM·프롬프트·프롬프트 버전) · 8장에서 Phase 3 행 제거, Claude 전환 행 추가 |
 | 2026-09-21 | `4ead4ca` | Phase 2 종료. **expo.dev → Sentry 소스맵 업로드 선 추가**(0-1 지도 · 2장 흐름 · 2-6 신설) · **versionCode/릴리즈**(2-7 신설) · 빌드 프로필 표에 소스맵·versionCode 열 · **Release Health** 를 역할 A·B 순환으로(4-6) · **생체 잠금은 인프라를 늘리지 않는다**(3-3) · 비밀값 지도에 업로드 토큰·지문 정보 2줄 + "앱에 비밀을 두지 않는다"의 정확한 뜻 · 의존성 표에 업로드 토큰 만료 · 용어 8개 추가. sessions 조회에서 프로젝트·집계 단위를 빠뜨리면 틀린 답이 오는 것(4-6) |

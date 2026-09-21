@@ -19,4 +19,12 @@ export const levelColor: Record<'error' | 'warning' | 'info', string> = {
   info: colors.info,
 };
 
+/** AI 분석의 심각도 4단계(설계 §5.4). 인시던트 레벨 3색과 별개 축이라 따로 둔다 — critical 은 보라색으로 구분 */
+export const severityColor: Record<'critical' | 'high' | 'medium' | 'low', string> = {
+  critical: '#c678dd',
+  high: colors.error,
+  medium: colors.warning,
+  low: colors.info,
+};
+
 export const spacing = { xs: 4, sm: 8, md: 16, lg: 24 } as const;

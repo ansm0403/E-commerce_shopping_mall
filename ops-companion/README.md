@@ -124,6 +124,18 @@ eas build --platform android --profile preview
 빌드 로그에서 `Sentry-CLI arguments:` 와 `Uploaded files to Sentry` 를 찾는다. 설치 후 프로필 탭의
 **Sentry 테스트 에러 보내기** → Sentry 이슈의 스택이 `app/(tabs)/profile.tsx` 로 보이면 된다.
 
+## AI 분석 (Phase 3)
+
+인시던트 상세 맨 아래 **"AI에게 원인 물어보기"** → 백엔드가 LLM(현재 Gemini)에 스택트레이스·직전 행동을 넘겨
+원인·조치를 JSON 으로 받아 카드로 그린다. 앱은 LLM 을 직접 부르지 않는다 — API 키는 백엔드에만 있다.
+
+- 백엔드 `.env` 에 `GEMINI_API_KEY` 가 없으면 화면은 "AI 분석 미설정"(503) 이다. 나머지 기능은 그대로 돈다.
+- 첫 요청은 5~15초 걸린다. 같은 인시던트를 다시 열면 저장된 결과를 바로 준다. **"다시 분석"** 을 눌러야 새로 부른다.
+- 무료티어 상한(분당 5건) 을 넘으면 "요청이 잠시 몰렸습니다"(429). 1분 뒤 다시.
+- 섹션마다 **복사** 버튼, 맨 위에 **전체 복사**가 있다. 다른 AI 에게 "이 분석이 맞나?" 라고 되물을 때 붙여 넣는다.
+- **구조화 실패 화면 확인** — 개발 빌드에서만 보이는 `[DEV] 구조화 실패 시뮬레이션` 버튼을 누른다. 백엔드가 LLM 없이
+  실패 행을 만들어 준다(**로컬 백엔드에서만** 동작한다. 운영 백엔드는 이 옵션을 무시하고 실제 분석을 한 번 더 한다).
+
 ## 로컬 백엔드에 붙이려면
 
 `.env` 의 주소를 PC 의 LAN IP 로 바꾼다. 실기기에서 `localhost` 는 **기기 자신**을 가리키므로 쓸 수 없다.
@@ -154,7 +166,8 @@ app/                     # Expo Router — 파일 경로가 곧 화면 경로
 └── (tabs)/
     ├── incidents/_layout.tsx # 목록 → 상세 스택(anchor=index)
     ├── incidents/index.tsx   # S2 인시던트 목록
-    ├── incidents/[id].tsx    # S3 인시던트 상세 (푸시 딥링크 도착지)
+    ├── incidents/[id].tsx    # S3 인시던트 상세 (푸시 딥링크 도착지) + "AI에게 원인 물어보기"
+    ├── incidents/analysis/[id].tsx  # S4 AI 분석 (구조화 카드 / 실패 fallback)
     └── profile.tsx           # S6 프로필
 src/
 ├── lib/api.ts           # axios 인스턴스 + 401 시 refresh 1회 재시도
@@ -164,7 +177,8 @@ src/
 ├── lib/sentry.ts        # Sentry init (DSN 없으면 no-op)
 ├── lib/config.ts        # 환경변수 읽기
 ├── contexts/AuthContext.tsx
-└── features/incidents/queries.ts
+├── features/incidents/queries.ts
+└── features/analysis/   # 분석 쿼리(useAnalysis·useReanalyze) + 카드·fallback 컴포넌트
 ```
 
 ## 알아둘 것

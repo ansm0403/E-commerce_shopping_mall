@@ -6,7 +6,9 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { User } from '../auth/decorators/user.decorator';
 import { Role } from '../user/entity/role.entity';
 import { OpsService } from './ops.service';
+import { OpsAnalysisService } from './ops-analysis.service';
 import { IncidentSummary } from './dto/incident-summary.dto';
+import { AnalysisResponse, CreateAnalysisDto } from './dto/analysis.dto';
 import { IncidentDetail } from './dto/incident-detail.dto';
 import { RegisterDeviceDto } from './dto/register-device.dto';
 import { ReleaseHealth } from './dto/release-health.dto';
@@ -20,7 +22,10 @@ import { ReleaseHealth } from './dto/release-health.dto';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.ADMIN)
 export class OpsController {
-  constructor(private readonly opsService: OpsService) {}
+  constructor(
+    private readonly opsService: OpsService,
+    private readonly analysisService: OpsAnalysisService,
+  ) {}
 
   /**
    * GET /v1/ops/incidents — 최근 24h 인시던트 목록(축약형).
@@ -43,6 +48,27 @@ export class OpsController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<IncidentDetail> {
     const { item, cached } = await this.opsService.getIncident(id);
+    res.setHeader('X-Cache', cached ? 'HIT' : 'MISS');
+    return item;
+  }
+
+  /**
+   * POST /v1/ops/incidents/:id/analysis — AI 분석 생성 또는 최근 결과 반환(설계 §3.4 · §5.1).
+   *
+   * POST 인 이유: 첫 호출이 LLM 을 부르고 행을 만든다(부수효과). 두 번째부터는 최근 행을 돌려주며
+   * X-Cache: HIT 다. body `{ force: true }` 면 새로 분석한다(앱의 "다시 분석").
+   * LLM 키 없음 503 · 없는 이슈 404 · 분당 상한 429 · 같은 이슈 동시 요청 409.
+   *
+   * DemoAccountGuard 를 걸지 않는다: 로컬 DB 의 관리자가 데모 계정이라 걸면 앱 개발이 막힌다.
+   * 대신 분당 상한이 쿼터를 지킨다(호출당 최대 LLM 2왕복 × 분당 5건 = 10 RPM < 무료티어 15).
+   */
+  @Post('incidents/:id/analysis')
+  async analyzeIncident(
+    @Param('id') id: string,
+    @Body() dto: CreateAnalysisDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<AnalysisResponse> {
+    const { item, cached } = await this.analysisService.analyze(id, dto);
     res.setHeader('X-Cache', cached ? 'HIT' : 'MISS');
     return item;
   }

@@ -8253,6 +8253,7 @@ __metadata:
     "@types/react-native-web": "npm:^0"
     axios: "npm:^1.20.0"
     expo: "npm:~57.0.24"
+    expo-clipboard: "npm:~57.0.2"
     expo-constants: "npm:~57.0.19"
     expo-dev-client: "npm:~57.0.19"
     expo-device: "npm:~57.0.2"
@@ -14513,6 +14514,17 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: 10c0/b4c944ad85c5c0bc0bbd2888712ba30a3e582ff9c0d9a47dc4189bfac53beafdad1c5b0e10a8fd39aee587948fcf83a5ec31aa42b99263756a00a750e7c318a2
+  languageName: node
+  linkType: hard
+
+"expo-clipboard@npm:~57.0.2":
+  version: 57.0.2
+  resolution: "expo-clipboard@npm:57.0.2"
+  peerDependencies:
+    expo: "*"
+    react: "*"
+    react-native: "*"
+  checksum: 10c0/3cc041aeb53d09214f6eb70bb861737c6858323e621cb349ef07eaa5b2fca71432094e748db557f8bf47f318ac3c63fc1ccb9c66732f1026b923fb7e309eef73
   languageName: node
   linkType: hard
 
