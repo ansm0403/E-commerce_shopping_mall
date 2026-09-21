@@ -3,7 +3,7 @@
 > 대상: **React Native 와 모바일 인프라를 처음 접한다고 가정**한다. 용어는 처음 나올 때 풀고, 맨 끝 [용어 사전](#용어-사전)에 다시 모았다.
 > 성격: **살아 있는 문서**다. 편 번호가 붙은 학습 노트(1편·2편…)는 Phase 가 끝난 시점의 기록이지만, 이 문서는 인프라가 늘거나 바뀔 때마다 고쳐 쓴다. 갱신 규칙은 [README](./README.md#부록--살아-있는-문서) 에 있다.
 > 짝지어 읽을 것: [2편 — 푸시 알림과 딥링크](./02-push-and-deeplink.md) · [3편 — 관측성 심화와 생체 인증](./03-observability-and-biometrics.md) · [4편 — AI 분석](./04-ai-analysis.md)(코드 중심) · [설계 문서](../../roadmap/ops-companion-design.md) §3(아키텍처) · [관측 지도](../../roadmap/ex-observability-map.md)
-> 기준 시점: 2026-09-21 (Phase 3 구현, 브랜치 `feat/ops-ai-analysis`)
+> 기준 시점: 2026-09-21 (커밋 `bd9f8b4`, Phase 3)
 
 ---
 
@@ -758,5 +758,5 @@ Sentry 프로젝트는 셋이다: `e-commerse-frontend`, `e-commerse-backend`, `
 | 날짜 | 커밋 | 무엇이 바뀌었나 |
 |---|---|---|
 | 2026-09-20 | `37ca6b0` | 첫 작성 — Phase 1 종료 시점. Metro · Expo Go · 개발 빌드 · EAS · Firebase/FCM · Expo Push · Sentry(역할 A·B) · nginx/EC2 · UptimeRobot |
-| 2026-09-21 | (커밋 전) | Phase 3 구현. **LLM API(Gemini) 노드**(0-1 지도) · **3-4 신설**(AI 분석 흐름 — 키 은닉·나가는 마스킹·저장으로 완충) · 비밀값 지도에 LLM 키(새 키는 아님) · 의존성 표에 LLM 행(분석만 멈춘다) · 7장에 호출 위치·응답 형식 결정 · Gemini RPM 비용 · 용어 4개(LLM·RPM·프롬프트·프롬프트 버전) · 8장에서 Phase 3 행 제거, Claude 전환 행 추가 |
+| 2026-09-21 | `bd9f8b4` | Phase 3 구현. **LLM API(Gemini) 노드**(0-1 지도) · **3-4 신설**(AI 분석 흐름 — 키 은닉·나가는 마스킹·저장으로 완충) · 비밀값 지도에 LLM 키(새 키는 아님) · 의존성 표에 LLM 행(분석만 멈춘다) · 7장에 호출 위치·응답 형식 결정 · Gemini RPM 비용 · 용어 4개(LLM·RPM·프롬프트·프롬프트 버전) · 8장에서 Phase 3 행 제거, Claude 전환 행 추가 |
 | 2026-09-21 | `4ead4ca` | Phase 2 종료. **expo.dev → Sentry 소스맵 업로드 선 추가**(0-1 지도 · 2장 흐름 · 2-6 신설) · **versionCode/릴리즈**(2-7 신설) · 빌드 프로필 표에 소스맵·versionCode 열 · **Release Health** 를 역할 A·B 순환으로(4-6) · **생체 잠금은 인프라를 늘리지 않는다**(3-3) · 비밀값 지도에 업로드 토큰·지문 정보 2줄 + "앱에 비밀을 두지 않는다"의 정확한 뜻 · 의존성 표에 업로드 토큰 만료 · 용어 8개 추가. sessions 조회에서 프로젝트·집계 단위를 빠뜨리면 틀린 답이 오는 것(4-6) |

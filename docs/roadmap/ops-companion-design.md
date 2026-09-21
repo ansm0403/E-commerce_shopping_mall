@@ -715,7 +715,7 @@ prebuild 때 APK 안으로 들어간다(SDK 자신이 경고한다).
 - DoD: 실제 인시던트에 대해 구조화 카드가 렌더됨. AI가 스키마를 어긴 경우에도
   앱이 깨지지 않고 fallback UI가 표시됨(강제 실패 테스트 포함).
 
-**✅ 실기기 DoD 통과 · 운영 배포 대기(2026-09-21, 브랜치 `feat/ops-ai-analysis`)** — 학습 노트 4편
+**✅ 실기기 DoD 통과 · 운영 배포 대기(2026-09-21, `bd9f8b4`, 브랜치 `feat/ops-ai-analysis`)** — 학습 노트 4편
 [04-ai-analysis.md](../learning/ops-companion/04-ai-analysis.md).
 
 | 단계 | 내용 | 상태 |

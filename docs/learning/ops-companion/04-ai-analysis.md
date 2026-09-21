@@ -4,7 +4,7 @@
 > 원본 설계: [`docs/roadmap/ops-companion-design.md`](../../roadmap/ops-companion-design.md) §3.4(AI 분석 파이프라인) · §4.3 S4 · §5.3 `ops_analyses` · §5.4(응답 스키마) · §6 "AI 호출 계측" · §9 Phase 3
 > 재사용한 자산의 원본: [`docs/roadmap/ex-ai-assistant.md`](../../roadmap/ex-ai-assistant.md) (쇼핑몰 관리자 AI 어시스턴트 — `LlmClient`, `scrubText`, judge 파서)
 > 짝지어 읽을 코드: [ops-analysis.service.ts](../../../backend/src/ops/ops-analysis.service.ts) · [analysis.dto.ts](../../../backend/src/ops/dto/analysis.dto.ts) · [ops-analysis.entity.ts](../../../backend/src/ops/entity/ops-analysis.entity.ts) · [analysis/[id].tsx](../../../ops-companion/app/%28tabs%29/incidents/analysis/%5Bid%5D.tsx) · [AnalysisCard.tsx](../../../ops-companion/src/features/analysis/AnalysisCard.tsx) · [queries.ts](../../../ops-companion/src/features/analysis/queries.ts) · [sentry.ts](../../../ops-companion/src/lib/sentry.ts)
-> 작성 시점: 2026-09-21 (브랜치 `feat/ops-ai-analysis`, 커밋 전 — 실기기 DoD 통과. 남은 것은 운영 배포와 Sentry span 확인, 0-3 표 참고)
+> 작성 시점: 2026-09-21 (커밋 `bd9f8b4`, 브랜치 `feat/ops-ai-analysis` — 실기기 DoD 통과. 남은 것은 운영 배포와 Sentry span 확인, 0-3 표 참고)
 
 ---
 
