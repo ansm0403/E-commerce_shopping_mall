@@ -715,16 +715,16 @@ prebuild 때 APK 안으로 들어간다(SDK 자신이 경고한다).
 - DoD: 실제 인시던트에 대해 구조화 카드가 렌더됨. AI가 스키마를 어긴 경우에도
   앱이 깨지지 않고 fallback UI가 표시됨(강제 실패 테스트 포함).
 
-**✅ 실기기 DoD 통과 · 운영 배포 대기(2026-09-21, `bd9f8b4`, 브랜치 `feat/ops-ai-analysis`)** — 학습 노트 4편
+**✅ 완료(2026-09-21, main `89a02bc` = PR #33)** — 실기기 DoD · 운영 배포 · Sentry span 확인 — 학습 노트 4편
 [04-ai-analysis.md](../learning/ops-companion/04-ai-analysis.md).
 
 | 단계 | 내용 | 상태 |
 |---|---|---|
 | ① 백엔드 파이프라인 | `OpsAnalysisService`: 상세 재사용 → 프롬프트 → `LlmClient.generate` → `parseAnalysis` → 교정 재시도 1회 → `ops_analyses` | ✅ 단위 15건 + 파서 단위 14건. **로컬 실인시던트로 `ok` 1건 실측**(Gemini flash-lite, 1회 시도, 2.4초, 스키마 준수) |
-| ② DB | `ops_analyses` 마이그레이션(+`raw_text`) · index.ts 등록 · 로컬 적용 | ✅ 로컬. **운영 미적용** |
+| ② DB | `ops_analyses` 마이그레이션(+`raw_text`) · index.ts 등록 · 로컬 적용 | ✅ 로컬 · **운영 적용**(`run --rm … migrate.js`, 2026-09-21) |
 | ③ S4 AnalysisScreen | `/incidents/analysis/[id]` — 스켈레톤 / 구조화 카드 / fallback(원문+다시 분석) / HTTP 에러 6종 문구 | ✅ **실기기**(개발 빌드 `8f91794d` + 로컬 백엔드) 카드 렌더 |
 | ④ S3 CTA | "AI에게 원인 물어보기" 버튼 활성 | ✅ 실기기 |
-| ⑤ span 계측 | 앱 `tracesSampler` 이름 필터 + `ops.analysis.request` · 백엔드 `ops.analysis.llm` | ✅ 코드. ⏳ Sentry Performance 는 운영 배포 뒤(개발 모드는 Sentry off) |
+| ⑤ span 계측 | 앱 `tracesSampler` 이름 필터 + `ops.analysis.request` · 백엔드 `ops.analysis.llm` | ✅ **preview `aad289d2` + 운영**: 누른 횟수만큼 트랜잭션, `ops.analysis.status=ok`, 자식 `POST`. 앱 시작·화면 이동 트랜잭션 없음(`app.start.warm` 은 첫 트랜잭션의 자식 span — 4편 6-10). 백엔드 span 은 운영 샘플 0.1 |
 | ⑥ 강제 실패 | `simulate:'parse_failed'`(비운영) + 개발 빌드 전용 `[DEV]` 버튼 | ✅ **실기기**: fallback 원문 표시, 앱 생존, "다시 분석"으로 카드 복귀 |
 
 **DoD 통과가 "분석이 맞다"는 뜻은 아니다.** 첫 실기기 분석(CORS 이슈)은 문장이 매끄러웠지만 판단이 틀렸다 — 차단한 서버 자신을 허용 목록에 넣으라고 했다(학습 노트 4편 6-8). 옳고 그름을 가리는 장치가 Phase 4 이고, 근거를 늘리는 것이 아래 보강 후보다.
