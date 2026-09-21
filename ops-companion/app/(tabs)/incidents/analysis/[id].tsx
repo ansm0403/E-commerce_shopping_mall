@@ -15,7 +15,7 @@
 import { useCallback } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { AxiosError } from 'axios';
 import { useAnalysis, useReanalyze } from '../../../../src/features/analysis/queries';
 import { AnalysisCard, AnalysisMeta, CopyButton, FallbackCard, analysisToText } from '../../../../src/features/analysis/AnalysisCard';
@@ -59,6 +59,7 @@ function Skeleton() {
 
 export default function AnalysisScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const { data, isPending, isError, error, refetch } = useAnalysis(id);
   const reanalyze = useReanalyze(id);
 
@@ -114,6 +115,15 @@ export default function AnalysisScreen() {
         {data.status === 'ok' ? (
           <>
             <AnalysisCard result={data.result} />
+            {/* S4 → S5 (설계 §4.3 S4 마지막 줄). 평가 탭으로 넘어가며 이 분석 카드를 맨 앞으로 끌어올린다.
+                순환 고리 ②→③ 의 손잡이 — 방금 읽은 분석이 맞는지 틀리는지를 사람이 바로 판정한다 */}
+            <Pressable
+              style={({ pressed }) => [styles.reviewButton, pressed && styles.disabled]}
+              onPress={() => router.push({ pathname: '/review', params: { analysisId: String(data.id) } })}
+            >
+              <Text style={styles.reviewText}>이 분석 평가하기</Text>
+              <Text style={styles.reviewHint}>승인한 분석은 다음 AI 분석의 예시가 됩니다</Text>
+            </Pressable>
             <Pressable style={[styles.secondaryButton, isRetrying && styles.disabled]} onPress={() => onReanalyze()} disabled={isRetrying}>
               <Text style={styles.secondaryText}>{isRetrying ? '다시 분석 중…' : '다시 분석'}</Text>
             </Pressable>
@@ -168,6 +178,16 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   retryText: { color: '#fff', fontWeight: '600' },
+  reviewButton: {
+    marginTop: spacing.md,
+    backgroundColor: colors.accent,
+    borderRadius: 10,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    gap: 2,
+  },
+  reviewText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  reviewHint: { color: 'rgba(255,255,255,0.8)', fontSize: 12 },
   secondaryButton: {
     marginTop: spacing.sm,
     borderColor: colors.border,

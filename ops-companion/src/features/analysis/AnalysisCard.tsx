@@ -112,10 +112,15 @@ export function analysisToText(result: Partial<AiAnalysis> | null | undefined): 
   ].join('\n');
 }
 
-/** 분석 메타 한 줄 — "gemini-3.1-flash-lite · v1 · 3.2초 · 5분 전". 어느 모델·프롬프트가 만든 답인지 화면에서 보인다 */
+/**
+ * 분석 메타 한 줄 — "gemini-3.1-flash-lite · 프롬프트 v2 (예시 3) · 3.2초 · 5분 전".
+ * 어느 모델·프롬프트가 만든 답인지 화면에서 보인다. "(예시 n)" 은 few-shot 예시가 들어간 v2 에서만 붙는다(Phase 4).
+ * 평가 카드(S5)는 이 줄을 쓰지 않는다 — 버전을 보여주면 블라인드가 깨진다.
+ */
 export function AnalysisMeta({ analysis }: { analysis: IncidentAnalysis }) {
   const seconds = analysis.latencyMs > 0 ? `${(analysis.latencyMs / 1000).toFixed(1)}초` : null;
-  const parts = [analysis.model ?? '모델 미상', `프롬프트 ${analysis.promptVersion}`, seconds, timeAgo(analysis.createdAt)].filter(
+  const fewShot = Array.isArray(analysis.fewShotIds) && analysis.fewShotIds.length > 0 ? ` (예시 ${analysis.fewShotIds.length})` : '';
+  const parts = [analysis.model ?? '모델 미상', `프롬프트 ${analysis.promptVersion}${fewShot}`, seconds, timeAgo(analysis.createdAt)].filter(
     Boolean,
   );
   return <Text style={styles.meta}>{parts.join(' · ')}</Text>;

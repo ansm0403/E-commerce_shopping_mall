@@ -1,0 +1,146 @@
+{
+  "runAt": "2026-09-21T19:34:24.623Z",
+  "command": "test",
+  "ids": [
+    "7742806178",
+    "7742712093",
+    "7734495591",
+    "7743410873",
+    "7736291868",
+    "7734451568"
+  ],
+  "delayMs": 13000,
+  "records": [
+    {
+      "incidentId": "7742806178",
+      "arm": "v1",
+      "analysisId": 17,
+      "status": "ok",
+      "promptVersion": "v1",
+      "fewShotIds": null,
+      "latencyMs": 7012
+    },
+    {
+      "incidentId": "7742806178",
+      "arm": "v2",
+      "analysisId": 18,
+      "status": "ok",
+      "promptVersion": "v2",
+      "fewShotIds": [
+        1,
+        15,
+        16
+      ],
+      "latencyMs": 5422
+    },
+    {
+      "incidentId": "7742712093",
+      "arm": "v1",
+      "analysisId": 19,
+      "status": "ok",
+      "promptVersion": "v1",
+      "fewShotIds": null,
+      "latencyMs": 7109
+    },
+    {
+      "incidentId": "7742712093",
+      "arm": "v2",
+      "analysisId": 20,
+      "status": "ok",
+      "promptVersion": "v2",
+      "fewShotIds": [
+        15,
+        16
+      ],
+      "latencyMs": 4159
+    },
+    {
+      "incidentId": "7734495591",
+      "arm": "v1",
+      "analysisId": 21,
+      "status": "ok",
+      "promptVersion": "v1",
+      "fewShotIds": null,
+      "latencyMs": 5949
+    },
+    {
+      "incidentId": "7734495591",
+      "arm": "v2",
+      "analysisId": 22,
+      "status": "ok",
+      "promptVersion": "v2",
+      "fewShotIds": [
+        1,
+        15,
+        16
+      ],
+      "latencyMs": 5321
+    },
+    {
+      "incidentId": "7743410873",
+      "arm": "v1",
+      "analysisId": 23,
+      "status": "ok",
+      "promptVersion": "v1",
+      "fewShotIds": null,
+      "latencyMs": 3395
+    },
+    {
+      "incidentId": "7743410873",
+      "arm": "v2",
+      "analysisId": 24,
+      "status": "ok",
+      "promptVersion": "v2",
+      "fewShotIds": [
+        1,
+        15,
+        16
+      ],
+      "latencyMs": 9366
+    },
+    {
+      "incidentId": "7736291868",
+      "arm": "v1",
+      "analysisId": 25,
+      "status": "ok",
+      "promptVersion": "v1",
+      "fewShotIds": null,
+      "latencyMs": 7525
+    },
+    {
+      "incidentId": "7736291868",
+      "arm": "v2",
+      "analysisId": 26,
+      "status": "ok",
+      "promptVersion": "v2",
+      "fewShotIds": [
+        1,
+        15,
+        16
+      ],
+      "latencyMs": 3140
+    },
+    {
+      "incidentId": "7734451568",
+      "arm": "v1",
+      "analysisId": 27,
+      "status": "ok",
+      "promptVersion": "v1",
+      "fewShotIds": null,
+      "latencyMs": 3088
+    },
+    {
+      "incidentId": "7734451568",
+      "arm": "v2",
+      "analysisId": 28,
+      "status": "ok",
+      "promptVersion": "v2",
+      "fewShotIds": [
+        1,
+        15,
+        16
+      ],
+      "latencyMs": 5853
+    }
+  ]
+}
