@@ -1,0 +1,29 @@
+{
+  "runAt": "2026-09-21T16:03:33.394Z",
+  "command": "seed",
+  "ids": [
+    "7742806116",
+    "7744504775"
+  ],
+  "delayMs": 13000,
+  "records": [
+    {
+      "incidentId": "7742806116",
+      "arm": "v1",
+      "analysisId": 15,
+      "status": "ok",
+      "promptVersion": "v1",
+      "fewShotIds": null,
+      "latencyMs": 2637
+    },
+    {
+      "incidentId": "7744504775",
+      "arm": "v1",
+      "analysisId": 16,
+      "status": "ok",
+      "promptVersion": "v1",
+      "fewShotIds": null,
+      "latencyMs": 33506
+    }
+  ]
+}

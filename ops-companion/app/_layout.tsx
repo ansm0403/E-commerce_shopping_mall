@@ -19,6 +19,7 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as Notifications from 'expo-notifications';
 import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
@@ -92,22 +93,27 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <SafeAreaProvider>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <BiometricLockProvider>
-          <PushProvider>
-            <StatusBar style="light" />
-            <RootNavigator />
-          </PushProvider>
-          </BiometricLockProvider>
-        </AuthProvider>
-      </QueryClientProvider>
-    </SafeAreaProvider>
+    // 제스처(평가 화면의 스와이프)는 이 뷰 안에서만 잡힌다. 안 감싸면 GestureDetector 가 조용히 동작하지 않는다 —
+    // 에러도 없이 카드가 그냥 안 움직인다. 루트에 한 번만 두면 된다(Phase 4).
+    <GestureHandlerRootView style={styles.gestureRoot}>
+      <SafeAreaProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <BiometricLockProvider>
+            <PushProvider>
+              <StatusBar style="light" />
+              <RootNavigator />
+            </PushProvider>
+            </BiometricLockProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
+  gestureRoot: { flex: 1 },
   root: { flex: 1 },
   booting: {
     flex: 1,

@@ -136,6 +136,17 @@ eas build --platform android --profile preview
 - **구조화 실패 화면 확인** — 개발 빌드에서만 보이는 `[DEV] 구조화 실패 시뮬레이션` 버튼을 누른다. 백엔드가 LLM 없이
   실패 행을 만들어 준다(**로컬 백엔드에서만** 동작한다. 운영 백엔드는 이 옵션을 무시하고 실제 분석을 한 번 더 한다).
 
+## 평가 (Phase 4)
+
+하단 **평가** 탭 — AI 분석을 카드 한 장씩 보고 **오른쪽으로 밀면 승인, 왼쪽은 반려**(아래 버튼도 같다). 별점 1~5 는 선택.
+스와이프 순간 다음 카드가 뜨고 저장은 뒤에서 나간다. 실패하면 카드가 되돌아오고 알림이 뜬다.
+
+- 카드에는 **프롬프트 버전이 없다**(블라인드). 백엔드가 응답에서 뺀다 — 채점이 끝난 뒤 `GET /v1/ops/analyses/stats` 에서만 v1·v2 가 갈린다.
+- 승인한 분석은 다음 AI 분석의 **예시(few-shot)** 로 프롬프트에 들어간다 → 그 분석의 메타 줄이 `프롬프트 v2 (예시 3)` 으로 바뀐다.
+- 분석 화면(S4) 맨 아래 **"이 분석 평가하기"** 를 누르면 그 카드가 평가 탭 맨 앞에 온다. 이미 채점한 분석이면 알려만 준다.
+- 평가 세트를 한꺼번에 만들거나 승인율을 보려면 `backend/eval/ops-review-set.ts`(`list` / `seed` / `test` / `stats`).
+- 스와이프가 **아예 안 움직이면** 루트 `_layout.tsx` 의 `GestureHandlerRootView` 가 빠진 것이다(에러 없이 조용히 죽는다).
+
 ## 로컬 백엔드에 붙이려면
 
 `.env` 의 주소를 PC 의 LAN IP 로 바꾼다. 실기기에서 `localhost` 는 **기기 자신**을 가리키므로 쓸 수 없다.
@@ -167,7 +178,8 @@ app/                     # Expo Router — 파일 경로가 곧 화면 경로
     ├── incidents/_layout.tsx # 목록 → 상세 스택(anchor=index)
     ├── incidents/index.tsx   # S2 인시던트 목록
     ├── incidents/[id].tsx    # S3 인시던트 상세 (푸시 딥링크 도착지) + "AI에게 원인 물어보기"
-    ├── incidents/analysis/[id].tsx  # S4 AI 분석 (구조화 카드 / 실패 fallback)
+    ├── incidents/analysis/[id].tsx  # S4 AI 분석 (구조화 카드 / 실패 fallback) + "이 분석 평가하기"
+    ├── review.tsx            # S5 평가 카드 스택 (스와이프 승인/반려 + 별점)
     └── profile.tsx           # S6 프로필
 src/
 ├── lib/api.ts           # axios 인스턴스 + 401 시 refresh 1회 재시도
@@ -178,7 +190,8 @@ src/
 ├── lib/config.ts        # 환경변수 읽기
 ├── contexts/AuthContext.tsx
 ├── features/incidents/queries.ts
-└── features/analysis/   # 분석 쿼리(useAnalysis·useReanalyze) + 카드·fallback 컴포넌트
+├── features/analysis/   # 분석 쿼리(useAnalysis·useReanalyze) + 카드·fallback 컴포넌트
+└── features/review/     # 평가 쿼리(낙관적 업데이트) + SwipeCard(gesture-handler·reanimated) + StarRating
 ```
 
 ## 알아둘 것

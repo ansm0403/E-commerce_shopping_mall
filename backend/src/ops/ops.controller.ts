@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Res, UseGuards } from '@nestjs/common';
 import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -7,8 +7,10 @@ import { User } from '../auth/decorators/user.decorator';
 import { Role } from '../user/entity/role.entity';
 import { OpsService } from './ops.service';
 import { OpsAnalysisService } from './ops-analysis.service';
+import { OpsReviewService } from './ops-review.service';
 import { IncidentSummary } from './dto/incident-summary.dto';
 import { AnalysisResponse, CreateAnalysisDto } from './dto/analysis.dto';
+import { CreateReviewDto, PendingReviewItem, ReviewResponse, ReviewStats } from './dto/review.dto';
 import { IncidentDetail } from './dto/incident-detail.dto';
 import { RegisterDeviceDto } from './dto/register-device.dto';
 import { ReleaseHealth } from './dto/release-health.dto';
@@ -25,6 +27,7 @@ export class OpsController {
   constructor(
     private readonly opsService: OpsService,
     private readonly analysisService: OpsAnalysisService,
+    private readonly reviewService: OpsReviewService,
   ) {}
 
   /**
@@ -70,6 +73,47 @@ export class OpsController {
   ): Promise<AnalysisResponse> {
     const { item, cached } = await this.analysisService.analyze(id, dto);
     res.setHeader('X-Cache', cached ? 'HIT' : 'MISS');
+    return item;
+  }
+
+  // ── Phase 4 평가 루프(설계 §5.1 · §9 Phase 4) ───────────────────────────────
+  // 정적 경로(pending·stats)를 동적 경로(:id/review)보다 먼저 둔다 — 메서드가 달라 충돌은 없지만 읽는 순서를 맞춘다.
+
+  /**
+   * GET /v1/ops/analyses/pending — 이 평가자가 아직 채점하지 않은 분석(S5 카드 스택의 재료).
+   * 응답에 promptVersion 이 **없다**(블라인드 평가). 캐시하지 않는다 — 채점할 때마다 목록이 바뀌는 데이터다.
+   */
+  @Get('analyses/pending')
+  async listPendingReviews(@User('sub') reviewerId: number): Promise<PendingReviewItem[]> {
+    return this.reviewService.listPending(reviewerId);
+  }
+
+  /**
+   * GET /v1/ops/analyses/stats — promptVersion 별 승인율·구조화 실패율. Phase 4 DoD 의 숫자.
+   * 앱 화면은 없고(사람이 채점 중에 보면 블라인드가 깨진다) 스크립트·curl 로 본다.
+   */
+  @Get('analyses/stats')
+  async getReviewStats(): Promise<ReviewStats> {
+    return this.reviewService.getStats();
+  }
+
+  /**
+   * POST /v1/ops/analyses/:id/review — 판정 저장. 같은 평가자의 재평가는 덮어쓴다(upsert, 결정 ⑤).
+   * 처음이면 X-Review: CREATED, 덮어썼으면 UPDATED — 상태코드는 둘 다 201 이라 헤더로만 구분한다(e2e 용).
+   * 평가 대상이 아닌 행(parse_failed·simulated) 400 · 없는 분석 404.
+   *
+   * DemoAccountGuard 를 걸지 않는다: 분석 엔드포인트와 같은 이유(로컬 관리자가 데모 계정). 저장되는 것은
+   * 본인의 판정 한 줄이라 남의 데이터가 바뀌지 않는다.
+   */
+  @Post('analyses/:id/review')
+  async submitReview(
+    @User('sub') reviewerId: number,
+    @Param('id', ParseIntPipe) analysisId: number,
+    @Body() dto: CreateReviewDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<ReviewResponse> {
+    const { item, created } = await this.reviewService.submitReview(reviewerId, analysisId, dto);
+    res.setHeader('X-Review', created ? 'CREATED' : 'UPDATED');
     return item;
   }
 

@@ -258,6 +258,8 @@ export interface IncidentAnalysis {
   promptVersion: string;
   model: string | null;
   latencyMs: number;
+  /** few-shot 예시로 들어간 분석 id(Phase 4). v1(예시 없음)이면 null. 메타 줄이 "v2 · 예시 3" 으로 그린다 */
+  fewShotIds?: number[] | null;
   createdAt: string;
 }
 
@@ -287,4 +289,57 @@ export async function requestAnalysis(id: string, options: AnalyzeOptions = {}):
     setStatus(data.status);
     return data;
   });
+}
+
+// ─── 평가 루프 (Phase 4, 설계 §4.3 S5 · §5.1) ──────────────────────
+
+export type ReviewVerdict = 'approved' | 'rejected';
+
+/**
+ * GET /v1/ops/analyses/pending 의 항목 — 내가 아직 채점하지 않은, 구조화에 성공한 분석.
+ *
+ * promptVersion 이 **없다**. 평가는 블라인드다(설계 §9 Phase 4 결정 ①) — "이건 v2 니까" 하고 후하게 줄 수 있는
+ * 정보는 카드에서 숨기는 게 아니라 백엔드가 응답에서 뺀다. 버전은 채점이 끝난 뒤 집계에서만 드러난다.
+ */
+export interface PendingReview {
+  analysisId: number;
+  incidentId: string;
+  /** 분석 시점에 저장한 제목. Phase 3 시절의 옛 행은 null — 화면은 incidentId 로 대신 그린다 */
+  incidentTitle: string | null;
+  exceptionText: string | null;
+  result: AiAnalysis;
+  model: string | null;
+  createdAt: string;
+}
+
+export interface ReviewInput {
+  verdict: ReviewVerdict;
+  /** 1~5. 별점을 안 고르고 스와이프만 하면 보내지 않는다 */
+  rating?: number;
+  comment?: string;
+}
+
+export interface ReviewResult {
+  id: number;
+  analysisId: number;
+  reviewerId: number;
+  verdict: ReviewVerdict;
+  rating: number | null;
+  comment: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function fetchPendingReviews(): Promise<PendingReview[]> {
+  const { data } = await api.get<PendingReview[]>('/ops/analyses/pending');
+  return data;
+}
+
+/**
+ * POST /v1/ops/analyses/:id/review — 판정 저장. 같은 분석을 다시 평가하면 백엔드가 덮어쓴다(upsert, 결정 ⑤).
+ * 그래서 낙관적 업데이트가 실패해 카드를 되돌린 뒤 다시 스와이프해도 같은 경로를 탄다.
+ */
+export async function submitReview(analysisId: number, input: ReviewInput): Promise<ReviewResult> {
+  const { data } = await api.post<ReviewResult>(`/ops/analyses/${analysisId}/review`, input);
+  return data;
 }

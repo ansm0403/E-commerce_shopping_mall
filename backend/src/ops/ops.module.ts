@@ -10,6 +10,8 @@ import { OpsDeviceTokenEntity } from './entity/ops-device-token.entity';
 import { OpsPollStateEntity } from './entity/ops-poll-state.entity';
 import { OpsPushLogEntity } from './entity/ops-push-log.entity';
 import { OpsAnalysisEntity } from './entity/ops-analysis.entity';
+import { OpsReviewEntity } from './entity/ops-review.entity';
+import { OpsReviewService } from './ops-review.service';
 
 /**
  * Ops Companion(RN 운영 앱) 백엔드 모듈 — Phase 0~3.
@@ -20,6 +22,8 @@ import { OpsAnalysisEntity } from './entity/ops-analysis.entity';
  *   가 스캔한다 — forRoot 는 앱 전체에 한 번만 있으면 되고, 두 번 부르면 잡이 중복 등록된다.
  * - Phase 3: ops_analyses + OpsAnalysisService. LLM_CLIENT 는 AiModule.forRoot()(global) 이 제공하므로
  *   여기서 import 하지 않는다(admin/assistant 와 같은 방식).
+ * - Phase 4: ops_reviews + OpsReviewService(평가 저장·집계·few-shot 선정). OpsAnalysisService 가 이걸 주입받아
+ *   프롬프트에 승인된 예시를 넣는다 — 순환 고리(설계 §1.4)의 ④→② 화살표가 이 의존성이다.
  */
 @Module({
   imports: [
@@ -28,11 +32,12 @@ import { OpsAnalysisEntity } from './entity/ops-analysis.entity';
       OpsPollStateEntity,
       OpsPushLogEntity,
       OpsAnalysisEntity,
+      OpsReviewEntity,
     ]),
     AuthModule,
   ],
   controllers: [OpsController],
-  providers: [OpsService, OpsAnalysisService, OpsPollerService, SentryApiClient],
+  providers: [OpsService, OpsAnalysisService, OpsReviewService, OpsPollerService, SentryApiClient],
   exports: [OpsService],
 })
 export class OpsModule {}

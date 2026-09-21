@@ -34,6 +34,14 @@ export class CreateAnalysisDto {
   @IsOptional()
   @IsIn(['parse_failed'])
   simulate?: 'parse_failed';
+
+  /**
+   * false 면 승인된 예시(few-shot)를 넣지 않고 Phase 3 그대로의 프롬프트(v1)로 분석한다.
+   * 평가 세트 스크립트가 대조군을 만들 때 쓴다(Phase 4 결정 ①). 앱은 보내지 않는다(기본 true).
+   */
+  @IsOptional()
+  @IsBoolean()
+  fewShot?: boolean;
 }
 
 /** 응답. 캐시 적중 여부는 다른 ops 엔드포인트와 같이 X-Cache 헤더로 알린다 */
@@ -48,6 +56,8 @@ export interface AnalysisResponse {
   promptVersion: string;
   model: string | null;
   latencyMs: number;
+  /** few-shot 예시로 들어간 분석 행 id. v1(예시 없음)이면 null. 앱 메타 줄이 "v2 · 예시 3" 으로 그린다 */
+  fewShotIds: number[] | null;
   /** ISO 8601 */
   createdAt: string;
 }

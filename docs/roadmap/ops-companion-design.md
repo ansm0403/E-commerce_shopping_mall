@@ -327,8 +327,9 @@ RootNavigator (AuthContext의 user 유무로 분기)
 | `POST /v1/ops/devices` | 기기 Expo push token 등록 — ✅ **구현 완료(2026-09-20)**: `(userId, 토큰)` upsert + Expo 토큰 정규식 검증. `DemoAccountGuard` 는 걸지 않는다(저장되는 것이 본인 기기 주소뿐이고, 막으면 데모 로그인으로 앱이 못 돈다) | 1 |
 | ~~`POST /v1/ops/webhooks/sentry`~~ | ~~Sentry webhook 수신~~ → **폐기(2026-09-16)**. §3.3 의 폴링 스케줄러로 대체 | 1 |
 | `POST /v1/ops/incidents/:id/analysis` | AI 분석 생성(또는 캐시된 분석 반환) — ✅ **구현 완료(2026-09-21)**: `ops-analysis.service.ts`. `getIncident` 재사용 → 프롬프트 조립(`scrubText`) → `LlmClient.generate` → `parseAnalysis` 검증, 위반 시 사유를 실어 **1회 교정 재시도** → `ops_analyses` 저장. body 없이 부르면 최근 행(상태 무관, `X-Cache: HIT`), `{force:true}` 면 재분석, `{simulate:'parse_failed'}` 는 **비운영 전용** 강제 실패. LLM 키 없음 503 · 분당 상한(`OPS_ANALYSIS_MAX_PER_MIN`, 기본 5) 초과 429 · 같은 이슈 동시 409. 실제 LLM 호출은 단위 테스트 15건이 모킹으로 고정, e2e 는 시뮬레이션 경로만 | 3 |
-| `GET /v1/ops/analyses/pending` | 평가 대기 중인 분석 목록 | 4 |
-| `POST /v1/ops/analyses/:id/review` | 평가 저장 (verdict, rating) | 4 |
+| `GET /v1/ops/analyses/pending` | 평가 대기 중인 분석 목록 — ✅ **구현(2026-09-22, `ops-review.service.ts`)**: 이 평가자가 아직 채점하지 않은 `status=ok`·비시뮬레이션 행. **promptVersion 을 응답에서 뺀다**(블라인드). 순서는 `md5(id:reviewerId)` — 평가자별 고정 뒤섞기(시간순이면 v1·v2 가 번갈아 나와 패턴이 읽히고, 난수면 새로고침마다 재배열). 상한 50 | 4 |
+| `POST /v1/ops/analyses/:id/review` | 평가 저장 (verdict, rating) — ✅ **구현(2026-09-22)**: `{verdict, rating?, comment?}` → `ops_reviews` **upsert**(같은 평가자 재평가는 통째로 덮어씀, `X-Review: CREATED|UPDATED`). parse_failed·simulated 행 400, 없는 분석 404 | 4 |
+| `GET /v1/ops/analyses/stats` | (설계에 없던 추가) promptVersion 별 분석 수·구조화 실패율·승인율·평균 별점 — DoD 의 숫자가 나오는 경로. 앱 화면은 없다(채점 중에 보면 블라인드가 깨진다). `model='simulated'` 제외 | 4 |
 
 - **인증 확정(2026-09-15)**: `@UseGuards(JwtAuthGuard, RolesGuard)` + `@Roles(Role.ADMIN)`.
   `Role` 은 `buyer | seller | admin`(`backend/src/user/entity/role.entity.ts`).
@@ -759,6 +760,60 @@ AI 의 가치는 모델이 아니라 **컨텍스트 · 도구 · 피드백 루�
   (승인된 분석 상위 N개를 프롬프트에 포함), promptVersion 관리
 - DoD: 평가 10건 이상 축적 후, few-shot 적용 전/후 분석 품질 차이를 스크린샷
   또는 승인율 수치로 비교할 수 있음.
+
+**✅ 완료(2026-09-22, 브랜치 `feat/ops-review-loop` — 실기기 채점 18장 · v1 vs v2 수치까지. 운영 배포는 커밋·PR 뒤)** — 학습 노트 5편 [05-review-loop.md](../learning/ops-companion/05-review-loop.md). 착수 전 결정 4건(+재평가 1건)을 사용자와 확정했다.
+
+**실측 수치(2026-09-22, 로컬 DB, 평가자 1명, gemini-3.1-flash-lite)**
+
+| 집합 | v1 승인율 | v2 승인율 | 평균 별점 v1 / v2 | 구조화 실패 |
+|---|---|---|---|---|
+| test 6건(같은 인시던트 × 두 버전, 블라인드) | **5/6 = 83.3%** | **4/6 = 66.7%** | 3.60 / 3.75 | 0 / 0 |
+| test 중 쌍둥이 2건 제외 | 3/4 | 3/4 | — | — |
+| 전체(`stats` 출력 — Phase 3 옛 행·seed 포함) | 8/12 = 66.7% | 4/6 = 66.7% | 3.88 / 3.75 | 0 / 0 |
+
+**few-shot 은 승인율을 올리지 못했다.** 표본이 6건이라(한 건 = 16.7%p) 어느 쪽도 단정할 수 없고, 이 표의 뜻은 "측정 장치가 생겼고 첫 측정이 기대와 달랐다"다. v1 도 v2 도 CORS 이슈에는 같은 오답을 냈다(seed #14) — 예시로는 못 고치는 종류의 오류라 보강 후보 1번(소스 코드 읽기)의 근거가 됐다. 오염 요소(쌍둥이 2건 · 옛 행 #1 이 test 인시던트와 겹쳐 그 건의 v2 는 예시 2개 · 반려에 별점 5 인 행 1건)는 5편 6-6.
+
+| 항목 | 결정 | 이유 |
+|---|---|---|
+| ① 비교 방법 | **고정 평가 세트 + 블라인드.** Sentry 30일 이슈에서 seed(3건)·test(5~6건)를 **서로 다른 인시던트**로 나눈다. seed 를 v1 로 분석·채점해 승인 풀을 만든 뒤, test 를 v1·v2 로 **각각** 분석해 섞어서 채점한다. 평가 화면은 promptVersion 을 **응답에서 아예 내려주지 않는다**(카드에서 숨기는 게 아니라). 총 평가 ≈ 3 + 2×6 = 15건 | 서로 다른 인시던트로 v1·v2 를 재면 난이도가 섞여 차이의 원인을 가릴 수 없다. 어시스턴트 eval(골든셋 고정 → 프롬프트만 변경)과 같은 원리. seed/test 를 나누면 누수(④)가 구조적으로 막힌다 |
+| ② 평가 재료 | 24h 가 아니라 **`listIssues('30d')`** 로 후보를 모은 뒤 사용자가 id 를 고른다. 생성은 `backend/eval/ops-review-set.ts` 스크립트(Nest 컨텍스트 부팅, 어시스턴트 eval 러너와 같은 방식) | 24h 인시던트는 2~3건뿐이다. 같은 이슈 재분석은 다양성이 없고, 자연 발생분은 언제 10건이 모일지 모른다 |
+| ③ 캐시와 버전 | **그대로 둔다.** 화면 진입은 최신 행(버전 무관), 재분석은 "다시 분석" 버튼뿐. 평가 세트는 스크립트가 `force` 로 만든다 | Phase 3 결정 "비싼 동작은 사용자가 눌렀을 때만"을 지킨다. 버전이 다르다고 화면 진입이 LLM 을 부르면 쿼터 예측이 깨진다 |
+| ④ few-shot | **N=3**, 승인(`approved`) + `status=ok` + `model≠simulated` 행에서 **rating 높은 순 → 최신순**. **분석 대상 인시던트 자신의 행은 제외**(정답 보고 시험 방지). 예시도 `scrubText` 를 거쳐 system static 에 넣고, **어떤 예시(analysis id)를 썼는지 행에 기록**(`few_shot_ids`). `parse_failed` 는 평가 대상에서 빼고 버전별 구조화 실패율로 따로 센다 | 예시 3개면 입력이 약 1.5배. 별점이 있으니 "사람이 높이 산 것"을 먼저 쓴다. 기록이 있어야 "왜 이렇게 답했나"를 되짚을 수 있다(어시스턴트 eval 이 결과 JSON 을 보존한 것과 같은 발상) |
+| ⑤ 재평가 | **upsert** — 같은 평가자가 같은 분석을 다시 평가하면 최신 판정으로 덮어쓴다 | 스와이프 실수를 정정할 수 있어야 한다. `UNIQUE(analysisId, reviewerId)` 가 자연스러운 upsert 키 |
+
+**버전 표기 규칙(④의 귀결)**: `promptVersion` 은 상수가 아니라 **"예시가 실제로 들어갔는가"** 로 정한다 — 예시 0개면 `v1`(SYSTEM 이 Phase 3 과 바이트 단위로 같다), 1개 이상이면 `v2`. 승인 풀이 비어 있을 때 `v2` 라고 적으면 v1 과 같은 프롬프트에 다른 이름표를 붙이는 셈이라 비교가 오염된다. 스크립트의 대조군(v1)은 body `fewShot: false` 로 만든다.
+
+**진행(2026-09-22)**
+
+| 단계 | 내용 | 상태 |
+|---|---|---|
+| ① DB | `ops_reviews`(UNIQUE(analysis_id, reviewer_id), FK CASCADE 2개) + `ops_analyses` 에 `incident_title`·`exception_text`·`few_shot_ids` — 마이그레이션 `OpsReviews1790001959888`, index.ts 등록, 로컬 적용 | ✅ 로컬 · ⏳ 운영 |
+| ② 백엔드 평가 API | `OpsReviewService` — pending(블라인드·해시 셔플) · review(upsert) · stats(버전별 집계) · `selectFewShot`(별점순, 대상 인시던트 제외) | ✅ 단위 9건 |
+| ③ few-shot 주입 | `OpsAnalysisService.generate`: 승인 예시 → system static 뒤 예시 블록(격리 문구·scrubText·필드 1,500자 절단) → 예시 있으면 v2 + `few_shot_ids` 저장. `fewShot:false` 로 v1 대조군 | ✅ 단위 5건 추가(합 94) |
+| ④ e2e | F 절: 픽스처 행으로 pending 형태(promptVersion 없음)·400/404·CREATED→UPDATED·stats 숫자까지 | ✅ 22/22 |
+| ⑤ 평가 세트 스크립트 | `backend/eval/ops-review-set.ts` — list(30d 후보) / seed(v1) / test(v1+v2 번갈아) / stats. Nest 컨텍스트 부팅, 폴러 off, 상한 429 대기 | ✅ seed 3건(#14·#15·#16, v1) · test 12건(#17~#28, v1·v2 번갈아, 12/12 ok) · stats 실측 |
+| ⑥ 앱 S5 | `(tabs)/review.tsx` + `features/review/{queries,SwipeCard,StarRating}` — Pan 제스처(가로 16px 활성·세로 12px 실패로 카드 안 스크롤 양보) · Reanimated 회전/판정 스탬프 · 버튼 대체 경로 · 낙관적 업데이트(실패한 카드 한 장만 복귀) · 진행 "n / N" · `GestureHandlerRootView` 루트 감쌈 · 탭 추가 · S4 CTA "이 분석 평가하기"(`/review?analysisId=`) | ✅ tsc · ✅ **실기기**(개발 빌드 + 로컬 백엔드, 2026-09-22 — 18장 채점) |
+| ⑦ DoD | seed 3건 채점 → test 6건 × v1·v2 블라인드 채점 → stats 로 v1 vs v2 승인율 | ✅ 위 수치 표 |
+
+**평가 세트(2026-09-22 확정, 사용자 승인)** — Sentry 30일 이슈가 **9건뿐**이라 전부 쓴다(로컬 DB, 로컬 백엔드 + 새 개발 빌드로 채점).
+
+| 역할 | id | 프로젝트 | 횟수 | 제목 |
+|---|---|---|---|---|
+| seed | 7732523858 | backend | 778 | Not allowed by CORS — Phase 3 의 오답 사례(4편 6-8). 첫 반려 건 후보 |
+| seed | 7742806116 | frontend | 12 | AxiosError: Network Error |
+| seed | 7744504775 | ops-companion | 5 | Sentry 연결 테스트 |
+| test | 7742806178 | frontend | 4 | AxiosError: Network Error — ⚠ seed 와 **쌍둥이**(같은 제목) |
+| test | 7742712093 | ops-companion | 3 | Sentry 연결 테스트 — ⚠ seed 와 **쌍둥이** |
+| test | 7734495591 | frontend | 3 | probe-uncaught |
+| test | 7743410873 | backend | 2 | QueryFailedError: user_id null (ops_device_tokens) |
+| test | 7736291868 | backend | 2 | EADDRINUSE :4000 |
+| test | 7734451568 | backend | 1 | AggregateError |
+
+seed 첫 실측(2026-09-22, analysis #14, flash-lite 3.4초): CORS 이슈에 대해 **Phase 3 과 똑같은 오답**을 냈다 — "`api.ansmoon.dev` 를 허용 목록에 추가하라", confidence **high**. 같은 프롬프트(v1)는 같은 함정에 빠진다는 재현이고, 이 행이 평가 세트의 첫 반려 건이다. 첫 실행에서 나머지 2건은 Gemini 503(high demand, 일시적)으로 실패해 스크립트에 LLM 일시 장애 재시도(30초)를 더하고 다시 돌렸다.
+
+쌍둥이 2건은 v2 가 "거의 같은 인시던트의 승인 답"을 예시로 받으므로 유리하다. 운영에서는 정당한 효과(비슷한 과거 장애의 승인 분석이 도움이 되는 것)지만, 공정 비교로는 오염이라 **수치를 쌍둥이 2건 / 비쌍둥이 4건으로 나눠 본다.** 재료를 더 모으려면 90일로 늘리거나 실제 장애가 쌓이길 기다려야 한다.
+
+⚠ 실기기 확인의 전제: 폰에는 preview `aad289d2`(운영 API, Metro 불가)가 깔려 있다. 새 앱 코드를 보려면 **개발 빌드를 다시 만들어 설치**(preview 를 지우고 — versionCode 역행 거부)하고 로컬 백엔드에 붙이거나, 백엔드를 운영 배포한 뒤 **새 preview 빌드**로 운영 DB 를 상대로 채점해야 한다. 어느 쪽이든 EAS 빌드 1회(약 20분)가 필요하다. 네이티브 패키지는 **새로 넣지 않았다**(gesture-handler·reanimated 는 Phase 0 부터 APK 안에 있다) — 그래도 JS 가 바뀌었으니 preview 는 재빌드가 필요하고, 개발 빌드는 Metro 로 바로 본다.
 
 ### 명시적 비목표 (v1에서 하지 않는 것)
 - iOS 스토어 배포(EAS 내부 배포 링크로 충분), 다국어, 다크모드 완성도,

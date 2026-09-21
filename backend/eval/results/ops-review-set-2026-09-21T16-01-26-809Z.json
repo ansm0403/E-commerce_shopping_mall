@@ -1,0 +1,41 @@
+{
+  "runAt": "2026-09-21T16:01:26.809Z",
+  "command": "seed",
+  "ids": [
+    "7732523858",
+    "7742806116",
+    "7744504775"
+  ],
+  "delayMs": 13000,
+  "records": [
+    {
+      "incidentId": "7732523858",
+      "arm": "v1",
+      "analysisId": 14,
+      "status": "ok",
+      "promptVersion": "v1",
+      "fewShotIds": null,
+      "latencyMs": 3363
+    },
+    {
+      "incidentId": "7742806116",
+      "arm": "v1",
+      "analysisId": null,
+      "status": null,
+      "promptVersion": null,
+      "fewShotIds": null,
+      "latencyMs": null,
+      "error": "{\"error\":{\"code\":503,\"message\":\"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"
+    },
+    {
+      "incidentId": "7744504775",
+      "arm": "v1",
+      "analysisId": null,
+      "status": null,
+      "promptVersion": null,
+      "fewShotIds": null,
+      "latencyMs": null,
+      "error": "{\"error\":{\"code\":503,\"message\":\"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"
+    }
+  ]
+}

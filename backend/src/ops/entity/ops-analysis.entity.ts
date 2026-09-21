@@ -49,4 +49,24 @@ export class OpsAnalysisEntity extends BaseModel {
   /** LLM 왕복에 든 시간(재시도 포함, ms). Sentry span 과 같은 값을 DB 에도 남긴다 */
   @Column({ name: 'latency_ms', type: 'integer' })
   latencyMs: number;
+
+  // ── Phase 4 (평가 루프) 에서 더한 세 컬럼. 옛 행(Phase 3)은 전부 null 이다 ──
+
+  /**
+   * 분석 시점의 인시던트 제목(scrubText 적용, 300자). 평가 카드의 머리글이자 few-shot 예시의 "입력" 쪽이다.
+   * Sentry 를 다시 부르지 않고 행만으로 카드를 그리기 위해 저장한다 — 평가 화면은 대기 목록을 한 번에 수십 건 받는다.
+   */
+  @Column({ name: 'incident_title', type: 'varchar', length: 300, nullable: true })
+  incidentTitle: string | null;
+
+  /** "AxiosError: Network Error" 꼴의 예외 한 줄(scrubText, 500자). 예외가 없는 이벤트면 null */
+  @Column({ name: 'exception_text', type: 'varchar', length: 500, nullable: true })
+  exceptionText: string | null;
+
+  /**
+   * 이 분석의 프롬프트에 few-shot 예시로 들어간 분석 행의 id 목록. 예시가 없었으면(v1) null.
+   * "왜 이렇게 답했나"를 되짚을 수 있게 남긴다 — 어시스턴트 eval 이 결과 JSON 을 보존하는 것과 같은 발상(Phase 4 결정 ④).
+   */
+  @Column({ name: 'few_shot_ids', type: 'jsonb', nullable: true })
+  fewShotIds: number[] | null;
 }

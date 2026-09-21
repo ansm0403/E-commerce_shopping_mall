@@ -2,6 +2,7 @@ import { MigrationInterface } from 'typeorm';
 import { Init1786978325132 } from './1786978325132-Init';
 import { OpsPushTables1789877464959 } from './1789877464959-OpsPushTables';
 import { OpsAnalyses1789968335669 } from './1789968335669-OpsAnalyses';
+import { OpsReviews1790001959888 } from './1790001959888-OpsReviews';
 
 /**
  * 마이그레이션 명시적 등록 배열.
@@ -18,4 +19,5 @@ export const migrations: Array<new () => MigrationInterface> = [
   Init1786978325132,
   OpsPushTables1789877464959,
   OpsAnalyses1789968335669,
+  OpsReviews1790001959888,
 ];

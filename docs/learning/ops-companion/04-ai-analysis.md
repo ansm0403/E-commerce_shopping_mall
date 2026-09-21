@@ -607,3 +607,5 @@ yarn nx serve backend
 - 품질 비교의 수치화는 어시스턴트의 eval 하네스(`backend/eval/`)를 빌린다
 
 이번 편의 `parse_failed` 행도 버리지 않은 덕에 "모델이 형식을 못 지키는 인시던트는 어떤 종류인가"도 함께 셀 수 있다.
+
+> 갱신(2026-09-22, Phase 4): 위 예고대로 됐다 — [5편](./05-review-loop.md). 수치화는 어시스턴트 eval 하네스를 그대로 빌리지 않고 같은 부팅 방식의 전용 스크립트(`backend/eval/ops-review-set.ts`)로 했고, 첫 측정에서 v2 는 v1 을 넘지 못했다(5편 0-3). 6-8 의 CORS 오답은 v1·v2 모두 재현됐다.
