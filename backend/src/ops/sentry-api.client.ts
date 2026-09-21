@@ -175,6 +175,13 @@ export class SentryApiClient {
       statsPeriod,
       groupBy: 'release',
       project: this.appProjectSlug,
+      // ⚠ interval 을 반드시 준다. 생략하거나 잘게(1h) 주면 **방금 올라온 릴리즈가 응답에서 빠진다.**
+      // 실측(2026-09-21): 14d 로 조회할 때 interval 미지정·1h 는 세션 1건짜리 새 릴리즈를 누락하고
+      // 6h·1d 는 포함했다(3회 반복 재현). 기간 × interval 로 만들어지는 데이터 포인트가 많아지면
+      // Sentry 가 결과 크기를 맞추려 작은 그룹부터 떨구는 것으로 보인다.
+      // 우리는 시계열을 그리지 않고 totals 만 쓰므로, 가장 굵은 1d 로 고정해 누락을 피하고
+      // 응답 크기도 줄인다(14d 기준 포인트 336개 → 14개).
+      interval: '1d',
     });
     params.append('field', 'crash_free_rate(session)');
     params.append('field', 'sum(session)');
