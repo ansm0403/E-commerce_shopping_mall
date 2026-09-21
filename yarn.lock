@@ -8257,6 +8257,7 @@ __metadata:
     expo-dev-client: "npm:~57.0.19"
     expo-device: "npm:~57.0.2"
     expo-linking: "npm:~57.0.10"
+    expo-local-authentication: "npm:~57.0.3"
     expo-notifications: "npm:~57.0.20"
     expo-router: "npm:~57.0.22"
     expo-secure-store: "npm:~57.0.4"
@@ -14649,6 +14650,17 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: 10c0/fbff0ce526d366e74c6b613c3a7540d1da778e1d3201fb6b14b06a8d050f5db352fa40c64abaf388b0c173aaa59e55ba8ef40c6467e8bbef33046c4c9f9f150e
+  languageName: node
+  linkType: hard
+
+"expo-local-authentication@npm:~57.0.3":
+  version: 57.0.3
+  resolution: "expo-local-authentication@npm:57.0.3"
+  dependencies:
+    invariant: "npm:^2.2.4"
+  peerDependencies:
+    expo: "*"
+  checksum: 10c0/c6e32ce2f1579b947960760e796554ba63d00deeb53a81109bae41e82e9650f491f1f30ce35aac1e1f84a28549ba4ee44caa8147bdc1cd005371e9bc8d3f3df3
   languageName: node
   linkType: hard
 
