@@ -4,7 +4,7 @@
 > 원본 설계: [`docs/roadmap/ops-companion-design.md`](../../roadmap/ops-companion-design.md) §3.4(AI 분석 파이프라인) · §4.3 S4 · §5.3 `ops_analyses` · §5.4(응답 스키마) · §6 "AI 호출 계측" · §9 Phase 3
 > 재사용한 자산의 원본: [`docs/roadmap/ex-ai-assistant.md`](../../roadmap/ex-ai-assistant.md) (쇼핑몰 관리자 AI 어시스턴트 — `LlmClient`, `scrubText`, judge 파서)
 > 짝지어 읽을 코드: [ops-analysis.service.ts](../../../backend/src/ops/ops-analysis.service.ts) · [analysis.dto.ts](../../../backend/src/ops/dto/analysis.dto.ts) · [ops-analysis.entity.ts](../../../backend/src/ops/entity/ops-analysis.entity.ts) · [analysis/[id].tsx](../../../ops-companion/app/%28tabs%29/incidents/analysis/%5Bid%5D.tsx) · [AnalysisCard.tsx](../../../ops-companion/src/features/analysis/AnalysisCard.tsx) · [queries.ts](../../../ops-companion/src/features/analysis/queries.ts) · [sentry.ts](../../../ops-companion/src/lib/sentry.ts)
-> 작성 시점: 2026-09-21 (커밋 `bd9f8b4`, 브랜치 `feat/ops-ai-analysis` — 실기기 DoD 통과. 남은 것은 운영 배포와 Sentry span 확인, 0-3 표 참고)
+> 작성 시점: 2026-09-21 (커밋 `bd9f8b4`, main `89a02bc` = PR #33 — 실기기 DoD · 운영 배포 · Sentry span 확인까지 완료)
 
 ---
 
@@ -38,8 +38,8 @@
 | S4 화면 — 스켈레톤 / 구조화 카드 / **fallback(원문 + 다시 분석)** / HTTP 에러 문구 6종 | ✅ **실기기**(개발 빌드 `8f91794d` + 로컬 백엔드, 2026-09-21): 뱃지 "보통" + "확신도 높음" · 원인 · 코드가 든 추천 조치 · 관련 파일 칩 |
 | S3 의 "AI에게 원인 물어보기" CTA | ✅ 실기기 |
 | 강제 실패 — `simulate:'parse_failed'`(비운영 전용) + 개발 빌드의 `[DEV]` 버튼 | ✅ 실기기: "구조화하지 못했습니다" + `[simulated parse_failed]` 원문 + "다시 분석" → 새 카드로 복귀. **앱이 죽지 않았다** |
-| AI 호출 span — 앱 `ops.analysis.request` · 백엔드 `ops.analysis.llm` | ✅ 코드 · ⏳ Sentry Performance 에서 미확인(개발 모드는 Sentry 가 꺼져 있다 — preview + 운영 배포 뒤) |
-| 운영 배포 | ⏳ **미배포**. 마이그레이션 1건이 있다(`run --rm … migrate.js`) |
+| AI 호출 span — 앱 `ops.analysis.request` · 백엔드 `ops.analysis.llm` | ✅ **실기기**(preview `aad289d2` + 운영): 누른 횟수만큼 `ops.analysis.request` 트랜잭션, 속성 `ops.analysis.status=ok`·`ops.force`·`ops.incident_id`, 자식 span `POST`(axios 자동 계측). **앱 시작·화면 이동 트랜잭션은 없다**(이름 필터 동작). 백엔드 span 은 운영 `tracesSampleRate: 0.1` 이라 10% 만 남는다 |
+| 운영 배포 | ✅ `89a02bc`(PR #33, 2026-09-21). 마이그레이션 `OpsAnalyses1789968335669` 1건 적용 · health version 단언 · 분석 라우트 401(존재) · `/products`·`/categories` 200(회귀 없음) · 컨테이너 `NODE_ENV=production` 확인(강제 실패 옵션이 운영에서 꺼진다) |
 
 **첫 실기기 분석의 내용은 그럴듯했지만 틀렸다**(6-8). DoD 는 "카드가 렌더된다"이지 "분석이 맞다"가 아니다 — 맞는지를 가리는 것이 Phase 4 다.
 
@@ -529,6 +529,14 @@ async function copyText(text: string) {
 **판별법**: 패키지의 `build/` 에서 `requireNativeModule` 을 찾아본다. 있으면 네이티브 패키지다. 또는 `app.json` 의 `plugins` 에 넣으라는 안내가 있거나 패키지 이름이 `expo-` · `react-native-` 로 시작해 기기 기능(카메라·클립보드·알림·생체)을 다루면 거의 확실히 그렇다.
 
 **교훈**: 타입 검사·expo-doctor·Metro 번들은 **JS 절반만** 본다. 네이티브 절반이 APK 에 있는지는 폰에서 켜 봐야 안다. 네이티브 패키지를 더할 때는 ① 껍데기를 다시 만들 것인지, ② 없을 때 죽지 않게 짤 것인지를 **설치하기 전에** 정한다.
+
+## 6-10. `app.start.warm` 이 트레이스에 보였다 — 새 트랜잭션이 아니다
+
+span 을 확인하러 Sentry 트레이스를 열자 `ops.analysis.request` 앞에 `app.start.warm` 이 있었다. 이름 필터로 앱 시작 트랜잭션을 막았는데 새어 나온 것처럼 보였다.
+
+새어 나온 것이 아니다. RN SDK 는 앱 시작 시간을 독립 트랜잭션으로 보내지 않고, 그 실행에서 **처음 기록되는 트랜잭션의 자식 span** 으로 얹는다. 필터가 다른 트랜잭션을 전부 버렸으니 처음 살아남은 `ops.analysis.request` 에 붙은 것이다. 트랜잭션 수는 늘지 않는다.
+
+판별법: 앱을 새로 켜고 **처음** 누른 분석에만 `app.start.*` 가 있고, 두 번째부터는 `POST` 자식 span 만 있다.
 
 ## 6-7. 콘솔의 한글이 깨져 보였다 — 데이터는 멀쩡했다
 

@@ -30,13 +30,13 @@ Phase 3 은 **코드·실기기 DoD 완료, 배포 미완**이다. 브랜치 `fe
 
 | # | 할 일 | 누가 | 비고 |
 |---|---|---|---|
-| 1 | PR 생성·머지(`feat/ops-ai-analysis` → `main`) | **사용자** | ⚠ main 푸시 = Vercel 프론트 자동 운영 배포. 프론트 변경은 없다 |
-| 2 | 운영 배포 | Claude(**사용자 승인 후**) | 아래 절차. **마이그레이션 1건**(`OpsAnalyses1789968335669`) |
-| 3 | EC2 `.env` 에 `GEMINI_API_KEY` 가 있는지 확인 | 사용자 확인 | 없으면 분석이 503. `OPS_ANALYSIS_MAX_PER_MIN` 은 없어도 기본 5 |
-| 4 | Sentry span 확인 — 앱 `ops.analysis.request` · 백엔드 `ops.analysis.llm` | 사용자 + Claude | 개발 모드는 앱 Sentry 가 꺼져 있다(`enabled: !__DEV__`). **preview 빌드 + 운영 백엔드**에서 Performance 탭. 앱 시작·화면 이동 트랜잭션이 **없어야** 한다(`tracesSampler` 이름 필터) |
-| 5 | 학습 노트 4편 0-3 표의 ⏳(span·운영 배포) 갱신, 설계 §9 Phase 3 을 "✅ 완료" 로 | Claude | |
-| 6 | 앱 `ops-companion/.env` 를 운영 주소로 되돌림 | Claude | 지금 `http://172.30.1.85:4000/v1`(로컬). 운영 줄은 주석으로 남아 있다 |
-| 7 | 로컬 백엔드(4000) 종료 | Claude | 운영과 동시에 켜 두면 폴러가 둘이라 **알림이 두 번** 온다 |
+| 1 | PR 생성·머지(`feat/ops-ai-analysis` → `main`) | 사용자 | ✅ PR #33, main `89a02bc`(스쿼시) · CI 통과 |
+| 2 | 운영 배포 | Claude | ✅ 2026-09-21 — 마이그레이션 1건 적용, health `89a02bc`, 회귀 없음 |
+| 3 | EC2 `.env` 에 `GEMINI_API_KEY` 가 있는지 확인 | Claude | ✅ 있음(값은 출력하지 않고 존재만 확인). `NODE_ENV=production` 은 compose 가 넣는다 |
+| 4 | ✅ Sentry span 확인 — 앱 `ops.analysis.request`(누른 만큼 기록, `ops.analysis.status=ok`, 다른 트랜잭션 없음) · 백엔드 `ops.analysis.llm` | 사용자 + Claude | 개발 모드는 앱 Sentry 가 꺼져 있다(`enabled: !__DEV__`). **preview 빌드 `aad289d2` + 운영 백엔드**에서 Performance 탭. 앱 시작·화면 이동 트랜잭션이 **없어야** 한다(`tracesSampler` 이름 필터). ⚠ 백엔드는 `instrument.ts` 의 `tracesSampleRate` 가 운영 **0.1** 이라 `ops.analysis.llm` 은 10% 만 남는다 — 안 보이면 샘플링 탓인지부터 본다 |
+| 5 | ✅ 학습 노트 4편 0-3 표의 ⏳ 갱신, 설계 §9 Phase 3 을 "✅ 완료" 로 | Claude | |
+| 6 | 앱 `ops-companion/.env` 를 운영 주소로 되돌림 | Claude | ✅ |
+| 7 | 로컬 백엔드(4000) 종료 | Claude | ✅ (postgres·redis 컨테이너는 켜 둠) |
 | 8 | `feat/ops-observability` 브랜치의 `docs/roadmap/_next-session-phase3.md` 정리 | 사용자 판단 | 그 파일은 main 에 없고 그 브랜치에만 있다(`aa7a653`). 브랜치를 지우면 끝 |
 
 운영 배포 절차(설계 §10-6 / `03-infra-nginx-runbook.md` §10):
@@ -58,7 +58,7 @@ curl -s https://api.ansmoon.dev/v1/health   # version == 새 SHA
 
 ⚠ **운영 DB 를 직접 읽는 것은 권한 정책이 막는다**(Production Reads). 우회하지 마라. 운영 확인은 API·로그·앱 화면으로.
 
-**이 8개가 끝나야 Phase 3 이 닫힌다.** Phase 4 코드는 그 뒤에 시작한다(설계 §9 "이전 Phase 의 DoD 를 만족하기 전에 다음 Phase 코드를 작성하지 않는다").
+**2026-09-21 기준 1~7 완료.** 8번(옛 브랜치 정리)만 사용자 판단으로 남았다. **이 8개가 끝나야 Phase 3 이 닫힌다.** Phase 4 코드는 그 뒤에 시작한다(설계 §9 "이전 Phase 의 DoD 를 만족하기 전에 다음 Phase 코드를 작성하지 않는다").
 
 ---
 
@@ -76,8 +76,10 @@ curl -s https://api.ansmoon.dev/v1/health   # version == 새 SHA
 
 ### 인프라 상태
 
-- **운영 백엔드**: Phase 3 배포 전이면 `4ead4ca`. EC2 `15.164.185.156`, `https://api.ansmoon.dev/v1`
-- **폰**: 개발 빌드 **`8f91794d`**(development, versionCode 1)가 설치돼 있다. preview `7908bf7d` 는 서명 불일치로 덮어쓰지 못해 **삭제했다**. 개발 빌드는 Metro 에 붙어야 JS 가 돈다(`yarn start --clear`)
+- **운영 백엔드**: **`89a02bc`**(Phase 3, 2026-09-21 배포, `ops_analyses` 표 있음). EC2 `15.164.185.156`, `https://api.ansmoon.dev/v1`
+- **폰**: Phase 3 마감 때 preview **`aad289d2`**(versionCode 3, main `89a02bc`, 운영 API)를 설치했다(개발 빌드 위 업데이트 설치를 안내했고 실패 보고는 없었다 — 삭제 여부는 확인하지 않았다). 운영 계정 `kirianir@naver.com` 으로 로그인돼 있다. 개발 빌드 `8f91794d`(versionCode **1**)는 그 전까지 쓰던 것이다
+  - ⚠ **안드로이드는 versionCode 가 낮은 APK 로 덮어쓰기를 거부한다**("앱이 설치되지 않았습니다"). 모든 빌드가 같은 키스토어(`wl-nED5HQt`)를 쓰므로 서명 문제가 아니다 — Phase 3 에서 preview(2) 위에 개발 빌드(1)가 안 깔린 것도 이것이었다. 개발 빌드로 돌아가려면 **preview 를 삭제하고** 설치하거나, `eas build --profile development` 로 새 개발 빌드를 만든다(development 는 autoIncrement 가 꺼져 있어 여전히 1 이다 — 결국 삭제가 필요하다)
+  - 개발 빌드는 Metro 에 붙어야 JS 가 돈다(`yarn start --clear`). preview 는 JS 가 APK 안에 있어 Metro 가 필요 없고 붙을 수도 없다
 - **네이티브 모듈 현황**(APK 안에 있는가):
   | 패키지 | `8f91794d` 안에 | 비고 |
   |---|---|---|
