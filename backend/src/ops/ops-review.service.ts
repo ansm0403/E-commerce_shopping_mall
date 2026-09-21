@@ -144,6 +144,7 @@ export class OpsReviewService {
       approved: number;
       rejected: number;
       avg_rating: number | null;
+      tool_called: number;
     }> = await this.analyses.query(
       `SELECT a.prompt_version,
               COUNT(DISTINCT a.id)::int                                          AS analyses,
@@ -152,7 +153,8 @@ export class OpsReviewService {
               COUNT(r.id)::int                                                   AS reviews,
               COUNT(r.id) FILTER (WHERE r.verdict = 'approved')::int             AS approved,
               COUNT(r.id) FILTER (WHERE r.verdict = 'rejected')::int             AS rejected,
-              AVG(r.rating)::float                                               AS avg_rating
+              AVG(r.rating)::float                                               AS avg_rating,
+              COUNT(DISTINCT a.id) FILTER (WHERE jsonb_typeof(a.tool_calls) = 'array' AND jsonb_array_length(a.tool_calls) > 0)::int AS tool_called
          FROM ops_analyses a
          LEFT JOIN ops_reviews r ON r.analysis_id = a.id
         WHERE ${OpsReviewService.NOT_SIMULATED}
@@ -173,6 +175,7 @@ export class OpsReviewService {
         rejected: r.rejected,
         approvalRate: judged > 0 ? OpsReviewService.round(r.approved / judged) : null,
         avgRating: r.avg_rating === null ? null : OpsReviewService.round(r.avg_rating),
+        toolCalled: r.tool_called ?? 0,
       };
     });
     return { versions, generatedAt: new Date().toISOString() };

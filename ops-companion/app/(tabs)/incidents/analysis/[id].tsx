@@ -114,7 +114,7 @@ export default function AnalysisScreen() {
 
         {data.status === 'ok' ? (
           <>
-            <AnalysisCard result={data.result} />
+            <AnalysisCard result={data.result} toolCalls={data.toolCalls} />
             {/* S4 → S5 (설계 §4.3 S4 마지막 줄). 평가 탭으로 넘어가며 이 분석 카드를 맨 앞으로 끌어올린다.
                 순환 고리 ②→③ 의 손잡이 — 방금 읽은 분석이 맞는지 틀리는지를 사람이 바로 판정한다 */}
             <Pressable

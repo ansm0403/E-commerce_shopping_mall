@@ -260,7 +260,23 @@ export interface IncidentAnalysis {
   latencyMs: number;
   /** few-shot 예시로 들어간 분석 id(Phase 4). v1(예시 없음)이면 null. 메타 줄이 "v2 · 예시 3" 으로 그린다 */
   fewShotIds?: number[] | null;
+  /**
+   * AI 가 읽은 소스 코드 기록(Phase 5). null 또는 없음 = 도구를 주지 않은 분석(v1/v2·옛 행) · [] = 줬지만 안 읽음 · [...] = 읽은 것.
+   * 카드의 "AI 가 읽은 코드" 섹션이 이걸로 칩을 그린다. 백엔드가 바뀌어도 화면이 깨지지 않게 optional 로 둔다
+   */
+  toolCalls?: AnalysisToolCall[] | null;
   createdAt: string;
+}
+
+/** read_source 호출 한 건 — 어느 커밋의 어느 파일 몇 줄을 읽었나(ok=false 면 왜 못 읽었나) */
+export interface AnalysisToolCall {
+  path: string;
+  ref: string;
+  startLine: number | null;
+  endLine: number | null;
+  ok: boolean;
+  lines?: number;
+  reason?: string;
 }
 
 export interface AnalyzeOptions {

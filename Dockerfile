@@ -65,7 +65,11 @@ ENV APP_VERSION=${GIT_SHA}
 
 USER nestjs
 EXPOSE 4000
-CMD ["node", "backend/dist/main.js"]
+# --enable-source-maps: 에러 스택을 번들 좌표(dist/main.js:17026)가 아니라 원본(backend/src/main.ts:65)으로 찍는다.
+# webpack.config.js 의 sourceMap:true 가 만든 *.js.map 을 Node 가 읽는다. Sentry 이벤트의 프레임도 원본 경로가 되어
+# Ops Companion 의 AI 분석이 GitHub 에서 그 파일을 읽을 수 있다(docs/roadmap/ops-companion-design.md §9 Phase 5 결정 ①).
+# 비용은 스택을 실제로 문자열화할 때(에러 경로)만 든다.
+CMD ["node", "--enable-source-maps", "backend/dist/main.js"]
 
 # 주의: backend-prod가 마지막 stage여야 함.
 # --target 없이 docker build 시 마지막 stage가 빌드되므로 development stage를 두면 안 됨.

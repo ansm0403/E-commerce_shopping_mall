@@ -316,9 +316,17 @@ export class OpsService {
       culprit: issue.culprit || null,
       project: issue.project?.slug ?? null,
       status: issue.status ?? 'unresolved',
+      release: OpsService.releaseName(event?.release),
+      firstRelease: OpsService.releaseName(issue.firstRelease),
       exception,
       breadcrumbs,
     };
+  }
+
+  /** Sentry 의 release 객체 → 이름 한 줄. 릴리즈를 안 적는 프로젝트는 null 로 온다 */
+  static releaseName(release: { version?: string | null } | null | undefined): string | null {
+    const v = release?.version;
+    return typeof v === 'string' && v.trim().length > 0 ? v.trim().slice(0, 200) : null;
   }
 
   /**

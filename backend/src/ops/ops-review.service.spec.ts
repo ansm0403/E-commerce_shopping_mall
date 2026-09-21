@@ -157,7 +157,8 @@ describe('OpsReviewService — 평가 루프(설계 §9 Phase 4)', () => {
     it('approved/(approved+rejected) 로 승인율, 평가 없으면 null, 소수 셋째 자리 반올림', async () => {
       analyses.query.mockResolvedValue([
         { prompt_version: 'v1', analyses: 6, ok: 5, parse_failed: 1, reviews: 3, approved: 1, rejected: 2, avg_rating: 2.3333 },
-        { prompt_version: 'v2', analyses: 6, ok: 6, parse_failed: 0, reviews: 0, approved: 0, rejected: 0, avg_rating: null },
+        // tool_called 가 없는 행(옛 SQL 결과 형태)은 0 으로 본다
+        { prompt_version: 'v2', analyses: 6, ok: 6, parse_failed: 0, reviews: 0, approved: 0, rejected: 0, avg_rating: null, tool_called: 2 },
       ]);
 
       const { versions, generatedAt } = await service.getStats();
@@ -165,11 +166,11 @@ describe('OpsReviewService — 평가 루프(설계 §9 Phase 4)', () => {
       expect(versions).toEqual([
         {
           promptVersion: 'v1', analyses: 6, ok: 5, parseFailed: 1, parseFailedRate: 0.167,
-          reviews: 3, approved: 1, rejected: 2, approvalRate: 0.333, avgRating: 2.333,
+          reviews: 3, approved: 1, rejected: 2, approvalRate: 0.333, avgRating: 2.333, toolCalled: 0,
         },
         {
           promptVersion: 'v2', analyses: 6, ok: 6, parseFailed: 0, parseFailedRate: 0,
-          reviews: 0, approved: 0, rejected: 0, approvalRate: null, avgRating: null,
+          reviews: 0, approved: 0, rejected: 0, approvalRate: null, avgRating: null, toolCalled: 2,
         },
       ]);
       expect(new Date(generatedAt).getTime()).not.toBeNaN();

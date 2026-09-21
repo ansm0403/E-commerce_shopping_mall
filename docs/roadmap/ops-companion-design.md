@@ -201,6 +201,7 @@ NestJS:
      - 인시던트 데이터
   3) AI API 호출 — **기존 인프라 재사용**(아래 "재사용 가능한 기존 자산" 표).
      스트리밍이 필요하면 `POST /v1/admin/assistant/stream` 의 SSE-over-POST 방식을 그대로 쓴다
+     Phase 5: `read_source` 도구를 주고 `generateWithTools` 로 부른다 — 모델이 스택의 파일:줄을 GitHub 에서 읽고 답한다(§9 Phase 5)
   4) 응답 JSON 파싱 + 스키마 검증 (zod 등). 실패 시 1회 재시도 → 그래도 실패면
      구조화 실패 상태로 응답 (앱은 fallback UI 표시)
   5) 분석 결과 저장 (5.4 데이터 모델)
@@ -326,7 +327,7 @@ RootNavigator (AuthContext의 user 유무로 분기)
 | `GET /v1/ops/incidents/:id` | 인시던트 상세 — ✅ **구현 완료(2026-09-20, `0cc8301`)**: issue 단건 + 최신 event 를 합쳐 예외·스택(최근 호출이 앞, 30 프레임)·breadcrumbs(30개) 만 남긴다. request/user entry(헤더·쿠키·IP)는 읽지 않고 자유 텍스트는 `scrubText`. id 는 숫자만 받아 경로 조작 차단, 없는 이슈 404, Redis 60s 캐시 | 1 |
 | `POST /v1/ops/devices` | 기기 Expo push token 등록 — ✅ **구현 완료(2026-09-20)**: `(userId, 토큰)` upsert + Expo 토큰 정규식 검증. `DemoAccountGuard` 는 걸지 않는다(저장되는 것이 본인 기기 주소뿐이고, 막으면 데모 로그인으로 앱이 못 돈다) | 1 |
 | ~~`POST /v1/ops/webhooks/sentry`~~ | ~~Sentry webhook 수신~~ → **폐기(2026-09-16)**. §3.3 의 폴링 스케줄러로 대체 | 1 |
-| `POST /v1/ops/incidents/:id/analysis` | AI 분석 생성(또는 캐시된 분석 반환) — ✅ **구현 완료(2026-09-21)**: `ops-analysis.service.ts`. `getIncident` 재사용 → 프롬프트 조립(`scrubText`) → `LlmClient.generate` → `parseAnalysis` 검증, 위반 시 사유를 실어 **1회 교정 재시도** → `ops_analyses` 저장. body 없이 부르면 최근 행(상태 무관, `X-Cache: HIT`), `{force:true}` 면 재분석, `{simulate:'parse_failed'}` 는 **비운영 전용** 강제 실패. LLM 키 없음 503 · 분당 상한(`OPS_ANALYSIS_MAX_PER_MIN`, 기본 5) 초과 429 · 같은 이슈 동시 409. 실제 LLM 호출은 단위 테스트 15건이 모킹으로 고정, e2e 는 시뮬레이션 경로만 | 3 |
+| `POST /v1/ops/incidents/:id/analysis` | AI 분석 생성(또는 캐시된 분석 반환) — ✅ **구현 완료(2026-09-21)**: `ops-analysis.service.ts`. `getIncident` 재사용 → 프롬프트 조립(`scrubText`) → `LlmClient.generate` → `parseAnalysis` 검증, 위반 시 사유를 실어 **1회 교정 재시도** → `ops_analyses` 저장. body 없이 부르면 최근 행(상태 무관, `X-Cache: HIT`), `{force:true}` 면 재분석, `{simulate:'parse_failed'}` 는 **비운영 전용** 강제 실패. LLM 키 없음 503 · 분당 상한(`OPS_ANALYSIS_MAX_PER_MIN`, 기본 5) 초과 429 · 같은 이슈 동시 409. 실제 LLM 호출은 단위 테스트 15건이 모킹으로 고정, e2e 는 시뮬레이션 경로만. **Phase 5(2026-09-22)**: `read_source` 도구(`source-reader.service.ts`, GitHub raw + Redis 캐시, 폴더 허용 목록·80줄·3회) → `generateWithTools` → 교정 재시도는 도구 없이. 응답에 `toolCalls`(읽은 파일 기록). body `readSource:false` 가 도구 없는 팔. 상한은 `OPS_ANALYSIS_MAX_LLM_PER_MIN`(분당 LLM 호출 수, 기본 12) 예약형으로 교체 | 3 · 5 |
 | `GET /v1/ops/analyses/pending` | 평가 대기 중인 분석 목록 — ✅ **구현(2026-09-22, `ops-review.service.ts`)**: 이 평가자가 아직 채점하지 않은 `status=ok`·비시뮬레이션 행. **promptVersion 을 응답에서 뺀다**(블라인드). 순서는 `md5(id:reviewerId)` — 평가자별 고정 뒤섞기(시간순이면 v1·v2 가 번갈아 나와 패턴이 읽히고, 난수면 새로고침마다 재배열). 상한 50 | 4 |
 | `POST /v1/ops/analyses/:id/review` | 평가 저장 (verdict, rating) — ✅ **구현(2026-09-22)**: `{verdict, rating?, comment?}` → `ops_reviews` **upsert**(같은 평가자 재평가는 통째로 덮어씀, `X-Review: CREATED|UPDATED`). parse_failed·simulated 행 400, 없는 분석 404 | 4 |
 | `GET /v1/ops/analyses/stats` | (설계에 없던 추가) promptVersion 별 분석 수·구조화 실패율·승인율·평균 별점 — DoD 의 숫자가 나오는 경로. 앱 화면은 없다(채점 중에 보면 블라인드가 깨진다). `model='simulated'` 제외 | 4 |
@@ -403,6 +404,8 @@ ops_push_log                         ← v2.2 추가 (2026-09-20 구현 시점, 
 > `raw_text`(text, nullable) 를 더했다 — parse_failed 일 때 모델 원문(마스킹·4,000자 절단)을 앱의 fallback 화면이 보여준다.
 > `incident_id` 에 UNIQUE 를 걸지 않는다: 재시도·프롬프트 버전 변경으로 한 이슈에 여러 행이 쌓이고, "지금 보여줄 것"은
 > 최신 행이다. 옛 행을 지우지 않아야 Phase 4 의 v1 vs v2 비교가 성립한다. `ops_reviews` 는 Phase 4 몫.
+
+> **구현(2026-09-22, Phase 5)**: `ops_analyses` 에 `tool_calls`(jsonb, nullable) — 마이그레이션 `OpsToolCalls1790026688606`. `null`=도구 미제공(v1/v2·옛 행) · `[]`=제공했으나 미호출 · `[{path, ref, startLine, endLine, ok, lines|reason}]`=읽은 것. 코드 원문은 저장하지 않는다.
 
 > ⚠ **`ops_poll_state` 를 빠뜨리면 폴링이 성립하지 않는다.** "어디까지 봤는지"를 기억하지 못하면
 > 매 주기마다 같은 이슈를 새 인시던트로 오인해 **푸시가 무한 반복된다.** 커서를 Redis 에만 두는 것도
@@ -814,6 +817,55 @@ seed 첫 실측(2026-09-22, analysis #14, flash-lite 3.4초): CORS 이슈에 대
 쌍둥이 2건은 v2 가 "거의 같은 인시던트의 승인 답"을 예시로 받으므로 유리하다. 운영에서는 정당한 효과(비슷한 과거 장애의 승인 분석이 도움이 되는 것)지만, 공정 비교로는 오염이라 **수치를 쌍둥이 2건 / 비쌍둥이 4건으로 나눠 본다.** 재료를 더 모으려면 90일로 늘리거나 실제 장애가 쌓이길 기다려야 한다.
 
 ⚠ 실기기 확인의 전제: 폰에는 preview `aad289d2`(운영 API, Metro 불가)가 깔려 있다. 새 앱 코드를 보려면 **개발 빌드를 다시 만들어 설치**(preview 를 지우고 — versionCode 역행 거부)하고 로컬 백엔드에 붙이거나, 백엔드를 운영 배포한 뒤 **새 preview 빌드**로 운영 DB 를 상대로 채점해야 한다. 어느 쪽이든 EAS 빌드 1회(약 20분)가 필요하다. 네이티브 패키지는 **새로 넣지 않았다**(gesture-handler·reanimated 는 Phase 0 부터 APK 안에 있다) — 그래도 JS 가 바뀌었으니 preview 는 재빌드가 필요하고, 개발 빌드는 Metro 로 바로 본다.
+
+### Phase 5 — 소스 코드를 읽는 분석 (tool use)
+- 구현: `read_source` 도구(저장소 경로 + 줄 범위 → 코드 조각, GitHub raw 읽기 + Redis 캐시) · 분석 파이프라인을
+  `LlmClient.generateWithTools` 로 전환(도구 결과를 받아 최종 JSON, 교정 재시도는 도구 없이) · 읽은 파일 기록(`tool_calls`) ·
+  promptVersion `v3` · 백엔드 스택을 원본 좌표로(webpack `sourceMap` + `node --enable-source-maps`) · Sentry `release` 를
+  커밋 SHA 로 · 이벤트의 release/firstRelease 를 프롬프트에(보강 후보 2번)
+- 앱: 분석 카드에 "AI 가 읽은 코드" 섹션(파일:줄 칩). 새 네이티브 패키지 없이
+- DoD: ① CORS 이슈(7732523858)에 대해 v3 가 `main.ts` 의 CORS 설정을 **실제로 읽고**(`tool_calls` 기록으로 확인)
+  "서버 자신을 허용하라"는 오답을 내지 않는다 ② Phase 4 test 세트를 v3 로 분석해 블라인드 채점 → v1·v2·v3 승인율 표
+  ③ 도구 호출 실패(파일 없음·범위 밖·GitHub 장애)에도 분석이 v1 처럼 끝난다(깨지지 않는다)
+
+**착수 전 결정(2026-09-22, 사용자 승인)** — 코드에서 확인한 사실이 §9 보강 후보 표의 전제와 달랐다(아래 "확인한 사실").
+
+| 항목 | 결정 | 이유 |
+|---|---|---|
+| ① 백엔드 번들 좌표 | **(a) 이미지 안에서 변환** — webpack 옵션 오타(`sourceMaps`→`sourceMap`) 수정으로 운영 빌드에 `.map` 을 만들고, `CMD` 에 `node --enable-source-maps`. 배포 후 **새 이벤트부터** 원본 좌표 | Dockerfile 한 단어. 로컬 실험(2026-09-22)에서 `/app/backend/dist/main.js:17026` → `webpack://shopping-mall/backend/src/main.ts:60` 확인. (b) Sentry 업로드는 CI 절차·토큰이 늘고, (c) 프론트만은 소스맵 미업로드라 성립하지 않는다 |
+| ② 어느 시점의 코드 | **(b) `release: APP_VERSION`** 을 `instrument.ts` 에 더해 새 백엔드 이벤트에 커밋을 남기고, 이벤트 release 가 커밋 SHA 꼴이면 그 커밋을, 아니면(앱 `1.0.0+N`·옛 이벤트) `main` HEAD 를 읽되 프롬프트에 "발생 시점과 다를 수 있음" 명시 | 이슈 이후 코드가 바뀌면 HEAD 의 같은 줄은 엉뚱하다. 프론트는 Vercel 이 이미 SHA 를 적는다 |
+| ③ GitHub 접근 | **(a) 무인증 raw + Redis 캐시**(`ops:src:<ref>:<path>`, 커밋은 7일·main 은 10분) | public 저장소(API 200). 시간당 60회 상한이지만 분석당 최대 3회 + 캐시. 새 비밀값 0. private 전환 시 fine-grained 토큰 |
+| ④ 도구·안전장치 | 도구 **하나** `read_source({path,startLine,endLine})`. 허용 경로 `backend/src/`·`frontend/src/`·`ops-companion/(app|src)/` 만, `..`·절대경로·`.env*`·`*.pem`·`google-services.json`·`*firebase-adminsdk*` 거부. 80줄/회 · 3회/분석 · 결과 `scrubText` + 격리 문구 | 스택에 파일:줄이 이미 있어 검색 도구는 왕복만 늘린다. public 이어도 "LLM 이 아무 파일이나 읽는 구조"는 만들지 않는다. 도구 결과는 직렬화 인터셉터를 안 거친다(어시스턴트 §8-4) |
+| ⑤ 버전·기록 | **v3 = 도구가 프롬프트에 들어간 분석**(few-shot 끔). 실제 호출 여부는 `tool_calls`(jsonb, `[]`=제공했으나 미사용 · `null`=미제공)로 남긴다. 원문 코드는 저장하지 않는다 | Phase 4 규칙("프롬프트가 실제로 달라졌을 때만 버전이 바뀐다")과 같은 원리 — 도구 안내와 선언은 호출 여부와 무관하게 프롬프트에 들어간다. v3 에 few-shot 을 같이 켜면 v1 과의 차이가 "도구인지 예시인지" 가릴 수 없다 |
+| ⑥ 호출 예산 | 상한을 "분당 분석 건수"에서 **"분당 LLM 호출 수"**(`OPS_ANALYSIS_MAX_LLM_PER_MIN`, 기본 12)로. 분석 시작 시 최악 호출 수(도구 켬 5 = 1+3+1 · 끔 2)를 **예약**, 넘치면 429 + 예약 취소. 교정 재시도는 도구 없이 형식만 | 도구 루프가 붙으면 한 건이 2~5회라 기존 상한(5건)으로는 RPM 15 를 넘긴다. 어시스턴트 몫 3 을 남긴다 |
+
+**코드에서 확인한 사실(2026-09-22)** — 보강 후보 표의 전제와 다른 것
+
+| 표의 전제 | 실제 |
+|---|---|
+| "이미지에 `*.js.map` 이 들어 있다" | **없다.** `webpack.config.js` 의 `sourceMaps: true` 가 오타라 무시됐고 `--prod` 빌드에 `.map` 0개. 개발 빌드만 만들고 있었다 |
+| "Sentry release = 커밋 SHA" | 프론트만 그렇다(Vercel 자동). 백엔드 `instrument.ts` 에 `release` 없음, 앱은 `패키지@1.0.0+N` |
+| "프론트 프레임은 소스맵으로 원본 경로" | **아니다.** Vercel 에 업로드 토큰이 없어 릴리즈 파일 0개, 프레임은 `_next/static/chunks/8577-….js:12:123490`. 이번 범위 밖 |
+| — | **앱(ops-companion) 프레임은 이미 원본 경로**(`ops-companion/app/(tabs)/profile.tsx:38`, Phase 2 소스맵 업로드) — 배포 전에도 도구가 읽을 수 있는 유일한 프로젝트 |
+
+**🔶 코드·로컬 실측 완료(2026-09-22, 브랜치 `feat/ops-source-reading`) — 운영 배포·실기기 채점 미완.** 학습 노트 6편 [06-source-reading.md](../learning/ops-companion/06-source-reading.md).
+
+| 단계 | 내용 | 상태 |
+|---|---|---|
+| ① 도구 단독 | `SourceReaderService`(`source-reader.service.ts`): 경로 허용 목록·비밀값 이름 거절·프레임→저장소 경로 정규화·raw 읽기·Redis 캐시(커밋 7일/main 10분·404 부정 캐시 60초)·80줄·실패는 `{ok:false, reason}` | ✅ 단위 39건 · **실제 GitHub 스모크**(`main.ts@8610aca` 55~72줄 387ms, 캐시 HIT, 404·`.env` 거절) |
+| ② 파이프라인 | `OpsAnalysisService`: `READ_SOURCE_TOOL`·`TOOL_GUIDE`·`[소스 코드]` 절(커밋·릴리즈·읽을 수 있는 파일) → `generateWithTools`(마지막 라운드 텍스트만) → `executeTool`(3회 상한·기록·span `ops.analysis.tool`) → 교정 재시도는 `generate`. `tool_calls` 컬럼(마이그레이션 `OpsToolCalls1790026688606`, 로컬 적용). 상한을 `reserveRateLimit`(LLM 호출 수, 기본 12)로 교체. 상세에 `release`·`firstRelease` | ✅ 단위 30건(도구 9건) · e2e 22/22 · **로컬 실인시던트 7744504775: v3, 2회 읽음(`sentry.ts`·`profile.tsx`@main), low/high, 6.0초** |
+| ③ 소스맵·릴리즈 | `webpack.config.js` `sourceMaps`→`sourceMap`(오타로 운영 빌드에 .map 이 없었다) · Dockerfile `CMD node --enable-source-maps` · `instrument.ts` `release: APP_VERSION` | ✅ 로컬 실험(운영 번들 + 옵션 → `webpack://shopping-mall/backend/src/main.ts:60`) · ⏳ 운영은 배포 후 새 이벤트부터 |
+| ④ 앱 | `AnalysisCard` "AI 가 읽은 코드" 섹션(칩 `path:start-end`, 실패는 ✗+사유, `[]` 는 "읽지 않고 답했다", `null` 은 섹션 없음) · 메타 "(코드 n)" · pending 은 블라인드 유지(`toolCalls` 없음) | ✅ tsc · ⏳ 실기기 |
+| ⑤ 평가 세트 | 스크립트 `--arms v1,v2,v3` · `stats` 에 `toolCalled` | ✅ test 6건 × v3 생성(#30·31·35·39·40·41, 6/6 ok) · ⏳ 채점 |
+| ⑥ 문서 | 6편 · infra-story(GitHub 노드·3-4·5장·6장·7장·용어) · §3.4·§5.1·§5.3 | ✅ |
+| ⑦ 배포·DoD | PR → main → 이미지(`.map` 8개 + 새 CMD) → 마이그레이션 1건 → CORS 새 이벤트 확인 → v3 분석 → 채점 → v1·v2·v3 표 | ⏳ `_next-session-phase5-close.md` |
+
+**결정 ⑤의 변경(구현 중)**: "도구를 실제로 호출했을 때만 v3" → **"도구가 프롬프트에 들어갔으면 v3"**. Phase 4 규칙의 원리는 "프롬프트가 실제로 달라졌는가"이고, 도구 안내·선언은 호출 여부와 무관하게 프롬프트에 들어간다. 실제로 test 6건은 호출 0회였는데도 v1 과 답이 달랐다(확신도 전부 하락 — 6편 6-5). 호출로 가르면 그 6건이 v1 로 섞여 v1 이 오염된다. 호출 여부는 `tool_calls`(`[]` vs `null`)와 `stats.toolCalled` 가 말한다.
+
+**실측에서 확인한 것(2026-09-22)**
+- **test 세트 6건은 전부 "읽을 수 있는 파일 없음"이었다**(프론트 2 = 청크, 앱 1 = 소스맵 이전 빌드 `1.0.0+1`, 백엔드 2 = 로컬 dist 번들, 백엔드 1 = `node:net` 프레임뿐). Phase 4 의 평가 세트로는 도구의 효과를 잴 수 없다 — 배포 이후 새 이벤트로 새 세트가 필요하다.
+- 도구 호출 0회여도 v3 는 확신도를 낮췄다(v1 high/medium → v3 low/medium). 좋은 변화인지는 채점 후.
+- v3 연속 실행은 분당 2건(5×3 > 12) — 스크립트 `--delay 31000`.
 
 ### 명시적 비목표 (v1에서 하지 않는 것)
 - iOS 스토어 배포(EAS 내부 배포 링크로 충분), 다국어, 다크모드 완성도,

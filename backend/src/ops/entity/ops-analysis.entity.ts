@@ -1,5 +1,6 @@
 import { Column, Entity, Index } from 'typeorm';
 import { BaseModel } from '../../common/entity/base.entity';
+import type { ToolCallRecord } from '../dto/analysis.dto';
 
 /** 분석 결과의 두 상태(설계 §5.3). ok = 스키마 검증 통과, parse_failed = 재시도 후에도 JSON 이 아니었다 */
 export type OpsAnalysisStatus = 'ok' | 'parse_failed';
@@ -69,4 +70,14 @@ export class OpsAnalysisEntity extends BaseModel {
    */
   @Column({ name: 'few_shot_ids', type: 'jsonb', nullable: true })
   fewShotIds: number[] | null;
+
+  // ── Phase 5 (소스 코드 읽기) ──
+
+  /**
+   * read_source 도구 호출 기록 `[{path, ref, startLine, endLine, ok, lines|reason}]`(설계 §9 Phase 5 결정 ⑤).
+   * null = 도구를 주지 않은 분석(v1/v2·옛 행) · [] = 도구를 줬지만 모델이 부르지 않았다 · [...] = 실제로 읽은 것(실패 포함).
+   * "v3 가 좋아졌다면 어느 케이스에서 무엇을 읽었기 때문인가"를 되짚는 근거. 코드 원문은 저장하지 않는다.
+   */
+  @Column({ name: 'tool_calls', type: 'jsonb', nullable: true })
+  toolCalls: ToolCallRecord[] | null;
 }

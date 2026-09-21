@@ -42,6 +42,30 @@ export class CreateAnalysisDto {
   @IsOptional()
   @IsBoolean()
   fewShot?: boolean;
+
+  /**
+   * false 면 소스 코드 읽기 도구(Phase 5)를 주지 않는다 — 평가 세트 스크립트가 v1/v2 팔을 만들 때 쓴다. 앱은 보내지 않는다
+   * (기본 true — 리더가 비활성이면 켜지지 않는다). 도구를 켠 분석은 few-shot 을 넣지 않는다(v3 = 도구만, 결정 ⑤).
+   */
+  @IsOptional()
+  @IsBoolean()
+  readSource?: boolean;
+}
+
+/**
+ * read_source 도구 호출 한 건의 기록(Phase 5 결정 ⑤) — "무엇을 보고 답했나". 코드 원문은 저장하지 않는다(GitHub 에 있다).
+ * ok=false 면 reason 에 왜 못 읽었는지(파일 없음·범위 밖·GitHub 장애)가 남는다.
+ */
+export interface ToolCallRecord {
+  path: string;
+  /** 읽은 커밋(SHA) 또는 브랜치(main) */
+  ref: string;
+  startLine: number | null;
+  endLine: number | null;
+  ok: boolean;
+  /** ok 일 때 실제로 돌려준 줄 수 */
+  lines?: number;
+  reason?: string;
 }
 
 /** 응답. 캐시 적중 여부는 다른 ops 엔드포인트와 같이 X-Cache 헤더로 알린다 */
@@ -58,6 +82,11 @@ export interface AnalysisResponse {
   latencyMs: number;
   /** few-shot 예시로 들어간 분석 행 id. v1(예시 없음)이면 null. 앱 메타 줄이 "v2 · 예시 3" 으로 그린다 */
   fewShotIds: number[] | null;
+  /**
+   * 소스 읽기 기록(Phase 5). null = 도구를 주지 않은 분석(v1/v2) · [] = 도구를 줬지만 모델이 부르지 않음 · [...] = 읽은 것.
+   * 앱은 "AI 가 읽은 코드" 섹션을 이걸로 그린다
+   */
+  toolCalls: ToolCallRecord[] | null;
   /** ISO 8601 */
   createdAt: string;
 }

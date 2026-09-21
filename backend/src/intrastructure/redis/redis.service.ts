@@ -155,6 +155,29 @@ export class RedisService {
     return current <= limit;
   }
 
+  /**
+   * 비용이 정해진 작업의 사전 예약형 레이트리밋. checkRateLimit 이 "1건" 을 세는 데 비해 이쪽은
+   * cost 만큼 한꺼번에 센다 — ops 의 AI 분석처럼 한 요청이 LLM 을 여러 번(최악 5회) 부를 때
+   * "분당 LLM 호출 수" 로 상한을 걸기 위해서다. 넘치면 예약을 되돌린다(거절된 요청이 창을 잠그지 않게).
+   */
+  async reserveRateLimit(
+    identifier: string,
+    cost: number,
+    limit: number,
+    windowSeconds: number,
+  ): Promise<boolean> {
+    const key = `rate:${identifier}`;
+    const current = await this.redis.incrby(key, cost);
+    if (current === cost) {
+      await this.redis.expire(key, windowSeconds);
+    }
+    if (current > limit) {
+      await this.redis.decrby(key, cost);
+      return false;
+    }
+    return true;
+  }
+
   // ===== 캐싱 =====
   async getCache<T>(key: string): Promise<T | null> {
     const data = await this.redis.get(key);

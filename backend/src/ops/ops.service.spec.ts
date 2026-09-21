@@ -110,12 +110,14 @@ describe('OpsService', () => {
       culprit: 'GET /products',
       status: 'unresolved',
       project: { slug: 'e-commerse-frontend' },
+      firstRelease: { version: 'f54ba5ec90783a8c9a1722ee56200d6e2f678531' },
     });
 
     /** 2026-09-20 실측 event 의 모양 — request/user 같은 민감 entry 가 함께 온다 */
     const event = (): SentryEvent =>
       ({
         user: { email: 'buyer@example.com', ip_address: '1.2.3.4' },
+        release: { version: 'c6a2c4b1cafa00f67779e34e05e94b105c9d4399' },
         entries: [
           {
             type: 'exception',
@@ -164,6 +166,8 @@ describe('OpsService', () => {
         culprit: 'GET /products',
         project: 'e-commerse-frontend',
         status: 'unresolved',
+        release: 'c6a2c4b1cafa00f67779e34e05e94b105c9d4399',
+        firstRelease: 'f54ba5ec90783a8c9a1722ee56200d6e2f678531',
         exception: {
           type: 'AxiosError',
           value: 'Network Error (user k***@***)',
@@ -206,6 +210,8 @@ describe('OpsService', () => {
       const { item } = await service.getIncident('1');
       expect(item.exception).toBeNull();
       expect(item.breadcrumbs).toEqual([]);
+      // 릴리즈를 안 적는 프로젝트(Phase 5 이전 백엔드)는 null — 분석은 HEAD 를 읽는다
+      expect(item.release).toBeNull();
     });
 
     it('캐시 HIT 이면 Sentry 를 부르지 않는다', async () => {

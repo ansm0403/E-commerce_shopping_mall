@@ -1,7 +1,7 @@
 /**
  * S4 AnalysisScreen 의 본문 두 가지 (설계 §4.3 S4).
  *
- *  - AnalysisCard   : status='ok'  — 심각도 뱃지 / 원인 / 추천 조치(모노스페이스) / 관련 파일 칩
+ *  - AnalysisCard   : status='ok'  — 심각도 뱃지 / 원인 / 추천 조치(모노스페이스) / 관련 파일 칩 / AI 가 읽은 코드(Phase 5)
  *  - FallbackCard   : status='parse_failed' — 모델 원문 + "다시 분석" 버튼
  *
  * 방어 렌더링(설계 §3.4 (b)): 백엔드가 검증을 통과시킨 결과라도 필드마다 없을 수 있다고 보고 그린다.
@@ -11,7 +11,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, Share, StyleSheet, Text, View } from 'react-native';
 import { requireOptionalNativeModule } from 'expo';
-import type { AiAnalysis, IncidentAnalysis } from '../../lib/api';
+import type { AiAnalysis, AnalysisToolCall, IncidentAnalysis } from '../../lib/api';
 import { timeAgo } from '../../lib/format';
 import { colors, severityColor, spacing } from '../../theme';
 
@@ -112,24 +112,79 @@ export function analysisToText(result: Partial<AiAnalysis> | null | undefined): 
   ].join('\n');
 }
 
+/** 도구 기록 중 실제로 읽힌 것만. 값이 이상해도(옛 행·다른 백엔드) 빈 배열로 — 화면은 던지지 않는다 */
+function okToolCalls(calls: unknown): AnalysisToolCall[] {
+  return Array.isArray(calls) ? (calls as AnalysisToolCall[]).filter((c) => c && typeof c === 'object' && typeof c.path === 'string') : [];
+}
+
 /**
- * 분석 메타 한 줄 — "gemini-3.1-flash-lite · 프롬프트 v2 (예시 3) · 3.2초 · 5분 전".
- * 어느 모델·프롬프트가 만든 답인지 화면에서 보인다. "(예시 n)" 은 few-shot 예시가 들어간 v2 에서만 붙는다(Phase 4).
+ * 분석 메타 한 줄 — "gemini-3.1-flash-lite · 프롬프트 v3 (코드 2) · 3.2초 · 5분 전".
+ * 어느 모델·프롬프트가 만든 답인지 화면에서 보인다. "(예시 n)" 은 few-shot 예시가 들어간 v2 에서만(Phase 4),
+ * "(코드 n)" 은 소스 코드를 실제로 읽은 v3 에서만 붙는다(Phase 5).
  * 평가 카드(S5)는 이 줄을 쓰지 않는다 — 버전을 보여주면 블라인드가 깨진다.
  */
 export function AnalysisMeta({ analysis }: { analysis: IncidentAnalysis }) {
   const seconds = analysis.latencyMs > 0 ? `${(analysis.latencyMs / 1000).toFixed(1)}초` : null;
   const fewShot = Array.isArray(analysis.fewShotIds) && analysis.fewShotIds.length > 0 ? ` (예시 ${analysis.fewShotIds.length})` : '';
-  const parts = [analysis.model ?? '모델 미상', `프롬프트 ${analysis.promptVersion}${fewShot}`, seconds, timeAgo(analysis.createdAt)].filter(
+  const read = okToolCalls(analysis.toolCalls).filter((c) => c.ok).length;
+  const code = read > 0 ? ` (코드 ${read})` : '';
+  const parts = [analysis.model ?? '모델 미상', `프롬프트 ${analysis.promptVersion}${fewShot}${code}`, seconds, timeAgo(analysis.createdAt)].filter(
     Boolean,
   );
   return <Text style={styles.meta}>{parts.join(' · ')}</Text>;
 }
 
-export function AnalysisCard({ result }: { result: Partial<AiAnalysis> | null | undefined }) {
+/** "backend/src/main.ts:40-90" 꼴의 칩 라벨. 줄 정보가 없으면 경로만 */
+function toolCallLabel(c: AnalysisToolCall): string {
+  const range = c.startLine !== null && c.endLine !== null ? `:${c.startLine}-${c.endLine}` : c.startLine !== null ? `:${c.startLine}` : '';
+  return `${c.path}${range}`;
+}
+
+/**
+ * "AI 가 읽은 코드" 섹션(Phase 5). 백엔드의 tool_calls 기록 — AI 가 답하기 전에 실제로 열어 본 파일:줄이다.
+ * 이 섹션이 있어야 "근거 있는 지적"과 "추측"을 화면에서 구분할 수 있다. 읽지 못한 호출(ok=false)은 사유와 함께 흐리게.
+ *
+ *  - toolCalls 가 null/없음(v1·v2·옛 행) → 섹션 자체를 그리지 않는다(도구가 없던 분석에 "안 읽었다"고 쓰면 오해)
+ *  - [] (도구를 줬지만 안 읽음) → "읽지 않고 답했다" 한 줄. 스택이 번들 좌표면 이렇게 된다
+ */
+function ToolCallsSection({ toolCalls, copyText }: { toolCalls: unknown; copyText: string | null }) {
+  if (!Array.isArray(toolCalls)) return null;
+  const calls = okToolCalls(toolCalls);
+  const ref = calls.find((c) => typeof c.ref === 'string')?.ref;
+  return (
+    <>
+      <SectionHeader title={`AI 가 읽은 코드${ref ? ` · ${ref.length > 12 ? ref.slice(0, 12) : ref}` : ''}`} copyText={copyText} />
+      <View style={styles.card}>
+        {calls.length > 0 ? (
+          <View style={styles.chips}>
+            {calls.map((c, i) => (
+              <View key={`${toolCallLabel(c)}-${i}`} style={[styles.chip, !c.ok && styles.chipFailed]}>
+                <Text style={[styles.mono, styles.chipText, !c.ok && styles.chipTextFailed]} numberOfLines={1}>
+                  {c.ok ? toolCallLabel(c) : `✗ ${toolCallLabel(c)}${c.reason ? ` — ${c.reason}` : ''}`}
+                </Text>
+              </View>
+            ))}
+          </View>
+        ) : (
+          <Text style={styles.empty}>코드를 읽지 않고 답했습니다. 스택트레이스가 원본 파일을 가리키지 않으면 이렇게 됩니다.</Text>
+        )}
+      </View>
+    </>
+  );
+}
+
+export function AnalysisCard({
+  result,
+  toolCalls,
+}: {
+  result: Partial<AiAnalysis> | null | undefined;
+  /** 백엔드의 tool_calls(Phase 5). 안 넘기면(평가 카드 등) 섹션을 그리지 않는다 */
+  toolCalls?: unknown;
+}) {
   const severity = typeof result?.severity === 'string' ? result.severity : null;
   const confidence = typeof result?.confidence === 'string' ? result.confidence : null;
   const files = Array.isArray(result?.relatedFiles) ? result.relatedFiles.filter((f) => typeof f === 'string') : [];
+  const readLabels = okToolCalls(toolCalls).filter((c) => c.ok).map(toolCallLabel);
 
   return (
     <View style={styles.stack}>
@@ -173,6 +228,8 @@ export function AnalysisCard({ result }: { result: Partial<AiAnalysis> | null | 
           <Text style={styles.empty}>스택트레이스에서 추정한 파일이 없습니다.</Text>
         )}
       </View>
+
+      <ToolCallsSection toolCalls={toolCalls} copyText={readLabels.length > 0 ? readLabels.join('\n') : null} />
     </View>
   );
 }
@@ -253,6 +310,8 @@ const styles = StyleSheet.create({
     maxWidth: '100%',
   },
   chipText: { color: colors.accent, fontSize: 11 },
+  chipFailed: { borderStyle: 'dashed', opacity: 0.7 },
+  chipTextFailed: { color: colors.textMuted },
   empty: { color: colors.textMuted, fontSize: 13 },
   fallbackCard: { borderColor: colors.warning },
   fallbackTitle: { color: colors.warning, fontSize: 16, fontWeight: '600' },
