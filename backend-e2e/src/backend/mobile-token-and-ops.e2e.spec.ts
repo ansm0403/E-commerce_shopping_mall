@@ -21,6 +21,12 @@ const emails = makeEmails(SUITE);
  *   · 캐시: 연속 호출 시 X-Cache MISS → HIT
  *   · 키 미설정 서버면 503 — 이 경우에도 서버가 죽지 않는 것만 확인한다
  *
+ * E. POST /v1/ops/incidents/:id/analysis — AI 분석(Phase 3)
+ *   · 가드: 무토큰 401 / buyer 403 · 없는 이슈 404 · LLM 키 미설정 서버면 503
+ *   · 강제 실패(simulate=parse_failed, 비운영 전용): LLM 없이 parse_failed 행 → 응답 형태·DB 행 단언
+ *   · 캐시: 같은 이슈를 force 없이 다시 부르면 X-Cache HIT + 같은 id (LLM 을 몰래 다시 부르지 않는다)
+ *   · 실제 LLM 호출은 이 스펙에서 하지 않는다 — 무료티어 쿼터와 비결정성 때문. 파이프라인은 단위 테스트가 고정한다
+ *
  * 전제: postgres·redis + `yarn nx serve backend` 가 떠 있어야 한다(support/global-setup.ts).
  */
 
@@ -52,6 +58,8 @@ describe('모바일 토큰 전략 + ops 인시던트 조회 (HTTP e2e)', () => {
   });
 
   afterAll(async () => {
+    // E 절이 만든 시뮬레이션 분석 행. 사용자 FK 가 없어 계정 정리로는 지워지지 않는다.
+    await ds.query(`DELETE FROM ops_analyses WHERE model = 'simulated'`);
     await cleanupE2eData(ds, SUITE);
     await ds.destroy();
   });
@@ -237,6 +245,76 @@ describe('모바일 토큰 전략 + ops 인시던트 조회 (HTTP e2e)', () => {
       const rows = await tokenRows(userId);
       expect(rows).toHaveLength(1);
       expect(rows[0].disabled_at).toBeNull();
+    });
+  });
+
+  describe('E. POST /v1/ops/incidents/:id/analysis (Phase 3 — AI 분석)', () => {
+    const ANALYSIS_KEYS = ['createdAt', 'id', 'incidentId', 'latencyMs', 'model', 'promptVersion', 'rawText', 'result', 'status'];
+
+    it('토큰 없음 → 401, buyer → 403', async () => {
+      expect((await axios.post('/ops/incidents/1/analysis', {})).status).toBe(401);
+      expect((await axios.post('/ops/incidents/1/analysis', {}, auth(buyerToken))).status).toBe(403);
+    });
+
+    it('잘못된 body(simulate 허용값 밖)는 400 — 가드 뒤·서비스 앞에서 걸린다', async () => {
+      // force 는 전역 ValidationPipe 의 enableImplicitConversion 때문에 'yes' 같은 문자열도 true 로 바뀌어 통과한다.
+      // 프로젝트 전체 규칙이라 여기서 단언하지 않는다.
+      expect(
+        (await axios.post('/ops/incidents/1/analysis', { simulate: 'boom' }, auth(adminMobile.accessToken))).status,
+      ).toBe(400);
+    });
+
+    it('강제 실패 → parse_failed 행(LLM 미호출) → 재요청은 캐시 HIT / 없는 이슈 404 / 키 미설정 서버면 503', async () => {
+      const list = await axios.get('/ops/incidents', auth(adminMobile.accessToken));
+      if (list.status === 503) {
+        // Sentry 미설정이면 인시던트 자체를 못 읽으므로 분석도 503(Sentry) 로 끝난다
+        expect((await axios.post('/ops/incidents/1/analysis', {}, auth(adminMobile.accessToken))).status).toBe(503);
+        return;
+      }
+
+      const probe = await axios.post('/ops/incidents/999999999999/analysis', {}, auth(adminMobile.accessToken));
+      if (probe.status === 503) {
+        // LLM 키 미설정(no-op) 경로: 서버가 죽지 않고 명시적으로 알린다. 그 밖의 단언은 할 수 없다
+        expect(probe.data.message).toMatch(/LLM/);
+        return;
+      }
+      expect(probe.status).toBe(404);
+
+      // 최근 24h 에 이슈가 없는 조용한 날에는 분석할 대상이 없다 — 여기까지만 단언한다
+      if (list.data.length === 0) return;
+      const id: string = list.data[0].id;
+
+      // 강제 실패: 비운영 서버에서만 통한다. 운영 서버를 향해 돌리면(그럴 일은 없지만) 실제 분석이 만들어지므로
+      // status 로 분기해 두 경우 모두 형태만은 고정한다.
+      const failed = await axios.post(
+        `/ops/incidents/${id}/analysis`,
+        { simulate: 'parse_failed' },
+        auth(adminMobile.accessToken),
+      );
+      expect(failed.status).toBe(201);
+      expect(failed.headers['x-cache']).toBe('MISS');
+      expect(Object.keys(failed.data).sort()).toEqual(ANALYSIS_KEYS);
+      expect(failed.data.incidentId).toBe(id);
+      expect(failed.data.promptVersion).toEqual(expect.any(String)); // Phase 4 비교 축 — 비어 있으면 안 된다
+      if (failed.data.status === 'parse_failed') {
+        expect(failed.data.result).toBeNull();
+        expect(failed.data.rawText).toContain('[simulated parse_failed]');
+        expect(failed.data.model).toBe('simulated');
+        const rows = await ds.query(
+          `SELECT status, result_json, prompt_version FROM ops_analyses WHERE id = $1`,
+          [failed.data.id],
+        );
+        expect(rows).toEqual([{ status: 'parse_failed', result_json: null, prompt_version: failed.data.promptVersion }]);
+      } else {
+        expect(failed.data.status).toBe('ok');
+        expect(failed.data.result).toMatchObject({ severity: expect.any(String), rootCause: expect.any(String) });
+      }
+
+      // force 없이 다시 → 최근 행 그대로(HIT). 화면을 다시 열 때마다 LLM 을 태우지 않는다
+      const again = await axios.post(`/ops/incidents/${id}/analysis`, {}, auth(adminMobile.accessToken));
+      expect(again.status).toBe(201);
+      expect(again.headers['x-cache']).toBe('HIT');
+      expect(again.data.id).toBe(failed.data.id);
     });
   });
 });

@@ -176,4 +176,18 @@ export class RedisService {
       await this.redis.del(...keys);
     }
   }
+
+  // ===== 단순 분산 락 (SET NX EX) =====
+  /**
+   * 같은 작업이 동시에 두 번 돌지 않게 하는 짧은 락. 잡으면 true, 이미 누가 잡고 있으면 false.
+   * TTL 이 있어 잡은 쪽이 죽어도 스스로 풀린다. (ops 의 AI 분석처럼 "비싸고 느린" 작업 앞에 건다)
+   */
+  async acquireLock(key: string, ttlSeconds: number): Promise<boolean> {
+    const result = await this.redis.set(`lock:${key}`, '1', 'EX', ttlSeconds, 'NX');
+    return result === 'OK';
+  }
+
+  async releaseLock(key: string): Promise<void> {
+    await this.redis.del(`lock:${key}`);
+  }
 }

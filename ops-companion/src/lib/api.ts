@@ -11,6 +11,7 @@
  */
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import { API_BASE_URL, CLIENT_HEADER } from './config';
+import { traceAnalysisRequest } from './sentry';
 import { clearTokens, getAccessToken, getRefreshToken, saveTokens } from './token-storage';
 
 export interface AuthUser {
@@ -226,4 +227,64 @@ export async function fetchReleaseHealth(): Promise<ReleaseHealth> {
  */
 export async function registerDevice(expoPushToken: string, platform: 'ios' | 'android'): Promise<void> {
   await api.post('/ops/devices', { expoPushToken, platform });
+}
+
+// ─── AI 분석 (Phase 3, 설계 §3.4 · §5.4) ──────────────────────
+
+export type AnalysisSeverity = 'critical' | 'high' | 'medium' | 'low';
+export type AnalysisConfidence = 'high' | 'medium' | 'low';
+
+/**
+ * 백엔드가 **검증을 통과시킨** 분석 결과(설계 §5.4). status 가 'ok' 일 때만 온다.
+ * 그래도 화면은 각 필드를 optional 처럼 방어해서 그린다(설계 §3.4 방어 처리 (b)) — 서버 쪽 검증이
+ * 바뀌거나 옛 행이 남아 있어도 앱이 깨지면 안 된다.
+ */
+export interface AiAnalysis {
+  severity: AnalysisSeverity;
+  rootCause: string;
+  suggestedFix: string;
+  relatedFiles: string[];
+  confidence: AnalysisConfidence;
+}
+
+export interface IncidentAnalysis {
+  id: number;
+  incidentId: string;
+  /** ok = 구조화 카드 / parse_failed = 원문 fallback(설계 §4.3 S4) */
+  status: 'ok' | 'parse_failed';
+  result: AiAnalysis | null;
+  /** parse_failed 일 때 모델이 실제로 뱉은 원문(백엔드가 마스킹·절단) */
+  rawText: string | null;
+  promptVersion: string;
+  model: string | null;
+  latencyMs: number;
+  createdAt: string;
+}
+
+export interface AnalyzeOptions {
+  /** 최근 결과가 있어도 새로 분석한다("다시 분석" 버튼) */
+  force?: boolean;
+  /** 개발 빌드 전용 — 백엔드가 LLM 없이 구조화 실패 행을 만든다(강제 실패 테스트). 운영 서버는 무시한다 */
+  simulate?: 'parse_failed';
+}
+
+/**
+ * POST /v1/ops/incidents/:id/analysis — 분석을 만들거나(첫 호출, 몇 초 걸린다) 최근 결과를 받는다.
+ *
+ * POST 인데 "조회"처럼 쓰는 이유: 첫 호출이 LLM 을 부르고 행을 만드는 부수효과가 있어서다.
+ * 두 번째부터는 백엔드가 저장된 행을 그대로 주므로(X-Cache: HIT) 화면을 다시 열어도 AI 를 다시 부르지 않는다.
+ *
+ * 타임아웃을 기본 15초보다 길게 준다 — 무료티어 모델이 스키마를 어겨 백엔드가 1회 재시도하면 20초를 넘길 수 있다.
+ * 요청 전체를 Sentry span 으로 감싼다(설계 §6 "AI 호출 계측") — 사용자가 체감한 지연이 이 값이다.
+ */
+export async function requestAnalysis(id: string, options: AnalyzeOptions = {}): Promise<IncidentAnalysis> {
+  return traceAnalysisRequest(id, Boolean(options.force), async (setStatus) => {
+    const { data } = await api.post<IncidentAnalysis>(
+      `/ops/incidents/${encodeURIComponent(id)}/analysis`,
+      options,
+      { timeout: 45_000 },
+    );
+    setStatus(data.status);
+    return data;
+  });
 }

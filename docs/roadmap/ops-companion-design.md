@@ -326,7 +326,7 @@ RootNavigator (AuthContext의 user 유무로 분기)
 | `GET /v1/ops/incidents/:id` | 인시던트 상세 — ✅ **구현 완료(2026-09-20, `0cc8301`)**: issue 단건 + 최신 event 를 합쳐 예외·스택(최근 호출이 앞, 30 프레임)·breadcrumbs(30개) 만 남긴다. request/user entry(헤더·쿠키·IP)는 읽지 않고 자유 텍스트는 `scrubText`. id 는 숫자만 받아 경로 조작 차단, 없는 이슈 404, Redis 60s 캐시 | 1 |
 | `POST /v1/ops/devices` | 기기 Expo push token 등록 — ✅ **구현 완료(2026-09-20)**: `(userId, 토큰)` upsert + Expo 토큰 정규식 검증. `DemoAccountGuard` 는 걸지 않는다(저장되는 것이 본인 기기 주소뿐이고, 막으면 데모 로그인으로 앱이 못 돈다) | 1 |
 | ~~`POST /v1/ops/webhooks/sentry`~~ | ~~Sentry webhook 수신~~ → **폐기(2026-09-16)**. §3.3 의 폴링 스케줄러로 대체 | 1 |
-| `POST /v1/ops/incidents/:id/analysis` | AI 분석 생성(또는 캐시된 분석 반환) | 3 |
+| `POST /v1/ops/incidents/:id/analysis` | AI 분석 생성(또는 캐시된 분석 반환) — ✅ **구현 완료(2026-09-21)**: `ops-analysis.service.ts`. `getIncident` 재사용 → 프롬프트 조립(`scrubText`) → `LlmClient.generate` → `parseAnalysis` 검증, 위반 시 사유를 실어 **1회 교정 재시도** → `ops_analyses` 저장. body 없이 부르면 최근 행(상태 무관, `X-Cache: HIT`), `{force:true}` 면 재분석, `{simulate:'parse_failed'}` 는 **비운영 전용** 강제 실패. LLM 키 없음 503 · 분당 상한(`OPS_ANALYSIS_MAX_PER_MIN`, 기본 5) 초과 429 · 같은 이슈 동시 409. 실제 LLM 호출은 단위 테스트 15건이 모킹으로 고정, e2e 는 시뮬레이션 경로만 | 3 |
 | `GET /v1/ops/analyses/pending` | 평가 대기 중인 분석 목록 | 4 |
 | `POST /v1/ops/analyses/:id/review` | 평가 저장 (verdict, rating) | 4 |
 
@@ -397,6 +397,11 @@ ops_push_log                         ← v2.2 추가 (2026-09-20 구현 시점, 
 > (`ops_device_tokens`·`ops_poll_state`·`ops_push_log`. `ops_analyses`·`ops_reviews` 는 Phase 3·4 몫).
 > `ops_device_tokens` 에는 설계에 없던 `disabledAt` 을 더했다 — Expo 가 `DeviceNotRegistered` 를 돌려준
 > 기기(앱 삭제)를 지우지 않고 표시만 해 두면, 재등록으로 되살아나고 발송 대상에서는 빠진다.
+
+> **구현 완료(2026-09-21, Phase 3)**: `ops_analyses` 를 마이그레이션 `OpsAnalyses1789968335669` 로 만들었다. 설계에 없던
+> `raw_text`(text, nullable) 를 더했다 — parse_failed 일 때 모델 원문(마스킹·4,000자 절단)을 앱의 fallback 화면이 보여준다.
+> `incident_id` 에 UNIQUE 를 걸지 않는다: 재시도·프롬프트 버전 변경으로 한 이슈에 여러 행이 쌓이고, "지금 보여줄 것"은
+> 최신 행이다. 옛 행을 지우지 않아야 Phase 4 의 v1 vs v2 비교가 성립한다. `ops_reviews` 는 Phase 4 몫.
 
 > ⚠ **`ops_poll_state` 를 빠뜨리면 폴링이 성립하지 않는다.** "어디까지 봤는지"를 기억하지 못하면
 > 매 주기마다 같은 이슈를 새 인시던트로 오인해 **푸시가 무한 반복된다.** 커서를 Redis 에만 두는 것도
@@ -477,7 +482,7 @@ accessToken 수명이 **15분**이므로 refresh 없이는 앱이 15분마다 �
 | beforeSend | 노이즈 필터(개발 중 의도적 에러 태그 제외) + PII 마스킹(이메일 등) | 2 |
 | 소스맵 | Hermes 소스맵 업로드. EAS Build와 연동해 자동화 `[확인 필요: 설치 시점의 sentry-expo/@sentry/react-native 공식 가이드 확인]` | 2 |
 | Release Health | 릴리즈 태깅 → crash-free sessions 추적. S2 요약 카드의 데이터 원천 | 2 |
-| AI 호출 계측 | `POST /analysis` 요청을 커스텀 span으로 감싸 지연/실패율 추적. "AI를 관측한다"는 차별화 포인트 | 3 |
+| AI 호출 계측 | `POST /analysis` 요청을 커스텀 span으로 감싸 지연/실패율 추적. "AI를 관측한다"는 차별화 포인트 — ✅ **구현(2026-09-21)** 양쪽에: 앱 `ops.analysis.request`(체감 지연, `tracesSampler` 가 **이 이름만 100%**, 나머지 트랜잭션 0% = 쿼터 방어) · 백엔드 `ops.analysis.llm`(LLM 왕복, 시도 횟수·status 속성) | 3 |
 | 태그 | `screen`, `appVersion`, 로그인 사용자 id(마스킹 규칙 적용) | 2 |
 
 **요금 안전장치 (필수 설정):** 무료 Developer 플랜 사용. 조직 설정에서
@@ -709,6 +714,45 @@ prebuild 때 APK 안으로 들어간다(SDK 자신이 경고한다).
   S4 화면, AI 호출 Sentry span 계측
 - DoD: 실제 인시던트에 대해 구조화 카드가 렌더됨. AI가 스키마를 어긴 경우에도
   앱이 깨지지 않고 fallback UI가 표시됨(강제 실패 테스트 포함).
+
+**✅ 실기기 DoD 통과 · 운영 배포 대기(2026-09-21, 브랜치 `feat/ops-ai-analysis`)** — 학습 노트 4편
+[04-ai-analysis.md](../learning/ops-companion/04-ai-analysis.md).
+
+| 단계 | 내용 | 상태 |
+|---|---|---|
+| ① 백엔드 파이프라인 | `OpsAnalysisService`: 상세 재사용 → 프롬프트 → `LlmClient.generate` → `parseAnalysis` → 교정 재시도 1회 → `ops_analyses` | ✅ 단위 15건 + 파서 단위 14건. **로컬 실인시던트로 `ok` 1건 실측**(Gemini flash-lite, 1회 시도, 2.4초, 스키마 준수) |
+| ② DB | `ops_analyses` 마이그레이션(+`raw_text`) · index.ts 등록 · 로컬 적용 | ✅ 로컬. **운영 미적용** |
+| ③ S4 AnalysisScreen | `/incidents/analysis/[id]` — 스켈레톤 / 구조화 카드 / fallback(원문+다시 분석) / HTTP 에러 6종 문구 | ✅ **실기기**(개발 빌드 `8f91794d` + 로컬 백엔드) 카드 렌더 |
+| ④ S3 CTA | "AI에게 원인 물어보기" 버튼 활성 | ✅ 실기기 |
+| ⑤ span 계측 | 앱 `tracesSampler` 이름 필터 + `ops.analysis.request` · 백엔드 `ops.analysis.llm` | ✅ 코드. ⏳ Sentry Performance 는 운영 배포 뒤(개발 모드는 Sentry off) |
+| ⑥ 강제 실패 | `simulate:'parse_failed'`(비운영) + 개발 빌드 전용 `[DEV]` 버튼 | ✅ **실기기**: fallback 원문 표시, 앱 생존, "다시 분석"으로 카드 복귀 |
+
+**DoD 통과가 "분석이 맞다"는 뜻은 아니다.** 첫 실기기 분석(CORS 이슈)은 문장이 매끄러웠지만 판단이 틀렸다 — 차단한 서버 자신을 허용 목록에 넣으라고 했다(학습 노트 4편 6-8). 옳고 그름을 가리는 장치가 Phase 4 이고, 근거를 늘리는 것이 아래 보강 후보다.
+
+**확정한 결정**
+
+| 항목 | 결정 | 이유 |
+|---|---|---|
+| 캐시 의미 | force 없는 요청은 **최근 행을 상태 무관하게** 준다(parse_failed 포함) | 화면을 다시 열 때마다 몰래 재시도하면 무료티어 쿼터가 샌다. 재분석은 사용자가 버튼을 눌러 명시적으로 |
+| 재시도 방식 | 같은 질문 반복이 아니라 **교정 요청**(틀린 응답 + 위반 사유 + "JSON 만 다시") | 무엇을 고칠지 알려 주는 쪽이 성공률이 높다. 시도는 총 2회 — RPM 15 |
+| JSON 강제 | 프로바이더의 JSON 모드(Gemini `responseMimeType`)를 **쓰지 않는다** | `LlmClient` 인터페이스에 프로바이더 어휘를 넣지 않는다는 원칙. 대신 파서가 관대하게 읽고 엄격하게 검증한다 — "AI 가 어겨도 안 깨진다"는 서사가 실제 경로가 된다 |
+| 검증 라이브러리 | zod 없이 **직접 검증**(필드 5개) | 백엔드 번들에 의존성 하나를 늘릴 만큼의 스키마가 아니다 |
+| 경로 | `incidents/analysis/[id]`(상세의 **형제**) | `[id]/analysis` 로 하려면 상세를 `[id]/index.tsx` 로 옮겨야 하고, 그러면 딥링크 문서·학습 노트 링크가 전부 바뀐다 |
+| 트랜잭션 샘플링 | `tracesSampleRate` 대신 **`tracesSampler` 이름 필터** | 비율을 0 보다 크게 주면 SDK 기본 통합이 앱 시작·화면 이동 트랜잭션까지 만들어 에러 쿼터를 나눠 먹는다 |
+| DemoAccountGuard | **걸지 않는다** | 로컬 DB 관리자가 데모 계정이라 걸면 앱 개발이 막힌다. 대신 분당 상한이 쿼터를 지킨다 |
+
+**Phase 3 이후 보강 후보(2026-09-21 합의, 지금은 하지 않는다)** — 현재 분석은 스택트레이스·breadcrumb 만 보고 추측한다.
+AI 의 가치는 모델이 아니라 **컨텍스트 · 도구 · 피드백 루프**에서 나오는데 셋 다 얇다. 순서는 Phase 4(피드백 루프) 를
+먼저 끝내고, 그 다음 아래를 얹는다. 도구 왕복이 붙으면 분석 하나가 LLM 3~4회 호출이 되므로 무료티어 RPM 15 를 다시 계산해야 한다.
+
+| 우선 | 보강 | 지금 | 채우면 | 재사용 자산 |
+|---|---|---|---|---|
+| **1** | **소스 코드 읽기**(tool use) | 파일명만 추측(`relatedFiles`) | 스택의 파일:줄을 GitHub 에서 읽어 **실제 코드 줄**을 보고 고침을 제안. 쇼핑몰 프로젝트는 Sentry release = 커밋 SHA 라 정확한 시점의 코드를 읽을 수 있다 | `LlmClient.generateWithTools`(어시스턴트 Phase 3) |
+| 2 | 배포 맥락 | 없음 | "이 이슈는 릴리즈 X 부터" → 그 커밋의 변경 파일이 용의자. Sentry issue 응답에 `firstRelease` 가 이미 있다 | `sentry-api.client.ts` 필드 추가 |
+| 3 | 이벤트 여러 건·태그 분포 | 최신 이벤트 1건 | 한 브라우저·한 사용자에만 나는지로 심각도 근거 확보 | `getLatestEvent` → events 목록 |
+| 4 | 행동 | 분석만 | Slack 초안·GitHub 이슈 생성 | Slack Incoming Webhook(이미 2채널 사용) |
+
+체감이 가장 큰 것은 1번이다 — "추측"이 "근거 있는 지적"으로 바뀐다.
 
 ### Phase 4 — 평가 루프 (human-in-the-loop)
 - 구현: S5 스와이프 카드 + 별점 + 낙관적 업데이트, 평가 저장, few-shot 주입

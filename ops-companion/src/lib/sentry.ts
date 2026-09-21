@@ -107,8 +107,11 @@ export function initSentry(): void {
     // (@sentry/react-native integrations/release.js — init 옵션이 네이티브 값보다 우선한다).
     // 빌드 때 Gradle(sentry.gradle)이 소스맵을 올리며 붙이는 --release/--dist 가 바로 그 이름이라,
     // 여기서 '1.0.0' 으로 덮어쓰면 에러와 소스맵·Release Health 의 릴리즈 이름이 서로 어긋난다.
-    // 성능 추적은 Phase 3(AI 호출 span)에서 켠다. 지금은 에러만.
-    tracesSampleRate: 0,
+    // 성능 추적(트랜잭션)은 **AI 분석 요청만** 보낸다(설계 §6 "AI 호출 계측").
+    // tracesSampleRate 를 0 보다 크게 주면 SDK 기본 통합이 앱 시작·화면 이동 트랜잭션까지 만들어
+    // 에러와 같은 쿼터를 깎는다. 그래서 비율 하나가 아니라 **이름으로 고른다** — 우리가 만든 span 은 100%,
+    // 나머지는 0%. beforeSend 가 에러에 하는 일을 트랜잭션에는 이 함수가 한다.
+    tracesSampler: ({ name }) => (name.startsWith(ANALYSIS_SPAN_PREFIX) ? 1 : 0),
     initialScope: { tags: { appVersion: APP_VERSION } },
     beforeSend,
     // 행동 기록은 **쌓일 때** 한 번 거른다. beforeSend 의 scrubEvent 도 같은 일을 하지만,
@@ -135,6 +138,43 @@ function beforeSend(event: ErrorEvent): ErrorEvent | null {
   lastSentAt.set(key, now);
   sentCount += 1;
   return scrubbed;
+}
+
+/** AI 분석 span 의 이름 접두어. tracesSampler 가 이 이름만 통과시킨다 */
+const ANALYSIS_SPAN_PREFIX = 'ops.analysis';
+
+/**
+ * AI 분석 요청 한 번을 Sentry span 으로 감싼다(설계 §6 "AI 호출 계측").
+ *
+ * span = "이 구간이 얼마나 걸렸고 어떻게 끝났나"를 기록하는 단위다. 에러 이벤트가 "터졌다"만 남긴다면
+ * span 은 "느렸다"를 남긴다. AI 응답은 몇 초씩 걸리고 실패 방식도 여러 가지(스키마 위반·429·타임아웃)라,
+ * 지연과 결과를 같은 자리에서 봐야 "AI 를 관측한다"고 말할 수 있다.
+ *
+ * 속성에는 식별자와 상태만 싣는다. 원문·프롬프트는 싣지 않는다 — span 속성은 beforeSend 를 거치지 않는다.
+ * Sentry 가 꺼져 있으면(DSN 없음·개발 모드) startSpan 은 콜백만 실행하고 아무것도 보내지 않는다.
+ */
+export function traceAnalysisRequest<T>(
+  incidentId: string,
+  force: boolean,
+  run: (setStatus: (status: string) => void) => Promise<T>,
+): Promise<T> {
+  return Sentry.startSpan(
+    {
+      name: `${ANALYSIS_SPAN_PREFIX}.request`,
+      op: 'http.client',
+      attributes: { 'ops.incident_id': incidentId, 'ops.force': force },
+    },
+    async (span) => {
+      try {
+        return await run((status) => span.setAttribute('ops.analysis.status', status));
+      } catch (error) {
+        // HTTP 상태만 남긴다(429·409·503 을 구분해 보려고). 메시지는 싣지 않는다.
+        const status = (error as { response?: { status?: number } })?.response?.status;
+        span.setAttribute('ops.analysis.status', status ? `http_${status}` : 'network_error');
+        throw error;
+      }
+    },
+  );
 }
 
 /** 로그인/로그아웃 시 사용자 컨텍스트. 이메일 등 PII 는 싣지 않는다(설계 §7 ④). */
