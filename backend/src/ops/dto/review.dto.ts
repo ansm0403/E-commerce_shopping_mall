@@ -71,6 +71,8 @@ export interface ReviewVersionStats {
   approvalRate: number | null;
   /** 별점을 남긴 평가의 평균. 없으면 null */
   avgRating: number | null;
+  /** 소스 읽기 도구를 실제로 1회 이상 호출한 분석 수(Phase 5). v1/v2 는 0 — "v3 중 도구를 실제로 쓴 비율"의 분자 */
+  toolCalled: number;
 }
 
 export interface ReviewStats {

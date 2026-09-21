@@ -44,6 +44,13 @@ export interface IncidentDetail extends IncidentSummary {
   project: string | null;
   /** unresolved | resolved | ignored */
   status: string;
+  /**
+   * 최신 이벤트의 릴리즈 이름(Phase 5). 커밋 SHA 꼴이면 AI 분석의 read_source 가 그 커밋을 읽는다.
+   * 예: 프론트 "c6a2c4b1…"(40자) · 백엔드 "8610aca"(Phase 5 배포 이후) · 앱 "dev.ansmoon.opscompanion@1.0.0+3" · 없으면 null
+   */
+  release: string | null;
+  /** 이 이슈가 처음 나타난 릴리즈(설계 §9 보강 후보 2번 — "릴리즈 X 부터"). 없으면 null */
+  firstRelease: string | null;
   /** 최신 event 에 예외가 없으면(메시지 이벤트 등) null */
   exception: IncidentException | null;
   /** 시간순(오래된 것 → 최근). 최근 N개만 */

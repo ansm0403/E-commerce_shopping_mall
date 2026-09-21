@@ -31,6 +31,8 @@ export interface SentryIssueDetail extends SentryIssue {
   culprit?: string | null;
   status?: string;
   project?: { slug?: string } | null;
+  /** 이 이슈가 처음 나타난 릴리즈(설계 §9 보강 후보 2번). 릴리즈를 안 적는 프로젝트(백엔드, Phase 5 이전)는 null */
+  firstRelease?: { version?: string | null } | null;
 }
 
 export interface SentryStackFrame {
@@ -55,6 +57,8 @@ export interface SentryBreadcrumb {
  * exception · breadcrumbs · request · debugmeta). 앞의 둘만 읽는다.
  */
 export interface SentryEvent {
+  /** 이 이벤트가 난 릴리즈. 프론트는 커밋 SHA(Vercel 자동), 앱은 `패키지@버전+versionCode`, 백엔드는 Phase 5 부터 짧은 SHA */
+  release?: { version?: string | null } | null;
   entries?: Array<
     | {
         type: 'exception';

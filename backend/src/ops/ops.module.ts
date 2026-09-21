@@ -12,6 +12,7 @@ import { OpsPushLogEntity } from './entity/ops-push-log.entity';
 import { OpsAnalysisEntity } from './entity/ops-analysis.entity';
 import { OpsReviewEntity } from './entity/ops-review.entity';
 import { OpsReviewService } from './ops-review.service';
+import { SourceReaderService } from './source-reader.service';
 
 /**
  * Ops Companion(RN 운영 앱) 백엔드 모듈 — Phase 0~3.
@@ -24,6 +25,8 @@ import { OpsReviewService } from './ops-review.service';
  *   여기서 import 하지 않는다(admin/assistant 와 같은 방식).
  * - Phase 4: ops_reviews + OpsReviewService(평가 저장·집계·few-shot 선정). OpsAnalysisService 가 이걸 주입받아
  *   프롬프트에 승인된 예시를 넣는다 — 순환 고리(설계 §1.4)의 ④→② 화살표가 이 의존성이다.
+ * - Phase 5: SourceReaderService(GitHub raw 읽기 + Redis 캐시). OpsAnalysisService 가 read_source 도구의 실행부로 쓴다.
+ *   DB 는 ops_analyses.tool_calls 컬럼 하나. 새 외부 연결(GitHub)이지만 비밀값은 없다(public 저장소).
  */
 @Module({
   imports: [
@@ -37,7 +40,7 @@ import { OpsReviewService } from './ops-review.service';
     AuthModule,
   ],
   controllers: [OpsController],
-  providers: [OpsService, OpsAnalysisService, OpsReviewService, OpsPollerService, SentryApiClient],
+  providers: [OpsService, OpsAnalysisService, OpsReviewService, SourceReaderService, OpsPollerService, SentryApiClient],
   exports: [OpsService],
 })
 export class OpsModule {}

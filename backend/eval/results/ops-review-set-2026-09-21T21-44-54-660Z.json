@@ -1,0 +1,40 @@
+{
+  "runAt": "2026-09-21T21:44:54.661Z",
+  "command": "test",
+  "ids": [
+    "7744504775"
+  ],
+  "arms": [
+    "v3"
+  ],
+  "delayMs": 13000,
+  "records": [
+    {
+      "incidentId": "7744504775",
+      "arm": "v3",
+      "analysisId": 29,
+      "status": "ok",
+      "promptVersion": "v3",
+      "fewShotIds": null,
+      "toolCalls": [
+        {
+          "path": "ops-companion/src/lib/sentry.ts",
+          "ref": "main",
+          "startLine": 40,
+          "endLine": 55,
+          "ok": true,
+          "lines": 16
+        },
+        {
+          "path": "ops-companion/app/(tabs)/profile.tsx",
+          "ref": "main",
+          "startLine": 30,
+          "endLine": 45,
+          "ok": true,
+          "lines": 16
+        }
+      ],
+      "latencyMs": 6001
+    }
+  ]
+}

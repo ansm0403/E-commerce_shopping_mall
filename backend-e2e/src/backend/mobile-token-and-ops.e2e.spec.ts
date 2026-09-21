@@ -184,7 +184,7 @@ describe('모바일 토큰 전략 + ops 인시던트 조회 (HTTP e2e)', () => {
       const res = await axios.get(`/ops/incidents/${id}`, auth(adminMobile.accessToken));
       expect(res.status).toBe(200);
       expect(Object.keys(res.data).sort()).toEqual(
-        ['breadcrumbs', 'count', 'culprit', 'exception', 'firstSeen', 'id', 'lastSeen', 'level', 'project', 'status', 'title'],
+        ['breadcrumbs', 'count', 'culprit', 'exception', 'firstRelease', 'firstSeen', 'id', 'lastSeen', 'level', 'project', 'release', 'status', 'title'],
       );
       expect(res.data.id).toBe(id);
       expect(Array.isArray(res.data.breadcrumbs)).toBe(true);
@@ -255,7 +255,7 @@ describe('모바일 토큰 전략 + ops 인시던트 조회 (HTTP e2e)', () => {
   });
 
   describe('E. POST /v1/ops/incidents/:id/analysis (Phase 3 — AI 분석)', () => {
-    const ANALYSIS_KEYS = ['createdAt', 'fewShotIds', 'id', 'incidentId', 'latencyMs', 'model', 'promptVersion', 'rawText', 'result', 'status'];
+    const ANALYSIS_KEYS = ['createdAt', 'fewShotIds', 'id', 'incidentId', 'latencyMs', 'model', 'promptVersion', 'rawText', 'result', 'status', 'toolCalls'];
 
     it('토큰 없음 → 401, buyer → 403', async () => {
       expect((await axios.post('/ops/incidents/1/analysis', {})).status).toBe(401);
@@ -306,6 +306,7 @@ describe('모바일 토큰 전략 + ops 인시던트 조회 (HTTP e2e)', () => {
         expect(failed.data.result).toBeNull();
         expect(failed.data.rawText).toContain('[simulated parse_failed]');
         expect(failed.data.model).toBe('simulated');
+        expect(failed.data.toolCalls).toBeNull(); // 시뮬레이션은 도구를 주지 않는다(Phase 5)
         const rows = await ds.query(
           `SELECT status, result_json, prompt_version FROM ops_analyses WHERE id = $1`,
           [failed.data.id],
@@ -424,6 +425,7 @@ describe('모바일 토큰 전략 + ops 인시던트 조회 (HTTP e2e)', () => {
         rejected: 1,
         approvalRate: 0,
         avgRating: null,
+        toolCalled: 0,
       });
       // simulated 행은 어느 버전에도 세지 않는다(E 절이 만든 것이 있어도)
       expect(stats.data.versions.every((x: { promptVersion: string }) => x.promptVersion !== 'simulated')).toBe(true);

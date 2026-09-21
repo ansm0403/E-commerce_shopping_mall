@@ -1,0 +1,78 @@
+{
+  "runAt": "2026-09-21T21:51:08.261Z",
+  "command": "test",
+  "ids": [
+    "7742806178",
+    "7742712093",
+    "7734495591",
+    "7743410873",
+    "7736291868",
+    "7734451568"
+  ],
+  "arms": [
+    "v3"
+  ],
+  "delayMs": 20000,
+  "records": [
+    {
+      "incidentId": "7742806178",
+      "arm": "v3",
+      "analysisId": 30,
+      "status": "ok",
+      "promptVersion": "v3",
+      "fewShotIds": null,
+      "toolCalls": [],
+      "latencyMs": 4306
+    },
+    {
+      "incidentId": "7742712093",
+      "arm": "v3",
+      "analysisId": 31,
+      "status": "ok",
+      "promptVersion": "v3",
+      "fewShotIds": null,
+      "toolCalls": [],
+      "latencyMs": 2075
+    },
+    {
+      "incidentId": "7734495591",
+      "arm": "v3",
+      "analysisId": 35,
+      "status": "ok",
+      "promptVersion": "v3",
+      "fewShotIds": null,
+      "toolCalls": [],
+      "latencyMs": 3671
+    },
+    {
+      "incidentId": "7743410873",
+      "arm": "v3",
+      "analysisId": 39,
+      "status": "ok",
+      "promptVersion": "v3",
+      "fewShotIds": null,
+      "toolCalls": [],
+      "latencyMs": 3127
+    },
+    {
+      "incidentId": "7736291868",
+      "arm": "v3",
+      "analysisId": 40,
+      "status": "ok",
+      "promptVersion": "v3",
+      "fewShotIds": null,
+      "toolCalls": [],
+      "latencyMs": 3494
+    },
+    {
+      "incidentId": "7734451568",
+      "arm": "v3",
+      "analysisId": 41,
+      "status": "ok",
+      "promptVersion": "v3",
+      "fewShotIds": null,
+      "toolCalls": [],
+      "latencyMs": 3228
+    }
+  ]
+}

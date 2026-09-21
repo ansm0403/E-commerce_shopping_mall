@@ -18,6 +18,7 @@
 | 3 | [03-observability-and-biometrics](./03-observability-and-biometrics.md) | 관측성 심화와 생체 인증 | Phase 2 | `4ead4ca` | ✅ |
 | 4 | [04-ai-analysis](./04-ai-analysis.md) | AI 분석 — 스키마를 어겨도 깨지지 않게 | Phase 3 | `bd9f8b4` | ✅ (운영 `89a02bc`) |
 | 5 | [05-review-loop](./05-review-loop.md) | 평가 루프 — 사람이 채점한 데이터로 AI 를 고치고, 숫자로 확인한다 | Phase 4 | `454fae0` | ✅ (운영 `8610aca`) |
+| 6 | [06-source-reading](./06-source-reading.md) | 소스 코드를 읽는 분석 — 추측을 근거로 바꾸는 도구 하나 | Phase 5 | `feat/ops-source-reading` | 🔶 코드·로컬 실측 완료 / 운영 배포·실기기 채점 미확인 |
 
 편 번호 순서대로 읽는다. 뒤 편은 앞 편에서 설명한 개념을 다시 설명하지 않는다.
 
@@ -25,7 +26,7 @@
 
 | 파일 | 제목 | 성격 | 마지막 갱신 |
 |---|---|---|---|
-| [infra-story](./infra-story.md) | 인프라 이야기 — 우리 앱은 누구와 어떻게 일하는가 | **계속 고쳐 쓰는 문서** | 2026-09-22 (`454fae0`, Phase 4) |
+| [infra-story](./infra-story.md) | 인프라 이야기 — 우리 앱은 누구와 어떻게 일하는가 | **계속 고쳐 쓰는 문서** | 2026-09-22 (`feat/ops-source-reading`, Phase 5) |
 
 편 번호가 붙은 노트와 성격이 다르다.
 
