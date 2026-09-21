@@ -6,13 +6,18 @@
 // 그래서 두 가지를 명시한다(설계 문서 §2):
 //   · watchFolders     — 루트까지 파일 변경 감시(모노레포 공용 코드 수정이 앱에 반영되게)
 //   · nodeModulesPaths — 앱 폴더와 루트 node_modules 양쪽에서 모듈을 찾게
-const { getDefaultConfig } = require('expo/metro-config');
+//
+// 설정의 출발점은 Expo 기본값이 아니라 **Sentry 가 감싼 것**(getSentryExpoConfig)이다.
+// 내부에서 expo/metro-config 의 getDefaultConfig 를 그대로 부른 뒤, 번들 끝에 **Debug ID** 를
+// 심는 직렬화기만 얹는다. Debug ID 는 "이 번들과 이 소스맵은 한 쌍" 이라는 고유 표식이다 —
+// 빌드 때 Sentry 로 올라간 소스맵을, 나중에 도착한 에러의 압축된 스택과 짝지어 주는 열쇠다.
+const { getSentryExpoConfig } = require('@sentry/react-native/metro');
 const path = require('path');
 
 const projectRoot = __dirname;
 const workspaceRoot = path.resolve(projectRoot, '..');
 
-const config = getDefaultConfig(projectRoot);
+const config = getSentryExpoConfig(projectRoot);
 
 config.watchFolders = [workspaceRoot];
 config.resolver.nodeModulesPaths = [

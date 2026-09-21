@@ -24,6 +24,14 @@ export function PushProvider({ children }: { children: ReactNode }) {
   const register = useCallback(async () => {
     const result = await registerForPushNotifications();
     setRegistration(result);
+
+    // 개발 중에만 토큰을 콘솔(= PC 의 Metro 터미널)에 남긴다. 화면의 토큰은 길어서 옮겨 적기
+    // 어렵고, 푸시가 안 올 때 "등록된 토큰이 무엇인지"가 첫 번째 확인 대상이다.
+    // __DEV__ 로 막는 이유: 이 토큰이 있으면 남이 이 기기로 알림을 보낼 수 있으므로
+    // 배포 빌드의 로그에는 절대 남기지 않는다(설계 §7 — 앱이 들고 있는 비밀은 새지 않게).
+    if (__DEV__ && result.status === 'registered') {
+      console.log('[push] 기기 토큰:', result.token);
+    }
   }, []);
 
   useEffect(() => {

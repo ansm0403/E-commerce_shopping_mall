@@ -196,6 +196,31 @@ export async function fetchIncident(id: string): Promise<IncidentDetail> {
 }
 
 /**
+ * GET /v1/ops/release-health — 릴리즈별 crash-free 세션 비율(설계 §6).
+ *
+ * 세션 = 앱을 한 번 열어서 쓰는 동안. crash-free = 그중 크래시 없이 끝난 비율이다.
+ * 이 수치도 앱이 Sentry 를 직접 부르지 않고 백엔드를 거친다 — 토큰을 앱에 넣지 않기 위해서다.
+ */
+export interface ReleaseHealthItem {
+  release: string;
+  /** 0~1. 집계 기간에 세션이 없으면 null */
+  crashFreeRate: number | null;
+  sessions: number;
+}
+
+export interface ReleaseHealth {
+  /** 집계 기간. 예: "14d" */
+  period: string;
+  /** 세션 많은 순 */
+  releases: ReleaseHealthItem[];
+}
+
+export async function fetchReleaseHealth(): Promise<ReleaseHealth> {
+  const { data } = await api.get<ReleaseHealth>('/ops/release-health');
+  return data;
+}
+
+/**
  * POST /v1/ops/devices — 이 기기로 푸시를 받겠다고 백엔드에 알린다(설계 §5.1).
  * 앱이 켜질 때마다 불러도 안전하다(백엔드가 upsert).
  */

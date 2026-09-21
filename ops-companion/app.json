@@ -27,6 +27,7 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
+      "expo-local-authentication",
       [
         "expo-notifications",
         {
@@ -35,7 +36,13 @@
           "enableBackgroundRemoteNotifications": false
         }
       ],
-      "@sentry/react-native"
+      [
+        "@sentry/react-native",
+        {
+          "organization": "ansmoon",
+          "project": "ops-companion"
+        }
+      ]
     ],
     "scheme": "opscompanion",
     "extra": {
