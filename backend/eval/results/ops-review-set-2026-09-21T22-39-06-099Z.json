@@ -1,0 +1,32 @@
+{
+  "runAt": "2026-09-21T22:39:06.099Z",
+  "command": "test",
+  "ids": [
+    "7732523858"
+  ],
+  "arms": [
+    "v3"
+  ],
+  "delayMs": 13000,
+  "records": [
+    {
+      "incidentId": "7732523858",
+      "arm": "v3",
+      "analysisId": 43,
+      "status": "ok",
+      "promptVersion": "v3",
+      "fewShotIds": null,
+      "toolCalls": [
+        {
+          "path": "backend/src/main.ts",
+          "ref": "00107b7",
+          "startLine": 45,
+          "endLine": 75,
+          "ok": true,
+          "lines": 31
+        }
+      ],
+      "latencyMs": 4013
+    }
+  ]
+}

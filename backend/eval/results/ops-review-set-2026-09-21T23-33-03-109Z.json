@@ -1,0 +1,43 @@
+{
+  "runAt": "2026-09-21T23:33:03.109Z",
+  "command": "test",
+  "ids": [
+    "7732523858"
+  ],
+  "arms": [
+    "v3.1",
+    "v1.1"
+  ],
+  "delayMs": 13000,
+  "records": [
+    {
+      "incidentId": "7732523858",
+      "arm": "v3.1",
+      "analysisId": 45,
+      "status": "ok",
+      "promptVersion": "v3.1",
+      "fewShotIds": null,
+      "toolCalls": [
+        {
+          "path": "backend/src/main.ts",
+          "ref": "00107b7",
+          "startLine": 40,
+          "endLine": 80,
+          "ok": true,
+          "lines": 41
+        }
+      ],
+      "latencyMs": 3421
+    },
+    {
+      "incidentId": "7732523858",
+      "arm": "v1.1",
+      "analysisId": 46,
+      "status": "ok",
+      "promptVersion": "v1.1",
+      "fewShotIds": null,
+      "toolCalls": null,
+      "latencyMs": 1889
+    }
+  ]
+}

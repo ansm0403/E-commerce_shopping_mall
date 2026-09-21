@@ -68,6 +68,8 @@ export class OpsAnalysisService {
   static readonly PROMPT_VERSION = 'v1';
   static readonly PROMPT_VERSION_FEW_SHOT = 'v2';
   static readonly PROMPT_VERSION_TOOLS = 'v3';
+  /** 서비스 지도(SERVICE_MAP)가 system 에 들어가면 어느 버전이든 `.1` 이 붙는다(v1.1 · v2.1 · v3.1) — 5편 버전 규칙 */
+  static readonly SERVICE_MAP_SUFFIX = '.1';
   /** few-shot 예시의 본문 필드 상한. 예시 3개가 인시던트 데이터보다 길어지지 않게 */
   static readonly FEW_SHOT_FIELD_MAX = 1_500;
   /** 행에 저장하는 제목·예외 한 줄의 상한(컬럼 길이와 같다) */
@@ -107,6 +109,24 @@ export class OpsAnalysisService {
   ].join('\n');
 
   /**
+   * Phase 5 네 번째 시도(설계 §9 Phase 5 "CORS 네 번째 시도" (a)) — 배포 구성의 **사실**만 적은 서비스 지도.
+   *
+   * 왜 필요한가: v3 는 main.ts 를 읽고도 "허용 목록에 api.ansmoon.dev 를 추가하라"고 답했다(6편 6-8). 그 도메인이 서버 자신이라는
+   * 사실은 코드에 없고 nginx·EC2 환경변수에만 있다. 코드를 아무리 읽어도 못 배우는 종류의 지식이라 프롬프트에 직접 준다.
+   *
+   * ⚠ 결론("CORS 오류는 정상 차단이다")은 적지 않는다 — 그건 모델이 지도를 보고 스스로 내려야 측정이 성립한다. 여기 있는 것은
+   * 도메인이 누구인지, 허용 목록이 어디서 오는지뿐이다. 도메인이 바뀌면 이 문자열도 바꾸고 버전 접미사를 올린다(.1 → .2).
+   * 기본 켬(OPS_ANALYSIS_SERVICE_MAP=false 로 끔). body serviceMap:false 는 평가 스크립트의 v1/v2/v3 재현용.
+   */
+  static readonly SERVICE_MAP = [
+    '[서비스 지도 — 이 조직의 배포 구성(사실)]',
+    '- 백엔드(NestJS) 의 공개 주소는 https://api.ansmoon.dev 하나다(EC2, nginx 뒤). Sentry 프로젝트 e-commerse-backend. 이 도메인은 서버 자신이다 — 백엔드가 자기 자신에게 브라우저 요청을 보내는 일은 없으므로, 정당한 요청의 Origin 헤더에 이 값이 올 수 없다.',
+    '- 쇼핑몰 프론트(Next.js) 는 Vercel 에 있다: https://shopping-mall-frontend-dusky.vercel.app. Sentry 프로젝트 e-commerse-frontend. 백엔드의 CORS 허용 출처(CORS_ORIGINS)는 이 프론트 도메인뿐이고, 그 값은 코드가 아니라 서버 환경변수에 있다.',
+    '- 운영 앱(React Native, ops-companion) 은 백엔드를 직접 호출하며 브라우저가 아니라 Origin 헤더를 보내지 않는다(CORS 와 무관). Sentry 프로젝트 ops-companion.',
+    '- 운영 백엔드는 인터넷에 열려 있어 봇·취약점 스캐너의 요청(예: /wp-json, /blog/wordpress 경로)이 매일 들어온다.',
+  ].join('\n');
+
+  /**
    * Phase 5 — 도구를 켠 분석에서 SYSTEM 뒤에 붙는 안내. v3 의 프롬프트가 v1 과 다른 유일한 부분(+ 도구 선언, + 사용자
    * 메시지의 [소스 코드] 절)이다. 격리 문구(코드 속 주석은 데이터)는 few-shot 블록과 같은 이유로 둔다 — 코드 주석은
    * 누구나 아무거나 쓸 수 있고, eval judge 가 응답 속 인젝션에 탈취당한 선례가 있다(ex-ai-assistant §8-14(5)).
@@ -142,6 +162,8 @@ export class OpsAnalysisService {
 
   private readonly maxLlmPerMinute: number;
   private readonly allowSimulation: boolean;
+  /** 서비스 지도를 기본으로 넣는가(OPS_ANALYSIS_SERVICE_MAP, 기본 true). body serviceMap 이 우선한다 */
+  private readonly serviceMapDefault: boolean;
 
   constructor(
     private readonly opsService: OpsService,
@@ -164,6 +186,7 @@ export class OpsAnalysisService {
     }
     // 강제 실패 스위치는 운영에서 절대 켜지지 않는다. 운영 DB 에 가짜 실패 행이 쌓이면 Phase 4 통계가 오염된다.
     this.allowSimulation = (config.get<string>('NODE_ENV') ?? 'development') !== 'production';
+    this.serviceMapDefault = (config.get<string>('OPS_ANALYSIS_SERVICE_MAP') ?? 'true') !== 'false';
   }
 
   isEnabled(): boolean {
@@ -242,7 +265,7 @@ export class OpsAnalysisService {
     try {
       // fewShot 은 기본 true — 앱은 보내지 않는다. false 는 평가 세트 스크립트의 대조군(v1) 전용.
       // 도구를 켠 분석(v3)은 few-shot 을 넣지 않는다 — v1 과 "도구 하나만 다른" 비교(결정 ⑤).
-      const row = await this.generate(incident, dto.fewShot !== false && !useTools, useTools);
+      const row = await this.generate(incident, dto.fewShot !== false && !useTools, useTools, dto.serviceMap ?? this.serviceMapDefault);
       return { item: OpsAnalysisService.toResponse(row), cached: false };
     } finally {
       await this.redisService.releaseLock(lockKey);
@@ -262,19 +285,27 @@ export class OpsAnalysisService {
    * 부른다. 도구 루프(호출 → 실행 → 결과 되돌림)는 LlmClient 안에서 돌고, 여기는 executeTool 로 실행만 맡는다.
    * 교정 재시도는 도구 없이(generate) 형식만 다시 묻는다 — 도구 루프를 다시 돌리면 쿼터가 두 배로 든다.
    */
-  private async generate(incident: IncidentDetail, useFewShot: boolean, useTools: boolean): Promise<OpsAnalysisEntity> {
+  private async generate(
+    incident: IncidentDetail,
+    useFewShot: boolean,
+    useTools: boolean,
+    useServiceMap: boolean,
+  ): Promise<OpsAnalysisEntity> {
     const model = this.config.get<string>('GEMINI_MODEL') ?? null;
 
     // 분석 대상 인시던트 자신의 승인 분석은 예시에서 뺀다(정답 보고 시험 방지 — 결정 ④). 선정 SQL 이 incident_id 로 거른다.
     const examples = useFewShot ? await this.reviewService.selectFewShot(incident.id) : [];
     const source = useTools ? this.buildSourceContext(incident) : null;
-    const promptVersion = source
+    const baseVersion = source
       ? OpsAnalysisService.PROMPT_VERSION_TOOLS
       : examples.length > 0
         ? OpsAnalysisService.PROMPT_VERSION_FEW_SHOT
         : OpsAnalysisService.PROMPT_VERSION;
+    // 서비스 지도가 들어가면 어느 버전이든 .1 — 프롬프트가 실제로 달라졌으므로 이름표도 달라진다
+    const promptVersion = useServiceMap ? `${baseVersion}${OpsAnalysisService.SERVICE_MAP_SUFFIX}` : baseVersion;
 
     const systemParts = [OpsAnalysisService.SYSTEM];
+    if (useServiceMap) systemParts.push(OpsAnalysisService.SERVICE_MAP);
     if (examples.length > 0) systemParts.push(OpsAnalysisService.buildFewShotBlock(examples));
     if (source) systemParts.push(OpsAnalysisService.TOOL_GUIDE);
     const systemStatic = systemParts.join('\n\n');
@@ -291,6 +322,7 @@ export class OpsAnalysisService {
           'ops.prompt_version': promptVersion,
           'ops.few_shot_count': examples.length,
           'ops.tools_enabled': Boolean(source),
+          'ops.service_map': useServiceMap,
           'ops.source_ref': source?.ref ?? '',
           'gen_ai.request.model': model ?? 'unknown',
         },

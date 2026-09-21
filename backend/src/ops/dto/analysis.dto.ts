@@ -50,6 +50,14 @@ export class CreateAnalysisDto {
   @IsOptional()
   @IsBoolean()
   readSource?: boolean;
+
+  /**
+   * false 면 서비스 지도(배포 구성 사실)를 system 에 넣지 않는다 — 평가 스크립트가 v1/v2/v3(지도 이전) 팔을 재현할 때 쓴다.
+   * 생략하면 서버 기본값(OPS_ANALYSIS_SERVICE_MAP, 기본 true). 지도가 들어간 분석은 버전에 `.1` 이 붙는다.
+   */
+  @IsOptional()
+  @IsBoolean()
+  serviceMap?: boolean;
 }
 
 /**
