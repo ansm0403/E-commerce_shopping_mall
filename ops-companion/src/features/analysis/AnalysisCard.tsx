@@ -9,8 +9,8 @@
  * 예외를 던지지 않는다 — DoD 의 "AI 가 스키마를 어겨도 앱이 깨지지 않는다"가 여기 걸려 있다.
  */
 import { useEffect, useRef, useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import * as Clipboard from 'expo-clipboard';
+import { Platform, Pressable, Share, StyleSheet, Text, View } from 'react-native';
+import { requireOptionalNativeModule } from 'expo';
 import type { AiAnalysis, IncidentAnalysis } from '../../lib/api';
 import { timeAgo } from '../../lib/format';
 import { colors, severityColor, spacing } from '../../theme';
@@ -29,11 +29,37 @@ const CONFIDENCE_LABEL: Record<string, string> = {
 };
 
 /**
+ * expo-clipboard 의 네이티브 쪽(ExpoClipboard)이 **이 APK 안에 있는가.**
+ *
+ * ⚠ expo-clipboard 를 파일 맨 위에서 `import` 하면 안 된다. 그 패키지는 불러오는 순간
+ * `requireNativeModule('ExpoClipboard')` 를 부르고, 네이티브 코드가 없는 APK(패키지를 넣기 전에 만든
+ * 개발 빌드)에서는 거기서 던진다 — 이 파일을 쓰는 분석 화면 전체가 import 단계에서 죽는다(학습 노트 4편 6-9).
+ * 그래서 존재 여부를 **던지지 않는** requireOptionalNativeModule 로 먼저 보고, 있을 때만 require 한다.
+ */
+const HAS_NATIVE_CLIPBOARD = requireOptionalNativeModule('ExpoClipboard') !== null;
+
+/**
+ * 텍스트를 클립보드에 넣는다. 네이티브 모듈이 없는 빌드에서는 RN 기본 공유 시트(Share)로 대신한다 —
+ * 공유 시트에도 "복사" 가 있으므로 한 번 더 누르면 같은 결과다. 반환값으로 어느 길을 탔는지 알린다.
+ */
+async function copyText(text: string): Promise<'copied' | 'shared'> {
+  if (HAS_NATIVE_CLIPBOARD) {
+    // 여기까지 와야 비로소 패키지를 평가한다(Metro 는 require 시점에 모듈을 실행한다).
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const Clipboard = require('expo-clipboard') as typeof import('expo-clipboard');
+    await Clipboard.setStringAsync(text);
+    return 'copied';
+  }
+  await Share.share({ message: text });
+  return 'shared';
+}
+
+/**
  * 작은 "복사" 버튼. 누르면 클립보드에 넣고 1.5초 동안 "복사됨" 으로 바뀐다.
  *
  * 왜 있나: 분석을 다른 AI 에게 이중 검증시키거나 이슈 트래커에 붙일 때 폰에서 길게 눌러 드래그하는 것은
  * 고역이다(실기기 확인 중 사용자가 결과를 손으로 옮겨 적었다). 클립보드는 expo-clipboard —
- * 웹의 navigator.clipboard 에 해당하는 네이티브 모듈이다.
+ * 웹의 navigator.clipboard 에 해당하는 네이티브 모듈이다. 없는 빌드에서는 공유 시트가 뜬다(copyText).
  */
 export function CopyButton({ text, label = '복사' }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false);
@@ -41,7 +67,9 @@ export function CopyButton({ text, label = '복사' }: { text: string; label?: s
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
 
   const onPress = async () => {
-    await Clipboard.setStringAsync(text);
+    const how = await copyText(text).catch(() => null);
+    // 공유 시트로 넘어간 경우는 사용자가 시트에서 고른 동작이 결과다 — "복사됨" 을 띄우지 않는다.
+    if (how !== 'copied') return;
     setCopied(true);
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => setCopied(false), 1500);

@@ -325,7 +325,7 @@ const files = Array.isArray(result?.relatedFiles) ? result.relatedFiles.filter((
 
 (c) 는 `FallbackCard` 다. 원문을 고정폭으로 보여주고 "다시 분석" 버튼을 둔다. 아무것도 없는 것보다 읽을 수 있는 원문이 낫다.
 
-**복사 버튼**(`CopyButton`, expo-clipboard)은 실기기 확인 중에 생겼다. 분석을 다른 AI 에게 이중 검증시키려면 텍스트를 옮겨야 하는데, 폰에서 길게 눌러 드래그하는 것은 고역이라 사용자가 결과를 손으로 옮겨 적었다. 섹션마다 "복사", 맨 위에 "전체 복사"(라벨 붙은 한 덩어리)를 뒀다. 6-8 의 틀린 분석을 되묻는 데 바로 쓰인다.
+**복사 버튼**(`CopyButton`, expo-clipboard — 네이티브가 없는 빌드에서는 공유 시트로 대신, 6-9)은 실기기 확인 중에 생겼다. 분석을 다른 AI 에게 이중 검증시키려면 텍스트를 옮겨야 하는데, 폰에서 길게 눌러 드래그하는 것은 고역이라 사용자가 결과를 손으로 옮겨 적었다. 섹션마다 "복사", 맨 위에 "전체 복사"(라벨 붙은 한 덩어리)를 뒀다. 6-8 의 틀린 분석을 되묻는 데 바로 쓰인다.
 
 ## 3-9. span — 이름으로 고른다
 
@@ -491,6 +491,44 @@ Node 22 에서 `jest.config.ts` 파싱이 깨지는 것은 그대로다(메모�
 - **보강 후보 1번(설계 §9)**: 소스 코드를 읽는 도구가 있었다면 `main.ts` 의 `enableCors` 를 열어 보고 "이 도메인은 백엔드 자신"임을 알 수 있었다.
 
 **교훈**: LLM 의 출력은 문장이 매끄러울수록 더 의심해야 한다. 이 앱에서 "AI 가 말했다"는 "검토할 초안이 생겼다"는 뜻이지 그 이상이 아니다.
+
+## 6-9. 네이티브 패키지를 넣고 껍데기를 안 바꿨다 — import 한 줄에 화면이 죽었다
+
+복사 버튼을 만들며 `expo-clipboard` 를 설치하고 파일 맨 위에 `import * as Clipboard from 'expo-clipboard'` 를 적었다. 타입 검사도 expo-doctor 도 통과했다. 폰에서 분석 화면을 열자 **Uncaught Error: Cannot find native module 'ExpoClipboard'** 로 죽었다.
+
+1편에서 본 두 겹 구조 그대로다. `expo-clipboard` 는 JS 절반과 **안드로이드 코드 절반**으로 된 패키지다. JS 는 Metro 가 바로 폰에 건넸지만, 안드로이드 절반은 APK 안에 있어야 하는데 폰의 개발 빌드(`8f91794d`)는 이 패키지를 넣기 **전에** 만든 껍데기다. 그리고 이 패키지는 불러오는 순간 네이티브 쪽을 찾는다.
+
+```js
+// node_modules/expo-clipboard/build/ExpoClipboard.js
+export default requireNativeModule('ExpoClipboard');   // 없으면 던진다
+```
+
+그래서 버튼을 누르기도 전에, 파일을 **import 하는 순간** 분석 화면 전체가 죽었다.
+
+인수인계 문서가 정확히 이것을 경고했다 — "앱 JS 를 고칠 거면 개발 빌드가 설치돼 있는지 먼저 확인하라", "패키지는 `npx expo install` 로". 설치 명령은 지켰지만, **"이 패키지에 네이티브 코드가 있는가 → 있으면 껍데기를 다시 만들어야 한다"** 는 판단을 건너뛰었다.
+
+해결은 두 가지 중 하나다. 20분짜리 개발 빌드를 다시 하거나, 네이티브가 없어도 죽지 않게 짜거나. 후자를 택했다.
+
+```ts
+import { requireOptionalNativeModule } from 'expo';
+const HAS_NATIVE_CLIPBOARD = requireOptionalNativeModule('ExpoClipboard') !== null;  // 없으면 null, 던지지 않는다
+
+async function copyText(text: string) {
+  if (HAS_NATIVE_CLIPBOARD) {
+    const Clipboard = require('expo-clipboard');   // 있을 때만 이 순간 평가된다
+    await Clipboard.setStringAsync(text);
+    return 'copied';
+  }
+  await Share.share({ message: text });            // RN 기본 공유 시트 — 거기에도 "복사" 가 있다
+  return 'shared';
+}
+```
+
+지금 개발 빌드에서는 "복사"를 누르면 공유 시트가 뜨고, 다음에 만드는 빌드(preview·새 개발 빌드)부터는 바로 클립보드에 들어간다. 어느 쪽이든 **화면은 죽지 않는다.**
+
+**판별법**: 패키지의 `build/` 에서 `requireNativeModule` 을 찾아본다. 있으면 네이티브 패키지다. 또는 `app.json` 의 `plugins` 에 넣으라는 안내가 있거나 패키지 이름이 `expo-` · `react-native-` 로 시작해 기기 기능(카메라·클립보드·알림·생체)을 다루면 거의 확실히 그렇다.
+
+**교훈**: 타입 검사·expo-doctor·Metro 번들은 **JS 절반만** 본다. 네이티브 절반이 APK 에 있는지는 폰에서 켜 봐야 안다. 네이티브 패키지를 더할 때는 ① 껍데기를 다시 만들 것인지, ② 없을 때 죽지 않게 짤 것인지를 **설치하기 전에** 정한다.
 
 ## 6-7. 콘솔의 한글이 깨져 보였다 — 데이터는 멀쩡했다
 
