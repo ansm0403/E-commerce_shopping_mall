@@ -651,6 +651,52 @@ PC 의 Metro 에 의존한다(`eas build -p android --profile preview`, 키스�
 - DoD: 프로덕션 빌드의 에러가 Sentry에서 원본 파일:라인으로 복원되어 보임.
   릴리즈별 crash-free 수치가 대시보드와 앱 카드 양쪽에 표시.
 
+**✅ 완료(2026-09-21, `5e8ea91`)** — DoD 전 항목 통과. 학습 노트 3편
+[03-observability-and-biometrics.md](../learning/ops-companion/03-observability-and-biometrics.md).
+
+| 단계 | 내용 | 상태 |
+|---|---|---|
+| ① 소스맵 | `app.json` org·project + `metro.config.js` **Debug ID** + Gradle 업로드 | ✅ 실기기(preview). `sentry.ts:48:43`(= `new Error(` 의 여는 괄호)·`profile.tsx:38:40` 까지 **칸 단위 복원** |
+| ② beforeSend | 같은 에러 60초 1건 + 실행당 20건 상한, PII·자격증명 마스킹 | ✅ 실기기. 테스트 3건이 이슈 1개로 묶임, `user = id:1`(이메일 없음) |
+| ③ 태그 | `screen`(useSegments) · `appVersion` · navigation breadcrumb | ✅ 실기기. `screen = (tabs)/profile` (**패턴**, 실제 경로 아님) |
+| ④ Release Health | `GET /v1/ops/release-health` + S2 상단 카드 | ✅ 백엔드 단위 27건 + 실기기 카드 `100% / 1.0.0+1 / 16세션` |
+| ⑤ 생체 인증 | 덮개 방식 잠금 + 프로필 토글 | ✅ 실기기. **앱 종료 → 푸시 탭 → 잠금 → 지문 → 상세 직행** |
+
+**설계대로 지켜진 것**: DB 테이블·컬럼 **0개**, 마이그레이션 **0건**, 생체 인증 과정의 서버 요청 **0건**(§5.3 주의 문단·§4.3 S1).
+
+**확정한 결정 4건**
+
+| 항목 | 결정 | 이유 |
+|---|---|---|
+| `release` 옵션 | **적지 않는다**(네이티브 기본값 `패키지@버전+versionCode` 사용) | Gradle 이 소스맵을 올릴 때 쓰는 `--release` 가 네이티브 값이다. `'1.0.0'` 으로 덮으면 에러와 소스맵이 짝이 안 맞아 **복원이 조용히 실패**한다 |
+| `autoIncrement` | preview·production 에 **켠다**(development 는 제외) | RN 앱은 커밋 SHA 를 모르고 versionCode 에만 의존한다. 고정이면 모든 빌드가 한 릴리즈로 뭉쳐 "릴리즈별 crash-free" 자체가 성립하지 않는다 |
+| 카드 정렬 | 세션 수가 아니라 **`+N` 내림차순** | 새 빌드는 배포 직후라 세션이 적다. 세션 순이면 비교하려고 만든 카드가 **항상 옛 빌드를 크게** 보여준다 |
+| `disableDeviceFallback` | **false**(기기 PIN 대체 허용) | 센서가 안 읽혀 온콜 담당자가 장애 알림을 못 보는 쪽이 더 큰 위험. 잠금 화면에 로그아웃 버튼도 함께 뒀다 |
+
+**§7-1 문구 정정.** "Sentry API 토큰·AI API 키는 ... EAS secrets 어디에도 넣지 않는다" 는
+**"APK 안에 들어가는 곳에 넣지 않는다"** 로 읽어야 한다. 소스맵은 EAS 빌드 서버에서 만들어지므로
+업로드 토큰이 빌드 시점에 반드시 필요하고, 다른 방법이 없다. 이번에 추가한 토큰은 원칙의 취지에
+어긋나지 않는다 — ① 이슈 조회가 불가능한 **Organization Token**(`sntrys_`)이고 ② `EXPO_PUBLIC_`
+접두어가 없어 번들에 박히지 않는다(실측: APK 번들에서 DSN·API 주소는 평문으로 발견되지만
+이 토큰은 0회). ⚠ 플러그인 옵션 `authToken` 에는 **절대 적지 않는다** — app.json 은 커밋되고
+prebuild 때 APK 안으로 들어간다(SDK 자신이 경고한다).
+
+**구현 중 밟은 함정 5건**(학습 노트 3편 6장)
+
+1. **EAS 빌드에서 Sentry 가 통째로 꺼져 있었다.** `.easignore` 가 `.env` 를 제외해 DSN 이 빈 채로
+   빌드됐고 `if (!SENTRY_DSN) return;` 에 걸렸다. 소스맵을 올려도 복원할 에러가 안 온다 →
+   DSN 을 `eas.json` 의 preview·production `env` 로 옮겼다.
+2. **개발 빌드는 소스맵을 올리지 않는다.** `sentry.gradle` 이 `if (!v.name...contains("debug"))`
+   로 막는다. 복원 확인은 preview 빌드에서만 가능하다.
+3. **`nx serve` 는 코드를 바꿔도 node 를 재시작하지 않는다.** node 시작 12:38:12 → `main.js` 기록
+   12:38:27 로, 서버가 옛 코드를 메모리에 올린 채 404 를 냈다. 확인은 시작 로그의
+   `Mapped {/v1/ops/release-health, GET}`.
+4. **sessions API 의 `project` 는 slug 도 받는다.** "숫자 id 만 받는다"는 추정으로 `/projects/`
+   해석 단계를 넣었다가, 둘 다 200·동일 결과임을 실측하고 들어냈다(호출 1회·캐시 필드·404 경로 제거).
+   단 `project` 자체를 빼면 조직 전체가 합산된다(그룹 1개 → 9개).
+5. **기기 토큰이 화면에서 잘려 읽을 수 없었다**(`numberOfLines={1}`). 손으로 옮겨 적다 `l`↔`I` 를
+   혼동해 `DeviceNotRegistered` 가 났다 → `Field` 에 `full`(줄바꿈+복사) 추가 + `__DEV__` 콘솔 출력.
+
 ### Phase 3 — AI 분석
 - 구현: 백엔드 분석 파이프라인(3.4), 스키마 검증 + 재시도 + 실패 fallback,
   S4 화면, AI 호출 Sentry span 계측

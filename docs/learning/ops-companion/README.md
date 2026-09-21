@@ -14,8 +14,8 @@
 | 편 | 파일 | 제목 | 설계 Phase | 작성 시점 커밋 | 상태 |
 |---|---|---|---|---|---|
 | 1 | [01-rn-first-app](./01-rn-first-app.md) | RN 첫 앱 — 개념부터 우리 코드까지 | Phase 0 | `1b662a5` | ✅ |
-| 2 | [02-push-and-deeplink](./02-push-and-deeplink.md) | 푸시 알림과 딥링크 | Phase 1 | `6352975` | 🔧 DoD 확인 대기 |
-| 3 | — | 관측성 심화와 생체 인증 | Phase 2 | — | 예정 |
+| 2 | [02-push-and-deeplink](./02-push-and-deeplink.md) | 푸시 알림과 딥링크 | Phase 1 | `6352975` | ✅ |
+| 3 | [03-observability-and-biometrics](./03-observability-and-biometrics.md) | 관측성 심화와 생체 인증 | Phase 2 | `5e8ea91` | ✅ |
 | 4 | — | AI 분석 화면 | Phase 3 | — | 예정 |
 | 5 | — | 평가 루프(스와이프 카드) | Phase 4 | — | 예정 |
 
@@ -25,7 +25,7 @@
 
 | 파일 | 제목 | 성격 | 마지막 갱신 |
 |---|---|---|---|
-| [infra-story](./infra-story.md) | 인프라 이야기 — 우리 앱은 누구와 어떻게 일하는가 | **계속 고쳐 쓰는 문서** | 2026-09-20 (`37ca6b0`, Phase 1 종료) |
+| [infra-story](./infra-story.md) | 인프라 이야기 — 우리 앱은 누구와 어떻게 일하는가 | **계속 고쳐 쓰는 문서** | 2026-09-21 (`5e8ea91`, Phase 2 종료) |
 
 편 번호가 붙은 노트와 성격이 다르다.
 

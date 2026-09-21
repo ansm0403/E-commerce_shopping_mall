@@ -67,6 +67,7 @@
 
 - **RN Ops Companion 백엔드 Phase 0-A(2026-09-17)**: `X-Client: mobile` 토큰 분기(위) + `ops/` 모듈 `GET /v1/ops/incidents`(admin 전용, Sentry Web API 프록시 → `IncidentSummary` 5필드 축약, Redis 60s 캐시 `X-Cache` 헤더, `SENTRY_AUTH_TOKEN`/`SENTRY_ORG_SLUG` 없으면 503 no-op). DB 변경 없음. e2e `mobile-token-and-ops.e2e.spec.ts`. 상세 `docs/roadmap/ops-companion-design.md`.
 - **RN Ops Companion Phase 0 완료(2026-09-20)**: 앱(`ops-companion/`) 로그인·인시던트 목록·프로필 + SecureStore 토큰·401 자동 갱신 + Sentry(앱 전용 프로젝트). 실기기(Expo Go) DoD 통과. 로그인 분기는 `Stack.Protected`(조건부 `<Stack.Screen>` 은 Expo Router 에서 무효). 다음 = 관측 선행 2건(프론트 axios `reportApiError`·`/v1/health` readiness 503) + jti 를 한 번에 배포한 뒤 Phase 1(푸시·딥링크).
+- **RN Ops Companion Phase 2 완료(2026-09-21, `5e8ea91`)**: 관측성 심화 + 보안 UX. **소스맵**(app.json org·project + Metro Debug ID → Gradle 이 debug 아닌 빌드에서만 업로드. `release` 를 적지 않아야 네이티브 기본값이 소스맵 릴리즈명과 일치한다) · **beforeSend**(같은 에러 60s 1건 + 실행당 20건 = 쿼터 방어, 이메일·전화·Bearer·JWT·푸시토큰 마스킹) · **태그**(`screen` 은 usePathname 이 아니라 **useSegments** — 실제 경로는 카디널리티가 터진다) · **Release Health**(`GET /v1/ops/release-health`, Sentry sessions 프록시. `project` 를 빼면 쇼핑몰 웹 세션이 섞인다. 정렬은 세션 수가 아니라 `+N` 내림차순) · **생체 인증**(덮개 방식 — 라우트가 아니라 Stack 위에 겹쳐서 잠긴 동안 뒤에서 딥링크 이동이 끝난다). **DB 변경 0건.** `eas.json` preview 에 `autoIncrement` (RN 앱은 커밋 SHA 를 몰라 versionCode 가 릴리즈를 가르는 유일한 수단). 상세 `docs/learning/ops-companion/03-observability-and-biometrics.md`. 다음 = Phase 3(AI 분석).
 
 **비어 있음 / 스켈레톤**
 - **셀러 프론트** `(main)/seller/*` 중 stub: 대시보드/문의. (상품 목록·등록·수정, 주문/배송, 정산은 실구현, 신청 화면 `my/seller-apply`도 실구현)
