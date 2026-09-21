@@ -4,7 +4,7 @@
 > 원본 설계: [`docs/roadmap/ops-companion-design.md`](../../roadmap/ops-companion-design.md) §1.4(핵심 순환 고리) · §4.3 S5 · §5.1 Phase 4 엔드포인트 · §5.3 `ops_reviews` · §9 Phase 4(결정 5건 · 평가 세트 · 수치)
 > 재사용한 자산의 원본: [`docs/roadmap/ex-ai-assistant.md`](../../roadmap/ex-ai-assistant.md) §5 Phase 7 · §8-13~15 (골든셋 고정 → 프롬프트만 바꿔 재측정하는 eval 루프)
 > 짝지어 읽을 코드: [ops-review.service.ts](../../../backend/src/ops/ops-review.service.ts) · [ops-analysis.service.ts](../../../backend/src/ops/ops-analysis.service.ts) · [review.dto.ts](../../../backend/src/ops/dto/review.dto.ts) · [ops-review.entity.ts](../../../backend/src/ops/entity/ops-review.entity.ts) · [ops-review-set.ts](../../../backend/eval/ops-review-set.ts) · [review.tsx](../../../ops-companion/app/%28tabs%29/review.tsx) · [SwipeCard.tsx](../../../ops-companion/src/features/review/SwipeCard.tsx) · [queries.ts](../../../ops-companion/src/features/review/queries.ts)
-> 작성 시점: 2026-09-22 (브랜치 `feat/ops-review-loop`, 커밋 전 — 로컬 실기기 채점까지 완료, 운영 배포 전)
+> 작성 시점: 2026-09-22 (브랜치 `feat/ops-review-loop`, 커밋 `454fae0` — 로컬 실기기 채점까지 완료, 운영 배포 전)
 
 ---
 
