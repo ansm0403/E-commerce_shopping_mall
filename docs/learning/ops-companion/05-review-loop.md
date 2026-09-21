@@ -4,7 +4,7 @@
 > 원본 설계: [`docs/roadmap/ops-companion-design.md`](../../roadmap/ops-companion-design.md) §1.4(핵심 순환 고리) · §4.3 S5 · §5.1 Phase 4 엔드포인트 · §5.3 `ops_reviews` · §9 Phase 4(결정 5건 · 평가 세트 · 수치)
 > 재사용한 자산의 원본: [`docs/roadmap/ex-ai-assistant.md`](../../roadmap/ex-ai-assistant.md) §5 Phase 7 · §8-13~15 (골든셋 고정 → 프롬프트만 바꿔 재측정하는 eval 루프)
 > 짝지어 읽을 코드: [ops-review.service.ts](../../../backend/src/ops/ops-review.service.ts) · [ops-analysis.service.ts](../../../backend/src/ops/ops-analysis.service.ts) · [review.dto.ts](../../../backend/src/ops/dto/review.dto.ts) · [ops-review.entity.ts](../../../backend/src/ops/entity/ops-review.entity.ts) · [ops-review-set.ts](../../../backend/eval/ops-review-set.ts) · [review.tsx](../../../ops-companion/app/%28tabs%29/review.tsx) · [SwipeCard.tsx](../../../ops-companion/src/features/review/SwipeCard.tsx) · [queries.ts](../../../ops-companion/src/features/review/queries.ts)
-> 작성 시점: 2026-09-22 (브랜치 `feat/ops-review-loop`, 커밋 `454fae0` — 로컬 실기기 채점까지 완료, 운영 배포 전)
+> 작성 시점: 2026-09-22 (브랜치 `feat/ops-review-loop`, 커밋 `454fae0`, main `8610aca` = PR #35 — 실기기 채점 · 운영 배포까지 완료)
 
 ---
 
@@ -36,7 +36,7 @@
 | 평가 세트 스크립트 — `list` / `seed` / `test` / `stats` | ✅ 실측: seed 3건 + test 12건(6 × v1·v2) 생성 |
 | S5 평가 탭 — 스와이프(오른쪽 승인·왼쪽 반려)·별점·진행 "n / N"·낙관적 업데이트 | ✅ **실기기**(개발 빌드 + 로컬 백엔드, 2026-09-22): 18장 채점 |
 | S4 → S5 CTA "이 분석 평가하기" | ✅ 실기기 |
-| 운영 배포 | ⏳ 커밋·PR 뒤. 마이그레이션 1건 포함 |
+| 운영 배포 | ✅ main `8610aca`(PR #35, 2026-09-22). 마이그레이션 `OpsReviews1790001959888` 1건 적용 · health version 단언 · 새 엔드포인트 3개 401(라우트 존재) · `/products`·`/categories`·Vercel 프론트 200(회귀 없음). 운영 DB 의 평가 행은 0건이라 운영 분석은 승인 풀이 쌓일 때까지 v1 로 동작한다 |
 
 **실측 수치(2026-09-22, 로컬 DB, 평가자 1명, Gemini flash-lite)**
 
