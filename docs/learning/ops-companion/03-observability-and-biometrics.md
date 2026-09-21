@@ -3,7 +3,7 @@
 > 대상: [1편](./01-rn-first-app.md)·[2편](./02-push-and-deeplink.md)을 읽었다고 본다. 거기서 설명한 용어(Metro, 개발 빌드, SecureStore, 딥링크 3상태 등)는 다시 풀지 않는다.
 > 원본 설계: [`docs/roadmap/ops-companion-design.md`](../../roadmap/ops-companion-design.md) §6(Sentry 계측 계획) · §4.3 S1·S2 · §7(보안 원칙) · §9 Phase 2
 > 짝지어 읽을 코드: [sentry.ts](../../../ops-companion/src/lib/sentry.ts) · [scrub.ts](../../../ops-companion/src/lib/scrub.ts) · [biometrics.ts](../../../ops-companion/src/lib/biometrics.ts) · [BiometricLockContext.tsx](../../../ops-companion/src/features/security/BiometricLockContext.tsx) · [ReleaseHealthCard.tsx](../../../ops-companion/src/features/observability/ReleaseHealthCard.tsx) · [ops.service.ts](../../../backend/src/ops/ops.service.ts)
-> 작성 시점: 2026-09-21 (커밋 `5e8ea91`)
+> 작성 시점: 2026-09-21 (커밋 `4ead4ca`)
 
 ---
 
@@ -35,10 +35,10 @@
 | 같은 에러 60초 1건 + 실행당 20건 상한 | ✅ 실기기. 테스트 이벤트 3건이 **이슈 1개**로 묶임 |
 | 나가는 텍스트에서 이메일·전화·토큰 마스킹 | ✅ 단위 규칙 + 실기기(`user = id:1`, 이메일 없음) |
 | 에러에 `screen`·`appVersion` 태그 | ✅ 실기기. `screen = (tabs)/profile` (실제 경로가 아니라 **패턴**) |
-| 릴리즈별 crash-free 세션 비율 (백엔드 + 앱 카드) | ✅ 백엔드 단위 27건 + 실기기 카드 `100% / 1.0.0+1 / 16세션` |
+| 릴리즈**별** crash-free 세션 비율 (백엔드 + 앱 카드) | ✅ 백엔드 단위 27건 + 실기기 카드 **두 줄** — `1.0.0+2` 100%/1세션(위) · `1.0.0+1` 100%/16세션 |
 | 지문으로 앱 잠금, 백그라운드 60초 후 재잠금 | ✅ 실기기 |
 | **푸시 탭 → 잠금 → 지문 → 인시던트 상세 직행** | ✅ 실기기 (앱 완전 종료 상태에서) |
-| 운영 배포 | ✅ `5e8ea91`. health version 단언, `/ops/release-health` 401, 회귀 없음 |
+| 운영 배포 | ✅ `4ead4ca`. health version 단언, `/ops/release-health` 401, 회귀 없음 |
 
 마지막 줄에서 두 번째가 이번 설계의 요점이다. **잠금을 풀면 목적지에 이미 도착해 있다.** 목록으로 떨어졌다가 다시 찾아 들어가는 것이 아니다. 왜 그렇게 되는지는 3-6 에 있다.
 
@@ -538,10 +538,14 @@ const params = new URLSearchParams({
   statsPeriod,
   groupBy: 'release',
   project: this.appProjectSlug,
+  interval: '1d',
 });
 params.append('field', 'crash_free_rate(session)');
 params.append('field', 'sum(session)');
 ```
+
+네 줄 다 필요하다. `project` 와 `interval` 을 빠뜨리면 각각 다른 방식으로 조용히 틀린 답이 온다
+(`interval` 쪽은 6-9).
 
 `project` 를 빠뜨리면 **조직 전체가 합산된다.** 실측으로 확인했다.
 
@@ -595,6 +599,15 @@ static buildNumberOf(release: string): number | null {
 ```
 
 쇼핑몰처럼 `+N` 이 없는 이름(커밋 SHA)은 세션 수로 되돌아간다.
+
+두 번째 릴리즈가 생겼을 때 이 선택이 그대로 드러났다. 카드 위쪽이 **1세션짜리 새 빌드**이고
+아래가 16세션짜리 옛 빌드다 — 세션 수로 세웠다면 정반대였을 것이다.
+
+```
+100%   1.0.0+2      ← 새 빌드 (1세션)
+───────────────
+1.0.0+1  100%  16세션
+```
 
 ## 3-12. 카드는 실패해도 조용하다
 
@@ -822,6 +835,32 @@ Did you mean 'absoluteFill'?
 
 RN 0.86 의 타입 선언에서 빠진 듯하다. `top/left/right/bottom: 0` 을 직접 적어 해결했고, 오히려 덮개가 무엇을 하는지 읽기 쉬워졌다.
 
+## 6-9. 새 릴리즈가 조회 결과에서 조용히 빠졌다
+
+Phase 2 를 거의 마치고 두 번째 빌드(`1.0.0+2`)를 올렸는데, 카드에 **여전히 `+1` 한 줄만** 떴다.
+
+먼저 의심할 것을 하나씩 지웠다. `autoIncrement` 는 동작했고(빌드의 versionCode 가 2), 소스맵 업로드가 만든 릴리즈 `+2` 도 Sentry 에 존재했고, 앱을 실행했으니 세션도 있었다. 그런데 우리가 쓰는 질의에서만 안 보였다.
+
+기간과 `interval` 을 바꿔가며 같은 데이터를 조회해 보고서야 드러났다.
+
+```
+14d (interval 미지정) → +1:16
+14d + interval=1h     → +1:16          ← 새 릴리즈가 빠진다
+14d + interval=6h     → +1:16  +2:1
+14d + interval=1d     → +1:16  +2:1    ← 나온다
+ 7d (interval 미지정) → +1:16  +2:1
+```
+
+**전파 지연이 아니다.** 같은 질의를 세 번 반복해도 결과가 같았다.
+
+기간 × interval 로 만들어지는 데이터 포인트가 많아지면(14d × 1h = 336개) Sentry 가 결과 크기를 맞추려 **작은 그룹부터 떨구는** 것으로 보인다. 그리고 하필 **새 릴리즈가 항상 가장 작다** — 배포 직후라 세션이 몇 건뿐이다. 카드가 가장 보여주고 싶은 것이 정확히 걸리는 셈이다.
+
+→ `interval: '1d'` 로 고정했다. 우리는 시계열을 그리지 않고 `totals` 만 쓰므로 가장 굵은 단위면 된다. 누락이 사라지고 응답 포인트도 336개 → 14개로 줄었다.
+
+집계 기간 14일은 유지했다. 7일로 줄여도 지금은 되지만, 릴리즈가 늘면 같은 방식으로 다시 떨어질 수 있다. 증상을 피하는 것보다 원인을 막는 쪽이 낫다.
+
+**교훈**: 집계 API 가 **틀린 답이 아니라 불완전한 답**을 줄 수 있다. 에러도 경고도 없이 행 하나가 빠지므로, "있어야 할 것이 없다"는 의심이 들면 같은 데이터를 **다른 파라미터로** 조회해 대조하는 것이 가장 빠르다.
+
 <br>
 
 ---
@@ -893,6 +932,7 @@ eas env:list preview     # SENTRY_AUTH_TOKEN=***** (secret)
 | `release-health` 가 404 | 백엔드를 재시작했나(6-4). 시작 로그의 `Mapped {/v1/ops/release-health, GET}` 확인 |
 | 카드만 안 보인다 | 보조 정보라 실패하면 조용히 사라진다. 백엔드 로그를 본다 |
 | 카드에 커밋 SHA 릴리즈가 뜬다 | `project` 필터가 풀렸다(3-10) |
+| 새 빌드를 올렸는데 카드에 안 뜬다 | `interval` 이 빠졌거나 너무 잘다(6-9). Sentry 에 세션이 있는지부터 확인 |
 | 잠금이 안 걸린다 | 프로필 토글이 켜져 있나. 앱 시작 또는 백그라운드 60초 후에만 걸린다 |
 | 푸시를 수동으로 보내고 싶다 | 기기 토큰은 `__DEV__` 콘솔에 찍힌다(6-6). Expo Push API 로 직접 POST |
 

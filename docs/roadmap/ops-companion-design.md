@@ -651,7 +651,7 @@ PC 의 Metro 에 의존한다(`eas build -p android --profile preview`, 키스�
 - DoD: 프로덕션 빌드의 에러가 Sentry에서 원본 파일:라인으로 복원되어 보임.
   릴리즈별 crash-free 수치가 대시보드와 앱 카드 양쪽에 표시.
 
-**✅ 완료(2026-09-21, `5e8ea91`)** — DoD 전 항목 통과. 학습 노트 3편
+**✅ 완료(2026-09-21, `4ead4ca`)** — DoD 전 항목 통과. 학습 노트 3편
 [03-observability-and-biometrics.md](../learning/ops-companion/03-observability-and-biometrics.md).
 
 | 단계 | 내용 | 상태 |
@@ -659,7 +659,7 @@ PC 의 Metro 에 의존한다(`eas build -p android --profile preview`, 키스�
 | ① 소스맵 | `app.json` org·project + `metro.config.js` **Debug ID** + Gradle 업로드 | ✅ 실기기(preview). `sentry.ts:48:43`(= `new Error(` 의 여는 괄호)·`profile.tsx:38:40` 까지 **칸 단위 복원** |
 | ② beforeSend | 같은 에러 60초 1건 + 실행당 20건 상한, PII·자격증명 마스킹 | ✅ 실기기. 테스트 3건이 이슈 1개로 묶임, `user = id:1`(이메일 없음) |
 | ③ 태그 | `screen`(useSegments) · `appVersion` · navigation breadcrumb | ✅ 실기기. `screen = (tabs)/profile` (**패턴**, 실제 경로 아님) |
-| ④ Release Health | `GET /v1/ops/release-health` + S2 상단 카드 | ✅ 백엔드 단위 27건 + 실기기 카드 `100% / 1.0.0+1 / 16세션` |
+| ④ Release Health | `GET /v1/ops/release-health` + S2 상단 카드 | ✅ 백엔드 단위 27건 + 실기기 카드 **두 줄**(`1.0.0+2` 1세션이 위, `1.0.0+1` 16세션이 아래 — 정렬 기준이 세션 수가 아님을 같이 증명) |
 | ⑤ 생체 인증 | 덮개 방식 잠금 + 프로필 토글 | ✅ 실기기. **앱 종료 → 푸시 탭 → 잠금 → 지문 → 상세 직행** |
 
 **설계대로 지켜진 것**: DB 테이블·컬럼 **0개**, 마이그레이션 **0건**, 생체 인증 과정의 서버 요청 **0건**(§5.3 주의 문단·§4.3 S1).
@@ -696,6 +696,13 @@ prebuild 때 APK 안으로 들어간다(SDK 자신이 경고한다).
    단 `project` 자체를 빼면 조직 전체가 합산된다(그룹 1개 → 9개).
 5. **기기 토큰이 화면에서 잘려 읽을 수 없었다**(`numberOfLines={1}`). 손으로 옮겨 적다 `l`↔`I` 를
    혼동해 `DeviceNotRegistered` 가 났다 → `Field` 에 `full`(줄바꿈+복사) 추가 + `__DEV__` 콘솔 출력.
+6. **sessions 조회가 새 릴리즈를 조용히 빠뜨린다.** 두 번째 빌드(`+2`)를 올렸는데 카드에 `+1` 만
+   떴다. Sentry 에 릴리즈도 세션도 있었지만 우리 질의에서만 안 보였다. 실측(3회 재현):
+   `14d`(interval 미지정·`1h`) → `+1` 만 / `14d`+`6h`·`1d` → 둘 다 / `7d`(미지정) → 둘 다.
+   기간 × interval 로 포인트가 많아지면(14d×1h=336) Sentry 가 결과 크기를 맞추려 **작은 그룹부터
+   떨구는** 것으로 보이고, **새 릴리즈가 항상 가장 작다**(배포 직후라 세션이 몇 건뿐) →
+   `interval: '1d'` 고정. 시계열을 그리지 않고 totals 만 쓰므로 손해가 없고 응답도 336→14 포인트로
+   준다. 기간 14일은 유지 — 7일로 줄이면 지금은 되지만 릴리즈가 늘면 같은 방식으로 재발한다.
 
 ### Phase 3 — AI 분석
 - 구현: 백엔드 분석 파이프라인(3.4), 스키마 검증 + 재시도 + 실패 fallback,
