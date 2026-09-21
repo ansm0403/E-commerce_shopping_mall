@@ -6,7 +6,8 @@
  * pull-to-refresh 는 쿼리를 다시 당기지만, 백엔드가 60초 Redis 캐시를 두고 있어
  * 연타해도 Sentry 를 직접 때리지 않는다(설계 §3.2).
  *
- * crash-free 요약 카드는 Phase 2 에서 실데이터가 생길 때 추가한다(지금은 표시하지 않음).
+ * 상단 crash-free 요약 카드는 Phase 2 에서 붙였다(ReleaseHealthCard) — 별도 쿼리이고,
+ * 실패하면 조용히 사라지므로 인시던트 목록에 영향을 주지 않는다.
  */
 import { useCallback } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
@@ -14,6 +15,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AxiosError } from 'axios';
 import { useRouter } from 'expo-router';
 import { useIncidents } from '../../../src/features/incidents/queries';
+import { ReleaseHealthCard } from '../../../src/features/observability/ReleaseHealthCard';
+import { useReleaseHealth } from '../../../src/features/observability/queries';
 import type { IncidentSummary } from '../../../src/lib/api';
 import { timeAgo } from '../../../src/lib/format';
 import { colors, levelColor, spacing } from '../../../src/theme';
@@ -51,6 +54,13 @@ function IncidentRow({ item }: { item: IncidentSummary }) {
 
 export default function IncidentListScreen() {
   const { data, isPending, isError, error, refetch, isRefetching } = useIncidents();
+  // 아래로 당기면 요약 카드도 같이 새로고침한다. 목록만 갱신되고 카드가 옛 수치로 남으면
+  // 같은 화면 안에서 두 숫자가 서로 다른 시점을 가리킨다.
+  const { refetch: refetchHealth } = useReleaseHealth();
+  const onRefresh = useCallback(() => {
+    void refetch();
+    void refetchHealth();
+  }, [refetch, refetchHealth]);
 
   const renderItem = useCallback(
     ({ item }: { item: IncidentSummary }) => <IncidentRow item={item} />,
@@ -87,13 +97,18 @@ export default function IncidentListScreen() {
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
-            onRefresh={refetch}
+            onRefresh={onRefresh}
             tintColor={colors.accent}
             colors={[colors.accent]}
           />
         }
         ListHeaderComponent={
-          data.length > 0 ? <Text style={styles.listHeader}>최근 24시간 · {data.length}건</Text> : null
+          <>
+            <ReleaseHealthCard />
+            {data.length > 0 ? (
+              <Text style={styles.listHeader}>최근 24시간 · {data.length}건</Text>
+            ) : null}
+          </>
         }
         ListEmptyComponent={
           <View style={styles.centered}>
@@ -117,7 +132,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   listContent: { padding: spacing.md, gap: spacing.sm },
-  emptyContainer: { flexGrow: 1 },
+  emptyContainer: { flexGrow: 1, padding: spacing.md },
   listHeader: { color: colors.textMuted, fontSize: 12, marginBottom: spacing.xs },
   row: {
     flexDirection: 'row',

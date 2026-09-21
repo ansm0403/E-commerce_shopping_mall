@@ -24,6 +24,9 @@ import * as Notifications from 'expo-notifications';
 import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
 import { PushProvider } from '../src/features/push/PushContext';
 import { usePushRouting } from '../src/features/push/usePushRouting';
+import { useScreenTag } from '../src/features/observability/useScreenTag';
+import { BiometricLockProvider, useBiometricLock } from '../src/features/security/BiometricLockContext';
+import { LockScreen } from '../src/features/security/LockScreen';
 import { initSentry } from '../src/lib/sentry';
 import { colors } from '../src/theme';
 
@@ -52,6 +55,9 @@ function RootNavigator() {
   const { user, isBooting } = useAuth();
   // 알림 탭 → 상세 화면. 3상태(포그라운드/백그라운드/종료)를 이 훅이 전부 처리한다.
   usePushRouting();
+  // 현재 화면을 Sentry 태그로. 에러를 화면별로 모아 볼 수 있게 한다(설계 §6).
+  useScreenTag();
+  const { isLocked } = useBiometricLock();
 
   if (isBooting) {
     // SecureStore 복원 + /auth/me 검증이 끝나기 전. 이 시간이 없으면 로그인 상태인데도
@@ -63,15 +69,20 @@ function RootNavigator() {
     );
   }
 
+  // 잠금은 라우트가 아니라 **덮개**다. Stack 을 그대로 두고 그 위에 겹쳐야, 잠긴 동안에도
+  // 뒤에서 딥링크 이동이 일어나고 해제하는 순간 목적지 화면이 이미 떠 있다.
   return (
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
-      <Stack.Protected guard={user !== null}>
-        <Stack.Screen name="(tabs)" />
-      </Stack.Protected>
-      <Stack.Protected guard={user === null}>
-        <Stack.Screen name="(auth)/login" />
-      </Stack.Protected>
-    </Stack>
+    <View style={styles.root}>
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
+        <Stack.Protected guard={user !== null}>
+          <Stack.Screen name="(tabs)" />
+        </Stack.Protected>
+        <Stack.Protected guard={user === null}>
+          <Stack.Screen name="(auth)/login" />
+        </Stack.Protected>
+      </Stack>
+      {isLocked ? <LockScreen /> : null}
+    </View>
   );
 }
 
@@ -84,10 +95,12 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
+          <BiometricLockProvider>
           <PushProvider>
             <StatusBar style="light" />
             <RootNavigator />
           </PushProvider>
+          </BiometricLockProvider>
         </AuthProvider>
       </QueryClientProvider>
     </SafeAreaProvider>
@@ -95,6 +108,7 @@ export default function RootLayout() {
 }
 
 const styles = StyleSheet.create({
+  root: { flex: 1 },
   booting: {
     flex: 1,
     alignItems: 'center',

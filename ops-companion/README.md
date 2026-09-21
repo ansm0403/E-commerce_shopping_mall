@@ -82,6 +82,48 @@ yarn start --no-dev --minify --clear
 
 프로필 탭에서 "Sentry: 켜짐" 을 확인하고 **Sentry 테스트 에러 보내기** 를 누른다. Sentry 의 `ops-companion` 프로젝트 Issues 에 "Sentry 연결 테스트" 가 뜨면 된다.
 
+## 소스맵 업로드 (Phase 2)
+
+**소스맵** = 압축된 번들의 좌표(`index.android.bundle:1:55048`)를 원본 파일·줄(`app/(tabs)/profile.tsx:41`)로
+되돌리는 대응표다. 빌드할 때 Sentry 에 올려 두면, 나중에 도착한 에러의 스택이 원본으로 복원돼 보인다.
+
+업로드는 **EAS 빌드 안에서 자동으로** 일어난다. 세 조각이 맞물린다.
+
+| 조각 | 위치 | 하는 일 |
+|---|---|---|
+| org·project | `app.json` 의 `@sentry/react-native` 플러그인 옵션 | prebuild 때 `android/sentry.properties` 로 기록된다 |
+| Debug ID | `metro.config.js` 의 `getSentryExpoConfig` | 번들과 소스맵에 같은 고유 표식을 심는다(짝짓기 열쇠) |
+| 업로드 | SDK 의 `sentry.gradle` | **debug 가 아닌 변형**(preview·production)의 번들 작업 끝에 `sentry-cli` 로 올린다 |
+
+→ **development 빌드는 올리지 않는다**(debug 변형이고, JS 를 PC 의 Metro 에서 받는다). 복원 확인은 preview 빌드로 한다.
+
+**처음 한 번 — 업로드용 토큰**
+
+1. Sentry → **Settings → Developer Settings → Organization Tokens** → *Create New Token*.
+   이것은 **Organization Token**(`sntrys_` 로 시작)으로 권한이 CI 용으로 고정돼 있다 — 릴리즈·소스맵 업로드는 되고
+   이슈 조회는 안 된다. 백엔드가 쓰는 **개인 토큰**(`sntryu_`, 권한을 직접 고른 것)과 **다른 토큰**이다.
+   ⚠ 생성 직후 한 번만 보여준다. 창을 닫기 전에 2번을 끝내라.
+2. EAS 에 비밀값으로 등록한다(값은 명령행에 적지 말고 프롬프트에 붙여 넣는다 — 셸 기록에 남는다).
+   ```bash
+   cd ops-companion
+   eas env:set --name SENTRY_AUTH_TOKEN --visibility secret --environment preview --environment production
+   ```
+
+⚠ 이 토큰은 **EAS 빌드 서버에서만** 쓰이고 앱 바이너리에 들어가지 않는다(`EXPO_PUBLIC_` 접두어가 없는 값은
+번들에 박히지 않는다). `app.json` 의 플러그인 옵션 `authToken` 에는 **절대 적지 않는다** — 저장소에 남는다.
+
+**DSN 은 `eas.json` 에 있다.** `.easignore` 가 `.env` 를 올리지 않으므로, EAS 빌드는 로컬 `.env` 의 DSN 을
+보지 못한다. DSN 은 공개돼도 되는 값이라(설계 §3.1 규칙 3) preview·production 프로필의 `env` 에 직접 적었다.
+
+**확인**
+
+```bash
+eas build --platform android --profile preview
+```
+
+빌드 로그에서 `Sentry-CLI arguments:` 와 `Uploaded files to Sentry` 를 찾는다. 설치 후 프로필 탭의
+**Sentry 테스트 에러 보내기** → Sentry 이슈의 스택이 `app/(tabs)/profile.tsx` 로 보이면 된다.
+
 ## 로컬 백엔드에 붙이려면
 
 `.env` 의 주소를 PC 의 LAN IP 로 바꾼다. 실기기에서 `localhost` 는 **기기 자신**을 가리키므로 쓸 수 없다.

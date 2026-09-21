@@ -694,7 +694,7 @@ curl -s -o /dev/null -w "%{http_code}
 
 # 8장. 다음은 무엇인가
 
-Phase 2 는 **관측성 심화와 보안 UX** 다.
+Phase 2 는 **관측성 심화와 보안 UX** 다. 전부 끝났고 [3편](./03-observability-and-biometrics.md)에서 다룬다.
 
 - **소스맵**: 지금 상세 화면의 스택은 `chunks/5585-2589ad.js:1:55048` 처럼 압축된 좌표다. 소스맵을 올리면 원본 파일·줄 번호로 복원된다.
 - **Release Health**: 릴리즈별 crash-free 비율. 목록 화면 상단 요약 카드의 데이터 원천이다.

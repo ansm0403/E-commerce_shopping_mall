@@ -9,6 +9,7 @@ import { OpsService } from './ops.service';
 import { IncidentSummary } from './dto/incident-summary.dto';
 import { IncidentDetail } from './dto/incident-detail.dto';
 import { RegisterDeviceDto } from './dto/register-device.dto';
+import { ReleaseHealth } from './dto/release-health.dto';
 
 /**
  * /v1/ops — RN Ops Companion 전용 엔드포인트 (설계 §5.1).
@@ -42,6 +43,17 @@ export class OpsController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<IncidentDetail> {
     const { item, cached } = await this.opsService.getIncident(id);
+    res.setHeader('X-Cache', cached ? 'HIT' : 'MISS');
+    return item;
+  }
+
+  /**
+   * GET /v1/ops/release-health — 릴리즈별 crash-free 세션 비율(설계 §6).
+   * S2 목록 화면 상단 요약 카드의 데이터 원천. 읽기 전용이라 캐시 헤더 관례는 incidents 와 같다.
+   */
+  @Get('release-health')
+  async getReleaseHealth(@Res({ passthrough: true }) res: Response): Promise<ReleaseHealth> {
+    const { item, cached } = await this.opsService.getReleaseHealth();
     res.setHeader('X-Cache', cached ? 'HIT' : 'MISS');
     return item;
   }

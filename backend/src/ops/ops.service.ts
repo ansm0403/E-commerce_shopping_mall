@@ -16,10 +16,12 @@ import {
   SentryEvent,
   SentryIssue,
   SentryIssueDetail,
+  SentrySessionsResponse,
 } from './sentry-api.client';
 import { IncidentLevel, IncidentSummary } from './dto/incident-summary.dto';
 import { IncidentBreadcrumb, IncidentDetail, IncidentException } from './dto/incident-detail.dto';
 import { RegisterDeviceDto } from './dto/register-device.dto';
+import { ReleaseHealth, ReleaseHealthItem } from './dto/release-health.dto';
 import { OpsDeviceTokenEntity } from './entity/ops-device-token.entity';
 
 /**
@@ -42,6 +44,14 @@ export class OpsService {
   static readonly CACHE_TTL_SEC = 60;
   static readonly CACHE_KEY = `ops:incidents:${OpsService.STATS_PERIOD}`;
   static readonly DETAIL_CACHE_PREFIX = 'ops:incident:';
+  /**
+   * Release Health 집계 기간. 인시던트(24h)보다 훨씬 길게 잡는다 —
+   * 하루치 세션으로 낸 비율은 표본이 적어 한 번의 크래시에 수치가 요동친다.
+   */
+  static readonly HEALTH_PERIOD = '14d';
+  static readonly HEALTH_CACHE_KEY = `ops:release-health:${OpsService.HEALTH_PERIOD}`;
+  /** 요약 카드가 쓰는 것은 최신 1건이지만, 직전 릴리즈와 비교할 수 있게 몇 개만 함께 준다 */
+  static readonly MAX_RELEASES = 5;
   /** 상세 화면에 내려보낼 상한. 모바일 화면에서 그 이상은 읽지 않는다 — payload 다이어트 */
   static readonly MAX_FRAMES = 30;
   static readonly MAX_BREADCRUMBS = 30;
@@ -144,6 +154,87 @@ export class OpsService {
     const item = OpsService.toDetail(issue, event);
     await this.redisService.setCache(cacheKey, item, OpsService.CACHE_TTL_SEC);
     return { item, cached: false };
+  }
+
+  /**
+   * 릴리즈별 crash-free 세션 비율(설계 §6 Release Health · §4.3 S2 요약 카드의 데이터 원천).
+   *
+   * 앱이 Sentry 를 직접 부르지 않는 이유는 인시던트와 같다(§3.2) — 토큰을 앱에 넣지 않기 위해서다.
+   * 새 비밀값도, DB 테이블도 늘지 않는다. 세션은 SDK 가 이미 보내고 있고 우리는 읽기만 한다.
+   */
+  async getReleaseHealth(): Promise<{ item: ReleaseHealth; cached: boolean }> {
+    if (!this.isEnabled()) {
+      throw new ServiceUnavailableException(
+        'Sentry 연동이 설정되지 않았습니다 (SENTRY_AUTH_TOKEN / SENTRY_ORG_SLUG).',
+      );
+    }
+
+    const cached = await this.redisService.getCache<ReleaseHealth>(OpsService.HEALTH_CACHE_KEY);
+    if (cached && typeof cached === 'object') {
+      return { item: cached, cached: true };
+    }
+
+    let body: SentrySessionsResponse;
+    try {
+      body = await this.sentry.getSessionsByRelease(OpsService.HEALTH_PERIOD);
+    } catch (err) {
+      this.logger.error(`Sentry sessions 조회 실패: ${(err as Error).message}`);
+      throw new BadGatewayException('Sentry API 호출에 실패했습니다.');
+    }
+
+    const item = OpsService.toReleaseHealth(body);
+    await this.redisService.setCache(OpsService.HEALTH_CACHE_KEY, item, OpsService.CACHE_TTL_SEC);
+    return { item, cached: false };
+  }
+
+  /**
+   * Sentry sessions 응답 → ReleaseHealth.
+   *
+   * 응답의 groups 는 순서가 보장되지 않으므로 **최신 빌드가 앞에 오도록** 다시 세운다.
+   * 앱 카드가 첫 항목을 크게 그리는데, 온콜 담당자가 크게 봐야 하는 것은 **지금 돌고 있는
+   * 빌드**이기 때문이다.
+   *
+   * ⚠ 세션 수로 정렬하면 안 된다. 새 빌드는 막 배포돼 세션이 적어서 **항상 아래로 밀린다** —
+   * "새 빌드가 이전보다 나아졌나"를 보려고 만든 카드가 옛 빌드를 크게 보여주게 된다.
+   *
+   * "최신"의 기준은 릴리즈 이름 끝의 `+N`(안드로이드 versionCode)이다. 이 값은 빌드마다
+   * 증가하도록 eas.json 에서 autoIncrement 를 켜 두었다. 응답에는 릴리즈 날짜가 없어서
+   * 이름에서 읽어내는 것 말고는 최신을 가릴 방법이 없다. 읽어낼 수 없는 이름(쇼핑몰의
+   * 커밋 SHA 처럼 `+N` 이 없는 형식)은 세션 수로 되돌아간다.
+   */
+  static toReleaseHealth(body: SentrySessionsResponse): ReleaseHealth {
+    const releases: ReleaseHealthItem[] = (body.groups ?? [])
+      .map((g) => {
+        const release = g?.by?.release;
+        if (typeof release !== 'string' || release.length === 0) return null;
+
+        const rate = g?.totals?.['crash_free_rate(session)'];
+        const sessions = g?.totals?.['sum(session)'];
+        return {
+          release,
+          crashFreeRate: typeof rate === 'number' ? rate : null,
+          sessions: typeof sessions === 'number' ? sessions : 0,
+        };
+      })
+      .filter((r): r is ReleaseHealthItem => r !== null)
+      .sort((a, b) => {
+        const buildA = OpsService.buildNumberOf(a.release);
+        const buildB = OpsService.buildNumberOf(b.release);
+        if (buildA !== null && buildB !== null && buildA !== buildB) return buildB - buildA;
+        return b.sessions - a.sessions;
+      })
+      .slice(0, OpsService.MAX_RELEASES);
+
+    return { period: OpsService.HEALTH_PERIOD, releases };
+  }
+
+  /**
+   * 릴리즈 이름 끝의 `+N` 을 숫자로. `dev.ansmoon.opscompanion@1.0.0+2` → 2.
+   * 안드로이드 versionCode 이고, 빌드마다 1씩 오른다(= 큰 쪽이 새 빌드).
+   */
+  static buildNumberOf(release: string): number | null {
+    const matched = /\+(\d+)$/.exec(release);
+    return matched ? Number.parseInt(matched[1], 10) : null;
   }
 
   /** Sentry issue → IncidentSummary. 정해진 5개 필드만 남긴다(§5.2). */

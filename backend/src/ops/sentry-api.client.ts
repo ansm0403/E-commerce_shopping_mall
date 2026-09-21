@@ -71,6 +71,17 @@ export interface SentryEvent {
   >;
 }
 
+/**
+ * GET /organizations/{org}/sessions/ — Release Health 의 원천.
+ * groups[].by 에 groupBy 로 준 축(여기선 release)이, totals 에 field 로 요청한 지표가 담긴다.
+ */
+export interface SentrySessionsResponse {
+  groups?: Array<{
+    by?: Record<string, string | null> | null;
+    totals?: Record<string, number | null> | null;
+  }> | null;
+}
+
 /** Sentry 가 2xx 가 아닌 응답을 줬을 때. status 로 404(없는 이슈)를 구분한다 */
 export class SentryApiError extends Error {
   constructor(readonly status: number) {
@@ -96,10 +107,14 @@ export class SentryApiClient {
 
   private readonly token: string | undefined;
   private readonly orgSlug: string | undefined;
+  /** Release Health 를 볼 대상 = 이 앱 자신의 Sentry 프로젝트(설계 §6 "앱 전용 프로젝트를 새로 만들 것") */
+  private readonly appProjectSlug: string;
 
   constructor(config: ConfigService) {
     this.token = config.get<string>('SENTRY_AUTH_TOKEN')?.trim() || undefined;
     this.orgSlug = config.get<string>('SENTRY_ORG_SLUG')?.trim() || undefined;
+    this.appProjectSlug =
+      config.get<string>('OPS_APP_PROJECT_SLUG')?.trim() || 'ops-companion';
 
     if (!this.isEnabled()) {
       this.logger.warn(
@@ -141,6 +156,37 @@ export class SentryApiClient {
   /** GET /organizations/{org}/issues/{id}/events/latest/ — 스택트레이스·breadcrumbs 의 원천 */
   async getLatestEvent(issueId: string): Promise<SentryEvent> {
     return (await this.get(`/issues/${encodeURIComponent(issueId)}/events/latest/`)) as SentryEvent;
+  }
+
+  /**
+   * 릴리즈별 crash-free 세션 비율.
+   *
+   * ⚠ `project` 를 **반드시** 지정한다. 빼면 조직 전체가 합산되는데, 쇼핑몰 프론트·백엔드도
+   * 세션을 보내고 있어(릴리즈 이름이 커밋 SHA 다) 앱의 건강 지표에 웹 수치가 섞인다.
+   * 실측(2026-09-21): 지정하면 그룹 1개(앱), 빼면 9개(웹 릴리즈 8개 포함).
+   *
+   * 이 파라미터는 문서상 프로젝트 id 자리지만 **slug 도 동일하게 필터링된다**(둘 다 200,
+   * 같은 그룹·같은 세션 수로 실측 확인). 그래서 slug 를 그대로 넘긴다 — 숫자 id 를 얻자고
+   * /projects/ 를 한 번 더 부르면 호출과 실패 지점만 늘어난다. 혹시 이 동작이 바뀌어
+   * 필터가 풀리면 카드에 낯선 릴리즈(커밋 SHA)가 줄줄이 뜨므로 눈에 바로 띈다.
+   */
+  async getSessionsByRelease(statsPeriod: string): Promise<SentrySessionsResponse> {
+    const params = new URLSearchParams({
+      statsPeriod,
+      groupBy: 'release',
+      project: this.appProjectSlug,
+      // ⚠ interval 을 반드시 준다. 생략하거나 잘게(1h) 주면 **방금 올라온 릴리즈가 응답에서 빠진다.**
+      // 실측(2026-09-21): 14d 로 조회할 때 interval 미지정·1h 는 세션 1건짜리 새 릴리즈를 누락하고
+      // 6h·1d 는 포함했다(3회 반복 재현). 기간 × interval 로 만들어지는 데이터 포인트가 많아지면
+      // Sentry 가 결과 크기를 맞추려 작은 그룹부터 떨구는 것으로 보인다.
+      // 우리는 시계열을 그리지 않고 totals 만 쓰므로, 가장 굵은 1d 로 고정해 누락을 피하고
+      // 응답 크기도 줄인다(14d 기준 포인트 336개 → 14개).
+      interval: '1d',
+    });
+    params.append('field', 'crash_free_rate(session)');
+    params.append('field', 'sum(session)');
+
+    return (await this.get(`/sessions/?${params.toString()}`)) as SentrySessionsResponse;
   }
 
   /**

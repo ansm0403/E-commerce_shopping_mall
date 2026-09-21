@@ -9,6 +9,8 @@ export const colors = {
   error: '#ff6b6b',
   warning: '#ffb020',
   info: '#4cc4ff',
+  /** Release Health 카드의 '건강함' 표시. 지표가 좋을 때만 쓴다 */
+  success: '#3fb950',
 } as const;
 
 export const levelColor: Record<'error' | 'warning' | 'info', string> = {

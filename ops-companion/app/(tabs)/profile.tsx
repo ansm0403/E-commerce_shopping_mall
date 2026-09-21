@@ -2,6 +2,7 @@
  * S6. ProfileScreen (설계 §4.3 S6).
  * Phase 0 범위: 로그인한 계정 정보, 앱 버전, 로그아웃. 생체 인증 토글은 Phase 2.
  * Phase 1 추가: 푸시 등록 상태 — 알림이 안 올 때 "권한인지 개발 빌드인지"를 여기서 가린다.
+ * Phase 2 추가: 생체 잠금 토글. 기기 안에서만 처리되며 서버·DB 와 무관하다(설계 §4.3 S1).
  *
  * 로그아웃은 서버 세션까지 끊는다 — 앱은 쿠키가 없어서 refreshToken 을 body 로 보내야
  * 백엔드가 그 토큰을 무효화한다(안 그러면 7일간 살아 있다).
@@ -12,16 +13,21 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { usePush } from '../../src/features/push/PushContext';
+import { BiometricToggle } from '../../src/features/security/BiometricToggle';
 import { describeRegistration } from '../../src/lib/notifications';
 import { API_BASE_URL, APP_VERSION } from '../../src/lib/config';
 import { isSentryActive, sendSentryTestError } from '../../src/lib/sentry';
 import { colors, spacing } from '../../src/theme';
 
-function Field({ label, value }: { label: string; value: string }) {
+/**
+ * `full` 을 주면 한 줄로 자르지 않고 전부 보여주며, 길게 눌러 복사할 수 있다.
+ * 기기 토큰처럼 **옮겨 적어야 하는 값**에 쓴다 — 잘린 값은 없는 것과 같다.
+ */
+function Field({ label, value, full }: { label: string; value: string; full?: boolean }) {
   return (
     <View style={styles.field}>
       <Text style={styles.fieldLabel}>{label}</Text>
-      <Text style={styles.fieldValue} numberOfLines={1}>
+      <Text style={styles.fieldValue} numberOfLines={full ? undefined : 1} selectable={full}>
         {value}
       </Text>
     </View>
@@ -78,9 +84,11 @@ export default function ProfileScreen() {
       <View style={styles.card}>
         <Field label="푸시 알림" value={describeRegistration(registration)} />
         {registration?.status === 'registered' ? (
-          <Field label="기기 토큰" value={registration.token} />
+          <Field label="기기 토큰" value={registration.token} full />
         ) : null}
       </View>
+
+      <BiometricToggle />
 
       {registration !== null && registration.status !== 'registered' ? (
         <Pressable style={styles.secondaryButton} onPress={() => void retry()}>
