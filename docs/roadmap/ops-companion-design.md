@@ -761,7 +761,7 @@ AI 의 가치는 모델이 아니라 **컨텍스트 · 도구 · 피드백 루�
 - DoD: 평가 10건 이상 축적 후, few-shot 적용 전/후 분석 품질 차이를 스크린샷
   또는 승인율 수치로 비교할 수 있음.
 
-**✅ 완료(2026-09-22, 브랜치 `feat/ops-review-loop` — 실기기 채점 18장 · v1 vs v2 수치까지. 운영 배포는 커밋·PR 뒤)** — 학습 노트 5편 [05-review-loop.md](../learning/ops-companion/05-review-loop.md). 착수 전 결정 4건(+재평가 1건)을 사용자와 확정했다.
+**✅ 완료(2026-09-22, 브랜치 `feat/ops-review-loop` — 실기기 채점 18장 · v1 vs v2 수치 · **운영 배포(main `8610aca` = PR #35, 2026-09-22, 마이그레이션 1건)** 까지)** — 학습 노트 5편 [05-review-loop.md](../learning/ops-companion/05-review-loop.md). 착수 전 결정 4건(+재평가 1건)을 사용자와 확정했다.
 
 **실측 수치(2026-09-22, 로컬 DB, 평가자 1명, gemini-3.1-flash-lite)**
 
@@ -787,7 +787,7 @@ AI 의 가치는 모델이 아니라 **컨텍스트 · 도구 · 피드백 루�
 
 | 단계 | 내용 | 상태 |
 |---|---|---|
-| ① DB | `ops_reviews`(UNIQUE(analysis_id, reviewer_id), FK CASCADE 2개) + `ops_analyses` 에 `incident_title`·`exception_text`·`few_shot_ids` — 마이그레이션 `OpsReviews1790001959888`, index.ts 등록, 로컬 적용 | ✅ 로컬 · ⏳ 운영 |
+| ① DB | `ops_reviews`(UNIQUE(analysis_id, reviewer_id), FK CASCADE 2개) + `ops_analyses` 에 `incident_title`·`exception_text`·`few_shot_ids` — 마이그레이션 `OpsReviews1790001959888`, index.ts 등록, 로컬 적용 | ✅ 로컬 · ✅ 운영(`run --rm … migrate.js`, 2026-09-22) |
 | ② 백엔드 평가 API | `OpsReviewService` — pending(블라인드·해시 셔플) · review(upsert) · stats(버전별 집계) · `selectFewShot`(별점순, 대상 인시던트 제외) | ✅ 단위 9건 |
 | ③ few-shot 주입 | `OpsAnalysisService.generate`: 승인 예시 → system static 뒤 예시 블록(격리 문구·scrubText·필드 1,500자 절단) → 예시 있으면 v2 + `few_shot_ids` 저장. `fewShot:false` 로 v1 대조군 | ✅ 단위 5건 추가(합 94) |
 | ④ e2e | F 절: 픽스처 행으로 pending 형태(promptVersion 없음)·400/404·CREATED→UPDATED·stats 숫자까지 | ✅ 22/22 |

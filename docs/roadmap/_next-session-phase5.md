@@ -28,15 +28,15 @@ Phase 4 는 측정 장치를 만들었고, 첫 측정은 "few-shot 으로는 안
 
 ## ⚠ 착수 전 선행 작업 — Phase 4 운영 배포
 
-Phase 4 는 **코드·실기기 채점·수치 완료, 배포 미완**이다. 브랜치 `feat/ops-review-loop`(원격 푸시됨) = `454fae0`(본 작업) · `dd080f0`(문서 해시) + 이 인수인계 커밋.
+Phase 4 는 PR #35 로 main `8610aca` 에 머지됐다. **2026-09-22 에 1·2·3·5 완료** — 운영 health `8610aca`, 마이그레이션 `OpsReviews1790001959888` 적용, 새 엔드포인트 401 · 웹 회귀 없음. 남은 것은 4번(선택)뿐이다. 아래 절차는 다음 배포 때 참고용으로 남긴다.
 
 | # | 할 일 | 누가 | 비고 |
 |---|---|---|---|
-| 1 | PR 생성·머지(`feat/ops-review-loop` → `main`) | 사용자 | 머지되면 사용자가 알려 준다 |
-| 2 | 운영 배포 | Claude | **마이그레이션 1건**(`OpsReviews1790001959888` — `ops_reviews` 신설 + `ops_analyses` 컬럼 3개). 절차는 아래 |
-| 3 | 스모크 | Claude | `GET /v1/ops/analyses/pending`·`/stats`·`POST /v1/ops/analyses/1/review` 가 401(라우트 존재) · `/products`·`/categories` 200 |
+| 1 | PR 생성·머지(`feat/ops-review-loop` → `main`) | 사용자 | ✅ PR #35, main `8610aca` |
+| 2 | 운영 배포 | Claude | ✅ 2026-09-22 · **마이그레이션 1건**(`OpsReviews1790001959888` — `ops_reviews` 신설 + `ops_analyses` 컬럼 3개). 절차는 아래 |
+| 3 | 스모크 | Claude | ✅ `GET /v1/ops/analyses/pending`·`/stats`·`POST /v1/ops/analyses/1/review` 가 401(라우트 존재) · `/products`·`/categories` 200 |
 | 4 | 새 preview 빌드(선택) | 사용자 | 폰의 개발 빌드는 Metro 의존이다. 운영에서 평가 탭을 쓰려면 `eas build -p android --profile preview`(versionCode 자동 증가). 개발 빌드가 깔린 상태라면 삭제 불필요 — preview 가 versionCode 가 더 높다 |
-| 5 | 학습 노트 5편 0-3 "운영 배포 ⏳" · 설계 §9 Phase 4 머리줄 · CLAUDE.md 갱신 | Claude | 배포 SHA 기입 |
+| 5 | 학습 노트 5편 0-3 "운영 배포 ⏳" · 설계 §9 Phase 4 머리줄 · CLAUDE.md 갱신 | Claude | ✅ 배포 SHA 기입 |
 
 운영 배포 절차(설계 §10-6):
 
@@ -58,7 +58,9 @@ curl -s https://api.ansmoon.dev/v1/health   # version == 새 SHA
 ⚠ **운영 DB 를 직접 읽는 것은 권한 정책이 막는다.** 운영 확인은 API·로그·앱 화면으로.
 ⚠ 운영 DB 에는 **평가 행이 0건**이다(Phase 4 채점은 전부 로컬 DB). 운영에서 few-shot 은 승인 풀이 빌 때까지 v1 로 동작한다(버전 규칙 — 설계 §9 Phase 4).
 
-**1~3 이 끝나야 Phase 4 가 닫힌다. Phase 5 코드는 그 뒤에 시작한다**(설계 §9 절대 원칙).
+**1~3 완료로 Phase 4 는 닫혔다.** Phase 5 코드는 main 에서 새 브랜치를 따 시작한다.
+
+⚠ **배포 중 밟은 것(2026-09-22)**: `docker build` 가 `COPY . .` 에서 수십 분 멈췄다. 원인은 빌드가 아니라 **Docker Desktop 데몬 먹통**이었다(`docker images` 가 `500 Internal Server Error`). Docker Desktop 프로세스 강제 종료 → `wsl --shutdown` → 재실행으로 복구했고, 재빌드에서 같은 단계는 16초였다. 빌드가 한 단계에서 오래 멈추면 **먼저 `docker images` 가 응답하는지** 본다.
 
 ---
 
@@ -84,7 +86,7 @@ curl -s https://api.ansmoon.dev/v1/health   # version == 새 SHA
 
 ### 인프라·기기 상태
 
-- 운영 백엔드: `89a02bc`(Phase 3). Phase 4 배포 후 새 SHA
+- 운영 백엔드: **`8610aca`**(Phase 4, 2026-09-22 배포, `ops_reviews` 표 있음)
 - 폰: **개발 빌드**(Phase 4 채점에 사용) — Metro(`yarn start --clear`) + 앱 `.env` LAN IP 가 있어야 돈다. 앱 `.env` 는 지금 **운영 주소**로 되돌려 놓았다
 - 로컬: postgres·redis 컨테이너 켜짐, 백엔드(4000)·Metro 꺼짐
 - LLM: Gemini flash-lite 무료티어 RPM 15. Phase 4 중 **`"code":503 high demand` 가 자주 왔다**(스크립트는 30초 재시도로 방어)
