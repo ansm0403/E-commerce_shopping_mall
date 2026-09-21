@@ -14,6 +14,7 @@
  *   test  --ids d,e,f [--arms v1,v2] [--allow-empty-pool]
  *                                          각 id 를 --arms 의 버전으로 **각각** 분석한다(번갈아, 기본 v1,v2).
  *                                          v1 = 예시 없음·도구 없음 / v2 = 승인 예시 / v3 = 소스 코드 읽기 도구(Phase 5, 예시 없음).
+ *                                          `.1` 접미(v1.1·v2.1·v3.1) = 서비스 지도(배포 구성 사실) 포함 — Phase 5 네 번째 시도 (a).
  *                                          v2 가 포함됐는데 승인 풀이 비어 있으면 중단 — v2 가 v1 과 같은 프롬프트가 돼 비교가 성립하지 않는다.
  *                                          Phase 4 의 test 세트를 `--arms v3` 로 다시 돌리면 같은 인시던트의 v1·v2·v3 가 나란히 생긴다
  *   stats                                  promptVersion 별 분석 수·구조화 실패율·승인율·평균 별점
@@ -48,13 +49,16 @@ import { scrubText } from '../src/common/utils/scrub-text';
 import { sleep } from './eval-utils';
 
 type Command = 'list' | 'seed' | 'test' | 'stats';
-type Arm = 'v1' | 'v2' | 'v3';
-const ARMS: Arm[] = ['v1', 'v2', 'v3'];
-/** 팔 → 분석 옵션. 버전 이름표는 서비스가 프롬프트로 정하므로 여기선 켜고 끄기만 한다 */
-const ARM_OPTIONS: Record<Arm, { fewShot: boolean; readSource: boolean }> = {
-  v1: { fewShot: false, readSource: false },
-  v2: { fewShot: true, readSource: false },
-  v3: { fewShot: false, readSource: true },
+type Arm = 'v1' | 'v2' | 'v3' | 'v1.1' | 'v2.1' | 'v3.1';
+const ARMS: Arm[] = ['v1', 'v2', 'v3', 'v1.1', 'v2.1', 'v3.1'];
+/** 팔 → 분석 옵션. 버전 이름표는 서비스가 프롬프트로 정하므로 여기선 켜고 끄기만 한다. `.1` = 서비스 지도(배포 구성 사실) 포함 */
+const ARM_OPTIONS: Record<Arm, { fewShot: boolean; readSource: boolean; serviceMap: boolean }> = {
+  v1: { fewShot: false, readSource: false, serviceMap: false },
+  v2: { fewShot: true, readSource: false, serviceMap: false },
+  v3: { fewShot: false, readSource: true, serviceMap: false },
+  'v1.1': { fewShot: false, readSource: false, serviceMap: true },
+  'v2.1': { fewShot: true, readSource: false, serviceMap: true },
+  'v3.1': { fewShot: false, readSource: true, serviceMap: true },
 };
 
 interface Args {
@@ -190,7 +194,7 @@ async function main() {
 
     const arms: Arm[] = args.command === 'seed' ? ['v1'] : args.arms;
     if (arms.length === 0) throw new Error('--arms 에 v1,v2,v3 중 하나 이상을 적어라');
-    if (args.command === 'test' && arms.includes('v2')) {
+    if (args.command === 'test' && (arms.includes('v2') || arms.includes('v2.1'))) {
       // 예시 선정은 대상 인시던트를 제외하므로 id 하나로 풀 크기를 가늠한다
       const pool = await review.selectFewShot(args.ids[0]);
       if (pool.length === 0 && !args.allowEmptyPool) {
@@ -206,7 +210,7 @@ async function main() {
     for (let i = 0; i < plan.length; i++) {
       const { id, arm } = plan[i];
       if (args.dryRun) {
-        console.log(`  · ${id} [${arm}] force=true fewShot=${ARM_OPTIONS[arm].fewShot} readSource=${ARM_OPTIONS[arm].readSource}`);
+        console.log(`  · ${id} [${arm}] force=true fewShot=${ARM_OPTIONS[arm].fewShot} readSource=${ARM_OPTIONS[arm].readSource} serviceMap=${ARM_OPTIONS[arm].serviceMap}`);
         continue;
       }
       let rec: RunRecord;
@@ -222,11 +226,8 @@ async function main() {
           toolCalls: item.toolCalls ?? null,
           latencyMs: item.latencyMs,
         };
-        if (arm === 'v2' && item.promptVersion !== 'v2') {
-          rec.error = `v2 팔인데 promptVersion=${item.promptVersion} — 이 인시던트에 쓸 예시가 없었다(자기 자신 제외 후 풀 0개)`;
-        }
-        if (arm === 'v3' && item.promptVersion !== 'v3') {
-          rec.error = `v3 팔인데 promptVersion=${item.promptVersion} — 소스 읽기 리더가 비활성(OPS_SOURCE_READ_ENABLED=false)인가`;
+        if (item.promptVersion !== arm) {
+          rec.error = `${arm} 팔인데 promptVersion=${item.promptVersion} — 승인 풀이 비었거나(v2) 리더가 비활성(v3)이거나 서비스 지도 설정이 다르다`;
         }
       } catch (e) {
         rec = { incidentId: id, arm, analysisId: null, status: null, promptVersion: null, fewShotIds: null, toolCalls: null, latencyMs: null, error: (e as Error).message };

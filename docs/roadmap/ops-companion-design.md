@@ -848,17 +848,17 @@ seed 첫 실측(2026-09-22, analysis #14, flash-lite 3.4초): CORS 이슈에 대
 | "프론트 프레임은 소스맵으로 원본 경로" | **아니다.** Vercel 에 업로드 토큰이 없어 릴리즈 파일 0개, 프레임은 `_next/static/chunks/8577-….js:12:123490`. 이번 범위 밖 |
 | — | **앱(ops-companion) 프레임은 이미 원본 경로**(`ops-companion/app/(tabs)/profile.tsx:38`, Phase 2 소스맵 업로드) — 배포 전에도 도구가 읽을 수 있는 유일한 프로젝트 |
 
-**🔶 코드·로컬 실측 완료(2026-09-22, 브랜치 `feat/ops-source-reading`) — 운영 배포·실기기 채점 미완.** 학습 노트 6편 [06-source-reading.md](../learning/ops-companion/06-source-reading.md).
+**🔶 운영 배포 완료(2026-09-22, main `00107b7` = PR #37, 마이그레이션 1건) — DoD ① 은 "읽는다"까지, 오답은 그대로. 실기기 채점 미완.** 학습 노트 6편 [06-source-reading.md](../learning/ops-companion/06-source-reading.md).
 
 | 단계 | 내용 | 상태 |
 |---|---|---|
 | ① 도구 단독 | `SourceReaderService`(`source-reader.service.ts`): 경로 허용 목록·비밀값 이름 거절·프레임→저장소 경로 정규화·raw 읽기·Redis 캐시(커밋 7일/main 10분·404 부정 캐시 60초)·80줄·실패는 `{ok:false, reason}` | ✅ 단위 39건 · **실제 GitHub 스모크**(`main.ts@8610aca` 55~72줄 387ms, 캐시 HIT, 404·`.env` 거절) |
 | ② 파이프라인 | `OpsAnalysisService`: `READ_SOURCE_TOOL`·`TOOL_GUIDE`·`[소스 코드]` 절(커밋·릴리즈·읽을 수 있는 파일) → `generateWithTools`(마지막 라운드 텍스트만) → `executeTool`(3회 상한·기록·span `ops.analysis.tool`) → 교정 재시도는 `generate`. `tool_calls` 컬럼(마이그레이션 `OpsToolCalls1790026688606`, 로컬 적용). 상한을 `reserveRateLimit`(LLM 호출 수, 기본 12)로 교체. 상세에 `release`·`firstRelease` | ✅ 단위 30건(도구 9건) · e2e 22/22 · **로컬 실인시던트 7744504775: v3, 2회 읽음(`sentry.ts`·`profile.tsx`@main), low/high, 6.0초** |
-| ③ 소스맵·릴리즈 | `webpack.config.js` `sourceMaps`→`sourceMap`(오타로 운영 빌드에 .map 이 없었다) · Dockerfile `CMD node --enable-source-maps` · `instrument.ts` `release: APP_VERSION` | ✅ 로컬 실험(운영 번들 + 옵션 → `webpack://shopping-mall/backend/src/main.ts:60`) · ⏳ 운영은 배포 후 새 이벤트부터 |
+| ③ 소스맵·릴리즈 | `webpack.config.js` `sourceMaps`→`sourceMap`(오타로 운영 빌드에 .map 이 없었다) · Dockerfile `CMD node --enable-source-maps` · `instrument.ts` `release: APP_VERSION` | ✅ 로컬 실험 · ✅ **운영**: 배포 직후 만든 CORS 이벤트가 `webpack://shopping-mall/backend/src/main.ts:60` · `release: 00107b7` |
 | ④ 앱 | `AnalysisCard` "AI 가 읽은 코드" 섹션(칩 `path:start-end`, 실패는 ✗+사유, `[]` 는 "읽지 않고 답했다", `null` 은 섹션 없음) · 메타 "(코드 n)" · pending 은 블라인드 유지(`toolCalls` 없음) | ✅ tsc · ⏳ 실기기 |
-| ⑤ 평가 세트 | 스크립트 `--arms v1,v2,v3` · `stats` 에 `toolCalled` | ✅ test 6건 × v3 생성(#30·31·35·39·40·41, 6/6 ok) · ⏳ 채점 |
+| ⑤ 평가 세트·채점 | 스크립트 `--arms v1,v2,v3` · `stats` 에 `toolCalled` | ✅ v3 생성 10건 · **실기기 채점 9건(2026-09-22)**: test 6건 v1 5/6 · v2 4/6 · **v3 6/6** / 전체 v1 66.7% · v2 66.7% · **v3 88.9%(8/9)** / 별점 3.88 · 3.75 · 3.13. v3 유일한 반려 = #43(CORS 오답). test 6건은 도구 0회라 "확신도 낮춘 답"이 승인된 것 — 6편 0-3 |
 | ⑥ 문서 | 6편 · infra-story(GitHub 노드·3-4·5장·6장·7장·용어) · §3.4·§5.1·§5.3 | ✅ |
-| ⑦ 배포·DoD | PR → main → 이미지(`.map` 8개 + 새 CMD) → 마이그레이션 1건 → CORS 새 이벤트 확인 → v3 분석 → 채점 → v1·v2·v3 표 | ⏳ `_next-session-phase5-close.md` |
+| ⑦ 배포·DoD | PR #37 → main `00107b7` → 이미지(`.map` 8개 + 새 CMD, `APP_VERSION=00107b7`) → EC2 `run --rm migrate.js`(`OpsToolCalls` 1건) → `up -d` → nginx reload → health `00107b7` · 새 라우트 401 · `/products` 200 · 부팅 로그에 리더·상한 경고 없음(EC2 `.env` 무변경) | ✅ 배포(2026-09-22) · **DoD ① 절반**: 봇과 같은 Origin(`api.ansmoon.dev`)으로 만든 새 이벤트를 v3 가 `main.ts:45-75@00107b7` 를 **읽고도** "`CORS_ORIGINS` 에 추가하라"(#43, high/high). 임의 Origin 이벤트는 정답(#42, "정상 차단"). 원인 = 그 도메인이 서버 자신이라는 사실이 소스에 없다(배포 맥락). 6편 6-8 · ⏳ DoD ② 채점 |
 
 **결정 ⑤의 변경(구현 중)**: "도구를 실제로 호출했을 때만 v3" → **"도구가 프롬프트에 들어갔으면 v3"**. Phase 4 규칙의 원리는 "프롬프트가 실제로 달라졌는가"이고, 도구 안내·선언은 호출 여부와 무관하게 프롬프트에 들어간다. 실제로 test 6건은 호출 0회였는데도 v1 과 답이 달랐다(확신도 전부 하락 — 6편 6-5). 호출로 가르면 그 6건이 v1 로 섞여 v1 이 오염된다. 호출 여부는 `tool_calls`(`[]` vs `null`)와 `stats.toolCalled` 가 말한다.
 
@@ -866,6 +866,15 @@ seed 첫 실측(2026-09-22, analysis #14, flash-lite 3.4초): CORS 이슈에 대
 - **test 세트 6건은 전부 "읽을 수 있는 파일 없음"이었다**(프론트 2 = 청크, 앱 1 = 소스맵 이전 빌드 `1.0.0+1`, 백엔드 2 = 로컬 dist 번들, 백엔드 1 = `node:net` 프레임뿐). Phase 4 의 평가 세트로는 도구의 효과를 잴 수 없다 — 배포 이후 새 이벤트로 새 세트가 필요하다.
 - 도구 호출 0회여도 v3 는 확신도를 낮췄다(v1 high/medium → v3 low/medium). 좋은 변화인지는 채점 후.
 - v3 연속 실행은 분당 2건(5×3 > 12) — 스크립트 `--delay 31000`.
+- **DoD ① 미통과의 뜻**: 소스 읽기는 "어느 코드가 차단했나"(60~65행)를 정확히 짚게 했지만, "차단당한 이름이 누구인가"는 코드 밖(nginx·EC2 `.env`·Vercel)에 있다. 다음 후보 = system 프롬프트에 서비스 지도 한 단락(SYSTEM 이 바뀌므로 v1.1) 또는 도구 허용 목록에 배포 파일(`.env.example`·compose·nginx) 추가. 같은 인시던트로 다시 잰다.
+
+**네 번째 시도 (a) — 서비스 지도(2026-09-22, 사용자 선택, 브랜치 `feat/ops-service-map`)**
+
+| 항목 | 내용 |
+|---|---|
+| 구현 | `OpsAnalysisService.SERVICE_MAP` — 배포 구성의 **사실** 4줄(백엔드 공개 주소 = `api.ansmoon.dev` 하나 = 서버 자신 · 프론트 = Vercel 도메인, `CORS_ORIGINS` 는 그 하나뿐이고 환경변수에 있음 · 앱은 Origin 없음 · 봇 요청이 매일 들어옴). **결론("정상 차단")은 적지 않는다** — 모델이 내려야 측정이 된다. SYSTEM 바로 뒤에 붙고 버전에 `.1`(v1.1·v2.1·v3.1). 기본 켬(`OPS_ANALYSIS_SERVICE_MAP`), body `serviceMap:false` 로 옛 팔 재현. 스크립트 `--arms v1.1,v2.1,v3.1`. 단위 4건(합 146) |
+| 실측 | 같은 CORS 이벤트(Origin = 서버 자신): **v3.1(#45, `main.ts:40-80@00107b7` 읽음)·v1.1(#46, 도구 없음) 모두 정답** — "봇·스캐너가 서버 자신의 도메인을 Origin 으로, 정상 차단, 조치 = Sentry 필터"(low/high). 차이: v1.1 은 조치 코드를 지어냈고(`FRONTEND_URL` 배열 — 실제 코드 아님), v3.1 은 코드 수정을 제안하지 않았다. **지도 = 판단, 도구 = 근거(지어내지 않음)** |
+| 남은 것 | 지도의 부작용 측정 — test 세트 6건을 `--arms v3.1` 로 만들어 채점(v3 vs v3.1). 운영 배포는 코드 변경(프롬프트·dto·스크립트)이라 이미지 재배포 필요, 마이그레이션 없음. (b) 배포 파일 읽기는 (a) 로 충분하면 하지 않는다 |
 
 ### 명시적 비목표 (v1에서 하지 않는 것)
 - iOS 스토어 배포(EAS 내부 배포 링크로 충분), 다국어, 다크모드 완성도,
