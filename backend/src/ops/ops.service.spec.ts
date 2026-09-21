@@ -18,7 +18,13 @@ const issue = (over: Partial<SentryIssue> = {}): SentryIssue => ({
 
 describe('OpsService', () => {
   let service: OpsService;
-  let sentry: { isEnabled: jest.Mock; listIssues: jest.Mock; getIssue: jest.Mock; getLatestEvent: jest.Mock };
+  let sentry: {
+    isEnabled: jest.Mock;
+    listIssues: jest.Mock;
+    getIssue: jest.Mock;
+    getLatestEvent: jest.Mock;
+    getSessionsByRelease: jest.Mock;
+  };
   let redis: { getCache: jest.Mock; setCache: jest.Mock };
   let deviceTokens: { upsert: jest.Mock };
 
@@ -28,6 +34,7 @@ describe('OpsService', () => {
       listIssues: jest.fn(),
       getIssue: jest.fn(),
       getLatestEvent: jest.fn(),
+      getSessionsByRelease: jest.fn(),
     };
     redis = { getCache: jest.fn().mockResolvedValue(null), setCache: jest.fn() };
     deviceTokens = { upsert: jest.fn() };
@@ -239,6 +246,82 @@ describe('OpsService', () => {
         { userId: 27, expoPushToken: 'ExponentPushToken[phone-A]', platform: 'android', disabledAt: null },
         { conflictPaths: ['userId', 'expoPushToken'] },
       );
+    });
+  });
+  describe('getReleaseHealth', () => {
+    /** Sentry sessions 실응답(2026-09-20 실측)에서 필요한 모양만 딴 샘플 */
+    const sessions = (groups: unknown[]) => ({ groups });
+
+    it('세션이 적어도 최신 빌드(+N 큰 쪽)를 앞에 세운다', () => {
+      // 이 순서가 카드의 큰 글씨를 정한다. 세션 수로 세우면 새 빌드는 배포 직후라
+      // 세션이 적어 **항상** 아래로 밀리고, 비교하려고 만든 카드가 옛 빌드를 크게 보여준다.
+      const result = OpsService.toReleaseHealth(
+        sessions([
+          { by: { release: 'app@1.0.0+1' }, totals: { 'crash_free_rate(session)': 0.98, 'sum(session)': 420 } },
+          { by: { release: 'app@1.0.0+2' }, totals: { 'crash_free_rate(session)': 1, 'sum(session)': 3 } },
+        ]),
+      );
+
+      expect(result.period).toBe(OpsService.HEALTH_PERIOD);
+      expect(result.releases).toEqual([
+        { release: 'app@1.0.0+2', crashFreeRate: 1, sessions: 3 },
+        { release: 'app@1.0.0+1', crashFreeRate: 0.98, sessions: 420 },
+      ]);
+    });
+
+    it('+N 을 읽을 수 없는 이름끼리는 세션 수로 되돌아간다', () => {
+      // 쇼핑몰 프론트·백엔드의 릴리즈는 커밋 SHA 라 `+N` 이 없다. 앱 프로젝트만 조회하므로
+      // 정상 경로에서는 섞이지 않지만, 섞이더라도 순서가 무너지지 않아야 한다.
+      const result = OpsService.toReleaseHealth(
+        sessions([
+          { by: { release: 'f54ba5ec9078' }, totals: { 'crash_free_rate(session)': 1, 'sum(session)': 5 } },
+          { by: { release: 'e76791f92bdd' }, totals: { 'crash_free_rate(session)': 1, 'sum(session)': 40 } },
+        ]),
+      );
+
+      expect(result.releases.map((r) => r.release)).toEqual(['e76791f92bdd', 'f54ba5ec9078']);
+    });
+
+    it('buildNumberOf — 끝의 +N 만 읽는다', () => {
+      expect(OpsService.buildNumberOf('dev.ansmoon.opscompanion@1.0.0+2')).toBe(2);
+      expect(OpsService.buildNumberOf('app@1.2.3+147')).toBe(147);
+      expect(OpsService.buildNumberOf('f54ba5ec9078')).toBeNull();
+      // 버전 안의 +는 끝이 아니므로 읽지 않는다
+      expect(OpsService.buildNumberOf('app@1.0.0+2-rc1')).toBeNull();
+    });
+
+    it('릴리즈 이름이 없는 그룹은 버리고, 비율이 null 이면 null 로 통과시킨다', () => {
+      // 세션이 0인 릴리즈에 Sentry 는 비율을 null 로 준다. 0 으로 바꾸면 "전부 크래시"로 오해된다.
+      const result = OpsService.toReleaseHealth(
+        sessions([
+          { by: { release: null }, totals: { 'sum(session)': 5 } },
+          { by: {}, totals: { 'sum(session)': 3 } },
+          { by: { release: 'app@1.0.0+3' }, totals: { 'crash_free_rate(session)': null, 'sum(session)': 0 } },
+        ]),
+      );
+
+      expect(result.releases).toEqual([{ release: 'app@1.0.0+3', crashFreeRate: null, sessions: 0 }]);
+    });
+
+    it('groups 가 비거나 없어도 빈 배열을 준다', () => {
+      expect(OpsService.toReleaseHealth({}).releases).toEqual([]);
+      expect(OpsService.toReleaseHealth(sessions([])).releases).toEqual([]);
+    });
+
+    it('캐시가 있으면 Sentry 를 부르지 않는다', async () => {
+      const cachedValue = { period: '14d', releases: [] };
+      redis.getCache.mockResolvedValueOnce(cachedValue);
+
+      await expect(service.getReleaseHealth()).resolves.toEqual({ item: cachedValue, cached: true });
+      expect(sentry.getSessionsByRelease).not.toHaveBeenCalled();
+    });
+
+    it('미설정이면 503, Sentry 실패면 502', async () => {
+      sentry.getSessionsByRelease.mockRejectedValueOnce(new Error('boom'));
+      await expect(service.getReleaseHealth()).rejects.toBeInstanceOf(BadGatewayException);
+
+      sentry.isEnabled.mockReturnValue(false);
+      await expect(service.getReleaseHealth()).rejects.toBeInstanceOf(ServiceUnavailableException);
     });
   });
 });
