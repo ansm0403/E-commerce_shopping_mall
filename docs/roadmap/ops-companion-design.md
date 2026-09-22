@@ -950,7 +950,7 @@ seed 첫 실측(2026-09-22, analysis #14, flash-lite 3.4초): CORS 이슈에 대
 - 구현(초안): `ops_incident_notes`(incident_id PK · 메모 4필드 · 작성자 · 마이그레이션 1건) + `PUT /v1/ops/incidents/:id/note`(admin) · pending 응답에 `note`·`checklist` 정의 · `ops_reviews` 에 `checks jsonb`·`guided boolean`(마이그레이션 같은 파일) · 앱 카드 "채점 안내" 접이식 섹션 + 체크 4개 → 승인/반려 자동 제안 · `stats` 에 guided 전/후 열 · 스크립트 `notes seed`(아래 표를 넣는다).
 - DoD: ① 7건의 메모가 들어가 카드에 보인다 ② 14장을 안내와 함께 재채점 → `stats --after 54` 가 guided 전/후를 나란히 낸다 ③ 항목 ②(지어냄) 실패 건이 v1.1 에서만 나오는지(6편 이후 도구의 몫이 수치로 잡히는지) 확인
 
-**진행(2026-09-22, 브랜치 `feat/ops-guided-review` — 구현·로컬 검증 완료, 재채점 대기)**
+**진행(2026-09-22) — ✅ Phase 7 종료: 구현·재채점·운영 배포(main `10e9cb4` = PR #40, 마이그레이션 1건)**
 
 | 단계 | 내용 | 상태 |
 |---|---|---|
@@ -962,6 +962,7 @@ seed 첫 실측(2026-09-22, analysis #14, flash-lite 3.4초): CORS 이슈에 대
 | ⑥ 재채점 | 실기기(로컬 백엔드, 앱 `.env` 는 LAN IP 로 전환됨). 1차 시도에서 대기가 50장(옛 채점 51건이 전부 복귀, CORS 10행 반복) → 사용자가 18장에서 중단(대상 14장 중 9장 완료). 대기 규칙 2개 추가(같은 인시던트·같은 버전은 최신 1장 · 재채점은 메모 있는 카드만) → 남은 대기 **6장**(대상 5장 #54·55·57·63·67 + CORS 옛 팔 v3 최신 #44 — 실 API 확인) → 2차에서 완료 | ✅ 14장 + 옛 9장(2026-09-22) |
 | ⑦ 수치 | `stats --after 54`: **안내 후 승인율 v1.1 7/7 = v3.1 7/7(변화 없음) · 별점 v1.1 3.43 → 3.43, v3.1 4.29 → 4.00(쌍별 5승 1무 1패 → 3승 3무 1패) · 항목 ① ③ 전부 ✓, ② 두 팔 모두 ✗ 0, ④ ✗ 1(#64)**. 기대했던 #66(`FRONTEND_URL`·`callback`)·#54(`reduce`·"undefined 초기값")는 ①②④ 전부 ✓ 로 통과, #66 별점 4 → 5. 옛 분석 CORS v1(#7·14)·v3(#43·44)은 ③④ ✗ 로 반려 — **안내는 방향이 틀린 답은 잡고 이름이 틀린 답은 못 잡는다**(8편 6-5). DoD ③ "수치로 잡힌다"는 통과, "v1.1 에서만 나온다"는 기대는 불발 | ✅ |
 | ⑧ 문서 | 8편 `08-guided-review.md` · README · CLAUDE.md · 이 절 | ✅ |
+| ⑨ 운영 배포 | PR #40 → main `10e9cb4`(squash) → 로컬 빌드 전 Docker 빌드 캐시 23GB → 8GB 정리(7편 부록의 C 드라이브 함정 예방) → 이미지 `10e9cb4`(`.map` 8개, `APP_VERSION=10e9cb4`) push → EC2 pull → `migrate.js` **`OpsGuidedReview1790079789208` 1건 적용** → `up -d` → nginx reload → health `10e9cb4` · 새 라우트 3개 401 · `/products` 200(직접·Vercel 프록시) · 부팅 로그 에러 0 → 운영 DB 에 메모 7건(로컬 행을 `INSERT … ON CONFLICT DO NOTHING` 으로 옮김 — 운영 관리자 비밀번호 없이, id 는 운영 시퀀스에 맡김) | ✅ 2026-09-22 · 운영에서 메모가 붙는 분석은 5건(CORS 4 · 카테고리 1), 운영 평가 기록 0건 · ✅ **운영 확인(2026-09-23)**: 실기기(운영 API, 개발 빌드 + Metro)에서 로그인 → 평가 탭 카드에 메모·확인 항목 표시 확인. ⚠ 도중에 Metro `--clear` 재시작이 개발 빌드를 reload 시켜 `UnsatisfiedLinkError … NativeStatePropsGetter.clearAllContentOriginsImpl` 크래시 — 8편 6-7 |
 
 - 결과 해석(2026-09-22): 카드에 정답을 붙이는 것만으로는 채점이 대조가 되지 않았다. 확인 항목 ②(식별자 대조)는 이름 단위의 기계적인 일이라 사람이 빠뜨린다 → **다음 단계는 ② 를 코드가 미리 표시**(조치 코드의 식별자를 메모 코드/저장소와 대조해 "코드에 없는 이름" 칩) + ①④ 는 메모를 정답으로 주는 LLM judge(어시스턴트 Phase 7·A-1 재사용). 이번 편의 `checks`·`ops_incident_notes` 가 그 입력이다. 평가자 1명·23장(1차 17 + 2차 6)의 한계는 그대로.
 
@@ -984,6 +985,14 @@ seed 첫 실측(2026-09-22, analysis #14, flash-lite 3.4초): CORS 이슈에 대
 | 7747424036 .filter | 상세 페이지 연관 상품 응답 `data.data` 가 문자열 | `frontend/src/app/(main)/products/[id]/RelatedProducts.tsx` 26행 `data?.data?.data ?? []` → 29행 `.filter` | 배열 검증 후 `filter` | — |
 | 7744504775 앱 Sentry 테스트 | 프로필 화면 "Sentry 연결 테스트" 버튼이 **의도적으로** `throw` | `ops-companion/app/(tabs)/profile.tsx` ~38행 · `src/lib/sentry.ts` | 버그 아님. 조치 없음(또는 `__DEV__` 분기). severity low 가 정답 | "실제 크래시"로 읽어 high |
 | 7732523858 CORS | 봇이 **서버 자신 도메인**(`api.ansmoon.dev`)을 Origin 으로 요청, `main.ts` 60~65행이 정상 차단 | `backend/src/main.ts` `enableCors` origin 콜백 | 정상 동작. Sentry 필터 또는 `cb(new Error)` 대신 `cb(null,false)` 로 500 회피 | **"`CORS_ORIGINS` 에 `api.ansmoon.dev` 추가"**(4~6편 오답) · `FRONTEND_URL` 배열 등 지어낸 코드 |
+
+### Phase 8 — 코드 이름 대조 칩 + 실제 버그 수정으로 고리 닫기 (이력서 전 마지막 Phase)
+- 배경: Phase 7 에서 사람은 방향이 틀린 답은 반려했지만 코드 이름을 지어낸 답은 통과시켰다(#66). 이름 대조는 기계가, 결정은 사람이 — 칩은 판정이 아니라 **근거**다. 그리고 지금까지 앱의 분석대로 실제로 고친 적이 없다(평가 재료를 지키려고 미뤘다) — 재채점이 끝났으니 고리를 닫는다.
+- 정의(2026-09-23, 사용자 승인 — "하나의 Phase 8 로"):
+  - **A. 이름 대조 칩**: 조치 코드의 식별자(`process.env.X`·JSX 속성 포함, 예약어·내장·조치 안에서 선언한 이름 제외)를 메모 코드 ∪ relatedFiles 파일 전체와 대조 → 대기 카드에 "실제 코드에 없는 이름" 칩. 판정 제안은 그대로. 사전 점검(실측 아님): v1.1 #66 `FRONTEND_URL`·`callback` · #58 `DEFAULT_IMAGE_URL` · #62 `currentId` · #56 `data`(JSX) 예상, v3.1 #67 `ForbiddenException` 은 거짓 양성 후보, **#54 는 못 잡는다**(이름은 실재하고 코드를 다시 썼다 — 한계).
+  - **B. 고리 닫기**: 앱이 찾고 사람이 승인한 프론트 버그 5건(배열 가드) + CSP `worker-src` 수정 → 저장소에 남기는 프로브로 **수정 전 재현 → 수정 후 0건**(로컬, 운영은 수정 후만) → PR 에 "이슈 → 승인된 분석 → 수정" 표. 선택: 앱에서 해결 처리(`POST /ops/incidents/:id/resolve` → Sentry 이슈 resolved) — 현재 토큰이 읽기 전용이라 사용자가 `event:write` 토큰을 발급해야 가능. 재발하면 기존 폴러가 다시 푸시(재발 감시).
+- 인수인계: `docs/roadmap/_next-session-phase8.md`.
+- **확장 메모(범위 밖, 2026-09-23 대화)**: 범용화는 3단계 — ① 내 프로젝트 여럿(설정 테이블: Sentry 프로젝트·저장소·폴더·서비스 지도, 3~5일) ② 독립 서비스 분리(별도 백엔드·DB·인증·토큰 암호화, AI 도움 시 4~7일) ③ 다른 사람이 가입하는 SaaS(테넌트 분리·OAuth/GitHub App·팀별 LLM 비용, 수개월). 한 회사가 자기 도메인용으로 내부 도구를 두는 형태라면 지금 구조(한 조직·한 모노레포)도 현실적이다 — 다만 서비스 지도·저장소·폴더 목록이 코드에 박혀 있어 ① 은 회사가 바뀌어도 필요하다.
 
 ### 명시적 비목표 (v1에서 하지 않는 것)
 - iOS 스토어 배포(EAS 내부 배포 링크로 충분), 다국어, 다크모드 완성도,
