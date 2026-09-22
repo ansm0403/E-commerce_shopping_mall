@@ -257,7 +257,8 @@ describe('모바일 토큰 전략 + ops 인시던트 조회 (HTTP e2e)', () => {
   });
 
   describe('E. POST /v1/ops/incidents/:id/analysis (Phase 3 — AI 분석)', () => {
-    const ANALYSIS_KEYS = ['createdAt', 'fewShotIds', 'id', 'incidentId', 'latencyMs', 'model', 'promptVersion', 'rawText', 'result', 'status', 'toolCalls'];
+    // Phase 8 후속: S4 보강 필드 4개(project · note · identifierCheck · reviewSummary) — 컨트롤러가 채운다
+    const ANALYSIS_KEYS = ['createdAt', 'fewShotIds', 'id', 'identifierCheck', 'incidentId', 'latencyMs', 'model', 'note', 'project', 'promptVersion', 'rawText', 'result', 'reviewSummary', 'status', 'toolCalls'];
 
     it('토큰 없음 → 401, buyer → 403', async () => {
       expect((await axios.post('/ops/incidents/1/analysis', {})).status).toBe(401);
@@ -309,6 +310,10 @@ describe('모바일 토큰 전략 + ops 인시던트 조회 (HTTP e2e)', () => {
         expect(failed.data.rawText).toContain('[simulated parse_failed]');
         expect(failed.data.model).toBe('simulated');
         expect(failed.data.toolCalls).toBeNull(); // 시뮬레이션은 도구를 주지 않는다(Phase 5)
+        // Phase 8 후속: 구조화 실패 행은 대조할 코드가 없다 · 새 행이라 채점 0 · 메모는 인시던트에 따라 있을 수도(null 또는 객체)
+        expect(failed.data.identifierCheck).toBeNull();
+        expect(failed.data.reviewSummary).toEqual({ reviews: 0, approved: 0, rejected: 0, avgRating: null, mine: null });
+        expect(failed.data.note === null || typeof failed.data.note === 'object').toBe(true);
         const rows = await ds.query(
           `SELECT status, result_json, prompt_version FROM ops_analyses WHERE id = $1`,
           [failed.data.id],

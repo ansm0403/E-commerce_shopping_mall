@@ -11,6 +11,10 @@
  * 여기에 HTTP 에러(429 상한·409 분석 중·503 미설정·404)는 상세 화면과 같은 방식의 에러 화면으로 그린다.
  *
  * 데이터는 POST /v1/ops/incidents/:id/analysis 하나다. 처음 열면 생성, 다시 열면 백엔드가 저장된 행을 준다.
+ *
+ * Phase 8 후속(S4 보강): 채점 카드(S5)에만 있던 근거가 "고치는 사람"의 화면에 없었다. 같은 응답에 백엔드(컨트롤러)가 세 가지를 실어 준다 —
+ *   운영 메모(사람이 조사해 확정한 원인·조치, 있을 때만 AI 답 **위**에) · 이름 대조 칩(AnalysisCard 의 추천 조치 아래) · 사람 채점 요약(아래).
+ *   순서가 곧 읽는 순서다: 사람이 확정한 것 → AI 답(+ 그 조치의 이름이 실제 코드에 있는가) → 사람들이 그 답을 어떻게 봤나 → 내가 판정.
  */
 import { useCallback } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -19,6 +23,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { AxiosError } from 'axios';
 import { useAnalysis, useReanalyze } from '../../../../src/features/analysis/queries';
 import { AnalysisCard, AnalysisMeta, CopyButton, FallbackCard, analysisToText } from '../../../../src/features/analysis/AnalysisCard';
+import { ReviewSummaryCard } from '../../../../src/features/analysis/ReviewSummaryCard';
+import { GuidancePanel } from '../../../../src/features/review/GuidancePanel';
 import { colors, spacing } from '../../../../src/theme';
 
 function errorMessage(error: unknown): { title: string; body: string; canRetry: boolean } {
@@ -112,9 +118,14 @@ export default function AnalysisScreen() {
           {data.status === 'ok' ? <CopyButton text={analysisToText(data.result)} label="전체 복사" /> : null}
         </View>
 
+        {/* 운영 메모 — 사람이 확정한 원인·조치. 있을 때만 그려지고(detail 모드), AI 답보다 위에 온다. 구조화 실패여도 메모는 유효하다 */}
+        <GuidancePanel note={data.note ?? null} mode="detail" />
+
         {data.status === 'ok' ? (
           <>
-            <AnalysisCard result={data.result} toolCalls={data.toolCalls} />
+            <AnalysisCard result={data.result} toolCalls={data.toolCalls} identifierCheck={data.identifierCheck} />
+            {/* 이 답을 사람이 어떻게 봤나 — 반려가 있으면 조치를 그대로 쓰지 말라는 신호 */}
+            <ReviewSummaryCard summary={data.reviewSummary} />
             {/* S4 → S5 (설계 §4.3 S4 마지막 줄). 평가 탭으로 넘어가며 이 분석 카드를 맨 앞으로 끌어올린다.
                 순환 고리 ②→③ 의 손잡이 — 방금 읽은 분석이 맞는지 틀리는지를 사람이 바로 판정한다 */}
             <Pressable

@@ -70,13 +70,29 @@ export class OpsController {
    */
   @Post('incidents/:id/analysis')
   async analyzeIncident(
+    @User('sub') reviewerId: number,
     @Param('id') id: string,
     @Body() dto: CreateAnalysisDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<AnalysisResponse> {
     const { item, cached } = await this.analysisService.analyze(id, dto);
     res.setHeader('X-Cache', cached ? 'HIT' : 'MISS');
-    return item;
+    return this.enrichAnalysis(item, reviewerId ?? null);
+  }
+
+  /**
+   * 분석 응답 보강(Phase 8 후속) — 사실 메모(운영 메모) · 조치 코드 이름 대조 · 사람 채점 요약.
+   * 왜 컨트롤러에서 하나: OpsAnalysisService 는 OpsNoteService 를 주입받으면 안 된다(메모 = LLM 입력 금지, 단위 테스트가 고정).
+   * 채점 카드(S5)에 있던 근거가 "고치는 사람"의 화면(S4)에는 없었다 — 조치를 붙여 넣기 전에 봐야 하는 정보다.
+   * 셋 다 부가물이라 어느 하나가 실패해도 분석은 그대로 나간다(null).
+   */
+  private async enrichAnalysis(item: AnalysisResponse, reviewerId: number | null): Promise<AnalysisResponse> {
+    const [note, reviewSummary] = await Promise.all([
+      this.noteService.findByIncident(item.incidentId).catch(() => null),
+      this.reviewService.summarizeReviews(item.id, reviewerId).catch(() => null),
+    ]);
+    const identifierCheck = await this.reviewService.identifierCheckFor(item, note).catch(() => null);
+    return { ...item, note, identifierCheck, reviewSummary };
   }
 
   /**

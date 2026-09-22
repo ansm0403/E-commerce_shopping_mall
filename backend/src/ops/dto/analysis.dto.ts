@@ -1,5 +1,8 @@
 import { IsBoolean, IsIn, IsOptional } from 'class-validator';
 import type { OpsAnalysisStatus } from '../entity/ops-analysis.entity';
+import type { OpsReviewVerdict } from '../entity/ops-review.entity';
+import type { IdentifierCheckView } from './review.dto';
+import type { IncidentNoteView } from './note.dto';
 
 /** AI 가 지켜야 하는 응답 스키마(설계 §5.4). 앱의 구조화 카드가 이 다섯 필드를 그린다 */
 export const ANALYSIS_SEVERITIES = ['critical', 'high', 'medium', 'low'] as const;
@@ -76,7 +79,24 @@ export interface ToolCallRecord {
   reason?: string;
 }
 
-/** 응답. 캐시 적중 여부는 다른 ops 엔드포인트와 같이 X-Cache 헤더로 알린다 */
+/**
+ * 이 분석에 대한 사람 채점 요약(Phase 8 후속) — S4 가 "이 답을 사람이 어떻게 봤나"를 한 줄로 보여준다.
+ * 대기 카드(S5)에는 싣지 않는다 — 채점 중인 사람에게 남의 판정을 보이면 블라인드의 취지가 흔들린다. S4 는 블라인드 대상이 아니다.
+ */
+export interface ReviewSummary {
+  reviews: number;
+  approved: number;
+  rejected: number;
+  avgRating: number | null;
+  /** 요청한 관리자 자신의 판정(안내 채점 행 우선). 없으면 null */
+  mine: { verdict: OpsReviewVerdict; rating: number | null; guided: boolean } | null;
+}
+
+/**
+ * 응답. 캐시 적중 여부는 다른 ops 엔드포인트와 같이 X-Cache 헤더로 알린다.
+ * `note`·`identifierCheck`·`reviewSummary`(Phase 8 후속)는 OpsAnalysisService 가 아니라 **컨트롤러**가 채운다 —
+ * 메모가 LLM 쪽 서비스에 들어가지 않게(OpsAnalysisService 는 OpsNoteService 를 모른다). toResponse 는 null 로 둔다.
+ */
 export interface AnalysisResponse {
   id: number;
   incidentId: string;
@@ -97,6 +117,14 @@ export interface AnalysisResponse {
   toolCalls: ToolCallRecord[] | null;
   /** ISO 8601 */
   createdAt: string;
+  /** 분석 시점의 Sentry 프로젝트 slug(relatedFiles 정규화 힌트). 옛 행은 null */
+  project: string | null;
+  /** 인시던트의 사실 메모(사람이 조사해 확정한 원인·조치). 없으면 null. S4 는 "운영 메모"로 그린다 */
+  note: IncidentNoteView | null;
+  /** 조치 코드 이름 대조(S5 카드와 같은 계산). 구조화 실패·대조 불가면 null */
+  identifierCheck: IdentifierCheckView | null;
+  /** 이 분석에 대한 사람 채점 요약. 채점이 없으면 reviews 0 */
+  reviewSummary: ReviewSummary | null;
 }
 
 /** 스키마 검증 결과. 실패 사유(reason)는 재시도 프롬프트에 그대로 실어 모델이 무엇을 고쳐야 하는지 알게 한다 */

@@ -266,6 +266,23 @@ export interface IncidentAnalysis {
    */
   toolCalls?: AnalysisToolCall[] | null;
   createdAt: string;
+  /** Phase 8 후속(S4 보강) — 옛 백엔드엔 없다(optional). 컨트롤러가 채우는 부가물이라 각각 null 일 수 있다 */
+  project?: string | null;
+  /** 인시던트의 사실 메모 = 사람이 조사해 확정한 원인·조치. S4 는 "운영 메모"로 AI 답 위에 그린다 */
+  note?: IncidentNote | null;
+  /** 조치 코드 이름 대조(S5 카드와 같은 계산) */
+  identifierCheck?: IdentifierCheck | null;
+  /** 이 분석에 대한 사람 채점 요약 */
+  reviewSummary?: ReviewSummary | null;
+}
+
+/** 이 분석을 사람이 어떻게 봤나 — 승인/반려 수 · 평균 별점 · 내 판정(안내 채점 우선). S5 대기 카드에는 오지 않는다(블라인드) */
+export interface ReviewSummary {
+  reviews: number;
+  approved: number;
+  rejected: number;
+  avgRating: number | null;
+  mine: { verdict: ReviewVerdict; rating: number | null; guided: boolean } | null;
 }
 
 /** read_source 호출 한 건 — 어느 커밋의 어느 파일 몇 줄을 읽었나(ok=false 면 왜 못 읽었나) */

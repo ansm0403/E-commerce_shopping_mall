@@ -27,7 +27,7 @@ import { AxiosError } from 'axios';
 import { usePendingReviews, useSubmitReview } from '../../src/features/review/queries';
 import { SwipeCard, type SwipeCardHandle } from '../../src/features/review/SwipeCard';
 import { StarRating } from '../../src/features/review/StarRating';
-import { Checklist, GuidancePanel, IdentifierChip, suggestVerdict } from '../../src/features/review/GuidancePanel';
+import { Checklist, GuidancePanel, suggestVerdict } from '../../src/features/review/GuidancePanel';
 import { AnalysisCard } from '../../src/features/analysis/AnalysisCard';
 import type { PendingReview, ReviewCheckKey, ReviewChecks, ReviewVerdict } from '../../src/lib/api';
 import { timeAgo } from '../../src/lib/format';
@@ -60,9 +60,8 @@ function ReviewCardBody({
         {[item.model ?? '모델 미상', `분석 ${timeAgo(item.createdAt)}`].join(' · ')}
       </Text>
       <GuidancePanel note={item.note ?? null} />
-      <AnalysisCard result={item.result} />
-      {/* Phase 8: 조치 코드 이름 대조 — 분석 바로 아래, 항목 ② 위. 근거일 뿐 제안(suggestVerdict)에는 들어가지 않는다 */}
-      <IdentifierChip check={item.identifierCheck} />
+      {/* Phase 8: 이름 대조 칩은 AnalysisCard 가 "추천 조치" 아래에 그린다(S4 와 같은 자리). 근거일 뿐 제안(suggestVerdict)에는 들어가지 않는다 */}
+      <AnalysisCard result={item.result} identifierCheck={item.identifierCheck} />
       <Checklist items={Array.isArray(item.checklist) ? item.checklist : []} checks={checks} onChange={onCheck} />
     </ScrollView>
   );

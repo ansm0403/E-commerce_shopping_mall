@@ -14,7 +14,7 @@ import { IdentifierCheckService } from './identifier-check.service';
  */
 describe('OpsReviewService — 평가 루프(설계 §9 Phase 4 · Phase 7)', () => {
   let service: OpsReviewService;
-  let reviews: { findOne: jest.Mock; create: jest.Mock; save: jest.Mock };
+  let reviews: { findOne: jest.Mock; find: jest.Mock; create: jest.Mock; save: jest.Mock };
   let analyses: { findOne: jest.Mock; query: jest.Mock };
   let identifierCheck: { checkMany: jest.Mock };
 
@@ -56,6 +56,7 @@ describe('OpsReviewService — 평가 루프(설계 §9 Phase 4 · Phase 7)', ()
     let nextId = 100;
     reviews = {
       findOne: jest.fn().mockResolvedValue(null),
+      find: jest.fn().mockResolvedValue([]),
       create: jest.fn((v: Partial<OpsReviewEntity>) => ({ ...v })),
       save: jest.fn(async (v: Partial<OpsReviewEntity>) => ({
         id: v.id ?? nextId++,
@@ -352,6 +353,70 @@ describe('OpsReviewService — 평가 루프(설계 §9 Phase 4 · Phase 7)', ()
       await service.getStats({ minAnalysisId: Number.NaN });
       expect(analyses.query.mock.calls[1][0]).not.toMatch(/a\.id >=/);
       expect(analyses.query.mock.calls[1][1]).toEqual([]);
+    });
+  });
+
+  describe('S4 보강(Phase 8 후속) — identifierCheckFor · summarizeReviews', () => {
+    const item = (over: Record<string, unknown> = {}) =>
+      ({
+        id: 66,
+        incidentId: '7732523858',
+        status: 'ok',
+        result: { severity: 'high', rootCause: 'x', suggestedFix: 'process.env.FRONTEND_URL', relatedFiles: ['./src/main.ts'], confidence: 'medium' },
+        rawText: null,
+        promptVersion: 'v1.1',
+        model: 'm',
+        latencyMs: 1,
+        fewShotIds: null,
+        toolCalls: null,
+        createdAt: '2026-09-23T00:00:00.000Z',
+        project: 'e-commerse-backend',
+        note: null,
+        identifierCheck: null,
+        reviewSummary: null,
+        ...over,
+      }) as never;
+    const note = {
+      incidentId: '7732523858', project: 'e-commerse-backend', symptom: 's', causeLocation: 'c', fixDirection: 'f', commonMistakes: null,
+      code: { path: 'backend/src/main.ts', ref: '00107b7', startLine: 51, endLine: 72, text: '…' }, updatedAt: '2026-09-22T00:00:00.000Z',
+    };
+
+    it('identifierCheckFor — 대기 카드와 같은 입력(정규화된 relatedFiles · 메모 코드 경로/ref · tool_calls)으로 한 장을 대조한다', async () => {
+      const view = { checkedFiles: ['backend/src/main.ts@00107b7'], checkedCount: 1, unknown: ['FRONTEND_URL'], maybeLibrary: [] };
+      identifierCheck.checkMany.mockResolvedValue(new Map([[66, view]]));
+      expect(await service.identifierCheckFor(item(), note)).toEqual(view);
+      expect(identifierCheck.checkMany).toHaveBeenCalledWith([
+        { analysisId: 66, incidentId: '7732523858', suggestedFix: 'process.env.FRONTEND_URL', relatedFiles: ['backend/src/main.ts'], toolCalls: null, noteCodePath: 'backend/src/main.ts', noteCodeRef: '00107b7' },
+      ]);
+    });
+
+    it('identifierCheckFor — project 가 없으면 메모의 project 로 정규화 · 메모 없으면 코드 경로 null · parse_failed 는 null', async () => {
+      identifierCheck.checkMany.mockResolvedValue(new Map());
+      expect(await service.identifierCheckFor(item({ project: null }), note)).toBeNull();
+      expect(identifierCheck.checkMany.mock.calls[0][0][0]).toMatchObject({ relatedFiles: ['backend/src/main.ts'], noteCodePath: 'backend/src/main.ts' });
+      await service.identifierCheckFor(item({ project: null }), null);
+      // 힌트가 전혀 없으면 `./` 만 뗀다(blindResult 규칙)
+      expect(identifierCheck.checkMany.mock.calls[1][0][0]).toMatchObject({ relatedFiles: ['src/main.ts'], noteCodePath: null, noteCodeRef: null });
+      identifierCheck.checkMany.mockClear();
+      expect(await service.identifierCheckFor(item({ status: 'parse_failed', result: null }), note)).toBeNull();
+      expect(identifierCheck.checkMany).not.toHaveBeenCalled();
+    });
+
+    it('summarizeReviews — 승인/반려/평균 별점, mine 은 안내 채점 행 우선 · 채점 없으면 0 과 null', async () => {
+      reviews.find.mockResolvedValue([
+        { reviewerId: 42, verdict: 'approved', rating: 4, guided: false },
+        { reviewerId: 42, verdict: 'rejected', rating: 2, guided: true },
+        { reviewerId: 7, verdict: 'approved', rating: null, guided: true },
+      ]);
+      expect(await service.summarizeReviews(66, 42)).toEqual({
+        reviews: 3, approved: 2, rejected: 1, avgRating: 3,
+        mine: { verdict: 'rejected', rating: 2, guided: true },
+      });
+      expect(reviews.find).toHaveBeenCalledWith({ where: { analysisId: 66 } });
+      expect((await service.summarizeReviews(66, 99)).mine).toBeNull();
+
+      reviews.find.mockResolvedValue([]);
+      expect(await service.summarizeReviews(66, 42)).toEqual({ reviews: 0, approved: 0, rejected: 0, avgRating: null, mine: null });
     });
   });
 

@@ -1,6 +1,6 @@
 # 9편. 고리 닫기 — 이름 대조는 코드가, 결정은 사람이, 그리고 실제로 고친다
 
-> 설계 문서 §9 **Phase 8**. 작성 시점: 브랜치 `feat/ops-closing-loop`(main `10e9cb4` 다음, 첫 커밋 `7cbeca9`) — 코드 커밋 해시는 PR 머지 후 이 줄을 고친다.
+> 설계 문서 §9 **Phase 8**. 작성 시점 커밋: main `d370e03`(PR #41 squash, 2026-09-23). 브랜치 `feat/ops-closing-loop` 의 코드·문서가 이 한 커밋이다.
 > 앞 편: [8편 채점 안내](./08-guided-review.md). 이 편은 8편의 결론("안내는 방향이 틀린 답은 잡고 이름이 틀린 답은 못 잡는다")에서 시작한다.
 
 ## 0-1. 한 문장
@@ -17,11 +17,11 @@ AI 조치 코드의 **이름**(변수·함수·환경변수)을 실제 소스와
 
 | 무엇이 되는가 | 검증 |
 |---|---|
-| **이름 대조 칩** — 대기 카드의 분석 아래에 "⚠ 실제 코드에 없는 이름: `FRONTEND_URL`" / "✓ 이름 N개가 모두 실제 코드에 있음" / "조치에 코드 이름 없음" / "대조할 코드 없음". 판정 제안(`suggestVerdict`)은 그대로 — 칩은 ② 의 **근거**다 | ✅ 단위 40(`identifier-check.spec` 규칙 + 14장 실제 텍스트 픽스처 · `identifier-check.service.spec`) · e2e F 절(pending 키에 `identifierCheck`, 픽스처 "조치 없음" → `checkedCount 0`, GitHub 무접촉) · `chips --after 54` 실 API(GitHub raw + Redis) 14장 아래 표 · 앱 tsc · ⏳ 실기기(7장) |
+| **이름 대조 칩** — 분석 카드의 "추천 조치" 바로 아래에(S5 채점 카드, 그리고 후속으로 S4 분석 상세도 — 9장) "⚠ 실제 코드에 없는 이름: `FRONTEND_URL`" / "✓ 이름 N개가 모두 실제 코드에 있음" / "조치에 코드 이름 없음" / "대조할 코드 없음". 판정 제안(`suggestVerdict`)은 그대로 — 칩은 ② 의 **근거**다 | ✅ 단위 40(`identifier-check.spec` 규칙 + 14장 실제 텍스트 픽스처 · `identifier-check.service.spec`) · e2e F 절(pending 키에 `identifierCheck`, 픽스처 "조치 없음" → `checkedCount 0`, GitHub 무접촉) · `chips --after 54` 실 API(GitHub raw + Redis) 14장 아래 표 · 앱 tsc · ⏳ 실기기(7장) |
 | 대조 파일은 **인시던트 단위 합집합**(메모 코드 파일 ∪ 두 팔의 relatedFiles) — 두 팔이 같은 `checkedFiles` 를 받는다(블라인드) | ✅ 단위(같은 인시던트의 두 카드 = 같은 파일 목록, 파일은 한 번만 읽음 · 이름 0 인 카드도 같은 목록) |
 | **DoD (A)1** — 14장 표. v1.1 에서 **4건**(#58·#60·#62·#66) 잡힘 · v3.1 unknown **0**, 라이브러리 꼴 1(#67 `ForbiddenException`) | ✅ 아래 표(실측 = 픽스처 expected) |
 | **프로브를 저장소로** `scripts/probe/probe.mjs` — 케이스 5개 · Sentry 전송 기본 차단 · 판정 BROKEN/OK/NO_HIT · 수정 후 화면 확인 | ✅ 로컬 전/후 아래 표 |
-| **버그 5건 수정**(+ CSP `worker-src`) — 배열 가드 4파일 + 프로브가 찾은 **네 번째 호출 지점** 1파일 | ✅ 수정 전 **5/5 BROKEN** → 수정 후 **5/5 OK**(화면 확인 5/5 pass) · 프론트 tsc · ⏳ 운영(PR 머지 → Vercel 배포 후 `--allow-sentry` 1회, 7장) |
+| **버그 5건 수정**(+ CSP `worker-src`) — 배열 가드 4파일 + 프로브가 찾은 **네 번째 호출 지점** 1파일 | ✅ 수정 전 **5/5 BROKEN** → 수정 후 **5/5 OK**(화면 확인 5/5 pass) · 프론트 tsc · ✅ **운영**(2026-09-23, main `d370e03` Vercel 배포 후): Sentry 차단 프로브 5/5 OK → `--allow-sentry` 1회 5/5 OK → Sentry 5개 이슈 `count`·`lastSeen` 불변, 프론트 프로젝트에 프로브 시각 이후 새 이슈 0 |
 | DB 변경 **0** · 새 외부 연결 0 · 새 비밀값 0 · 새 의존성 1(`playwright-core`, 루트 devDependency — 브라우저를 내려받지 않고 설치된 Chrome 을 쓴다) | — |
 | B-4 앱에서 "해결됨" 처리 | ⏭ **건너뜀** — Sentry 토큰이 읽기 전용(`event:read`)이라 `event:write` 토큰 발급이 먼저다. Sentry 웹에서 수동 Resolve(7장) |
 
@@ -61,7 +61,7 @@ hits 가 3 → 4 로 는 것이 이번 편의 부수 발견이다(6-2).
 ## 0-4. 무엇이 늘었나
 
 - 백엔드: `ops/identifier-check.ts`(순수 함수) · `ops/identifier-check.service.ts`(파일 읽기·인시던트 단위 합집합) · `SourceReaderService.readFile`(파일 전체) · `listPending` 에 `identifierCheck` · `dto/review.dto.ts` `IdentifierCheckView` · 픽스처 `ops/__fixtures__/identifier-check.phase8.json`(14장 실제 텍스트 + 8파일 원문).
-- 앱: `features/review/GuidancePanel.tsx` `IdentifierChip` · `review.tsx` 카드 순서 "메모 → 분석 → **칩** → 항목" · `api.ts` 타입.
+- 앱: `features/analysis/IdentifierChip.tsx`(처음엔 GuidancePanel 안에 있었다 — 9장에서 공용으로 옮김) · `AnalysisCard` 가 "추천 조치" 아래에 칩을 그림 · `review.tsx` 카드 순서 "메모 → 분석(+칩) → 항목" · `api.ts` 타입.
 - 스크립트: `ops-review-set.ts chips --ids|--after` · `scripts/probe/probe.mjs`(+README).
 - 프론트: `useCategories.ts` · `ProductSection.tsx` · `ProductCard.tsx` · `RelatedProducts.tsx` · **`CategoryTabSection.tsx`** · `next.config.js`(CSP `worker-src`).
 - DB 0 · 새 비밀값 0(infra-story 갱신 없음).
@@ -95,8 +95,10 @@ backend/src/ops/
 ├── dto/review.dto.ts              ← IdentifierCheckView · PendingReviewItem.identifierCheck
 └── __fixtures__/identifier-check.phase8.json   ← 14장 실제 조치 + 8파일 원문(그 커밋)
 
-ops-companion/src/features/review/GuidancePanel.tsx   ← IdentifierChip (네 상태)
-ops-companion/app/(tabs)/review.tsx                   ← 메모 → 분석 → 칩 → 항목
+ops-companion/src/features/analysis/IdentifierChip.tsx    ← 네 상태의 칩(S4·S5 공용, AnalysisCard 추천 조치 아래)
+ops-companion/src/features/analysis/ReviewSummaryCard.tsx ← 사람 채점 요약(S4 만, 9장)
+ops-companion/app/(tabs)/review.tsx                      ← 메모 → 분석(+칩) → 항목
+ops-companion/app/(tabs)/incidents/analysis/[id].tsx     ← 운영 메모 → 분석(+칩) → 채점 요약 → 평가하기(9장)
 
 scripts/probe/probe.mjs            ← 케이스 5 · Sentry 차단 · 전/후 판정 · JSON 기록
 backend/eval/ops-review-set.ts     ← chips --ids|--after (카드와 같은 계산을 채점 끝난 분석에도)
@@ -169,7 +171,7 @@ catch (e) { this.logger.warn(`이름 대조 실패 — 칩 없이 내려준다: 
 
 `tool_calls` 는 SELECT 에 들어왔지만 응답에는 없다 — v3.1 에만 있어 팔을 드러내는 필드다(8편 함정 3). 단위 테스트가 응답 키에 `toolCalls` 가 없음을 고정한다. 대조 서비스가 던져도 카드는 나간다 — 칩은 부가물이다.
 
-### 3-6. 네 상태의 칩 — `GuidancePanel.tsx` `IdentifierChip`
+### 3-6. 네 상태의 칩 — `features/analysis/IdentifierChip.tsx`(처음엔 `GuidancePanel.tsx` 안, 9장에서 이동)
 
 ```ts
 if (check === null)            title = '대조할 코드 없음 — 관련 파일을 읽지 못했습니다';
@@ -315,8 +317,9 @@ node node_modules/typescript/bin/tsc --noEmit -p frontend/tsconfig.json
 | (A)3 실기기에서 칩이 보인다 | ⏳ **사용자**: 앱 `.env` 를 LAN IP 로 → Metro `--clear` → **앱 강제 종료 후 재실행**(8편 6-7) → 평가 탭. 대기 카드가 없으면 인시던트 상세에서 분석을 하나 새로 만든다(그 카드엔 메모가 없어도 칩은 붙는다 — relatedFiles 만으로 대조) |
 | (A)4 재채점 | ⏭ 하지 않음(인수인계) |
 | (B)1 수정 전 5건 재현 · 수정 후 0건 — 로컬 | ✅ 0-3 표 |
-| (B)1 운영(수정 후만) | ⏳ PR 머지 → Vercel 배포 → `node scripts/probe/probe.mjs --base https://<vercel> --api https://<vercel>/api --allow-sentry` 1회 → Sentry 에 새 이벤트 0 |
+| (B)1 운영(수정 후만) | ✅ 2026-09-23 — 머지 직후 첫 프로브는 옛 번들이라 5/5 깨짐(콘솔 에러의 변수가 `t`·`x`·`a` 로 축약 = Sentry 제목과 같은 꼴 — 배포 전 신호). Vercel `success` 뒤 차단 프로브 5/5 OK → `--allow-sentry` 1회 5/5 OK → Sentry 이슈 5개 불변·새 이슈 0 |
 | (B)2 PR 에 근거 표 | ✅ `PR_DRAFT.md` |
+| 백엔드 운영 배포(칩이 운영 카드에 붙으려면) | ✅ 2026-09-23 — 이미지 `d370e03` 로컬 빌드(Docker 엔진 500 → PowerShell `Stop-Process` 로 전부 죽이고 재실행해야 살아났다) → push(사용자) → EC2 pull·up·nginx reload → health `d370e03` · 새 라우트 401 · 부팅 로그 에러 0 |
 | (B)3 Sentry 5건 resolved → 앱 목록에서 사라짐 | ⏳ **사용자**: Sentry 웹에서 7747401267·7747419604·7747420327·7747419820·7747424036 Resolve(토큰이 읽기 전용이라 앱 버튼 없음) |
 | (B)4 앱에서 해결 처리 | ⏭ 건너뜀 — `event:write` 토큰 발급 뒤 별도 |
 
@@ -329,6 +332,29 @@ node node_modules/typescript/bin/tsc --noEmit -p frontend/tsconfig.json
 | 프로브 `NO_HIT` | 그 페이지는 서버 컴포넌트가 받는다(7편 6-4) | 홈·상세의 연관 상품처럼 클라이언트 요청이 있는 곳으로 |
 | 프로브가 Chrome 을 못 연다 | `playwright-core` 는 브라우저를 내려받지 않는다 | Google Chrome 설치 또는 `channel` 조정 |
 | `products-*` 만 BROKEN 인데 hits 가 늘었다 | 다른 컴포넌트가 같은 응답을 쓴다(6-2) | `pageerror` 뒤의 `@ 파일:줄` 프레임을 본다 |
+
+## 9장. 후속 — 고치는 사람의 화면(S4)에도 근거를 (2026-09-23 밤)
+
+운영 배포 뒤 실기기에서 사용자가 짚었다: 칩과 사실 메모는 **채점 카드(S5)** 에만 있고, 실제로 조치를 읽고 고치러 가는 **분석 상세(S4)** 에는 Phase 3 그대로 원인·조치·관련 파일·읽은 코드만 있다. 이 앱의 본래 여정은 채점이 아니라 고치는 것이다 — 근거가 있어야 할 자리가 바뀌어 있었다.
+
+**무엇을 더했나(백엔드 컨트롤러 + 앱, DB 변경 0)**
+
+| 자리 | 내용 | 왜 |
+|---|---|---|
+| 응답 `POST /ops/incidents/:id/analysis` | `project` · `note`(사실 메모) · `identifierCheck` · `reviewSummary`(승인/반려/평균 별점/내 판정) 4필드. **컨트롤러**(`OpsController.enrichAnalysis`)가 채우고 `OpsAnalysisService.toResponse` 는 null 로 둔다 | 메모는 LLM 쪽 서비스에 들어가면 안 된다(`OpsAnalysisService` 는 여전히 `OpsNoteService` 를 모른다 — 격리 단위 테스트 그대로 통과). 셋 다 부가물이라 실패해도 분석은 나간다 |
+| `OpsReviewService.identifierCheckFor` | 대기 카드와 **같은 입력·같은 서비스**로 한 장만 대조 | S4 는 블라인드 대상이 아니라 인시던트 합집합이 아니어도 된다 — 그래서 `checkedFiles` 가 S5 카드와 다를 수 있다(#55: S5 는 CategorySelect 까지 2개, S4 는 useCategories 1개) |
+| `OpsReviewService.summarizeReviews` | 행을 읽어 JS 로 센다. `mine` 은 안내 채점 행 우선 | **대기 카드에는 싣지 않는다** — 채점 중에 남의 판정이 보이면 블라인드의 취지가 흔들린다 |
+| 앱 S4 순서 | **운영 메모**(있을 때만, AI 답 위) → 분석 카드(**추천 조치 아래에 칩**) → **사람 채점 요약** → 이 분석 평가하기 | 사람이 확정한 것 → AI 답(+ 이름이 실제 코드에 있나) → 사람들이 그 답을 어떻게 봤나 → 내 판정. 읽는 순서가 곧 고치는 순서다 |
+| `GuidancePanel mode="detail"` | 제목 "사람이 확인한 운영 메모", 문구가 채점용에서 조치용으로, 메모 없으면 칸 자체를 뺀다 | S5 의 "메모 없음 — 참고 등급"은 채점 문맥이다. 고치는 사람에게 "조사 안 됨" 칸은 소음이다 |
+| 칩 위치 | `IdentifierChip` 을 `features/analysis/` 로 옮기고 `AnalysisCard` 가 "추천 조치" 바로 아래에 그린다 | 조치를 붙여 넣기 직전에 보이는 자리. S5 도 같은 자리라 두 화면의 칩이 같다 |
+
+**뜻이 바뀐 것 하나.** S5 에서 메모는 "정답지"였다. S4 에 오면 "이 인시던트는 조사돼 원인·조치가 확정됐다"는 **인시던트별 운영 메모**가 된다 — 운영자에게는 AI 답보다 더 유용한 정보다. 지금 메모는 평가 세트 7건에만 있다. 새 인시던트를 조사한 뒤 메모를 남기는 행동이 붙으면 `ops_incident_notes` 는 평가용 표에서 가벼운 인시던트 지식베이스가 된다. 앱에서 쓰는 화면은 범위 밖(지금은 `PUT /ops/incidents/:id/note` · 스크립트).
+
+**검증.** ops 단위 216(+3: `identifierCheckFor` 입력·parse_failed·`summarizeReviews` 집계/mine) · e2e E·F 8건(`ANALYSIS_KEYS` +4, parse_failed 행은 `identifierCheck null`·`reviewSummary` 0) · 양쪽 tsc · 실 API: CORS #67 → 메모 `main.ts:51-72@00107b7` · 칩 라이브러리 꼴 `ForbiddenException` · 채점 승인 2/별점 4.5/내 판정 승인(안내) · 카테고리 #55 → 메모·칩 ✓ 1개·승인 2/별점 5.
+
+**운영 반영.** 이미지 `830a33b` → push(사용자) → EC2 pull·up·nginx reload → health `830a33b`, 부팅 로그 에러 0, `POST /ops/incidents/:id/analysis` 401(살아 있음). 앱은 JS 만 바뀌어 재설치 없이 Metro `--clear` 로 받는다.
+
+**밟은 함정.** 세션이 끊길 때 살아남은 옛 로컬 백엔드(02:47 시작)가 4000 을 쥐고 있어 새 번들이 EADDRINUSE 로 죽었고, e2e 가 옛 키 목록을 받았다. 8편 6-2 의 "nx serve 재시작 함정"과 같은 부류 — `netstat -ano | grep :4000` 으로 PID 의 시작 시각과 `dist/main.js` mtime 을 비교하면 바로 보인다. 그리고 이 편을 쓰다 또 하나: 백틱이 든 문장을 `node -e "…"` 큰따옴표 안에 넣으면 셸이 명령 치환한다 — 문서·메모리 갱신은 따옴표 heredoc 으로 파일에 쓴 뒤 붙인다(6-4 와 같은 뿌리).
 
 ## 8장. 다음
 
