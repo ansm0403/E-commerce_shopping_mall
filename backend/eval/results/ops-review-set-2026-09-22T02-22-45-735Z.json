@@ -1,0 +1,239 @@
+{
+  "runAt": "2026-09-22T02:22:45.735Z",
+  "command": "test",
+  "ids": [
+    "7747401267",
+    "7747419604",
+    "7747419820",
+    "7747420327",
+    "7747424036",
+    "7744504775",
+    "7732523858"
+  ],
+  "arms": [
+    "v1.1",
+    "v3.1"
+  ],
+  "delayMs": 31000,
+  "records": [
+    {
+      "incidentId": "7747401267",
+      "arm": "v1.1",
+      "analysisId": 54,
+      "status": "ok",
+      "promptVersion": "v1.1",
+      "fewShotIds": null,
+      "toolCalls": null,
+      "latencyMs": 4314
+    },
+    {
+      "incidentId": "7747401267",
+      "arm": "v3.1",
+      "analysisId": 55,
+      "status": "ok",
+      "promptVersion": "v3.1",
+      "fewShotIds": null,
+      "toolCalls": [
+        {
+          "path": "frontend/src/hooks/useCategories.ts",
+          "ref": "7e3784f4e6ef1cb22d3eeaf123e902f288fa6f4b",
+          "startLine": 1,
+          "endLine": 29,
+          "ok": true,
+          "lines": 29
+        }
+      ],
+      "latencyMs": 8736
+    },
+    {
+      "incidentId": "7747419604",
+      "arm": "v1.1",
+      "analysisId": 56,
+      "status": "ok",
+      "promptVersion": "v1.1",
+      "fewShotIds": null,
+      "toolCalls": null,
+      "latencyMs": 2154
+    },
+    {
+      "incidentId": "7747419604",
+      "arm": "v3.1",
+      "analysisId": 57,
+      "status": "ok",
+      "promptVersion": "v3.1",
+      "fewShotIds": null,
+      "toolCalls": [
+        {
+          "path": "frontend/src/components/home/ProductSection.tsx",
+          "ref": "7e3784f4e6ef1cb22d3eeaf123e902f288fa6f4b",
+          "startLine": 40,
+          "endLine": 66,
+          "ok": true,
+          "lines": 27
+        }
+      ],
+      "latencyMs": 7017
+    },
+    {
+      "incidentId": "7747419820",
+      "arm": "v1.1",
+      "analysisId": 58,
+      "status": "ok",
+      "promptVersion": "v1.1",
+      "fewShotIds": null,
+      "toolCalls": null,
+      "latencyMs": 3740
+    },
+    {
+      "incidentId": "7747419820",
+      "arm": "v3.1",
+      "analysisId": 59,
+      "status": "ok",
+      "promptVersion": "v3.1",
+      "fewShotIds": null,
+      "toolCalls": [
+        {
+          "path": "frontend/src/components/home/ProductCard.tsx",
+          "ref": "7e3784f4e6ef1cb22d3eeaf123e902f288fa6f4b",
+          "startLine": 5,
+          "endLine": 20,
+          "ok": true,
+          "lines": 16
+        }
+      ],
+      "latencyMs": 9715
+    },
+    {
+      "incidentId": "7747420327",
+      "arm": "v1.1",
+      "analysisId": 60,
+      "status": "ok",
+      "promptVersion": "v1.1",
+      "fewShotIds": null,
+      "toolCalls": null,
+      "latencyMs": 7333
+    },
+    {
+      "incidentId": "7747420327",
+      "arm": "v3.1",
+      "analysisId": 61,
+      "status": "ok",
+      "promptVersion": "v3.1",
+      "fewShotIds": null,
+      "toolCalls": [
+        {
+          "path": "frontend/src/components/home/ProductSection.tsx",
+          "ref": "7e3784f4e6ef1cb22d3eeaf123e902f288fa6f4b",
+          "startLine": 35,
+          "endLine": 66,
+          "ok": true,
+          "lines": 32
+        }
+      ],
+      "latencyMs": 10548
+    },
+    {
+      "incidentId": "7747424036",
+      "arm": "v1.1",
+      "analysisId": 62,
+      "status": "ok",
+      "promptVersion": "v1.1",
+      "fewShotIds": null,
+      "toolCalls": null,
+      "latencyMs": 5063
+    },
+    {
+      "incidentId": "7747424036",
+      "arm": "v3.1",
+      "analysisId": 63,
+      "status": "ok",
+      "promptVersion": "v3.1",
+      "fewShotIds": null,
+      "toolCalls": [
+        {
+          "path": "frontend/src/app/(main)/products/[id]/RelatedProducts.tsx",
+          "ref": "7e3784f4e6ef1cb22d3eeaf123e902f288fa6f4b",
+          "startLine": 10,
+          "endLine": 50,
+          "ok": true,
+          "lines": 41
+        }
+      ],
+      "latencyMs": 17939
+    },
+    {
+      "incidentId": "7744504775",
+      "arm": "v1.1",
+      "analysisId": 64,
+      "status": "ok",
+      "promptVersion": "v1.1",
+      "fewShotIds": null,
+      "toolCalls": null,
+      "latencyMs": 4498
+    },
+    {
+      "incidentId": "7744504775",
+      "arm": "v3.1",
+      "analysisId": 65,
+      "status": "ok",
+      "promptVersion": "v3.1",
+      "fewShotIds": null,
+      "toolCalls": [
+        {
+          "path": "ops-companion/src/lib/sentry.ts",
+          "ref": "main",
+          "startLine": 40,
+          "endLine": 55,
+          "ok": true,
+          "lines": 16
+        },
+        {
+          "path": "ops-companion/app/(tabs)/profile.tsx",
+          "ref": "main",
+          "startLine": 30,
+          "endLine": 45,
+          "ok": true,
+          "lines": 16
+        },
+        {
+          "path": "ops-companion/src/lib/sentry.ts",
+          "ref": "main",
+          "startLine": 1,
+          "endLine": 20,
+          "ok": true,
+          "lines": 20
+        }
+      ],
+      "latencyMs": 32276
+    },
+    {
+      "incidentId": "7732523858",
+      "arm": "v1.1",
+      "analysisId": 66,
+      "status": "ok",
+      "promptVersion": "v1.1",
+      "fewShotIds": null,
+      "toolCalls": null,
+      "latencyMs": 2934
+    },
+    {
+      "incidentId": "7732523858",
+      "arm": "v3.1",
+      "analysisId": 67,
+      "status": "ok",
+      "promptVersion": "v3.1",
+      "fewShotIds": null,
+      "toolCalls": [
+        {
+          "path": "backend/src/main.ts",
+          "ref": "00107b7",
+          "startLine": 50,
+          "endLine": 70,
+          "ok": true,
+          "lines": 21
+        }
+      ],
+      "latencyMs": 4464
+    }
+  ]
+}

@@ -175,6 +175,21 @@ describe('OpsReviewService — 평가 루프(설계 §9 Phase 4)', () => {
       ]);
       expect(new Date(generatedAt).getTime()).not.toBeNaN();
       expect(analyses.query.mock.calls[0][0]).toMatch(/simulated/);
+      expect(analyses.query.mock.calls[0][0]).not.toMatch(/a\.id >=/);
+      expect(analyses.query.mock.calls[0][1]).toEqual([]);
+    });
+
+    it('minAnalysisId 를 주면 그 id 이상만 센다(Phase 6 — 새 세트만 집계). 정수가 아니면 무시', async () => {
+      analyses.query.mockResolvedValue([]);
+
+      await service.getStats({ minAnalysisId: 54.9 });
+      const [sql, params] = analyses.query.mock.calls[0];
+      expect(sql).toMatch(/a\.id >= \$1/);
+      expect(params).toEqual([54]);
+
+      await service.getStats({ minAnalysisId: Number.NaN });
+      expect(analyses.query.mock.calls[1][0]).not.toMatch(/a\.id >=/);
+      expect(analyses.query.mock.calls[1][1]).toEqual([]);
     });
   });
 

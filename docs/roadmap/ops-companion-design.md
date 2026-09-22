@@ -848,7 +848,7 @@ seed 첫 실측(2026-09-22, analysis #14, flash-lite 3.4초): CORS 이슈에 대
 | "프론트 프레임은 소스맵으로 원본 경로" | **아니다.** Vercel 에 업로드 토큰이 없어 릴리즈 파일 0개, 프레임은 `_next/static/chunks/8577-….js:12:123490`. 이번 범위 밖 |
 | — | **앱(ops-companion) 프레임은 이미 원본 경로**(`ops-companion/app/(tabs)/profile.tsx:38`, Phase 2 소스맵 업로드) — 배포 전에도 도구가 읽을 수 있는 유일한 프로젝트 |
 
-**🔶 운영 배포 완료(2026-09-22, main `00107b7` = PR #37, 마이그레이션 1건) — DoD ① 은 "읽는다"까지, 오답은 그대로. 실기기 채점 미완.** 학습 노트 6편 [06-source-reading.md](../learning/ops-companion/06-source-reading.md).
+**✅ 완료(2026-09-22, main `00107b7` = PR #37 → 서비스 지도 `7e3784f` = PR #38, 운영 배포·실기기 채점까지) — DoD ① 은 v3 에서 "읽는다"까지였고 서비스 지도(v3.1)로 통과, DoD ② v3 8/10 · v3.1 7/7, DoD ③ 통과.** 학습 노트 6편 [06-source-reading.md](../learning/ops-companion/06-source-reading.md).
 
 | 단계 | 내용 | 상태 |
 |---|---|---|
@@ -874,7 +874,92 @@ seed 첫 실측(2026-09-22, analysis #14, flash-lite 3.4초): CORS 이슈에 대
 |---|---|
 | 구현 | `OpsAnalysisService.SERVICE_MAP` — 배포 구성의 **사실** 4줄(백엔드 공개 주소 = `api.ansmoon.dev` 하나 = 서버 자신 · 프론트 = Vercel 도메인, `CORS_ORIGINS` 는 그 하나뿐이고 환경변수에 있음 · 앱은 Origin 없음 · 봇 요청이 매일 들어옴). **결론("정상 차단")은 적지 않는다** — 모델이 내려야 측정이 된다. SYSTEM 바로 뒤에 붙고 버전에 `.1`(v1.1·v2.1·v3.1). 기본 켬(`OPS_ANALYSIS_SERVICE_MAP`), body `serviceMap:false` 로 옛 팔 재현. 스크립트 `--arms v1.1,v2.1,v3.1`. 단위 4건(합 146) |
 | 실측 | 같은 CORS 이벤트(Origin = 서버 자신): **v3.1(#45, `main.ts:40-80@00107b7` 읽음)·v1.1(#46, 도구 없음) 모두 정답** — "봇·스캐너가 서버 자신의 도메인을 Origin 으로, 정상 차단, 조치 = Sentry 필터"(low/high). 차이: v1.1 은 조치 코드를 지어냈고(`FRONTEND_URL` 배열 — 실제 코드 아님), v3.1 은 코드 수정을 제안하지 않았다. **지도 = 판단, 도구 = 근거(지어내지 않음)** |
-| 남은 것 | 지도의 부작용 측정 — test 세트 6건을 `--arms v3.1` 로 만들어 채점(v3 vs v3.1). 운영 배포는 코드 변경(프롬프트·dto·스크립트)이라 이미지 재배포 필요, 마이그레이션 없음. (b) 배포 파일 읽기는 (a) 로 충분하면 하지 않는다 |
+| 부작용 측정 | test 6건을 v3.1 로 생성(#47~#52, 도구 0회) → 실기기 채점 **6/6 승인**(v3 와 동일), 별점 평균 3.29. CORS #45 승인(별점 2) · v1.1 #46 승인(별점 4 — 코드를 지어낸 쪽이 더 높은 별점). (b) 는 하지 않는다 |
+| 배포 | ✅ PR #38 → main `7e3784f` → 이미지 재배포(2026-09-22, `migrate.js` "pending 없음", nginx reload, health `7e3784f`, 새 라우트 401·`/products` 200). 운영 분석은 이제 기본 **v3.1** |
+
+### Phase 6 — 프론트 소스맵 업로드 + 새 평가 세트 (도구의 효과를 처음으로 잰다)
+- 목표: 쇼핑몰 프론트 에러의 스택을 원본 좌표로(Vercel → Sentry 소스맵 업로드) 만들어 `read_source` 가 프론트 코드도 읽게 하고,
+  "읽을 수 있는 프레임이 있는" 인시던트로 평가 세트를 새로 짜 **v1.1(지도만) vs v3.1(지도 + 도구)** — 도구 유무만 다른 첫 비교표.
+  Phase 5 의 결론 두 줄(옛 세트 6건은 도구 호출 0회 · 프론트는 소스맵 미업로드로 읽을 파일 없음)이 출발점(6편 6-4·6-2).
+- 구현: **A.** Vercel 환경변수 3개(`SENTRY_ORG`·`SENTRY_PROJECT`·`SENTRY_AUTH_TOKEN`) + Redeploy(사용자) → 코드 변경은
+  `SourceReaderService.normalizeFramePath(filename, project?)` 한 곳(+`PROJECT_ROOTS`) **B.** 스크립트 `list --readable`(읽을 수 있는 파일 수·읽는 커밋 열) ·
+  `stats --after <id>`(`getStats({minAnalysisId})` — 옛 v1.1·v3.1 행과 새 세트 분리) · 세트 7건 × 2팔
+- DoD: ① 새 프론트 이벤트 1건의 `frames[].filename` 이 원본 경로이고 `normalizeFramePath` 가 `frontend/src/…` 를 돌려준다(단위 + 실이벤트)
+  ② 프론트 인시던트 1건을 v3.1 로 분석해 `tool_calls` 에 `frontend/src/…` ③ 새 test 세트(읽을 수 있는 인시던트 ≥ 4건)를 v1.1·v3.1 로 블라인드 채점 → 승인율 + `toolCalled` 표
+
+**착수 전 결정(2026-09-22)** — 사용자가 "초심자라 판단이 어렵다, Claude 의 판단을 따르겠다"고 위임. 인수인계 초안의 추천을 그대로 택하고 ②·③ 을 실측에 맞춰 조정했다.
+
+| 항목 | 결정 | 이유 |
+|---|---|---|
+| ① 프론트 경로 → 저장소 경로 | **실이벤트를 먼저 만들어 꼴을 확인**한 뒤(`filename=./src/hooks/useCategories.ts`, `absPath=app:///_next/static/chunks/app/(main)/src/…`) `normalizeFramePath` 에 `project`(Sentry slug) 힌트를 더한다. 폴더 이름이 있으면 기존 규칙, 없으면 `PROJECT_ROOTS[project]` 를 앞에 붙이고 `checkPath` 로 검증. `./` 하나만 접고 `../`·절대경로·URL 은 null | Next.js 빌드 cwd 가 `frontend/` 라 프레임에 저장소 폴더가 없다. `absPath` 는 라우트 그룹이 끼어 있어 못 쓴다. 힌트는 "붙이기"만 하고 허용 여부는 여전히 `checkPath` — 방어선 우회 없음. 백엔드·앱 케이스 12건 불변 |
+| ② 세트 선정 | `list --readable` 로 읽기 > 0 인 이슈만. **seed 는 두지 않는다**(few-shot 팔이 없으니 승인 풀이 필요 없다). 읽을 수 있는 이슈가 3건뿐이라(CORS·앱·프론트 1) **프로브로 프론트 이벤트를 만들어** 재료를 늘렸다 — 헤드리스 Chrome 이 운영 페이지를 열고 `page.route` 로 API 응답 하나만 브라우저 안에서 깨진 꼴로 바꾼다(서버·DB 무접촉). 쌍둥이(같은 제목) 1건 제외 → 7건 | 초안은 "seed 3 / test ≥ 4" 였지만 seed 는 Phase 4 의 few-shot 풀 용도였다. 자연 발생 인시던트를 기다리면 언제 4건이 모일지 모른다. 프로브 인시던트는 인위적이지만 가리키는 결함(배열 가드 부재)은 진짜다 |
+| ③ 비교 팔 | **v1.1 vs v3.1** 만. v2.1 없음 | 지도는 운영 기본이라 둘 다 포함, 차이는 도구뿐. 승인 풀에 v3.1 답이 섞여 있어 few-shot 을 넣으면 축이 섞인다 |
+| ④ 토큰 | Sentry 업로드 토큰을 새로 발급해 **Vercel 에만**(`NEXT_PUBLIC_` 아님 → 브라우저 번들 미포함). expo.dev 의 것과 값이 다르다 | 한쪽이 새도 다른 쪽은 무사. infra-story 5장에 1행 |
+| ⑤ 배포 분리 | 프론트는 Redeploy 로 먼저(코드 변경 0) · 백엔드 `normalizeFramePath` 는 PR 뒤 이미지 재배포(마이그레이션 없음) | main 푸시 = 프론트 자동 배포. 비교 자체는 스크립트가 로컬 Nest 컨텍스트로 돌리므로 배포를 기다리지 않는다 |
+| ⑥ 집계 분리 | `getStats({minAnalysisId})` + 스크립트 `stats --after 54` | v1.1·v3.1 은 Phase 5 의 CORS 재현(#45·#46)·부작용 측정(#47~#52)에도 쓴 이름표라 그대로 합산하면 섞인다 |
+
+**실측(2026-09-22)**
+
+| 무엇 | 결과 |
+|---|---|
+| 소스맵 업로드 | 재배포(01:53Z) 직후 `e-commerse-frontend` 에 **Debug ID 아티팩트 번들 3개**(147·138·132 파일). `releases/<sha>/files/` 는 여전히 0 — Debug ID 방식은 릴리즈에 파일을 매지 않는다(Phase 5 의 "릴리즈 파일 0 = 미업로드" 판정 기준은 필요조건이 아니었다) |
+| 첫 프로브(`/api/*` 끊기 → Network Error) | 프레임은 복원됐지만 `../node_modules/axios/…`·`@sentry/browser/…` 만 — **우리 코드 프레임 0**. axios 가 던진 에러라 소스맵이 있어도 영원히 "읽기 0"(7편 6-2) |
+| 둘째 프로브(응답을 `{}` 로) | 모든 페이지에서 `TypeError: t is not iterable`(7747401267) — `(main)` 레이아웃의 `CategorySelect → useCategories.flattenTree` 가 먼저 죽는다. `filename=./src/hooks/useCategories.ts:9`, 릴리즈 `7e3784f…` — **DoD ①** |
+| DoD ② | 분석 #53(v3.1): `frontend/src/hooks/useCategories.ts:1-29 @7e3784f` 읽음, "flattenTree 가 배열을 가정, 9행 타입 가드 부재"(high/high) — 코드와 대조해 **맞다** |
+| 재료 늘리기 | 홈·상세의 `**/api/products?**` 만 깨진 **항목**(null · `images` 문자열 · `data` 문자열)으로 → 새 이슈 5건(`null.id` ×2 페이지 · `a.find` · `x.map` · `.filter`). `/products`·`/products/:id` 본문은 서버 컴포넌트라 클라이언트 요청 0(프로브 `apiHits` 로 확인) |
+| `list --readable` | 15건 중 읽기 > 0 = 8건(프론트 6 · 백엔드 CORS 1 · 앱 1). `Network Error` 2건은 0 그대로 |
+| 세트 생성 | 7건 × v1.1·v3.1 = **14/14 ok**(#54~#67, `--delay 31000`, 429 없음). v3.1 **7건 모두 도구 호출**(`toolCalled` 7 — 옛 세트는 0). 확신도 14건 전부 high, severity 는 #54→#55 한 건만 high→medium |
+| **채점(DoD ③)** | 실기기 블라인드 14장(2026-09-22, 평가자 1명) → `stats --after 54`: **v1.1 7/7 승인 · 별점 3.43 · 도구 0 / v3.1 7/7 승인 · 별점 4.29 · 도구 7**. 쌍별 v3.1 **5승 1무 1패**(카테고리 건 2→5 가 최대, 연관 상품 건 4→3 이 유일한 패). 승인율은 천장이라 축이 못 됐고(읽을 파일이 있는 인시던트는 v1.1 도 원인을 맞힌다), 별점은 6편과 **반대로 도구 쪽**에 붙었다 — CORS 에서 v1.1(#66)은 또 `FRONTEND_URL` 코드를 지어내고 4점, 실제 65행을 짚은 v3.1(#67)이 5점. 표본 7쌍·평가자 1명이라 단정 불가. **⚠ 타당성 한계**: 채점 직후 평가자가 "상황과 해답을 전부 알 수 없어 임의로 승인한 건이 많다"고 진술 — 승인 14/14 는 "틀렸다고 볼 근거가 없었다"이고, 카드가 판단 근거를 주지 않은 설계 문제. Phase 7 에서 해소. 상세 7편 0-3 |
+
+**평가 세트(2026-09-22)** — 로컬 DB. 상세·읽은 파일은 7편 0-3 표.
+
+| id | 프로젝트 | 읽기 | 제목 | v1.1 | v3.1 |
+|---|---|---|---|---|---|
+| 7747401267 | frontend | 2 | t is not iterable(카테고리 응답이 배열 아님) | #54 | #55 |
+| 7747419604 | frontend | 1 | null.id(홈 상품 항목 null) | #56 | #57 |
+| 7747419820 | frontend | 1 | a.find is not a function(`images` 문자열) | #58 | #59 |
+| 7747420327 | frontend | 1 | x.map is not a function(`data` 문자열) | #60 | #61 |
+| 7747424036 | frontend | 1 | (…).filter is not a function(상세 연관 상품) | #62 | #63 |
+| 7744504775 | ops-companion | 2 | Sentry 연결 테스트(앱) | #64 | #65 |
+| 7732523858 | backend | 1 | Not allowed by CORS — ⚠ 채점자가 답을 아는 인시던트 | #66 | #67 |
+
+**진행(2026-09-22)**
+
+| 단계 | 내용 | 상태 |
+|---|---|---|
+| ① Vercel env + Redeploy | 사용자 — 토큰은 "개인 토큰(Release Admin·Project Read·Org Read)" 또는 조직 토큰 | ✅ |
+| ② 프로브 → 실이벤트 → 프레임 꼴 확정 | 스크래치패드 playwright 스크립트(`channel:'chrome'`), Sentry API 로 아티팩트 번들·최신 이벤트 확인 | ✅ |
+| ③ `normalizeFramePath` + 단위 | `PROJECT_ROOTS` · 두 번째 인자 · 프론트 케이스 12건 · `buildSourceContext` 한 줄 · DTO 주석 | ✅ ops 단위 159 · tsc |
+| ④ 로컬 v3.1 분석 | #53 → `tool_calls` 에 `frontend/src/hooks/useCategories.ts` | ✅ |
+| ⑤ 백엔드 배포 | 마이그레이션 없음 | ⏳ PR 뒤 |
+| ⑥ 세트 선정·생성·채점 | `list --readable` → 7건 → `test --arms v1.1,v3.1` 14건 · 실기기 14장 · `stats --after 54` | ✅ 위 채점 행 |
+| ⑦ 문서 | 7편 · 이 절 · infra-story(0-1·3-4·5장·6장·용어·갱신 기록) · README · CLAUDE.md · 인수인계 `_next-session-phase6-close.md` | ✅ |
+
+**부수 발견(범위 밖, 기록)**: `next.config.js` CSP 에 `worker-src` 가 없어 Sentry Session Replay 의 압축 워커(blob)가 차단된다(콘솔 CSP 위반, 이벤트 유실은 없음) · `useCategories.flattenTree`·`ProductCard` 는 형태가 깨진 응답을 방어하지 않는다(이번 세트의 인시던트가 그 근거).
+
+### Phase 7 — 채점 안내(사실 메모 + 확인 항목) + 재채점 (채점이 "그럴듯함"이 아니라 "맞음"을 재게)
+- 배경: Phase 6 채점 직후 평가자가 "제시된 상황과 해답을 전부 알 수 없어 임의로 승인한 건이 많다"고 밝혔다. 카드가 판단 근거를 주지 않으면 채점은 "자신 있고 구체적인 답"에 점수를 주고(5·6편의 별점 = 구체성 가설), 승인율은 천장에 붙는다. **평가자의 문제가 아니라 설계의 문제**다.
+  "도구가 좋아지면 채점이 덜 필요한가"에 대한 답도 여기 있다 — 아니다. 바뀌어야 하는 것은 척도(승인/반려 → 확인 항목)와 재료다. CORS 는 파일을 더 읽어서가 아니라 지도로 풀렸다(그 사실은 저장소 밖).
+- 정의(2026-09-22, 사용자 승인 — "제안을 받아들인다"):
+  - **인시던트별 사실 메모(ground truth)** — "무엇이 어떻게 깨졌나 · 원인 파일/함수 · 정답 조치의 방향 · 흔한 오답"을 사람이 쓴다. 프로브 6건은 만든 쪽이 정확히 알고, CORS 는 4~6편에 있다. 자연 발생 인시던트는 조사 후 쓴다(없으면 "메모 없음"으로 카드에 표시 — 그 건의 채점은 참고 등급).
+  - **확인 항목 4개**(체크박스) — ① 원인이 메모의 파일·함수를 가리키는가 ② 조치 코드가 실제 파일에 있는 식별자만 쓰는가(지어낸 변수·함수·env 없음 — 카드의 "AI 가 읽은 코드"·관련 파일로 확인) ③ 조치를 그대로 적용해도 되는가 ④ 확신도가 근거에 비해 과하지 않은가. 승인/반려는 항목에서 **파생**(예: ①② 모두 통과 = 승인, 하나라도 실패 = 반려)하되 평가자가 덮어쓸 수 있다.
+  - **블라인드 유지** — 메모와 항목은 두 팔에 똑같이 붙는다. 버전은 여전히 응답에서 뺀다.
+  - **재채점** — 평가는 upsert 라 Phase 6 의 14장을 안내와 함께 다시 채점한다. 안내 전/후 차이 = "안내 없는 채점은 무엇을 쟀나". `ops_reviews` 에 항목 4개(+ `guided` 플래그)를 남겨 전후를 나눌 수 있게.
+  - **그다음(범위 밖)** — 메모·항목이 쌓이면 어시스턴트 트랙의 골든셋 + LLM judge(ex-ai-assistant Phase 7·A-1)로 자동 채점, 사람은 judge 표본 검증으로 물러난다.
+- 구현(초안): `ops_incident_notes`(incident_id PK · 메모 4필드 · 작성자 · 마이그레이션 1건) + `PUT /v1/ops/incidents/:id/note`(admin) · pending 응답에 `note`·`checklist` 정의 · `ops_reviews` 에 `checks jsonb`·`guided boolean`(마이그레이션 같은 파일) · 앱 카드 "채점 안내" 접이식 섹션 + 체크 4개 → 승인/반려 자동 제안 · `stats` 에 guided 전/후 열 · 스크립트 `notes seed`(아래 표를 넣는다).
+- DoD: ① 7건의 메모가 들어가 카드에 보인다 ② 14장을 안내와 함께 재채점 → `stats --after 54` 가 guided 전/후를 나란히 낸다 ③ 항목 ②(지어냄) 실패 건이 v1.1 에서만 나오는지(6편 이후 도구의 몫이 수치로 잡히는지) 확인
+
+**사실 메모 초안(2026-09-22, 프로브를 만든 쪽이 작성 — Phase 7 seed)**
+
+| 인시던트 | 무엇이 어떻게 깨졌나 | 원인 위치 | 정답 조치의 방향 | 흔한 오답 |
+|---|---|---|---|---|
+| 7747401267 t is not iterable | `/api/categories` 응답이 배열이 아닌 객체(`{phase6:…}`) | `frontend/src/hooks/useCategories.ts` 19행 `data: tree = []` 는 `undefined` 만 방어 → 9행 `flattenTree` 의 `for…of` 가 객체를 순회 | `flattenTree` 진입 시 `Array.isArray` 가드, 또는 query `select`/서비스에서 응답 검증 | `reduce` 로 다시 쓴 가짜 코드 · "비동기 로딩 초기값" 추측 |
+| 7747419604 null.id | `/api/products?…` 응답 `data` 배열 안에 `null` 항목 | `frontend/src/components/home/ProductSection.tsx` 의 `products.map` → 항목 `null` 의 `id` 접근(`key`/`ProductCard`) | 항목 `filter(Boolean)` 또는 서비스 계층 검증. `?? []` 는 항목 null 을 못 막는다 | "API 가 아직 안 왔다" 류 |
+| 7747419820 a.find | 항목의 `images` 가 배열이 아닌 문자열 | `frontend/src/components/home/ProductCard.tsx` `getProductImageUrl` 의 `images.find` | `Array.isArray(product.images)` 가드 | — |
+| 7747420327 x.map | 응답 `data` 가 배열이 아닌 문자열 | `ProductSection.tsx` `products.map` — `result?.data ?? []` 는 문자열을 못 막는다 | `Array.isArray` 가드 | — |
+| 7747424036 .filter | 상세 페이지 연관 상품 응답 `data.data` 가 문자열 | `frontend/src/app/(main)/products/[id]/RelatedProducts.tsx` 26행 `data?.data?.data ?? []` → 29행 `.filter` | 배열 검증 후 `filter` | — |
+| 7744504775 앱 Sentry 테스트 | 프로필 화면 "Sentry 연결 테스트" 버튼이 **의도적으로** `throw` | `ops-companion/app/(tabs)/profile.tsx` ~38행 · `src/lib/sentry.ts` | 버그 아님. 조치 없음(또는 `__DEV__` 분기). severity low 가 정답 | "실제 크래시"로 읽어 high |
+| 7732523858 CORS | 봇이 **서버 자신 도메인**(`api.ansmoon.dev`)을 Origin 으로 요청, `main.ts` 60~65행이 정상 차단 | `backend/src/main.ts` `enableCors` origin 콜백 | 정상 동작. Sentry 필터 또는 `cb(new Error)` 대신 `cb(null,false)` 로 500 회피 | **"`CORS_ORIGINS` 에 `api.ansmoon.dev` 추가"**(4~6편 오답) · `FRONTEND_URL` 배열 등 지어낸 코드 |
 
 ### 명시적 비목표 (v1에서 하지 않는 것)
 - iOS 스토어 배포(EAS 내부 배포 링크로 충분), 다국어, 다크모드 완성도,

@@ -479,7 +479,7 @@ export class OpsAnalysisService {
     const readable: string[] = [];
     const frames = (incident.exception?.frames ?? []).slice(0, OpsAnalysisService.PROMPT_FRAMES);
     for (const f of [...frames.filter((x) => x.inApp), ...frames.filter((x) => !x.inApp)]) {
-      const path = SourceReaderService.normalizeFramePath(f.filename);
+      const path = SourceReaderService.normalizeFramePath(f.filename, incident.project);
       if (!path || seen.has(path)) continue;
       seen.add(path);
       readable.push(f.lineNo !== null ? `${path}:${f.lineNo}` : path);
