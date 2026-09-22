@@ -993,7 +993,7 @@ seed 첫 실측(2026-09-22, analysis #14, flash-lite 3.4초): CORS 이슈에 대
   - **B. 고리 닫기**: 앱이 찾고 사람이 승인한 프론트 버그 5건(배열 가드) + CSP `worker-src` 수정 → 저장소에 남기는 프로브로 **수정 전 재현 → 수정 후 0건**(로컬, 운영은 수정 후만) → PR 에 "이슈 → 승인된 분석 → 수정" 표. 선택: 앱에서 해결 처리(`POST /ops/incidents/:id/resolve` → Sentry 이슈 resolved) — 현재 토큰이 읽기 전용이라 사용자가 `event:write` 토큰을 발급해야 가능. 재발하면 기존 폴러가 다시 푸시(재발 감시).
 - 인수인계: `docs/roadmap/_next-session-phase8.md`(Phase 종료 후 삭제 — 내용은 아래 진행표와 9편으로).
 
-**진행(2026-09-23) — 구현·검증 완료(브랜치 `feat/ops-closing-loop`), 운영 반영·실기기 확인 대기. DB 변경 0**
+**진행(2026-09-23) — ✅ 구현·검증 완료, main `d370e03` = PR #41(squash) · 프론트 운영 반영(Vercel) + 운영 프로브 통과 · 백엔드 EC2 배포·실기기 확인 대기. DB 변경 0**
 
 | 단계 | 내용 | 상태 |
 |---|---|---|
@@ -1004,7 +1004,7 @@ seed 첫 실측(2026-09-22, analysis #14, flash-lite 3.4초): CORS 이슈에 대
 | A-⑤ 표 | `ops-review-set.ts chips --ids|--after` → **14장 실측**: v1.1 **4/7**(#58 `DEFAULT_IMAGE_URL` · #60 `ProductItem` · #62 `currentId` · #66 `FRONTEND_URL`) · v3.1 unknown **0**, 라이브러리 꼴 1(#67 `ForbiddenException`). 인수인계 예상과 다른 셋: `callback`(#66)은 매개변수라 잡지 않음(규칙) · `data`(#56)는 파일에 변수로 있어 못 잡음(한계) · `ProductItem`(#60)은 예상에 없던 진짜 지어낸 이름. #54 는 이름 0(전부 스스로 선언) — 한계 그대로 | ✅ DoD (A)1·2 |
 | B-① 근거 표 | 이슈 → 승인된 분석 → 메모 → 수정: 7747401267 `useCategories.ts` · 7747419604/7747420327 `ProductSection.tsx` · 7747419820 `ProductCard.tsx` · 7747424036 `RelatedProducts.tsx` · (부수) CSP `worker-src 'self' blob:` | ✅ PR 본문 |
 | B-② 프로브 | `scripts/probe/probe.mjs`(+README) — `playwright-core` + 설치된 Chrome(`channel:'chrome'`, 브라우저 다운로드 없음) · 케이스 5 · **Sentry 전송 기본 차단** · BROKEN/OK/NO_HIT · 수정 후 화면 확인 · `pageerror` 에 우리 파일 첫 프레임 · `--json` | ✅ |
-| B-③ 전/후 | 로컬 **수정 전 5/5 BROKEN**(`nodes is not iterable` · `null (reading 'id')` · `products.map` · `images.find` · `response.filter`) → 가드 4파일 → **2건 그대로 BROKEN, hits 3 → 4** → **네 번째 호출 지점 `CategoryTabSection.tsx`**(같은 응답·같은 `products.map`, 첫 크래시가 가려 Sentry 스택·메모·AI 분석 어디에도 없었다) 수정 → **5/5 OK, 화면 확인 5/5** · 프론트 tsc | ✅ 로컬 · ⏳ 운영(머지 → Vercel → `--allow-sentry` 1회 → Sentry 새 이벤트 0) |
+| B-③ 전/후 | 로컬 **수정 전 5/5 BROKEN**(`nodes is not iterable` · `null (reading 'id')` · `products.map` · `images.find` · `response.filter`) → 가드 4파일 → **2건 그대로 BROKEN, hits 3 → 4** → **네 번째 호출 지점 `CategoryTabSection.tsx`**(같은 응답·같은 `products.map`, 첫 크래시가 가려 Sentry 스택·메모·AI 분석 어디에도 없었다) 수정 → **5/5 OK, 화면 확인 5/5** · 프론트 tsc | ✅ 로컬 · ✅ **운영(2026-09-23)**: 머지 직후 프로브는 옛 번들(5/5 깨짐, 축약 변수 이름) → Vercel `success` 후 차단 프로브 5/5 OK → `--allow-sentry` 1회 5/5 OK → Sentry 이슈 5개 `count`·`lastSeen` 불변, 프론트 프로젝트 새 이슈 0 |
 | B-④ 해결 처리 | Sentry 토큰이 읽기 전용(`event:read`) → **건너뜀**. Sentry 웹에서 수동 Resolve 5건(사용자) | ⏭ |
 | 문서 | 9편 `09-closing-the-loop.md` · README 목차 · CLAUDE.md §5 · PROJECT_CARD 차별점 카드 · 이 절 · `_next-session-phase8.md` 삭제 | ✅ |
 

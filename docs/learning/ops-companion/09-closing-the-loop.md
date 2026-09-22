@@ -1,6 +1,6 @@
 # 9편. 고리 닫기 — 이름 대조는 코드가, 결정은 사람이, 그리고 실제로 고친다
 
-> 설계 문서 §9 **Phase 8**. 작성 시점: 브랜치 `feat/ops-closing-loop`(main `10e9cb4` 다음, 첫 커밋 `7cbeca9`) — 코드 커밋 해시는 PR 머지 후 이 줄을 고친다.
+> 설계 문서 §9 **Phase 8**. 작성 시점 커밋: main `d370e03`(PR #41 squash, 2026-09-23). 브랜치 `feat/ops-closing-loop` 의 코드·문서가 이 한 커밋이다.
 > 앞 편: [8편 채점 안내](./08-guided-review.md). 이 편은 8편의 결론("안내는 방향이 틀린 답은 잡고 이름이 틀린 답은 못 잡는다")에서 시작한다.
 
 ## 0-1. 한 문장
@@ -21,7 +21,7 @@ AI 조치 코드의 **이름**(변수·함수·환경변수)을 실제 소스와
 | 대조 파일은 **인시던트 단위 합집합**(메모 코드 파일 ∪ 두 팔의 relatedFiles) — 두 팔이 같은 `checkedFiles` 를 받는다(블라인드) | ✅ 단위(같은 인시던트의 두 카드 = 같은 파일 목록, 파일은 한 번만 읽음 · 이름 0 인 카드도 같은 목록) |
 | **DoD (A)1** — 14장 표. v1.1 에서 **4건**(#58·#60·#62·#66) 잡힘 · v3.1 unknown **0**, 라이브러리 꼴 1(#67 `ForbiddenException`) | ✅ 아래 표(실측 = 픽스처 expected) |
 | **프로브를 저장소로** `scripts/probe/probe.mjs` — 케이스 5개 · Sentry 전송 기본 차단 · 판정 BROKEN/OK/NO_HIT · 수정 후 화면 확인 | ✅ 로컬 전/후 아래 표 |
-| **버그 5건 수정**(+ CSP `worker-src`) — 배열 가드 4파일 + 프로브가 찾은 **네 번째 호출 지점** 1파일 | ✅ 수정 전 **5/5 BROKEN** → 수정 후 **5/5 OK**(화면 확인 5/5 pass) · 프론트 tsc · ⏳ 운영(PR 머지 → Vercel 배포 후 `--allow-sentry` 1회, 7장) |
+| **버그 5건 수정**(+ CSP `worker-src`) — 배열 가드 4파일 + 프로브가 찾은 **네 번째 호출 지점** 1파일 | ✅ 수정 전 **5/5 BROKEN** → 수정 후 **5/5 OK**(화면 확인 5/5 pass) · 프론트 tsc · ✅ **운영**(2026-09-23, main `d370e03` Vercel 배포 후): Sentry 차단 프로브 5/5 OK → `--allow-sentry` 1회 5/5 OK → Sentry 5개 이슈 `count`·`lastSeen` 불변, 프론트 프로젝트에 프로브 시각 이후 새 이슈 0 |
 | DB 변경 **0** · 새 외부 연결 0 · 새 비밀값 0 · 새 의존성 1(`playwright-core`, 루트 devDependency — 브라우저를 내려받지 않고 설치된 Chrome 을 쓴다) | — |
 | B-4 앱에서 "해결됨" 처리 | ⏭ **건너뜀** — Sentry 토큰이 읽기 전용(`event:read`)이라 `event:write` 토큰 발급이 먼저다. Sentry 웹에서 수동 Resolve(7장) |
 
@@ -315,7 +315,7 @@ node node_modules/typescript/bin/tsc --noEmit -p frontend/tsconfig.json
 | (A)3 실기기에서 칩이 보인다 | ⏳ **사용자**: 앱 `.env` 를 LAN IP 로 → Metro `--clear` → **앱 강제 종료 후 재실행**(8편 6-7) → 평가 탭. 대기 카드가 없으면 인시던트 상세에서 분석을 하나 새로 만든다(그 카드엔 메모가 없어도 칩은 붙는다 — relatedFiles 만으로 대조) |
 | (A)4 재채점 | ⏭ 하지 않음(인수인계) |
 | (B)1 수정 전 5건 재현 · 수정 후 0건 — 로컬 | ✅ 0-3 표 |
-| (B)1 운영(수정 후만) | ⏳ PR 머지 → Vercel 배포 → `node scripts/probe/probe.mjs --base https://<vercel> --api https://<vercel>/api --allow-sentry` 1회 → Sentry 에 새 이벤트 0 |
+| (B)1 운영(수정 후만) | ✅ 2026-09-23 — 머지 직후 첫 프로브는 옛 번들이라 5/5 깨짐(콘솔 에러의 변수가 `t`·`x`·`a` 로 축약 = Sentry 제목과 같은 꼴 — 배포 전 신호). Vercel `success` 뒤 차단 프로브 5/5 OK → `--allow-sentry` 1회 5/5 OK → Sentry 이슈 5개 불변·새 이슈 0 |
 | (B)2 PR 에 근거 표 | ✅ `PR_DRAFT.md` |
 | (B)3 Sentry 5건 resolved → 앱 목록에서 사라짐 | ⏳ **사용자**: Sentry 웹에서 7747401267·7747419604·7747420327·7747419820·7747424036 Resolve(토큰이 읽기 전용이라 앱 버튼 없음) |
 | (B)4 앱에서 해결 처리 | ⏭ 건너뜀 — `event:write` 토큰 발급 뒤 별도 |
