@@ -19,7 +19,10 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "dev.ansmoon.opscompanion",
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -51,6 +54,9 @@
         "projectId": "b8880be3-f41f-481e-86b1-fcbc8690a60f"
       }
     },
-    "owner": "ansmoon"
+    "owner": "ansmoon",
+    "updates": {
+      "url": "https://u.expo.dev/b8880be3-f41f-481e-86b1-fcbc8690a60f"
+    }
   }
 }

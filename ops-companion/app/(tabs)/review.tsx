@@ -29,6 +29,7 @@ import { SwipeCard, type SwipeCardHandle } from '../../src/features/review/Swipe
 import { StarRating } from '../../src/features/review/StarRating';
 import { Checklist, GuidancePanel, suggestVerdict } from '../../src/features/review/GuidancePanel';
 import { AnalysisCard } from '../../src/features/analysis/AnalysisCard';
+import { DemoBanner } from '../../src/features/demo/DemoBanner';
 import type { PendingReview, ReviewCheckKey, ReviewChecks, ReviewVerdict } from '../../src/lib/api';
 import { timeAgo } from '../../src/lib/format';
 import { colors, spacing } from '../../src/theme';
@@ -191,6 +192,8 @@ export default function ReviewScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['bottom']}>
+      {/* 데모 계정: 채점은 저장되지만 집계·few-shot 에는 들어가지 않고, 카드는 다음 방문자를 위해 남는다(백엔드 showAll) */}
+      <DemoBanner />
       <View style={styles.header}>
         <Text style={styles.progress}>
           {reviewedCount + 1} / {total}

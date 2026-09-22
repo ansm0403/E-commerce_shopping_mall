@@ -12,10 +12,12 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   AuthUser,
+  demoLogin as demoLoginRequest,
   fetchMe,
   login as loginRequest,
   logout as logoutRequest,
   setSessionExpiredHandler,
+  type LoginResponse,
 } from '../lib/api';
 import { clearTokens, loadTokens, saveTokens } from '../lib/token-storage';
 import { setSentryUser } from '../lib/sentry';
@@ -25,6 +27,8 @@ interface AuthContextValue {
   /** 부팅 중 토큰 복원·검증이 끝나기 전 true. 이 동안 스플래시를 유지한다. */
   isBooting: boolean;
   signIn: (email: string, password: string) => Promise<void>;
+  /** 포트폴리오 방문자용 — 비밀번호 없이 데모 관리자로. 토큰 저장·상태 전환은 signIn 과 같다 */
+  signInDemo: () => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -69,12 +73,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const signIn = useCallback(async (email: string, password: string) => {
-    const result = await loginRequest(email, password);
+  // 로그인 응답을 세션으로 만드는 한 자리 — 일반 로그인과 데모 로그인이 같은 길을 탄다(토큰 저장 → user → Sentry 태그).
+  const adopt = useCallback(async (result: LoginResponse) => {
     await saveTokens({ accessToken: result.accessToken, refreshToken: result.refreshToken });
     setUser(result.user);
     setSentryUser(result.user.id);
   }, []);
+
+  const signIn = useCallback(async (email: string, password: string) => adopt(await loginRequest(email, password)), [adopt]);
+  const signInDemo = useCallback(async () => adopt(await demoLoginRequest()), [adopt]);
 
   const signOut = useCallback(async () => {
     await logoutRequest();
@@ -82,7 +89,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSentryUser(null);
   }, []);
 
-  const value = useMemo(() => ({ user, isBooting, signIn, signOut }), [user, isBooting, signIn, signOut]);
+  const value = useMemo(
+    () => ({ user, isBooting, signIn, signInDemo, signOut }),
+    [user, isBooting, signIn, signInDemo, signOut],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

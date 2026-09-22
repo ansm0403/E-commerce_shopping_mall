@@ -204,7 +204,21 @@ describe('OpsReviewService — 평가 루프(설계 §9 Phase 4 · Phase 7)', ()
       expect(sql).toMatch(/LEFT JOIN ops_incident_notes/);
       // SELECT 목록에 prompt_version 이 없다(블라인드). WHERE 의 "같은 버전 최신 1장" 비교에만 쓰인다
       expect(sql.split('FROM ops_analyses a')[0]).not.toMatch(/prompt_version/);
-      expect(params).toEqual([42, '42', OpsReviewService.PENDING_LIMIT]);
+      expect(params).toEqual([42, OpsReviewService.PENDING_LIMIT]);
+    });
+
+    it('showAll(데모 계정) — 판정 유무 조건 두 개가 빠지고 항상 전체 카드(최신 1장 규칙은 그대로) · 셔플·상한은 같다', async () => {
+      analyses.query.mockResolvedValue([pendingRow()]);
+
+      const items = await service.listPending(42, { showAll: true });
+
+      expect(items).toHaveLength(1);
+      const [sql, params] = analyses.query.mock.calls[0];
+      expect(sql).not.toMatch(/r\.reviewer_id = \$1/);
+      expect(sql).not.toMatch(/r2\.reviewer_id/);
+      expect(sql).toMatch(/a\.id = \(\s*SELECT MAX\(b\.id\) FROM ops_analyses b/);
+      expect(sql).toMatch(/ORDER BY \(n\.id IS NULL\), md5\(/);
+      expect(params).toEqual([42, OpsReviewService.PENDING_LIMIT]);
     });
 
     it('메모가 있으면 note 로 실린다(코드 포함) — 같은 인시던트의 두 팔이 같은 메모를 본다', async () => {
@@ -412,11 +426,29 @@ describe('OpsReviewService — 평가 루프(설계 §9 Phase 4 · Phase 7)', ()
         reviews: 3, approved: 2, rejected: 1, avgRating: 3,
         mine: { verdict: 'rejected', rating: 2, guided: true },
       });
-      expect(reviews.find).toHaveBeenCalledWith({ where: { analysisId: 66 } });
+      expect(reviews.find).toHaveBeenCalledWith({ where: { analysisId: 66 }, relations: { reviewer: true } });
       expect((await service.summarizeReviews(66, 99)).mine).toBeNull();
 
       reviews.find.mockResolvedValue([]);
       expect(await service.summarizeReviews(66, 42)).toEqual({ reviews: 0, approved: 0, rejected: 0, avgRating: null, mine: null });
+    });
+
+    it('summarizeReviews — 데모 계정(reviewer.isDemo)의 판정은 집계에서 빠지고, 요청자가 데모면 mine 에는 남는다', async () => {
+      reviews.find.mockResolvedValue([
+        { reviewerId: 42, verdict: 'approved', rating: 4, guided: true, reviewer: { isDemo: false } },
+        { reviewerId: 900, verdict: 'rejected', rating: 1, guided: true, reviewer: { isDemo: true } },
+      ]);
+      expect(await service.summarizeReviews(66, 900)).toEqual({
+        reviews: 1, approved: 1, rejected: 0, avgRating: 4,
+        mine: { verdict: 'rejected', rating: 1, guided: true },
+      });
+    });
+
+    it('getStats — 데모 계정의 판정은 JOIN 조건에서 빠진다(분석 행은 그대로 센다)', async () => {
+      analyses.query.mockResolvedValue([]);
+      await service.getStats();
+      const [sql] = analyses.query.mock.calls[0];
+      expect(sql).toMatch(/LEFT JOIN ops_reviews r ON r\.analysis_id = a\.id AND NOT EXISTS \(SELECT 1 FROM users u WHERE u\.id = r\.reviewer_id AND u\.is_demo = true\)/);
     });
   });
 
@@ -434,6 +466,8 @@ describe('OpsReviewService — 평가 루프(설계 §9 Phase 4 · Phase 7)', ()
       expect(sql).toMatch(/incident_id <> \$1/);
       expect(sql).toMatch(/ORDER BY MAX\(r\.rating\) DESC NULLS LAST/);
       expect(sql).not.toMatch(/ops_incident_notes/);
+      // 데모 계정(포트폴리오 방문자)이 승인한 분석은 예시 풀에 들어가지 않는다 — 외부인이 few-shot 을 고르면 순환 고리가 오염된다
+      expect(sql).toMatch(/NOT EXISTS \(SELECT 1 FROM users u WHERE u\.id = r\.reviewer_id AND u\.is_demo = true\)/);
       expect(params).toEqual(['7732523858', OpsReviewService.FEW_SHOT_N]);
     });
 

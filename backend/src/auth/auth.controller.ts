@@ -129,6 +129,11 @@ export class AuthController {
     return this.authService.resendVerificationEmail(email, ipAddress);
   }
 
+  /**
+   * 데모 관리자 로그인(비밀번호 없이, DEMO_LOGIN_ENABLED 일 때만). 웹 로그인 화면의 "관리자 페이지 체험하기" 버튼과
+   * RN 운영 앱의 "데모 계정으로 체험하기" 버튼이 같은 경로를 탄다 — 앱은 `X-Client: mobile` 을 붙여 login 과 똑같이
+   * body 로 refreshToken 을 받는다(안 주면 15분 뒤 갱신이 실패해 로그아웃된다). 헤더가 없으면 종전과 100% 같다.
+   */
   @Post('demo-login')
   @HttpCode(200)
   async demoLogin(
@@ -136,15 +141,11 @@ export class AuthController {
     @Ip() ipAddress: string,
     @Headers('user-agent') userAgent?: string,
     @Headers('x-device-id') deviceId?: string,
+    @Headers('x-client') client?: string,
   ) {
     const result = await this.authService.demoLogin({ ipAddress, userAgent, deviceId });
     this.setRefreshCookie(res, result.refreshToken, false);
-    return {
-      accessToken: result.accessToken,
-      expiresIn: result.expiresIn,
-      tokenType: result.tokenType,
-      user: result.user,
-    };
+    return this.buildTokenResponse(result, client);
   }
 
   @Post('login')

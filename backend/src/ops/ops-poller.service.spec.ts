@@ -108,6 +108,17 @@ describe('OpsPollerService', () => {
       expect(sendSpy).not.toHaveBeenCalled();
     });
 
+    it('발송 대상 기기는 활성(disabled_at IS NULL)이면서 데모 계정이 아닌 사용자의 것만 — 외부 방문자의 폰에는 보내지 않는다', async () => {
+      await build();
+      sentry.listIssues.mockResolvedValue([issue()]);
+
+      await service.poll(NOW);
+
+      const [query] = deviceTokens.find.mock.calls[0] as [{ where: { disabledAt: unknown; user: unknown } }];
+      expect(query.where.user).toEqual({ isDemo: false });
+      expect(query.where.disabledAt).toBeDefined();
+    });
+
     it('앱 자신(ops-companion)의 이슈는 제외한다 — 푸시→앱 열기→또 죽는 되먹임 차단', async () => {
       await build();
       sentry.listIssues.mockResolvedValue([issue({ project: { slug: 'ops-companion' } })]);

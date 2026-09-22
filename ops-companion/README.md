@@ -2,7 +2,28 @@
 
 쇼핑몰 백엔드를 재사용하는 관리자용 온콜 앱. 설계는 [docs/roadmap/ops-companion-design.md](../docs/roadmap/ops-companion-design.md) 가 진실의 원천이고, 이 문서는 **실행 방법만** 적는다.
 
-현재 상태: **Phase 1 진행 중** — 로그인, 인시던트 목록, **인시던트 상세**, 프로필은 Expo Go 로 확인했다. 푸시·딥링크는 **개발 빌드**가 있어야 확인할 수 있다(아래). AI 분석·평가는 Phase 3 이후.
+현재 상태: **Phase 0~8 완료**(2026-09-23, 설계 §9). 로그인 · 인시던트 목록/상세 · 푸시/딥링크 · 생체 잠금 · AI 분석(소스 읽기) · 채점(안내·이름 대조 칩)이 운영 백엔드와 붙어 돈다. **외부 방문자는 아래 "설치해서 써 보기"** 로 바로 쓸 수 있다.
+
+## 설치해서 써 보기 (포트폴리오 방문자용)
+
+PC·Metro·Expo 계정 없이, 안드로이드 폰 하나면 된다.
+
+1. 폰에서 설치 링크를 연다 → **https://expo.dev/accounts/ansmoon/projects/ops-companion/builds/9cd9b05b-ade8-4f29-afcd-363b6b7eafaf** (preview 빌드 versionCode 4, 2026-09-23. 같은 페이지의 QR 을 찍어도 된다)
+   - 스토어 밖 APK 라 "출처를 알 수 없는 앱 설치" 를 한 번 허용해야 한다. iOS 는 지원하지 않는다(설계 §9 비목표).
+2. 앱을 열고 로그인 화면의 **"데모 계정으로 체험하기"** 를 누른다. 계정 정보는 앱에도 이 문서에도 없다 — 서버가 켜 둔 데모 로그인(`POST /v1/auth/demo-login`, 웹 로그인 화면의 "관리자 페이지 체험하기" 와 같은 경로)이다.
+3. 보이는 것은 **실제 운영 Sentry 데이터**다(쇼핑몰 프론트·백엔드의 최근 14일 이슈 — 관리자 계정은 24시간). 이메일·전화는 백엔드가 마스킹하고, 요청 헤더·쿠키·IP 는 애초에 내려오지 않는다(설계 §5.2 · §7).
+
+데모 계정으로 되는 것과 꺼진 것(토큰의 `isDemo` 로 **백엔드가** 판단한다 — 앱 화면은 안내일 뿐):
+
+| 장면 | 데모 계정 | 이유 |
+|---|---|---|
+| 인시던트 목록·상세 · 릴리즈 건강 | ✅ (목록은 최근 14일) | 조회 전용. 조용한 날 24시간 목록은 비어 있어 체험이 끝나므로 기간을 늘렸다 |
+| AI 분석 보기 · **아직 분석이 없는 인시던트 분석하기** | ✅ (새 분석은 **시간당 6건**, 방문자 합산) | 이 앱의 핵심 장면. 상한은 무료티어 LLM 쿼터를 외부인이 태우지 못하게 하는 벽(`OPS_ANALYSIS_DEMO_MAX_PER_HOUR`) |
+| "다시 분석"(force) · 강제 실패 | ❌ 403 (버튼도 숨긴다) | 저장된 답을 건너뛰고 LLM 을 다시 부르는 길 |
+| 평가 탭 스와이프 채점 | ✅ 저장되지만 **집계·few-shot 예시에서 제외**, 카드는 다음 방문자를 위해 남는다 | 외부인의 판정이 승인율 표와 다음 프롬프트를 오염시키면 안 된다. 방문자 모두가 한 계정이라 "내가 채점한 카드"를 빼면 두 번째 방문자부터 빈 화면 |
+| 사실 메모 저장(`PUT …/note`) | ❌ 403 (`DemoAccountGuard`) | 모든 카드에 "정답"으로 붙는 공용 데이터. 앱에 편집 화면도 없다 |
+| 푸시 알림 등록 | ❌ 프로필에 "꺼짐 — 데모 계정은 장애 알림을 받지 않습니다" | 외부인의 폰에 운영 장애 푸시가 며칠씩 가면 체험이 아니라 유출. 폴러도 `is_demo` 사용자를 발송에서 뺀다 |
+| Sentry 테스트 에러 · 생체 잠금 | ✅ | 앱 자신의 Sentry 프로젝트(DSN 은 공개값, 같은 에러 60초 1건) · 기기 안에서만 처리 |
 
 ## 처음 한 번
 
@@ -25,7 +46,7 @@ yarn start          # = expo start. 터미널에 QR 코드가 뜬다
 3. 안 붙으면 `yarn start --tunnel` 로 터널 모드를 쓴다(회사·공유기 격리 환경에서 필요).
 
 로그인은 **관리자 권한 계정**으로 한다. 인시던트 목록이 관리자 전용이기 때문이다.
-데모 관리자 계정도 조회는 되지만, 쓰기 동작이 막혀 있어 Phase 1 이후에는 실계정을 쓰는 편이 낫다.
+데모 관리자 계정(또는 "데모 계정으로 체험하기")도 되지만 위 표의 규칙(재분석·메모·푸시 꺼짐)이 적용된다 — 개발 확인은 실계정으로.
 
 > ⚠ 로그인은 IP 당 10회 / 5분 제한이 있다. 비밀번호를 반복해서 틀리면 5분간 잠긴다.
 
@@ -147,6 +168,40 @@ eas build --platform android --profile preview
 - 평가 세트를 한꺼번에 만들거나 승인율을 보려면 `backend/eval/ops-review-set.ts`(`list` / `seed` / `test` / `stats`).
 - 스와이프가 **아예 안 움직이면** 루트 `_layout.tsx` 의 `GestureHandlerRootView` 가 빠진 것이다(에러 없이 조용히 죽는다).
 
+## 방문자용 배포 — preview 빌드와 EAS Update
+
+배포 방식은 다섯 가지가 있고, "PC 없이 설치해서 바로 로그인" 이 되는 것은 둘뿐이다.
+
+| 방식 | 설치 | PC/Metro | 푸시 | 방문자에게 |
+|---|---|---|---|---|
+| Expo Go | 스토어의 범용 앱 | **필요**(QR 로 내 Metro 에 붙는다) | ❌ (SDK 53+) | ✗ — PC 가 켜져 있어야 하고 푸시가 안 된다 |
+| 개발 빌드(`development`) | 우리 APK | **필요**(JS 를 Metro 에서 받는다) | ✅ | ✗ — 앱을 켜면 서버 선택 화면에서 멈춘다 |
+| **preview 빌드**(`preview`) | 우리 APK, **JS 내장** | 불필요 | ✅ | **✓ 선택** — 링크/QR 로 설치, 켜면 바로 로그인 화면. 소스맵도 이 빌드에서 올라간다 |
+| Play 내부 테스트 | Play 콘솔(유료 계정·`.aab`·심사) | 불필요 | ✅ | ✗ — 스토어 배포는 비목표(설계 §9), 테스터 이메일 등록이 필요 |
+| EAS Update | (설치가 아니라) 이미 깔린 앱의 **JS 만 교체** | 불필요 | — | ✓ preview 빌드의 **동반자** — 화면 코드만 고쳤을 때 재설치 없이 반영 |
+
+**preview 빌드 만들기**(클라우드, 10~20분). `autoIncrement` 라 versionCode 가 +1 된다(Sentry 릴리즈 이름의 `+N`).
+
+```bash
+cd ops-companion
+eas build -p android --profile preview          # 끝나면 expo.dev 빌드 페이지에 설치 링크·QR
+eas build:list --platform android --limit 3     # 링크를 다시 보려면
+```
+
+빌드 페이지 링크(`https://expo.dev/accounts/ansmoon/projects/ops-companion/builds/<id>`)가 곧 설치 링크다. **빌드마다 링크가 바뀌므로** 이 README 의 "설치해서 써 보기" 링크를 같이 고친다.
+
+**EAS Update(2026-09-23 도입)** — `expo-updates` + `app.json` 의 `updates.url`·`runtimeVersion(appVersion)` + `eas.json` 의 프로필별 `channel`. 설정은 `eas update:configure` 한 번이었다.
+
+```bash
+cd ops-companion
+eas update --channel preview --message "로그인 문구 수정"   # JS 만 바뀐 경우. 설치된 preview 앱이 다음 실행 때 받는다
+npx sentry-expo-upload-sourcemaps dist                       # (선택) 업데이트 번들의 소스맵을 Sentry 에
+```
+
+규칙: **네이티브가 바뀌면(패키지 추가·`app.json` 플러그인·권한) 빌드**, 화면 코드만 바뀌면 업데이트. `runtimeVersion` 정책이 `appVersion` 이라 네이티브를 바꿀 때는 `app.json` 의 `version` 도 올려야 옛 APK 가 새 JS 를 받지 않는다. 채널이 다르면(`development` 빌드) 업데이트를 받지 않는다.
+
+**데모 로그인을 서버에서 끄려면** 백엔드 `.env` 의 `DEMO_LOGIN_ENABLED=false` — 앱은 버튼을 눌렀을 때 "데모 로그인이 지금은 꺼져 있습니다" 를 보여준다(재빌드 불필요).
+
 ## 로컬 백엔드에 붙이려면
 
 `.env` 의 주소를 PC 의 LAN IP 로 바꾼다. 실기기에서 `localhost` 는 **기기 자신**을 가리키므로 쓸 수 없다.
@@ -157,6 +212,8 @@ EXPO_PUBLIC_API_BASE_URL=http://192.168.0.10:4000/v1
 
 안드로이드는 기본적으로 평문 HTTP 를 막는다. Expo Go 개발 중에는 열려 있지만, 실제 빌드에서는 HTTPS(운영 주소)를 쓴다.
 
+⚠ 로컬 DB 의 관리자가 데모 계정(`demo-admin@…`, `is_demo=true`)이면 위 표의 데모 규칙이 그대로 적용된다 — 다시 분석·메모 PUT 이 403, 목록이 14일, 푸시 등록이 꺼진다. 관리자 경로를 확인하려면 비데모 관리자를 하나 만든다(웹에서 가입 → `INSERT INTO user_roles(user_id, role_id) SELECT u.id, r.id FROM users u, roles r WHERE u.email='<가입 이메일>' AND r.name='admin'`). 백엔드 e2e 가 만드는 `e2e-mobile-ops-admin@test.local` 도 같은 방식이다.
+
 ## 명령
 
 | 명령 | 용도 |
@@ -166,6 +223,8 @@ EXPO_PUBLIC_API_BASE_URL=http://192.168.0.10:4000/v1
 | `yarn typecheck` | 타입 검사 |
 | `npx expo-doctor` | 설정·버전 호환 점검 |
 | `eas build -p android --profile development` | 개발 빌드(푸시 확인용 APK) |
+| `eas build -p android --profile preview` | **방문자 배포용** APK(JS 내장, 소스맵 업로드, versionCode +1) |
+| `eas update --channel preview --message "…"` | 설치된 preview 앱의 JS 만 교체(EAS Update) |
 | `npx expo export --platform android` | 기기 없이 번들이 되는지만 확인 |
 
 ## 구조
@@ -173,7 +232,7 @@ EXPO_PUBLIC_API_BASE_URL=http://192.168.0.10:4000/v1
 ```
 app/                     # Expo Router — 파일 경로가 곧 화면 경로
 ├── _layout.tsx          # Provider + user 유무에 따른 렌더 분기
-├── (auth)/login.tsx     # S1 로그인
+├── (auth)/login.tsx     # S1 로그인 (+ "데모 계정으로 체험하기" — 방문자 경로)
 └── (tabs)/
     ├── incidents/_layout.tsx # 목록 → 상세 스택(anchor=index)
     ├── incidents/index.tsx   # S2 인시던트 목록
@@ -191,6 +250,7 @@ src/
 ├── contexts/AuthContext.tsx
 ├── features/incidents/queries.ts
 ├── features/analysis/   # 분석 쿼리(useAnalysis·useReanalyze) + 카드·fallback 컴포넌트
+├── features/demo/       # 데모 계정 배너(useIsDemo) — 목록·평가·프로필 화면 위 한 줄. 권한은 백엔드가 정한다
 └── features/review/     # 평가 쿼리(낙관적 업데이트) + SwipeCard(gesture-handler·reanimated) + StarRating
 ```
 

@@ -29,7 +29,8 @@
 
 | 파일 | 제목 | 성격 | 마지막 갱신 |
 |---|---|---|---|
-| [infra-story](./infra-story.md) | 인프라 이야기 — 우리 앱은 누구와 어떻게 일하는가 | **계속 고쳐 쓰는 문서** | 2026-09-22 (Phase 6 — Vercel → Sentry 소스맵 선, 업로드 토큰 1) |
+| [infra-story](./infra-story.md) | 인프라 이야기 — 우리 앱은 누구와 어떻게 일하는가 | **계속 고쳐 쓰는 문서** | 2026-09-23 (외부 배포 — EAS Update 채널, preview = 방문자 배포) |
+| [appendix-public-demo](./appendix-public-demo.md) | 부록: 외부 배포 — 포트폴리오 방문자가 설치해 써 보게 (preview APK · 데모 계정 · 무엇을 막고 무엇을 열었나) | 기록(2026-09-23, 브랜치 `feat/ops-public-demo`) | 2026-09-23 |
 
 편 번호가 붙은 노트와 성격이 다르다.
 

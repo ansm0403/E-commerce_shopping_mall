@@ -14,7 +14,8 @@
       },
       "env": {
         "EXPO_PUBLIC_API_BASE_URL": "https://api.ansmoon.dev/v1"
-      }
+      },
+      "channel": "development"
     },
     "preview": {
       "environment": "preview",
@@ -26,7 +27,8 @@
       "env": {
         "EXPO_PUBLIC_API_BASE_URL": "https://api.ansmoon.dev/v1",
         "EXPO_PUBLIC_SENTRY_DSN": "https://fe3c075d325b7240ff9cd46764aaa902@o4511557963087872.ingest.us.sentry.io/4512113584111616"
-      }
+      },
+      "channel": "preview"
     },
     "production": {
       "environment": "production",
@@ -37,7 +39,8 @@
       "env": {
         "EXPO_PUBLIC_API_BASE_URL": "https://api.ansmoon.dev/v1",
         "EXPO_PUBLIC_SENTRY_DSN": "https://fe3c075d325b7240ff9cd46764aaa902@o4511557963087872.ingest.us.sentry.io/4512113584111616"
-      }
+      },
+      "channel": "production"
     }
   },
   "submit": {

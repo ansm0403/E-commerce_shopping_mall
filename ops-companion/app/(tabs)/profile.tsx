@@ -14,6 +14,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { usePush } from '../../src/features/push/PushContext';
 import { BiometricToggle } from '../../src/features/security/BiometricToggle';
+import { DemoBanner } from '../../src/features/demo/DemoBanner';
 import { describeRegistration } from '../../src/lib/notifications';
 import { API_BASE_URL, APP_VERSION } from '../../src/lib/config';
 import { isSentryActive, sendSentryTestError } from '../../src/lib/sentry';
@@ -69,6 +70,7 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={['bottom']}>
       <ScrollView contentContainerStyle={styles.content}>
+      <DemoBanner />
       <View style={styles.card}>
         <Field label="계정" value={user?.email ?? '-'} />
         <Field label="닉네임" value={user?.nickName ?? '-'} />

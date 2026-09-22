@@ -254,10 +254,12 @@ sequenceDiagram
 | 프로필 | ②(JS)의 위치 | 런처 | 소스맵 업로드 | versionCode | 쓰임 |
 |---|---|---|---|---|---|
 | `development` | PC 의 Metro 에서 받아옴 | 있음 | ❌ | 고정 | 평소 개발. 코드 수정이 즉시 반영된다 |
-| `preview` | **APK 안에 내장** | 없음 | ✅ | **+1씩 증가** | 진짜 앱처럼 동작. PC 없이 돈다. 데모 영상용 |
+| `preview` | **APK 안에 내장** | 없음 | ✅ | **+1씩 증가** | 진짜 앱처럼 동작. PC 없이 돈다. **포트폴리오 방문자 배포**(설치 링크·QR + 로그인 화면의 데모 계정 버튼, 2026-09-23) |
 | `production` | APK 안에 내장 | 없음 | ✅ | **+1씩 증가** | 스토어 제출용(`.aab`). v1 범위 밖 |
 
 `preview`·`production` 은 `.env` 가 아니라 `eas.json` 의 `env` 를 본다. 우리는 거기에 운영 주소(`https://api.ansmoon.dev/v1`)를 박아 뒀다.
+
+**EAS Update(2026-09-23 도입)** — 프로필마다 `channel` 이 하나씩 붙었다(`development`·`preview`·`production`). 설치된 앱은 자기 채널에 올라온 **JS 번들(②)** 을 다음 실행 때 내려받아 갈아 끼운다. 그래서 화면 코드만 고쳤을 때는 재빌드·재설치 없이 `eas update --channel preview` 로 방문자의 폰에 닿는다. ①(네이티브)이 바뀌면 여전히 빌드다 — `runtimeVersion` 정책이 `appVersion` 이라 `app.json` 의 `version` 이 같은 APK 끼리만 업데이트를 나눠 받는다. 새 비밀값은 없다(업데이트 서버는 expo.dev, 로그인 상태의 CLI 가 올린다).
 
 > **개발 빌드로는 "앱이 꺼져 있어도" 를 정직하게 시험할 수 없다.** 앱이 죽었다 켜질 때 PC 의 Metro 에서 ②를 다시 받아야 하기 때문이다. PC 가 꺼져 있으면 런처에서 멈춘다. 그 장면은 preview 빌드의 몫이다.
 
@@ -719,8 +721,8 @@ Sentry 프로젝트는 셋이다: `e-commerse-frontend`, `e-commerse-backend`, `
 | Phase | 더해질 인프라·연결 | 이 문서에서 고칠 곳 |
 |---|---|---|
 | 미정 | **LLM 을 Claude 로 전환** — 백엔드 `LLM_PROVIDER` 한 줄. 키가 하나 바뀐다 | 3-4 · 5장 |
-| 미정 | **preview/운영 빌드 배포** — 내부 배포 링크 또는 스토어 | 2-4 |
-| 미정 | **EAS Update**(설치 없이 JS 만 원격 교체하는 Expo 서비스) — 쓸지 아직 정하지 않았다 | 1장 |
+| ~~미정~~ ✅ 2026-09-23 | ~~**preview/운영 빌드 배포**~~ → preview 내부 배포 링크로 방문자 배포(스토어는 비목표 그대로) | 2-4 |
+| ~~미정~~ ✅ 2026-09-23 | ~~**EAS Update**~~ → 도입(채널 `preview`). 화면 코드만 바뀌면 재설치 없이 반영 | 2-4 |
 
 <br>
 
@@ -743,6 +745,7 @@ Sentry 프로젝트는 셋이다: `e-commerse-frontend`, `e-commerse-backend`, `
 | **DSN** | Sentry 로 에러를 **보낼** 주소. 쓰기 전용이라 공개돼도 된다 (4-6) |
 | **EAS** | Expo Application Services. 빌드(EAS Build)·자격증명 보관 등 Expo 의 클라우드 서비스 묶음 (2-1) |
 | **EAS 환경 변수** | expo.dev 에 저장해 빌드 때만 쓰는 값. `secret` 으로 두면 로그·UI 어디에도 안 보인다 (2-6) |
+| **EAS Update / 채널** | 설치된 앱의 JS 번들만 원격으로 교체하는 Expo 서비스. 빌드 프로필마다 채널이 있고, 앱은 자기 채널의 최신 번들을 다음 실행 때 받는다. 네이티브가 바뀌면 소용없다(`runtimeVersion`) (2-4) |
 | **EC2** | AWS 의 가상 서버. 우리 백엔드·DB·Redis·nginx 가 돈다 (3-2) |
 | **Expo** | React Native 위에 얹는 도구·서비스 묶음 (1-3) |
 | **Expo Go** | Expo 가 스토어에 올려 둔 범용 껍데기 앱. 설치 없이 내 JS 를 돌려 볼 수 있다 (1-3) |
@@ -798,4 +801,5 @@ Sentry 프로젝트는 셋이다: `e-commerse-frontend`, `e-commerse-backend`, `
 | 2026-09-22 | `454fae0` | Phase 4. **3-4 에 평가 루프 문단**(스와이프 → `ops_reviews` → few-shot → `v2`, 블라인드) · 4-5 표에 `ops_analyses`·`ops_reviews` 두 줄(표 다섯) · 용어 3개(프롬프트 버전 정의 갱신·few-shot·블라인드 평가) · 8장에서 Phase 4 행 제거, 소스 코드 읽기(tool use) 행 추가. 인프라·비밀값·의존성 표는 변화 없음(새 서비스 0·새 키 0) |
 | 2026-09-22 | `d15027d` | Phase 5. **GitHub 노드와 선**(0-1 지도) · **3-4 에 tool use 문단 + 시퀀스의 도구 loop**(read_source · 폴더 허용 목록 · 커밋 기준 읽기 · `--enable-source-maps`) · 5장에 "GitHub — 비밀값 없음" 행 · 6장에 GitHub 행(죽어도 분석은 코드 없이 끝난다) · 7장에 소스 읽기·번들 좌표 복원 결정 2행 + GitHub 상한 · 용어 3개(tool use · `--enable-source-maps` · 릴리즈 정의 갱신) · 8장에서 소스 읽기 행 제거. 새 서비스 1(GitHub, 무인증) · 새 키 0 |
 | 2026-09-22 | (Phase 6, 브랜치) | Phase 6. **Vercel → Sentry 소스맵 업로드 선**(0-1 지도) · 3-4 ③ 문단(프론트도 소스맵 — 서버 방식이 불가능한 이유 · 프로젝트 힌트) · 5장에 Vercel 업로드 토큰 행(새 비밀값 1, expo.dev 것과 별개) · 6장에 Vercel 토큰 만료 행(빌드는 성공하니 눈치채기 어렵다) · 용어 1개(아티팩트 번들). 새 서비스 0 · 새 키 1 |
+| 2026-09-23 | (외부 배포, 브랜치 `feat/ops-public-demo`) | 외부 배포. **2-4 에 EAS Update 문단**(채널·runtimeVersion) + preview 행을 "방문자 배포"로 · 8장의 preview 배포·EAS Update 두 행 ✅ · 용어 1개(EAS Update/채널). 인프라 노드는 늘지 않았다(expo.dev 가 업데이트도 나른다) · **새 비밀값 0**(5장 변화 없음 — 데모 계정 비밀번호는 원래 백엔드 `.env` 에 있던 값). 데모 계정의 경계는 [부록: 외부 배포](./appendix-public-demo.md) |
 | 2026-09-21 | `4ead4ca` | Phase 2 종료. **expo.dev → Sentry 소스맵 업로드 선 추가**(0-1 지도 · 2장 흐름 · 2-6 신설) · **versionCode/릴리즈**(2-7 신설) · 빌드 프로필 표에 소스맵·versionCode 열 · **Release Health** 를 역할 A·B 순환으로(4-6) · **생체 잠금은 인프라를 늘리지 않는다**(3-3) · 비밀값 지도에 업로드 토큰·지문 정보 2줄 + "앱에 비밀을 두지 않는다"의 정확한 뜻 · 의존성 표에 업로드 토큰 만료 · 용어 8개 추가. sessions 조회에서 프로젝트·집계 단위를 빠뜨리면 틀린 답이 오는 것(4-6) |

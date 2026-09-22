@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   HttpException,
   HttpStatus,
   Inject,
@@ -160,7 +161,15 @@ export class OpsAnalysisService {
     },
   };
 
+  /**
+   * 데모 계정(포트폴리오 방문자)이 **새로** 만들 수 있는 분석 수(시간당, 모든 방문자 합산). 캐시된 행을 보는 것은 무제한이다.
+   * 분당 LLM 상한(위)은 서버 전체의 벽이고, 이것은 "외부인이 한 시간 동안 무료티어 일일 쿼터를 태우는" 일을 막는 벽이다.
+   */
+  static readonly DEFAULT_DEMO_MAX_PER_HOUR = 6;
+  static readonly DEMO_RATE_KEY = 'ops:analysis:demo';
+
   private readonly maxLlmPerMinute: number;
+  private readonly demoMaxPerHour: number;
   private readonly allowSimulation: boolean;
   /** 서비스 지도를 기본으로 넣는가(OPS_ANALYSIS_SERVICE_MAP, 기본 true). body serviceMap 이 우선한다 */
   private readonly serviceMapDefault: boolean;
@@ -184,6 +193,9 @@ export class OpsAnalysisService {
         `OPS_ANALYSIS_MAX_PER_MIN 은 더 이상 쓰지 않는다 — OPS_ANALYSIS_MAX_LLM_PER_MIN(분당 LLM 호출 수, 현재 ${this.maxLlmPerMinute})로 바꿔라.`,
       );
     }
+    this.demoMaxPerHour = Number(
+      config.get<string>('OPS_ANALYSIS_DEMO_MAX_PER_HOUR') ?? OpsAnalysisService.DEFAULT_DEMO_MAX_PER_HOUR,
+    );
     // 강제 실패 스위치는 운영에서 절대 켜지지 않는다. 운영 DB 에 가짜 실패 행이 쌓이면 Phase 4 통계가 오염된다.
     this.allowSimulation = (config.get<string>('NODE_ENV') ?? 'development') !== 'production';
     this.serviceMapDefault = (config.get<string>('OPS_ANALYSIS_SERVICE_MAP') ?? 'true') !== 'false';
@@ -200,11 +212,21 @@ export class OpsAnalysisService {
    *    parse_failed 도 그대로 준다. 화면을 다시 열 때마다 몰래 재시도해 쿼터를 태우지 않기 위해서다.
    *    다시 분석하는 것은 사용자가 버튼을 눌러 force 로 요청할 때뿐이다.
    *  - 분당 상한 초과 → 429, 같은 인시던트가 이미 분석 중 → 409
+   *  - 데모 계정(actor.isDemo — 포트폴리오 방문자): 저장된 분석은 그대로 보고, 아직 없는 인시던트는 **새로 만들 수 있되**
+   *    시간당 상한(DEMO_MAX_PER_HOUR)이 따로 있다. `force`(다시 분석)·`simulate` 는 403 — 캐시를 건너뛰어 쿼터를 태우는 길이라서다.
+   *    DemoAccountGuard 로 통째로 막지 않는 이유: 이 앱의 핵심 장면이 AI 분석이고, 처음 열린 인시던트에서 403 이 나오면 체험이 끝난다.
    */
   async analyze(
     incidentId: string,
     dto: CreateAnalysisDto = {},
+    actor: { isDemo?: boolean } = {},
   ): Promise<{ item: AnalysisResponse; cached: boolean }> {
+    const demo = actor.isDemo === true;
+    if (demo && (dto.force || dto.simulate)) {
+      // LLM 키·Sentry 확인보다 앞에 둔다 — 키가 없는 서버에서도 같은 답(403)이라 e2e 가 결정적이다.
+      throw new ForbiddenException('데모 계정에서는 다시 분석할 수 없습니다. 저장된 분석만 볼 수 있습니다.');
+    }
+
     if (!this.isEnabled()) {
       throw new ServiceUnavailableException('AI 분석이 설정되지 않았습니다 (LLM API 키 없음).');
     }
@@ -219,6 +241,17 @@ export class OpsAnalysisService {
         order: { createdAt: 'DESC' },
       });
       if (latest) return { item: OpsAnalysisService.toResponse(latest), cached: true };
+    }
+
+    if (demo) {
+      // 방문자 전체가 한 창구를 나눠 쓴다(키가 사용자별이 아니다) — 목적이 "외부인이 쿼터를 태우지 못하게"라서 합산이 맞다.
+      const allowed = await this.redisService.checkRateLimit(OpsAnalysisService.DEMO_RATE_KEY, this.demoMaxPerHour, 3600);
+      if (!allowed) {
+        throw new HttpException(
+          `데모 계정의 새 분석은 시간당 ${this.demoMaxPerHour}건까지입니다. 이미 분석된 인시던트는 계속 볼 수 있습니다.`,
+          HttpStatus.TOO_MANY_REQUESTS,
+        );
+      }
     }
 
     if (dto.simulate === 'parse_failed' && this.allowSimulation) {

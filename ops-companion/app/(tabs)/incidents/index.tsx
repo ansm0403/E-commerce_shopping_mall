@@ -17,6 +17,7 @@ import { useRouter } from 'expo-router';
 import { useIncidents } from '../../../src/features/incidents/queries';
 import { ReleaseHealthCard } from '../../../src/features/observability/ReleaseHealthCard';
 import { useReleaseHealth } from '../../../src/features/observability/queries';
+import { DEMO_PERIOD_LABEL, DemoBanner, useIsDemo } from '../../../src/features/demo/DemoBanner';
 import type { IncidentSummary } from '../../../src/lib/api';
 import { timeAgo } from '../../../src/lib/format';
 import { colors, levelColor, spacing } from '../../../src/theme';
@@ -54,6 +55,8 @@ function IncidentRow({ item }: { item: IncidentSummary }) {
 
 export default function IncidentListScreen() {
   const { data, isPending, isError, error, refetch, isRefetching } = useIncidents();
+  // 데모 계정은 백엔드가 24h 가 아니라 14d 를 준다(조용한 날 빈 화면 방지) — 라벨을 맞춘다
+  const periodLabel = useIsDemo() ? DEMO_PERIOD_LABEL : '최근 24시간';
   // 아래로 당기면 요약 카드도 같이 새로고침한다. 목록만 갱신되고 카드가 옛 수치로 남으면
   // 같은 화면 안에서 두 숫자가 서로 다른 시점을 가리킨다.
   const { refetch: refetchHealth } = useReleaseHealth();
@@ -104,16 +107,20 @@ export default function IncidentListScreen() {
         }
         ListHeaderComponent={
           <>
+            {/* 데모 계정이면 "지금 보는 것이 무엇인지" 한 줄(2026-09-23 외부 배포). 아니면 null */}
+            <DemoBanner />
             <ReleaseHealthCard />
             {data.length > 0 ? (
-              <Text style={styles.listHeader}>최근 24시간 · {data.length}건</Text>
+              <Text style={styles.listHeader}>{periodLabel} · {data.length}건</Text>
             ) : null}
           </>
         }
         ListEmptyComponent={
           <View style={styles.centered}>
             <Text style={styles.stateTitle}>조용합니다</Text>
-            <Text style={styles.stateBody}>최근 24시간 동안 기록된 인시던트가 없습니다.</Text>
+            <Text style={styles.stateBody}>
+              {periodLabel} 동안 기록된 인시던트가 없습니다.{'\n'}평가 탭에서 지난 인시던트의 AI 분석은 볼 수 있습니다.
+            </Text>
           </View>
         }
       />
