@@ -993,7 +993,7 @@ seed 첫 실측(2026-09-22, analysis #14, flash-lite 3.4초): CORS 이슈에 대
   - **B. 고리 닫기**: 앱이 찾고 사람이 승인한 프론트 버그 5건(배열 가드) + CSP `worker-src` 수정 → 저장소에 남기는 프로브로 **수정 전 재현 → 수정 후 0건**(로컬, 운영은 수정 후만) → PR 에 "이슈 → 승인된 분석 → 수정" 표. 선택: 앱에서 해결 처리(`POST /ops/incidents/:id/resolve` → Sentry 이슈 resolved) — 현재 토큰이 읽기 전용이라 사용자가 `event:write` 토큰을 발급해야 가능. 재발하면 기존 폴러가 다시 푸시(재발 감시).
 - 인수인계: `docs/roadmap/_next-session-phase8.md`(Phase 종료 후 삭제 — 내용은 아래 진행표와 9편으로).
 
-**진행(2026-09-23) — ✅ 구현·검증 완료, main `d370e03` = PR #41(squash) · 프론트 운영 반영(Vercel) + 운영 프로브 통과 · 백엔드 EC2 배포·실기기 확인 대기. DB 변경 0**
+**진행(2026-09-23) — ✅ Phase 8 종료: main `d370e03` = PR #41(squash) · 프론트(Vercel)·백엔드(EC2 `d370e03`) 운영 배포 + 운영 프로브 통과. DB 변경 0. 남은 것 = Sentry 5건 수동 Resolve · 실기기 칩 확인(사용자)**
 
 | 단계 | 내용 | 상태 |
 |---|---|---|
@@ -1007,6 +1007,7 @@ seed 첫 실측(2026-09-22, analysis #14, flash-lite 3.4초): CORS 이슈에 대
 | B-③ 전/후 | 로컬 **수정 전 5/5 BROKEN**(`nodes is not iterable` · `null (reading 'id')` · `products.map` · `images.find` · `response.filter`) → 가드 4파일 → **2건 그대로 BROKEN, hits 3 → 4** → **네 번째 호출 지점 `CategoryTabSection.tsx`**(같은 응답·같은 `products.map`, 첫 크래시가 가려 Sentry 스택·메모·AI 분석 어디에도 없었다) 수정 → **5/5 OK, 화면 확인 5/5** · 프론트 tsc | ✅ 로컬 · ✅ **운영(2026-09-23)**: 머지 직후 프로브는 옛 번들(5/5 깨짐, 축약 변수 이름) → Vercel `success` 후 차단 프로브 5/5 OK → `--allow-sentry` 1회 5/5 OK → Sentry 이슈 5개 `count`·`lastSeen` 불변, 프론트 프로젝트 새 이슈 0 |
 | B-④ 해결 처리 | Sentry 토큰이 읽기 전용(`event:read`) → **건너뜀**. Sentry 웹에서 수동 Resolve 5건(사용자) | ⏭ |
 | 문서 | 9편 `09-closing-the-loop.md` · README 목차 · CLAUDE.md §5 · PROJECT_CARD 차별점 카드 · 이 절 · `_next-session-phase8.md` 삭제 | ✅ |
+| 운영 배포 | PR #41 → main `d370e03`(squash) → Vercel 자동(`Vercel:success`) → 운영 프로브(위) → 로컬 이미지 빌드(⚠ 첫 시도는 C 드라이브 100% + 세션 종료로 끊기고 Docker 엔진이 500 만 돌려줌 → Docker Desktop **프로세스를 PowerShell `Stop-Process` 로 전부 죽인 뒤** 재실행. Git Bash `taskkill` 은 원본 백엔드 프로세스를 못 죽여 UI 창만 새로 열렸다) → `docker push` 2태그(**사용자** — auto-mode 가 공개 표면 생성으로 차단) → EC2 `pull` → `up -d`(healthy) → `nginx -t && reload` → health **`d370e03`** · `/ops/analyses/pending`·`/ops/incidents` 401 · `/products`·`/categories` 200 · Vercel 프록시 200 · 부팅 로그 에러 0 · 컨테이너 `APP_VERSION=d370e03` | ✅ 2026-09-23 · ⏳ 실기기에서 평가 탭 칩 확인(사용자) |
 
 - 결정(추천 1개로 진행, 사용자 위임 원칙): ① 조치가 선언한 이름은 대조하지 않는다(자기 완결적 — `callback` 을 잡으려면 규칙을 깨야 하고 `(product) =>` 류가 전부 거짓 양성이 된다) ② 소스 쪽은 주석을 벗긴다(`FRONTEND_URL` 이 주석에만 있었다) — 문자열은 남긴다 ③ 라이브러리 꼴은 `maybeLibrary` 로 분리(카드가 약하게 표시) ④ 대조 파일은 인시던트 단위 합집합 + 이름 0 인 카드도 같은 목록(파일 수가 팔을 드러내지 않게) ⑤ 이름 0 이면 파일을 읽지 않는다(e2e·산문 조치가 GitHub 를 부르지 않게) ⑥ `playwright-core` 를 루트 devDependency 로(브라우저 미다운로드, CI 부담 없음).
 - 밟은 함정(9편 6장): 소스 주석의 `FRONTEND_URL` · 첫 크래시가 가린 네 번째 호출 지점 · 화살표 반환 타입 정규식이 줄을 넘어 다음 `=>` 를 삼킴 · 병렬 Bash 호출의 cwd 공유로 `yarn add` 가 `backend/package.json` 에 들어감 · `.bin/jest` 는 셸 스크립트.

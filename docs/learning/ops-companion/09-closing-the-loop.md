@@ -317,6 +317,7 @@ node node_modules/typescript/bin/tsc --noEmit -p frontend/tsconfig.json
 | (B)1 수정 전 5건 재현 · 수정 후 0건 — 로컬 | ✅ 0-3 표 |
 | (B)1 운영(수정 후만) | ✅ 2026-09-23 — 머지 직후 첫 프로브는 옛 번들이라 5/5 깨짐(콘솔 에러의 변수가 `t`·`x`·`a` 로 축약 = Sentry 제목과 같은 꼴 — 배포 전 신호). Vercel `success` 뒤 차단 프로브 5/5 OK → `--allow-sentry` 1회 5/5 OK → Sentry 이슈 5개 불변·새 이슈 0 |
 | (B)2 PR 에 근거 표 | ✅ `PR_DRAFT.md` |
+| 백엔드 운영 배포(칩이 운영 카드에 붙으려면) | ✅ 2026-09-23 — 이미지 `d370e03` 로컬 빌드(Docker 엔진 500 → PowerShell `Stop-Process` 로 전부 죽이고 재실행해야 살아났다) → push(사용자) → EC2 pull·up·nginx reload → health `d370e03` · 새 라우트 401 · 부팅 로그 에러 0 |
 | (B)3 Sentry 5건 resolved → 앱 목록에서 사라짐 | ⏳ **사용자**: Sentry 웹에서 7747401267·7747419604·7747420327·7747419820·7747424036 Resolve(토큰이 읽기 전용이라 앱 버튼 없음) |
 | (B)4 앱에서 해결 처리 | ⏭ 건너뜀 — `event:write` 토큰 발급 뒤 별도 |
 
