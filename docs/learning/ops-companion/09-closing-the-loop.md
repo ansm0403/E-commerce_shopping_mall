@@ -352,6 +352,8 @@ node node_modules/typescript/bin/tsc --noEmit -p frontend/tsconfig.json
 
 **검증.** ops 단위 216(+3: `identifierCheckFor` 입력·parse_failed·`summarizeReviews` 집계/mine) · e2e E·F 8건(`ANALYSIS_KEYS` +4, parse_failed 행은 `identifierCheck null`·`reviewSummary` 0) · 양쪽 tsc · 실 API: CORS #67 → 메모 `main.ts:51-72@00107b7` · 칩 라이브러리 꼴 `ForbiddenException` · 채점 승인 2/별점 4.5/내 판정 승인(안내) · 카테고리 #55 → 메모·칩 ✓ 1개·승인 2/별점 5.
 
+**운영 반영.** 이미지 `830a33b` → push(사용자) → EC2 pull·up·nginx reload → health `830a33b`, 부팅 로그 에러 0, `POST /ops/incidents/:id/analysis` 401(살아 있음). 앱은 JS 만 바뀌어 재설치 없이 Metro `--clear` 로 받는다.
+
 **밟은 함정.** 세션이 끊길 때 살아남은 옛 로컬 백엔드(02:47 시작)가 4000 을 쥐고 있어 새 번들이 EADDRINUSE 로 죽었고, e2e 가 옛 키 목록을 받았다. 8편 6-2 의 "nx serve 재시작 함정"과 같은 부류 — `netstat -ano | grep :4000` 으로 PID 의 시작 시각과 `dist/main.js` mtime 을 비교하면 바로 보인다. 그리고 이 편을 쓰다 또 하나: 백틱이 든 문장을 `node -e "…"` 큰따옴표 안에 넣으면 셸이 명령 치환한다 — 문서·메모리 갱신은 따옴표 heredoc 으로 파일에 쓴 뒤 붙인다(6-4 와 같은 뿌리).
 
 ## 8장. 다음
