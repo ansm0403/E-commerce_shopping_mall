@@ -22,7 +22,7 @@ export class NoteCodeDto {
   /** 읽을 커밋 SHA(7~40자) 또는 브랜치 이름. 생략하면 리더의 기본 브랜치(main) */
   @IsOptional()
   @IsString()
-  @Matches(/^[A-Za-z0-9._\/-]{1,40}$/)
+  @Matches(/^[A-Za-z0-9._/-]{1,40}$/)
   ref?: string;
 }
 
