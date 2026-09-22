@@ -80,4 +80,15 @@ export class OpsAnalysisEntity extends BaseModel {
    */
   @Column({ name: 'tool_calls', type: 'jsonb', nullable: true })
   toolCalls: ToolCallRecord[] | null;
+
+  // ── Phase 7 (채점 안내) ──
+
+  /**
+   * 분석 시점의 Sentry 프로젝트 slug(e-commerse-frontend 등). 옛 행은 null.
+   * 평가 대기 응답이 relatedFiles 를 저장소 경로로 **정규화**할 때의 힌트다 — v3.1 은 `frontend/src/…`(읽은 경로), v1.1 은
+   * `./src/…`(프레임 문자열 그대로)라 꼴만 보고도 팔을 짐작할 수 있었다(인수인계 함정 2). normalizeFramePath 가 폴더 이름 없는
+   * 프론트 경로에 `frontend/` 를 붙이려면 프로젝트를 알아야 한다. 옛 행은 같은 인시던트의 메모(ops_incident_notes.project)로 대신한다.
+   */
+  @Column({ type: 'varchar', length: 80, nullable: true })
+  project: string | null;
 }

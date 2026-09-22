@@ -328,9 +328,10 @@ RootNavigator (AuthContext의 user 유무로 분기)
 | `POST /v1/ops/devices` | 기기 Expo push token 등록 — ✅ **구현 완료(2026-09-20)**: `(userId, 토큰)` upsert + Expo 토큰 정규식 검증. `DemoAccountGuard` 는 걸지 않는다(저장되는 것이 본인 기기 주소뿐이고, 막으면 데모 로그인으로 앱이 못 돈다) | 1 |
 | ~~`POST /v1/ops/webhooks/sentry`~~ | ~~Sentry webhook 수신~~ → **폐기(2026-09-16)**. §3.3 의 폴링 스케줄러로 대체 | 1 |
 | `POST /v1/ops/incidents/:id/analysis` | AI 분석 생성(또는 캐시된 분석 반환) — ✅ **구현 완료(2026-09-21)**: `ops-analysis.service.ts`. `getIncident` 재사용 → 프롬프트 조립(`scrubText`) → `LlmClient.generate` → `parseAnalysis` 검증, 위반 시 사유를 실어 **1회 교정 재시도** → `ops_analyses` 저장. body 없이 부르면 최근 행(상태 무관, `X-Cache: HIT`), `{force:true}` 면 재분석, `{simulate:'parse_failed'}` 는 **비운영 전용** 강제 실패. LLM 키 없음 503 · 분당 상한(`OPS_ANALYSIS_MAX_PER_MIN`, 기본 5) 초과 429 · 같은 이슈 동시 409. 실제 LLM 호출은 단위 테스트 15건이 모킹으로 고정, e2e 는 시뮬레이션 경로만. **Phase 5(2026-09-22)**: `read_source` 도구(`source-reader.service.ts`, GitHub raw + Redis 캐시, 폴더 허용 목록·80줄·3회) → `generateWithTools` → 교정 재시도는 도구 없이. 응답에 `toolCalls`(읽은 파일 기록). body `readSource:false` 가 도구 없는 팔. 상한은 `OPS_ANALYSIS_MAX_LLM_PER_MIN`(분당 LLM 호출 수, 기본 12) 예약형으로 교체 | 3 · 5 |
-| `GET /v1/ops/analyses/pending` | 평가 대기 중인 분석 목록 — ✅ **구현(2026-09-22, `ops-review.service.ts`)**: 이 평가자가 아직 채점하지 않은 `status=ok`·비시뮬레이션 행. **promptVersion 을 응답에서 뺀다**(블라인드). 순서는 `md5(id:reviewerId)` — 평가자별 고정 뒤섞기(시간순이면 v1·v2 가 번갈아 나와 패턴이 읽히고, 난수면 새로고침마다 재배열). 상한 50 | 4 |
-| `POST /v1/ops/analyses/:id/review` | 평가 저장 (verdict, rating) — ✅ **구현(2026-09-22)**: `{verdict, rating?, comment?}` → `ops_reviews` **upsert**(같은 평가자 재평가는 통째로 덮어씀, `X-Review: CREATED|UPDATED`). parse_failed·simulated 행 400, 없는 분석 404 | 4 |
-| `GET /v1/ops/analyses/stats` | (설계에 없던 추가) promptVersion 별 분석 수·구조화 실패율·승인율·평균 별점 — DoD 의 숫자가 나오는 경로. 앱 화면은 없다(채점 중에 보면 블라인드가 깨진다). `model='simulated'` 제외 | 4 |
+| `GET /v1/ops/analyses/pending` | 평가 대기 중인 분석 목록 — ✅ **구현(2026-09-22, `ops-review.service.ts`)**: 이 평가자가 아직 채점하지 않은 `status=ok`·비시뮬레이션 행. **promptVersion 을 응답에서 뺀다**(블라인드). 순서는 `md5(id:reviewerId)` — 평가자별 고정 뒤섞기(시간순이면 v1·v2 가 번갈아 나와 패턴이 읽히고, 난수면 새로고침마다 재배열). 상한 50. **Phase 7**: "이 평가자의 **안내 채점(guided)** 이 없는 분석"으로 조건이 바뀌었다(옛 채점은 남긴 채 재채점) · 응답에 `note`(사실 메모, 없으면 null)·`checklist`(항목 4개 정의) 동봉 · `result.relatedFiles` 를 저장소 경로로 **정규화**(팔마다 꼴이 달라 버전이 새던 자리) · 메모 있는 카드 먼저 | 4 · 7 |
+| `POST /v1/ops/analyses/:id/review` | 평가 저장 (verdict, rating) — ✅ **구현(2026-09-22)**: `{verdict, rating?, comment?}` → `ops_reviews` **upsert**(같은 평가자 재평가는 통째로 덮어씀, `X-Review: CREATED|UPDATED`). parse_failed·simulated 행 400, 없는 분석 404. **Phase 7**: `+ guided?: boolean, checks?: {causeLocation, noInventedIdentifiers, applicableAsIs, confidenceFits}` — upsert 키가 `(analysis, reviewer, guided)` 라 안내 채점은 안내 전 판정과 **다른 행** | 4 · 7 |
+| `GET /v1/ops/analyses/stats` | (설계에 없던 추가) promptVersion 별 분석 수·구조화 실패율·승인율·평균 별점 — DoD 의 숫자가 나오는 경로. 앱 화면은 없다(채점 중에 보면 블라인드가 깨진다). `model='simulated'` 제외. **Phase 7**: 같은 꼴의 `unguided`·`guided`(+`withNote`·항목별 `pass/fail/unknown`) 를 버전마다 덧붙인다 | 4 · 7 |
+| `PUT /v1/ops/incidents/:id/note` | ✅ **Phase 7(2026-09-22, `ops-note.service.ts`)**: 인시던트별 사실 메모 upsert(`symptom·causeLocation·fixDirection·commonMistakes?·project?·code?{path,startLine,endLine,ref?}`). `code` 가 있으면 서버가 `SourceReaderService.read` 로 그 커밋의 코드를 읽어 함께 저장(실패 400, 저장 안 함). Sentry 를 부르지 않는다(옛 인시던트에도 달 수 있게). `X-Note: CREATED|UPDATED`. ⚠ 메모는 **LLM 입력에 절대 들어가지 않는다**(단위 테스트로 고정) | 7 |
 
 - **인증 확정(2026-09-15)**: `@UseGuards(JwtAuthGuard, RolesGuard)` + `@Roles(Role.ADMIN)`.
   `Role` 은 `buyer | seller | admin`(`backend/src/user/entity/role.entity.ts`).
@@ -948,6 +949,29 @@ seed 첫 실측(2026-09-22, analysis #14, flash-lite 3.4초): CORS 이슈에 대
   - **그다음(범위 밖)** — 메모·항목이 쌓이면 어시스턴트 트랙의 골든셋 + LLM judge(ex-ai-assistant Phase 7·A-1)로 자동 채점, 사람은 judge 표본 검증으로 물러난다.
 - 구현(초안): `ops_incident_notes`(incident_id PK · 메모 4필드 · 작성자 · 마이그레이션 1건) + `PUT /v1/ops/incidents/:id/note`(admin) · pending 응답에 `note`·`checklist` 정의 · `ops_reviews` 에 `checks jsonb`·`guided boolean`(마이그레이션 같은 파일) · 앱 카드 "채점 안내" 접이식 섹션 + 체크 4개 → 승인/반려 자동 제안 · `stats` 에 guided 전/후 열 · 스크립트 `notes seed`(아래 표를 넣는다).
 - DoD: ① 7건의 메모가 들어가 카드에 보인다 ② 14장을 안내와 함께 재채점 → `stats --after 54` 가 guided 전/후를 나란히 낸다 ③ 항목 ②(지어냄) 실패 건이 v1.1 에서만 나오는지(6편 이후 도구의 몫이 수치로 잡히는지) 확인
+
+**진행(2026-09-22, 브랜치 `feat/ops-guided-review` — 구현·로컬 검증 완료, 재채점 대기)**
+
+| 단계 | 내용 | 상태 |
+|---|---|---|
+| ① DB | 마이그레이션 `OpsGuidedReview1790079789208`(로컬 적용, 운영 미적용): `ops_incident_notes`(incident_id UNIQUE · 메모 4필드 · `project` · `code_path/ref/start/end/text` · `author_id`) + `ops_reviews.guided`(기본 false)·`checks jsonb` + 유니크 `(analysis_id, reviewer_id)` → `(analysis_id, reviewer_id, guided)` + `ops_analyses.project` | ✅ |
+| ② 백엔드 | `ops-note.service.ts`(upsert — 코드는 `SourceReaderService.read` 로 서버가 읽는다) · `PUT /ops/incidents/:id/note` · `listPending` 을 guided 기준 + `note`·`checklist` + relatedFiles 정규화(`blindResult`) + 메모 있는 카드 먼저 · `submitReview` 키에 guided · `getStats` 에 unguided/guided/항목별 · `summarizeIncident` 가 `project` 저장 | ✅ ops 단위 172(+13) · e2e 23(F 절 갱신: PUT note · 별도 행 보존 · 전/후 집계) |
+| ③ 메모 seed | `backend/eval/ops-incident-notes.ts`(7건, 초심자용 문장) + `ops-review-set.ts notes seed|list`(코드 조각 자동 추출 · 옛 분석 행 `project` 채움) → 로컬 DB 7건(`useCategories.ts:1-28@7e3784f` … `main.ts:51-72@00107b7`, 앱은 `profile.tsx:37-52@main`) | ✅ DoD ① |
+| ④ 앱 | `features/review/GuidancePanel.tsx`(사실 메모 접이식 + 코드 접이식 · 확인 항목 4개 ✓/✗ · `suggestVerdict`) · `review.tsx` 카드 순서 "메모 → 분석 → 항목", 헤더에 제안, `guided:true`+`checks` 전송 · `api.ts` 타입 | ✅ tsc |
+| ⑤ 스크립트 | `stats` 에 "안내 전/후" 표 + "항목별 ✓/✗/?" 표 | ✅ baseline(`--after 54`): 안내 전 v1.1 7/7·3.43 / v3.1 7/7·4.29, 안내 후 0 |
+| ⑥ 재채점 | 실기기(로컬 백엔드, 앱 `.env` 는 LAN IP 로 전환됨). 1차 시도에서 대기가 50장(옛 채점 51건이 전부 복귀, CORS 10행 반복) → 사용자가 18장에서 중단(대상 14장 중 9장 완료). 대기 규칙 2개 추가(같은 인시던트·같은 버전은 최신 1장 · 재채점은 메모 있는 카드만) → 남은 대기 **6장**(대상 5장 #54·55·57·63·67 + CORS 옛 팔 v3 최신 #44 — 실 API 확인) → 2차에서 완료 | ✅ 14장 + 옛 9장(2026-09-22) |
+| ⑦ 수치 | `stats --after 54`: **안내 후 승인율 v1.1 7/7 = v3.1 7/7(변화 없음) · 별점 v1.1 3.43 → 3.43, v3.1 4.29 → 4.00(쌍별 5승 1무 1패 → 3승 3무 1패) · 항목 ① ③ 전부 ✓, ② 두 팔 모두 ✗ 0, ④ ✗ 1(#64)**. 기대했던 #66(`FRONTEND_URL`·`callback`)·#54(`reduce`·"undefined 초기값")는 ①②④ 전부 ✓ 로 통과, #66 별점 4 → 5. 옛 분석 CORS v1(#7·14)·v3(#43·44)은 ③④ ✗ 로 반려 — **안내는 방향이 틀린 답은 잡고 이름이 틀린 답은 못 잡는다**(8편 6-5). DoD ③ "수치로 잡힌다"는 통과, "v1.1 에서만 나온다"는 기대는 불발 | ✅ |
+| ⑧ 문서 | 8편 `08-guided-review.md` · README · CLAUDE.md · 이 절 | ✅ |
+
+- 결과 해석(2026-09-22): 카드에 정답을 붙이는 것만으로는 채점이 대조가 되지 않았다. 확인 항목 ②(식별자 대조)는 이름 단위의 기계적인 일이라 사람이 빠뜨린다 → **다음 단계는 ② 를 코드가 미리 표시**(조치 코드의 식별자를 메모 코드/저장소와 대조해 "코드에 없는 이름" 칩) + ①④ 는 메모를 정답으로 주는 LLM judge(어시스턴트 Phase 7·A-1 재사용). 이번 편의 `checks`·`ops_incident_notes` 가 그 입력이다. 평가자 1명·23장(1차 17 + 2차 6)의 한계는 그대로.
+
+- 결정 5건(추천 1개로 진행, 사용자 위임 원칙):
+  1. **재채점 경로** = 유니크 키에 `guided` 추가(옛 판정을 옮기지 않고 그대로 둔다). 대기 목록은 "guided 평가가 없는 분석" — 옛 채점 51건이 전부 다시 대기로 돌아오므로 **메모 있는 카드를 먼저** 내고(두 팔이 같은 메모를 보므로 블라인드 무해), 실기기 1차 시도 뒤 규칙 둘을 더했다: **같은 인시던트·같은 버전은 최신 분석 1장만**(재분석으로 대체된 행은 대상 아님) · **재채점은 메모 있는 카드만**(판정이 이미 있고 메모가 없으면 그 판정이 선다, 판정 없는 새 분석은 그대로 나온다).
+  2. **블라인드 누수 봉합** = 대기 응답에서 `relatedFiles` 를 `normalizeFramePath(p, project) ?? p.replace(/^\.\//,'')` 로 정규화. 힌트 `project` 는 새 컬럼 `ops_analyses.project`(분석 시 저장) — 옛 행은 `notes seed` 가 메모의 project 로 채우고, SQL 도 `COALESCE(a.project, n.project)`. 실측: #54~#67 14장 모두 `frontend/src/…`·`backend/src/main.ts`·`ops-companion/…` 로 같은 꼴.
+  3. **항목 ② 의 근거** = 메모에 원인 위치의 실제 코드(서버가 그 커밋에서 읽어 저장). `toolCalls` 칩은 여전히 대기 응답에 없다.
+  4. **메모 격리** = `OpsAnalysisService` 는 `OpsNoteService`·메모 엔티티를 주입받지 않고, `selectFewShot` SQL 과 프롬프트 문자열에 메모가 없음을 단위 테스트가 고정(`ops-note.service.spec.ts`).
+  5. **제안 규칙** = ①② 중 하나라도 ✗ → 반려 제안, 둘 다 ✓ → 승인 제안, 그 밖엔 없음. ③④ 는 별점 안내만. 스와이프가 제안을 덮어쓴다.
+- 밟은 함정: Postgres 가 따옴표 없는 별칭 `chk_causeLocation_pass` 를 소문자로 접어 camelCase 매핑이 전부 0 — 단위 테스트(mock 행)는 못 잡고 e2e 가 잡았다. 별칭을 큰따옴표로.
 
 **사실 메모 초안(2026-09-22, 프로브를 만든 쪽이 작성 — Phase 7 seed)**
 

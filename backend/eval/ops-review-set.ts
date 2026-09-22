@@ -22,7 +22,12 @@
  *                                          Phase 4 의 test 세트를 `--arms v3` 로 다시 돌리면 같은 인시던트의 v1·v2·v3 가 나란히 생긴다
  *   stats [--after <analysisId>]           promptVersion 별 분석 수·구조화 실패율·승인율·평균 별점.
  *                                          --after 는 그 분석 id 이상만 센다 — v1.1·v3.1 은 Phase 5 에서도 쓴 이름표라 새 세트(Phase 6)만
- *                                          보려면 세트 첫 행의 id 로 자른다
+ *                                          보려면 세트 첫 행의 id 로 자른다.
+ *                                          Phase 7: 두 번째 표로 **안내 전(unguided) / 후(guided)** 를 나란히 내고, 확인 항목 4개의 통과/실패 수를 찍는다
+ *   notes seed [--ids a,b] [--dry-run]     eval/ops-incident-notes.ts 의 사실 메모를 ops_incident_notes 에 upsert 한다(Phase 7).
+ *                                          코드 조각은 서비스가 SourceReaderService.read 로 그 커밋에서 읽어 저장한다(GitHub 접근).
+ *                                          같은 인시던트의 옛 분석 행에 project 가 없으면 메모의 project 로 채운다(relatedFiles 정규화 힌트)
+ *   notes list                             DB 의 메모 목록(인시던트 · 코드 범위 · 커밋 · 글자 수)
  *
  * 옵션:
  *   --delay <ms>   호출 간 대기(기본 13000). 백엔드 상한은 분당 LLM 호출 12회(Phase 5) — v1/v2 는 2회, v3 는 5회를 예약하므로
@@ -51,11 +56,19 @@ import { OpsReviewService } from '../src/ops/ops-review.service';
 import { SentryApiClient } from '../src/ops/sentry-api.client';
 import { OpsService } from '../src/ops/ops.service';
 import { SourceReaderService } from '../src/ops/source-reader.service';
+import { OpsNoteService } from '../src/ops/ops-note.service';
+import { OpsIncidentNoteEntity } from '../src/ops/entity/ops-incident-note.entity';
+import { OpsAnalysisEntity } from '../src/ops/entity/ops-analysis.entity';
+import { REVIEW_CHECK_KEYS } from '../src/ops/entity/ops-review.entity';
 import type { AnalysisResponse } from '../src/ops/dto/analysis.dto';
+import type { ReviewRateStats } from '../src/ops/dto/review.dto';
 import { scrubText } from '../src/common/utils/scrub-text';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import type { Repository } from 'typeorm';
+import { INCIDENT_NOTES } from './ops-incident-notes';
 import { sleep } from './eval-utils';
 
-type Command = 'list' | 'seed' | 'test' | 'stats';
+type Command = 'list' | 'seed' | 'test' | 'stats' | 'notes';
 type Arm = 'v1' | 'v2' | 'v3' | 'v1.1' | 'v2.1' | 'v3.1';
 const ARMS: Arm[] = ['v1', 'v2', 'v3', 'v1.1', 'v2.1', 'v3.1'];
 /** 팔 → 분석 옵션. 버전 이름표는 서비스가 프롬프트로 정하므로 여기선 켜고 끄기만 한다. `.1` = 서비스 지도(배포 구성 사실) 포함 */
@@ -81,6 +94,8 @@ interface Args {
   readable: boolean;
   /** stats: 이 분석 id 이상만 집계 — 같은 버전 이름표를 쓴 옛 행(Phase 5 의 v1.1·v3.1)과 새 세트를 가른다 */
   after?: number;
+  /** notes: 하위 명령(seed | list) */
+  sub?: string;
 }
 
 interface RunRecord {
@@ -98,8 +113,13 @@ interface RunRecord {
 
 function parseArgs(argv: string[]): Args {
   const command = argv[0] as Command;
-  if (!['list', 'seed', 'test', 'stats'].includes(command)) {
-    console.error('사용법: ops-review-set.ts <list|seed|test|stats> [--ids a,b] [--arms v1,v2,v3] [--period 30d] [--limit 40] [--readable] [--after id] [--delay ms] [--dry-run] [--allow-empty-pool]');
+  if (!['list', 'seed', 'test', 'stats', 'notes'].includes(command)) {
+    console.error('사용법: ops-review-set.ts <list|seed|test|stats|notes seed|notes list> [--ids a,b] [--arms v1,v2,v3] [--period 30d] [--limit 40] [--readable] [--after id] [--delay ms] [--dry-run] [--allow-empty-pool]');
+    process.exit(2);
+  }
+  const sub = command === 'notes' ? argv[1] : undefined;
+  if (command === 'notes' && !['seed', 'list'].includes(sub ?? '')) {
+    console.error('사용법: ops-review-set.ts notes <seed|list> [--ids a,b] [--dry-run]');
     process.exit(2);
   }
   const get = (flag: string): string | undefined => {
@@ -116,6 +136,7 @@ function parseArgs(argv: string[]): Args {
     allowEmptyPool: argv.includes('--allow-empty-pool'),
     readable: argv.includes('--readable'),
     after: get('--after') !== undefined ? Number(get('--after')) : undefined,
+    sub,
     arms: (get('--arms') ?? 'v1,v2')
       .split(',')
       .map((s) => s.trim())
@@ -210,15 +231,93 @@ async function main() {
 
     if (args.command === 'stats') {
       const { versions } = await review.getStats(args.after !== undefined ? { minAnalysisId: args.after } : {});
+      const pct = (n: number | null) => (n === null ? '   -  ' : `${(n * 100).toFixed(1).padStart(5)}%`);
+      const avg = (n: number | null) => (n === null ? '-' : n.toFixed(2)).padStart(8);
       console.log(`\npromptVersion 별 집계 (model=simulated 제외${args.after !== undefined ? `, 분석 id ≥ ${args.after}` : ''})\n`);
       console.log('  version  analyses  ok  parse_failed  실패율   reviews  approved  rejected  승인율   평균별점  도구호출');
       for (const v of versions) {
-        const pct = (n: number | null) => (n === null ? '   -  ' : `${(n * 100).toFixed(1).padStart(5)}%`);
         console.log(
-          `  ${v.promptVersion.padEnd(8)} ${String(v.analyses).padStart(8)}  ${String(v.ok).padStart(2)}  ${String(v.parseFailed).padStart(12)}  ${pct(v.parseFailedRate)}  ${String(v.reviews).padStart(7)}  ${String(v.approved).padStart(8)}  ${String(v.rejected).padStart(8)}  ${pct(v.approvalRate)}  ${(v.avgRating === null ? '-' : v.avgRating.toFixed(2)).padStart(8)}  ${String(v.toolCalled ?? 0).padStart(8)}`,
+          `  ${v.promptVersion.padEnd(8)} ${String(v.analyses).padStart(8)}  ${String(v.ok).padStart(2)}  ${String(v.parseFailed).padStart(12)}  ${pct(v.parseFailedRate)}  ${String(v.reviews).padStart(7)}  ${String(v.approved).padStart(8)}  ${String(v.rejected).padStart(8)}  ${pct(v.approvalRate)}  ${avg(v.avgRating)}  ${String(v.toolCalled ?? 0).padStart(8)}`,
         );
       }
-      console.log('');
+
+      // Phase 7 — 안내 전/후. 같은 분석에 두 판정이 나란히 있을 때(재채점) 승인율·별점이 어떻게 움직였나
+      console.log('\n안내 전(unguided) / 후(guided) — Phase 7 DoD ②\n');
+      console.log('  version  구분        reviews  approved  rejected  승인율   평균별점  메모있음');
+      const rateRow = (label: string, r: ReviewRateStats, withNote?: number) =>
+        `  ${''.padEnd(8)} ${label.padEnd(10)} ${String(r.reviews).padStart(8)}  ${String(r.approved).padStart(8)}  ${String(r.rejected).padStart(8)}  ${pct(r.approvalRate)}  ${avg(r.avgRating)}  ${withNote === undefined ? '' : String(withNote).padStart(8)}`;
+      for (const v of versions) {
+        console.log(`  ${v.promptVersion}`);
+        console.log(rateRow('안내 전', v.unguided));
+        console.log(rateRow('안내 후', v.guided, v.guided.withNote));
+      }
+
+      // 확인 항목 4개 — ②(지어낸 식별자) 실패가 어느 팔에서 나오는지가 DoD ③
+      console.log('\n확인 항목별 통과/실패/미판단 (안내 채점만) — Phase 7 DoD ③\n');
+      console.log(`  version  ${REVIEW_CHECK_KEYS.map((k) => k.padEnd(24)).join('')}`);
+      for (const v of versions) {
+        const cells = REVIEW_CHECK_KEYS.map((k) => {
+          const c = v.guided.checks[k];
+          return `✓${c.pass} ✗${c.fail} ?${c.unknown}`.padEnd(24);
+        });
+        console.log(`  ${v.promptVersion.padEnd(8)} ${cells.join('')}`);
+      }
+      console.log('\n  ① causeLocation=원인 위치 일치 · ② noInventedIdentifiers=지어낸 식별자 없음 · ③ applicableAsIs=그대로 적용 가능 · ④ confidenceFits=확신도 적정\n');
+      return;
+    }
+
+    if (args.command === 'notes') {
+      const noteService = app.get(OpsNoteService);
+      const noteRepo = app.get<Repository<OpsIncidentNoteEntity>>(getRepositoryToken(OpsIncidentNoteEntity));
+      const analysisRepo = app.get<Repository<OpsAnalysisEntity>>(getRepositoryToken(OpsAnalysisEntity));
+
+      if (args.sub === 'list') {
+        const rows = await noteRepo.find({ order: { incidentId: 'ASC' } });
+        console.log(`\n사실 메모 ${rows.length}건 (ops_incident_notes)\n`);
+        console.log('  incident      project                 코드                                                       글자수(증상/원인/조치/오답)');
+        for (const n of rows) {
+          const code = n.codePath ? `${n.codePath}:${n.codeStartLine}-${n.codeEndLine}@${(n.codeRef ?? '').slice(0, 7)}` : '(코드 없음)';
+          console.log(
+            `  ${n.incidentId.padEnd(13)} ${(n.project ?? '-').padEnd(22)}  ${code.padEnd(58)} ${n.symptom.length}/${n.causeLocation.length}/${n.fixDirection.length}/${n.commonMistakes?.length ?? 0}`,
+          );
+        }
+        console.log('');
+        return;
+      }
+
+      // notes seed — 파일의 메모를 upsert. 코드는 서비스가 읽는다(GitHub raw, 커밋별 Redis 캐시).
+      const targets = INCIDENT_NOTES.filter((n) => args.ids.length === 0 || args.ids.includes(n.incidentId));
+      if (targets.length === 0) throw new Error('--ids 에 해당하는 메모가 eval/ops-incident-notes.ts 에 없다');
+      console.log(`\nnotes seed: ${targets.length}건${args.dryRun ? ' (dry-run)' : ''}\n`);
+      let okCount = 0;
+      for (const n of targets) {
+        const { incidentId, label, ...dto } = n;
+        if (args.dryRun) {
+          console.log(`  · ${incidentId} ${label} — ${dto.code ? `${dto.code.path}:${dto.code.startLine}-${dto.code.endLine}@${dto.code.ref ?? 'main'}` : '코드 없음'}`);
+          continue;
+        }
+        try {
+          const { item, created } = await noteService.upsert(incidentId, dto, null);
+          // 옛 분석 행(Phase 7 이전)엔 project 가 없다 → 메모의 project 로 채워 relatedFiles 정규화가 같은 힌트를 쓰게 한다
+          const backfilled = dto.project
+            ? await analysisRepo
+                .createQueryBuilder()
+                .update()
+                .set({ project: dto.project })
+                .where('incident_id = :id AND project IS NULL', { id: incidentId })
+                .execute()
+            : null;
+          okCount++;
+          console.log(
+            `  ✓ ${incidentId} ${label} — ${created ? 'CREATED' : 'UPDATED'} ${item.code ? `${item.code.path}:${item.code.startLine}-${item.code.endLine}@${item.code.ref.slice(0, 7)} (${item.code.text.split('\n').length}줄)` : '코드 없음'}${
+              backfilled?.affected ? ` · 분석 ${backfilled.affected}행 project 채움` : ''
+            }`,
+          );
+        } catch (e) {
+          console.log(`  ✗ ${incidentId} ${label} — ${(e as Error).message}`);
+        }
+      }
+      if (!args.dryRun) console.log(`\n완료: ${okCount}/${targets.length}. 다음: 앱 "평가" 탭에서 카드에 "채점 안내"가 보이는지 확인 → 14장 재채점 → stats --after 54\n`);
       return;
     }
 

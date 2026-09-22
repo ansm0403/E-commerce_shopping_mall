@@ -31,6 +31,8 @@ const emails = makeEmails(SUITE);
  *   · 픽스처: ok 행과 parse_failed 행을 DB 에 직접 심는다(model='e2e-fixture'). LLM 을 부르지 않는다
  *   · pending 은 ok 행만, promptVersion 없이(블라인드) · 평가 저장 → 목록에서 사라짐 · 재평가는 덮어쓰기(upsert)
  *   · stats 가 버전별 승인율·구조화 실패율을 낸다 — DoD 의 숫자가 이 경로에서 나온다
+ *   · Phase 7(채점 안내): PUT /ops/incidents/:id/note 로 사실 메모 upsert → pending 카드에 note·checklist 동봉, relatedFiles 정규화 ·
+ *     guided=true 평가는 안내 전 평가와 **별도 행**(옛 행 보존) · pending 은 안내 평가가 없는 분석만 · stats 에 unguided/guided 분리
  *
  * 전제: postgres·redis + `yarn nx serve backend` 가 떠 있어야 한다(support/global-setup.ts).
  */
@@ -325,64 +327,97 @@ describe('모바일 토큰 전략 + ops 인시던트 조회 (HTTP e2e)', () => {
     });
   });
 
-  describe('F. 평가 루프 — /ops/analyses/pending · /:id/review · /stats (Phase 4)', () => {
+  describe('F. 평가 루프 — /ops/analyses/pending · /:id/review · /stats (Phase 4) + 채점 안내(Phase 7)', () => {
     const FIXTURE_MODEL = 'e2e-fixture';
     const FIXTURE_VERSION = 'e2e-v9';
-    const RESULT = { severity: 'low', rootCause: 'e2e 픽스처 원인', suggestedFix: '조치 없음', relatedFiles: ['src/x.ts'], confidence: 'high' };
-    const PENDING_KEYS = ['analysisId', 'createdAt', 'exceptionText', 'incidentId', 'incidentTitle', 'model', 'result'];
+    const INCIDENT = 'e2e-issue-1';
+    // relatedFiles 는 카드에 나갈 때 저장소 경로로 정규화된다(Phase 7 블라인드) — project 가 프론트면 `./src/x.ts` → `frontend/src/x.ts`
+    const RESULT = { severity: 'low', rootCause: 'e2e 픽스처 원인', suggestedFix: '조치 없음', relatedFiles: ['./src/x.ts', 'backend/src/main.ts'], confidence: 'high' };
+    const BLIND_FILES = ['frontend/src/x.ts', 'backend/src/main.ts'];
+    const PENDING_KEYS = ['analysisId', 'checklist', 'createdAt', 'exceptionText', 'incidentId', 'incidentTitle', 'model', 'note', 'result'];
+    const CHECK_KEYS = ['causeLocation', 'noInventedIdentifiers', 'applicableAsIs', 'confidenceFits'];
+    const NOTE = { symptom: 'e2e 증상', causeLocation: 'e2e 원인 위치', fixDirection: 'e2e 조치 방향', commonMistakes: 'e2e 오답', project: 'e-commerse-frontend' };
     let okId: number;
     let failedId: number;
 
     beforeAll(async () => {
       // LLM 없이 평가 API 만 검증하려고 분석 행을 직접 심는다. incident_id 는 Sentry 를 안 부르므로 아무 문자열이어도 된다.
       const [ok] = await ds.query(
-        `INSERT INTO ops_analyses (incident_id, status, result_json, raw_text, prompt_version, model, latency_ms, incident_title, exception_text)
-         VALUES ('e2e-issue-1', 'ok', $1, NULL, $2, $3, 0, 'e2e 픽스처 제목', 'E2eError: fixture') RETURNING id`,
-        [JSON.stringify(RESULT), FIXTURE_VERSION, FIXTURE_MODEL],
+        `INSERT INTO ops_analyses (incident_id, status, result_json, raw_text, prompt_version, model, latency_ms, incident_title, exception_text, project)
+         VALUES ($4, 'ok', $1, NULL, $2, $3, 0, 'e2e 픽스처 제목', 'E2eError: fixture', 'e-commerse-frontend') RETURNING id`,
+        [JSON.stringify(RESULT), FIXTURE_VERSION, FIXTURE_MODEL, INCIDENT],
       );
       const [failed] = await ds.query(
         `INSERT INTO ops_analyses (incident_id, status, result_json, raw_text, prompt_version, model, latency_ms)
-         VALUES ('e2e-issue-1', 'parse_failed', NULL, 'not json', $1, $2, 0) RETURNING id`,
-        [FIXTURE_VERSION, FIXTURE_MODEL],
+         VALUES ($3, 'parse_failed', NULL, 'not json', $1, $2, 0) RETURNING id`,
+        [FIXTURE_VERSION, FIXTURE_MODEL, INCIDENT],
       );
       okId = ok.id;
       failedId = failed.id;
+      await ds.query(`DELETE FROM ops_incident_notes WHERE incident_id = $1`, [INCIDENT]);
     });
 
     afterAll(async () => {
       // 평가 행은 analysis FK CASCADE 로 함께 지워진다. 남기면 다음 실제 분석의 few-shot 예시로 섞여 들어간다
       await ds.query(`DELETE FROM ops_analyses WHERE model = $1`, [FIXTURE_MODEL]);
+      await ds.query(`DELETE FROM ops_incident_notes WHERE incident_id = $1`, [INCIDENT]);
     });
 
-    it('토큰 없음 → 401, buyer → 403 (세 엔드포인트 모두)', async () => {
+    it('토큰 없음 → 401, buyer → 403 (네 엔드포인트 모두)', async () => {
       expect((await axios.get('/ops/analyses/pending')).status).toBe(401);
       expect((await axios.get('/ops/analyses/stats')).status).toBe(401);
       expect((await axios.post(`/ops/analyses/${okId}/review`, { verdict: 'approved' })).status).toBe(401);
+      expect((await axios.put(`/ops/incidents/${INCIDENT}/note`, NOTE)).status).toBe(401);
       expect((await axios.get('/ops/analyses/pending', auth(buyerToken))).status).toBe(403);
       expect((await axios.get('/ops/analyses/stats', auth(buyerToken))).status).toBe(403);
       expect((await axios.post(`/ops/analyses/${okId}/review`, { verdict: 'approved' }, auth(buyerToken))).status).toBe(403);
+      expect((await axios.put(`/ops/incidents/${INCIDENT}/note`, NOTE, auth(buyerToken))).status).toBe(403);
     });
 
-    it('pending: 픽스처 ok 행이 보이고 promptVersion 이 없다(블라인드) · parse_failed 행은 없다', async () => {
+    it('pending: 픽스처 ok 행이 보이고 promptVersion 이 없다(블라인드) · relatedFiles 는 정규화 · 메모 없으면 note=null · checklist 4개 · parse_failed 행은 없다', async () => {
       const res = await axios.get('/ops/analyses/pending', auth(adminMobile.accessToken));
       expect(res.status).toBe(200);
       const mine = res.data.find((p: { analysisId: number }) => p.analysisId === okId);
       expect(mine).toBeDefined();
       expect(Object.keys(mine).sort()).toEqual(PENDING_KEYS);
       expect(mine).toMatchObject({
-        incidentId: 'e2e-issue-1',
+        incidentId: INCIDENT,
         incidentTitle: 'e2e 픽스처 제목',
         exceptionText: 'E2eError: fixture',
         model: FIXTURE_MODEL,
-        result: RESULT,
+        result: { ...RESULT, relatedFiles: BLIND_FILES },
+        note: null,
       });
+      expect(mine.checklist.map((c: { key: string }) => c.key)).toEqual(CHECK_KEYS);
       expect(res.data.some((p: { analysisId: number }) => p.analysisId === failedId)).toBe(false);
     });
 
-    it('잘못된 입력: verdict 허용값 밖·rating 6 → 400 / 없는 분석 404 / parse_failed 행 400 / id 가 숫자가 아니면 400', async () => {
+    it('PUT note: 잘못된 입력 400(빈 symptom · code 범위 역순) → 저장(CREATED) → 다시 PUT 은 UPDATED → pending 카드에 note 로 실린다', async () => {
+      const a = auth(adminMobile.accessToken);
+      expect((await axios.put(`/ops/incidents/${INCIDENT}/note`, { ...NOTE, symptom: '' }, a)).status).toBe(400);
+      expect((await axios.put(`/ops/incidents/${INCIDENT}/note`, { ...NOTE, code: { path: 'backend/src/main.ts', startLine: 9, endLine: 3 } }, a)).status).toBe(400);
+      expect(await ds.query(`SELECT count(*)::int AS n FROM ops_incident_notes WHERE incident_id = $1`, [INCIDENT])).toEqual([{ n: 0 }]);
+
+      // 코드 없는 메모(GitHub 를 부르지 않는다). Sentry 도 부르지 않으므로 옛 인시던트에도 달 수 있다
+      const first = await axios.put(`/ops/incidents/${INCIDENT}/note`, NOTE, a);
+      expect(first.status).toBe(200);
+      expect(first.headers['x-note']).toBe('CREATED');
+      expect(first.data).toMatchObject({ incidentId: INCIDENT, ...NOTE, code: null });
+
+      const second = await axios.put(`/ops/incidents/${INCIDENT}/note`, { ...NOTE, fixDirection: '고친 조치 방향' }, a);
+      expect(second.headers['x-note']).toBe('UPDATED');
+      expect(await ds.query(`SELECT count(*)::int AS n, min(fix_direction) AS f FROM ops_incident_notes WHERE incident_id = $1`, [INCIDENT])).toEqual([{ n: 1, f: '고친 조치 방향' }]);
+
+      const pending = await axios.get('/ops/analyses/pending', a);
+      const mine = pending.data.find((p: { analysisId: number }) => p.analysisId === okId);
+      expect(mine.note).toMatchObject({ incidentId: INCIDENT, symptom: 'e2e 증상', fixDirection: '고친 조치 방향', code: null });
+    });
+
+    it('잘못된 입력: verdict 허용값 밖·rating 6·checks 에 boolean 아닌 값 → 400 / 없는 분석 404 / parse_failed 행 400 / id 가 숫자가 아니면 400', async () => {
       const a = auth(adminMobile.accessToken);
       expect((await axios.post(`/ops/analyses/${okId}/review`, { verdict: 'maybe' }, a)).status).toBe(400);
       expect((await axios.post(`/ops/analyses/${okId}/review`, { verdict: 'approved', rating: 6 }, a)).status).toBe(400);
+      expect((await axios.post(`/ops/analyses/${okId}/review`, { verdict: 'approved', guided: true, checks: { causeLocation: 'yes' } }, a)).status).toBe(400);
       expect((await axios.post(`/ops/analyses/${okId}/review`, {}, a)).status).toBe(400);
       expect((await axios.post('/ops/analyses/999999999/review', { verdict: 'approved' }, a)).status).toBe(404);
       expect((await axios.post(`/ops/analyses/${failedId}/review`, { verdict: 'rejected' }, a)).status).toBe(400);
@@ -391,26 +426,58 @@ describe('모바일 토큰 전략 + ops 인시던트 조회 (HTTP e2e)', () => {
       expect(await ds.query(`SELECT count(*)::int AS n FROM ops_reviews WHERE analysis_id IN ($1, $2)`, [okId, failedId])).toEqual([{ n: 0 }]);
     });
 
-    it('평가 저장(CREATED) → pending 에서 사라짐 → 재평가는 덮어쓰기(UPDATED, 같은 id) → stats 에 반영', async () => {
+    it('안내 없는 평가(CREATED) → 재평가는 덮어쓰기(UPDATED, 같은 id) → 안내 평가는 **별도 행**(옛 행 보존) → pending 에서 사라짐 → stats 에 전/후가 나란히', async () => {
       const a = auth(adminMobile.accessToken);
 
+      // ① 안내 없는 평가(Phase 6 까지의 방식 — guided 를 안 보낸다)
       const first = await axios.post(`/ops/analyses/${okId}/review`, { verdict: 'approved', rating: 5, comment: ' 정확함 ' }, a);
       expect(first.status).toBe(201);
       expect(first.headers['x-review']).toBe('CREATED');
-      expect(first.data).toMatchObject({ analysisId: okId, reviewerId: adminId, verdict: 'approved', rating: 5, comment: '정확함' });
+      expect(first.data).toMatchObject({ analysisId: okId, reviewerId: adminId, verdict: 'approved', rating: 5, comment: '정확함', guided: false, checks: null });
       expect(typeof first.data.id).toBe('number');
 
-      const pending = await axios.get('/ops/analyses/pending', a);
-      expect(pending.data.some((p: { analysisId: number }) => p.analysisId === okId)).toBe(false);
+      // Phase 7: 안내 채점이 없고 **메모가 있으므로**(앞 테스트의 PUT note) 아직 pending 에 남아 있다 — 재채점 경로.
+      // 메모가 없었다면 "이미 판정이 있는 카드"라 빠진다(같은 인시던트가 열 번씩 나오던 실기기 문제의 해법). 이 describe 는 순서에 기댄다
+      let pending = await axios.get('/ops/analyses/pending', a);
+      expect(pending.data.some((p: { analysisId: number }) => p.analysisId === okId)).toBe(true);
 
-      // 같은 평가자가 다시 → 행이 늘지 않고 판정이 바뀐다. 안 보낸 rating 은 null 로(통째로 덮어쓰기)
+      // 같은 평가자가 다시(안내 없이) → 행이 늘지 않고 판정이 바뀐다. 안 보낸 rating 은 null 로(통째로 덮어쓰기)
       const second = await axios.post(`/ops/analyses/${okId}/review`, { verdict: 'rejected' }, a);
       expect(second.status).toBe(201);
       expect(second.headers['x-review']).toBe('UPDATED');
-      expect(second.data).toMatchObject({ id: first.data.id, verdict: 'rejected', rating: null, comment: null });
-      expect(await ds.query(`SELECT verdict, rating FROM ops_reviews WHERE analysis_id = $1`, [okId])).toEqual([{ verdict: 'rejected', rating: null }]);
+      expect(second.data).toMatchObject({ id: first.data.id, verdict: 'rejected', rating: null, comment: null, guided: false });
 
-      // 집계: 픽스처 버전 = 분석 2(ok 1 + parse_failed 1) · 평가 1(rejected) → 승인율 0, 실패율 0.5
+      // ② 안내와 함께 채점 → 새 행(CREATED). 옛 행은 그대로 남는다
+      const guided = await axios.post(
+        `/ops/analyses/${okId}/review`,
+        { verdict: 'approved', rating: 4, guided: true, checks: { causeLocation: true, noInventedIdentifiers: false, applicableAsIs: true } },
+        a,
+      );
+      expect(guided.status).toBe(201);
+      expect(guided.headers['x-review']).toBe('CREATED');
+      expect(guided.data.id).not.toBe(first.data.id);
+      expect(guided.data).toMatchObject({
+        verdict: 'approved', rating: 4, guided: true,
+        checks: { causeLocation: true, noInventedIdentifiers: false, applicableAsIs: true, confidenceFits: null },
+      });
+      expect(
+        await ds.query(`SELECT guided, verdict, rating FROM ops_reviews WHERE analysis_id = $1 ORDER BY guided`, [okId]),
+      ).toEqual([
+        { guided: false, verdict: 'rejected', rating: null },
+        { guided: true, verdict: 'approved', rating: 4 },
+      ]);
+
+      // 안내 채점이 생겼으니 이제 pending 에서 빠진다
+      pending = await axios.get('/ops/analyses/pending', a);
+      expect(pending.data.some((p: { analysisId: number }) => p.analysisId === okId)).toBe(false);
+
+      // 안내 채점 재전송은 guided 행을 덮어쓴다(UPDATED, 같은 id)
+      const guidedAgain = await axios.post(`/ops/analyses/${okId}/review`, { verdict: 'rejected', guided: true, checks: { causeLocation: false } }, a);
+      expect(guidedAgain.headers['x-review']).toBe('UPDATED');
+      expect(guidedAgain.data).toMatchObject({ id: guided.data.id, verdict: 'rejected', checks: { causeLocation: false, noInventedIdentifiers: null } });
+
+      // ③ 집계: 픽스처 버전 = 분석 2(ok 1 + parse_failed 1) · 평가 2(안내 전 rejected · 안내 후 rejected) → 전체 승인율 0, 실패율 0.5
+      //    안내 후: 메모 있음 1 · ① 실패 1 · 나머지 미판단
       const stats = await axios.get('/ops/analyses/stats', a);
       expect(stats.status).toBe(200);
       const v = stats.data.versions.find((x: { promptVersion: string }) => x.promptVersion === FIXTURE_VERSION);
@@ -420,12 +487,22 @@ describe('모바일 토큰 전략 + ops 인시던트 조회 (HTTP e2e)', () => {
         ok: 1,
         parseFailed: 1,
         parseFailedRate: 0.5,
-        reviews: 1,
+        reviews: 2,
         approved: 0,
-        rejected: 1,
+        rejected: 2,
         approvalRate: 0,
         avgRating: null,
         toolCalled: 0,
+        unguided: { reviews: 1, approved: 0, rejected: 1, approvalRate: 0, avgRating: null },
+        guided: {
+          reviews: 1, approved: 0, rejected: 1, approvalRate: 0, avgRating: null, withNote: 1,
+          checks: {
+            causeLocation: { pass: 0, fail: 1, unknown: 0 },
+            noInventedIdentifiers: { pass: 0, fail: 0, unknown: 1 },
+            applicableAsIs: { pass: 0, fail: 0, unknown: 1 },
+            confidenceFits: { pass: 0, fail: 0, unknown: 1 },
+          },
+        },
       });
       // simulated 행은 어느 버전에도 세지 않는다(E 절이 만든 것이 있어도)
       expect(stats.data.versions.every((x: { promptVersion: string }) => x.promptVersion !== 'simulated')).toBe(true);

@@ -13,6 +13,10 @@
  * 후자는 그 카드를 맨 앞으로 끌어올린다(이미 채점한 분석이면 목록에 없으므로 알려만 준다).
  *
  * 순환 고리(설계 §1.4)의 ③ 이 화면이고, 여기서 승인된 분석이 ④ 다음 프롬프트의 few-shot 예시가 된다.
+ *
+ * Phase 7(채점 안내): 카드 위에 인시던트의 **사실 메모**(사람이 쓴 정답 + 원인 위치의 실제 코드), 아래에 **확인 항목 4개**가 붙는다.
+ * ①②(원인 위치 · 지어낸 식별자)의 답에서 승인/반려를 제안하고, 스와이프가 그 제안을 덮어쓴다. 판정은 guided=true 로 저장돼
+ * 안내 전 판정과 다른 행이 된다 — 같은 14장을 다시 채점해 "안내 없는 채점은 무엇을 쟀나"를 비교하기 위해서다.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -22,13 +26,25 @@ import { AxiosError } from 'axios';
 import { usePendingReviews, useSubmitReview } from '../../src/features/review/queries';
 import { SwipeCard, type SwipeCardHandle } from '../../src/features/review/SwipeCard';
 import { StarRating } from '../../src/features/review/StarRating';
+import { Checklist, GuidancePanel, suggestVerdict } from '../../src/features/review/GuidancePanel';
 import { AnalysisCard } from '../../src/features/analysis/AnalysisCard';
-import type { PendingReview, ReviewVerdict } from '../../src/lib/api';
+import type { PendingReview, ReviewCheckKey, ReviewChecks, ReviewVerdict } from '../../src/lib/api';
 import { timeAgo } from '../../src/lib/format';
 import { colors, spacing } from '../../src/theme';
 
-/** 카드 본문 — 인시던트 한 줄 + 분석 카드. AnalysisCard 는 S4 와 같은 컴포넌트라 방어 렌더링도 그대로다 */
-function ReviewCardBody({ item }: { item: PendingReview }) {
+/**
+ * 카드 본문 — 인시던트 한 줄 → 사실 메모(안내) → 분석 카드 → 확인 항목. AnalysisCard 는 S4 와 같은 컴포넌트라 방어 렌더링도 그대로다.
+ * 순서가 곧 채점 절차다: 정답을 먼저 읽고, 답을 읽고, 항목에 답한다.
+ */
+function ReviewCardBody({
+  item,
+  checks,
+  onCheck,
+}: {
+  item: PendingReview;
+  checks: ReviewChecks;
+  onCheck: (key: ReviewCheckKey, value: boolean | null) => void;
+}) {
   return (
     <ScrollView style={styles.cardScroll} contentContainerStyle={styles.cardContent} nestedScrollEnabled>
       <Text style={styles.incidentTitle} numberOfLines={3}>
@@ -42,7 +58,9 @@ function ReviewCardBody({ item }: { item: PendingReview }) {
       <Text style={styles.meta}>
         {[item.model ?? '모델 미상', `분석 ${timeAgo(item.createdAt)}`].join(' · ')}
       </Text>
+      <GuidancePanel note={item.note ?? null} />
       <AnalysisCard result={item.result} />
+      <Checklist items={Array.isArray(item.checklist) ? item.checklist : []} checks={checks} onChange={onCheck} />
     </ScrollView>
   );
 }
@@ -65,6 +83,10 @@ export default function ReviewScreen() {
 
   const cardRef = useRef<SwipeCardHandle>(null);
   const [rating, setRating] = useState<number | null>(null);
+  // 확인 항목의 답(Phase 7). 카드마다 새로 시작 — 스와이프 때 별점과 함께 비운다
+  const [checks, setChecks] = useState<ReviewChecks>({});
+  const onCheck = useCallback((key: ReviewCheckKey, value: boolean | null) => setChecks((c) => ({ ...c, [key]: value })), []);
+  const suggestion = suggestVerdict(checks);
   const [reviewedCount, setReviewedCount] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -103,10 +125,13 @@ export default function ReviewScreen() {
       if (!top) return;
       const card = top;
       const chosen = rating;
+      const chosenChecks = checks;
       setRating(null);
+      setChecks({});
       setReviewedCount((n) => n + 1);
+      // guided=true: 이 판정은 메모+확인 항목을 본 채점이다. 백엔드가 안내 전 판정과 다른 행으로 보관한다(재채점 비교의 한쪽)
       submit.mutate(
-        { analysisId: card.analysisId, verdict, ...(chosen !== null ? { rating: chosen } : {}) },
+        { analysisId: card.analysisId, verdict, guided: true, checks: chosenChecks, ...(chosen !== null ? { rating: chosen } : {}) },
         {
           onError: (err) => {
             setReviewedCount((n) => Math.max(0, n - 1));
@@ -116,7 +141,7 @@ export default function ReviewScreen() {
         },
       );
     },
-    [top, rating, submit, showToast],
+    [top, rating, checks, submit, showToast],
   );
 
   if (isPending) {
@@ -168,7 +193,13 @@ export default function ReviewScreen() {
         <Text style={styles.progress}>
           {reviewedCount + 1} / {total}
         </Text>
-        <Text style={styles.hint}>오른쪽으로 밀면 승인, 왼쪽은 반려 · 프롬프트 버전은 채점 중 표시하지 않습니다</Text>
+        <Text style={styles.hint}>
+          {suggestion === 'approved'
+            ? '확인 항목 기준 제안: 승인 → 오른쪽으로 밀기 (다르게 판단하면 왼쪽)'
+            : suggestion === 'rejected'
+              ? '확인 항목 기준 제안: 반려 → 왼쪽으로 밀기 (다르게 판단하면 오른쪽)'
+              : '메모를 읽고 → AI 답을 읽고 → 확인 항목 ①②에 답하면 승인/반려를 제안합니다 · 버전은 표시하지 않습니다'}
+        </Text>
       </View>
 
       <View style={styles.deck}>
@@ -182,7 +213,7 @@ export default function ReviewScreen() {
         ) : null}
         {/* key 가 analysisId 라 카드가 바뀌면 새로 마운트된다 — translateX 가 0 에서 시작한다 */}
         <SwipeCard key={top.analysisId} ref={cardRef} onSwipe={onSwipe}>
-          <ReviewCardBody item={top} />
+          <ReviewCardBody item={top} checks={checks} onCheck={onCheck} />
         </SwipeCard>
       </View>
 
