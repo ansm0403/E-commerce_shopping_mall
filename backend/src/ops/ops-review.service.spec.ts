@@ -5,6 +5,7 @@ import { OpsReviewService } from './ops-review.service';
 import { OpsAnalysisEntity } from './entity/ops-analysis.entity';
 import { OpsReviewEntity } from './entity/ops-review.entity';
 import { REVIEW_CHECKLIST } from './dto/review.dto';
+import { IdentifierCheckService } from './identifier-check.service';
 
 /**
  * OpsReviewService 단위 테스트 — upsert 규칙 · 입력 검증 · 응답 변환 · SQL 결과 매핑.
@@ -15,6 +16,7 @@ describe('OpsReviewService — 평가 루프(설계 §9 Phase 4 · Phase 7)', ()
   let service: OpsReviewService;
   let reviews: { findOne: jest.Mock; create: jest.Mock; save: jest.Mock };
   let analyses: { findOne: jest.Mock; query: jest.Mock };
+  let identifierCheck: { checkMany: jest.Mock };
 
   const okAnalysis = (over: Partial<OpsAnalysisEntity> = {}): Partial<OpsAnalysisEntity> => ({
     id: 7,
@@ -63,12 +65,14 @@ describe('OpsReviewService — 평가 루프(설계 §9 Phase 4 · Phase 7)', ()
       })),
     };
     analyses = { findOne: jest.fn().mockResolvedValue(okAnalysis()), query: jest.fn().mockResolvedValue([]) };
+    identifierCheck = { checkMany: jest.fn().mockResolvedValue(new Map()) };
 
     const module = await Test.createTestingModule({
       providers: [
         OpsReviewService,
         { provide: getRepositoryToken(OpsReviewEntity), useValue: reviews },
         { provide: getRepositoryToken(OpsAnalysisEntity), useValue: analyses },
+        { provide: IdentifierCheckService, useValue: identifierCheck },
       ],
     }).compile();
     service = module.get(OpsReviewService);
@@ -179,9 +183,11 @@ describe('OpsReviewService — 평가 루프(설계 §9 Phase 4 · Phase 7)', ()
           createdAt: '2026-09-21T09:00:00.000Z',
           note: null,
           checklist: REVIEW_CHECKLIST,
+          identifierCheck: null,
         },
       ]);
       expect(Object.keys(items[0])).not.toContain('promptVersion');
+      expect(Object.keys(items[0])).not.toContain('toolCalls');
       expect(items[0].checklist.map((c) => c.key)).toEqual(['causeLocation', 'noInventedIdentifiers', 'applicableAsIs', 'confidenceFits']);
 
       // 평가자 id 는 NOT EXISTS(정수) 와 md5 셔플(문자열) 두 자리에 각각 들어간다. Phase 7: 안내 채점(guided=true)만 뺀다
@@ -249,6 +255,35 @@ describe('OpsReviewService — 평가 루프(설계 §9 Phase 4 · Phase 7)', ()
         '../node_modules/x.js',
         'backend/src/main.ts:65',
       ]);
+    });
+
+    it('identifierCheck(Phase 8) — 정규화된 relatedFiles·메모 코드 경로/ref·tool_calls 를 대조 서비스에 넘기고 결과를 카드에 붙인다 · 실패하면 null 로 내려간다', async () => {
+      analyses.query.mockResolvedValue([
+        pendingRow({
+          id: 66,
+          project: 'e-commerse-backend',
+          result_json: { severity: 'high', rootCause: 'x', suggestedFix: 'process.env.FRONTEND_URL', confidence: 'medium', relatedFiles: ['./src/main.ts', 'backend/src/main.ts'] },
+          tool_calls: null,
+          code_path: 'backend/src/main.ts',
+          code_ref: '00107b7',
+        }),
+        pendingRow({ id: 67, tool_calls: [{ path: 'backend/src/main.ts', ref: '00107b7', startLine: 50, endLine: 70, ok: true, lines: 21 }] }),
+      ]);
+      const view = { checkedFiles: ['backend/src/main.ts@00107b7'], checkedCount: 1, unknown: ['FRONTEND_URL'], maybeLibrary: [] };
+      identifierCheck.checkMany.mockResolvedValue(new Map([[66, view]]));
+
+      const items = await service.listPending(42);
+      expect(identifierCheck.checkMany).toHaveBeenCalledWith([
+        expect.objectContaining({ analysisId: 66, incidentId: '7732523858', suggestedFix: 'process.env.FRONTEND_URL', relatedFiles: ['backend/src/main.ts'], toolCalls: null, noteCodePath: 'backend/src/main.ts', noteCodeRef: '00107b7' }),
+        expect.objectContaining({ analysisId: 67, toolCalls: [expect.objectContaining({ ref: '00107b7' })], noteCodePath: null, noteCodeRef: null }),
+      ]);
+      expect(items[0].identifierCheck).toEqual(view);
+      expect(items[1].identifierCheck).toBeNull();
+
+      identifierCheck.checkMany.mockRejectedValue(new Error('GitHub down'));
+      const again = await service.listPending(42);
+      expect(again).toHaveLength(2);
+      expect(again.every((i) => i.identifierCheck === null)).toBe(true);
     });
 
     it('blindResult — project 힌트가 없으면 폴더 이름이 있는 경로만 바뀌고 나머지는 `./` 만 뗀다 · 중복 제거', () => {

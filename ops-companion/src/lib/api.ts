@@ -339,6 +339,21 @@ export interface IncidentNote {
 }
 
 /**
+ * 조치 코드 이름 대조(Phase 8) — 확인 항목 ②의 근거 칩. 백엔드가 조치 코드의 변수·함수·환경변수 이름을 실제 소스 파일과 대조한 결과다.
+ * 판정이 아니다 — 승인/반려 제안(suggestVerdict)에는 들어가지 않는다. 같은 인시던트의 카드는 모두 같은 checkedFiles 를 받는다(블라인드).
+ */
+export interface IdentifierCheck {
+  /** 대조에 쓴 파일 — `frontend/src/hooks/useCategories.ts@7e3784f` */
+  checkedFiles: string[];
+  /** 대조한 이름 수. 0 이면 조치에 코드 이름이 없다 */
+  checkedCount: number;
+  /** 실제 코드 어디에도 없는 이름 */
+  unknown: string[];
+  /** 없지만 `…Exception` 같은 라이브러리 클래스 꼴 — 약하게 표시 */
+  maybeLibrary: string[];
+}
+
+/**
  * GET /v1/ops/analyses/pending 의 항목 — 내가 아직 **안내와 함께** 채점하지 않은, 구조화에 성공한 분석.
  *
  * promptVersion 이 **없다**. 평가는 블라인드다(설계 §9 Phase 4 결정 ①) — "이건 v2 니까" 하고 후하게 줄 수 있는
@@ -356,6 +371,8 @@ export interface PendingReview {
   createdAt: string;
   note: IncidentNote | null;
   checklist: ReviewChecklistItem[];
+  /** Phase 8. null = 대조할 파일을 읽지 못함 · 없음(옛 백엔드) = 칩을 그리지 않는다 */
+  identifierCheck?: IdentifierCheck | null;
 }
 
 export interface ReviewInput {

@@ -17,6 +17,7 @@
  * Phase 7(채점 안내): 카드 위에 인시던트의 **사실 메모**(사람이 쓴 정답 + 원인 위치의 실제 코드), 아래에 **확인 항목 4개**가 붙는다.
  * ①②(원인 위치 · 지어낸 식별자)의 답에서 승인/반려를 제안하고, 스와이프가 그 제안을 덮어쓴다. 판정은 guided=true 로 저장돼
  * 안내 전 판정과 다른 행이 된다 — 같은 14장을 다시 채점해 "안내 없는 채점은 무엇을 쟀나"를 비교하기 위해서다.
+ * Phase 8(이름 대조 칩): 분석 아래에 백엔드가 조치 코드의 이름을 실제 파일과 대조한 결과가 붙는다 — 항목 ②의 근거. 제안 규칙은 그대로다.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -26,7 +27,7 @@ import { AxiosError } from 'axios';
 import { usePendingReviews, useSubmitReview } from '../../src/features/review/queries';
 import { SwipeCard, type SwipeCardHandle } from '../../src/features/review/SwipeCard';
 import { StarRating } from '../../src/features/review/StarRating';
-import { Checklist, GuidancePanel, suggestVerdict } from '../../src/features/review/GuidancePanel';
+import { Checklist, GuidancePanel, IdentifierChip, suggestVerdict } from '../../src/features/review/GuidancePanel';
 import { AnalysisCard } from '../../src/features/analysis/AnalysisCard';
 import type { PendingReview, ReviewCheckKey, ReviewChecks, ReviewVerdict } from '../../src/lib/api';
 import { timeAgo } from '../../src/lib/format';
@@ -60,6 +61,8 @@ function ReviewCardBody({
       </Text>
       <GuidancePanel note={item.note ?? null} />
       <AnalysisCard result={item.result} />
+      {/* Phase 8: 조치 코드 이름 대조 — 분석 바로 아래, 항목 ② 위. 근거일 뿐 제안(suggestVerdict)에는 들어가지 않는다 */}
+      <IdentifierChip check={item.identifierCheck} />
       <Checklist items={Array.isArray(item.checklist) ? item.checklist : []} checks={checks} onChange={onCheck} />
     </ScrollView>
   );

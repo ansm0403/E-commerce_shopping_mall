@@ -1,7 +1,7 @@
 # 8편. 채점 안내 — 카드에 정답(사실 메모)과 확인 항목을 붙여 "그럴듯함"이 아니라 "맞음"을 재게 (Phase 7)
 
 > 설계: [ops-companion-design.md §9 Phase 7](../../roadmap/ops-companion-design.md) · 앞 편: [7편](./07-frontend-sourcemaps-and-eval-set.md)
-> 작성 시점: 브랜치 `feat/ops-guided-review`, 2026-09-22 (구현·로컬 검증·실기기 재채점까지 완료. 운영 배포는 PR 뒤)
+> 작성 시점: main `10e9cb4`(PR #40), 2026-09-22 — 구현·실기기 재채점·운영 배포(마이그레이션 1건 + 운영 DB 메모 7건)까지 완료
 
 ## 0-1. 한 문장
 
@@ -232,6 +232,19 @@ jest 인라인 config 를 한 줄 스크립트로 만들려다 두 번 실패. �
 ### 6-6. `-t` 로 테스트를 골라 돌리면 앞 테스트의 부수효과가 사라진다
 
 e2e 실패를 좁히려고 `-t "안내 없는 평가"` 로 돌리자 `withNote` 가 0 — PUT note 테스트가 안 돌아 메모가 없던 것. F 절 전체(`-t "F\."`)로 돌려야 진짜 실패(6-1)만 남았다. 순서에 기대는 e2e 는 describe 단위로 돌린다.
+
+### 6-7. 운영 확인 중 앱이 reload 에서 죽었다 — `UnsatisfiedLinkError`
+
+재채점 뒤 앱 `.env` 를 운영 주소로 되돌렸는데 로그인이 안 됐다. 운영 nginx 로그에 앱 요청이 3시간 동안 **0건** — `EXPO_PUBLIC_*` 값은 번들을 만들 때 박히므로 Metro 가 옛 번들(LAN IP)을 캐시에서 내주고 있었다. `yarn start --clear` 로 다시 띄우자 이번엔 이런 크래시가 났다.
+
+```
+java.lang.UnsatisfiedLinkError: No implementation found for void
+expo.modules.kotlin.jni.fabric.NativeStatePropsGetter.clearAllContentOriginsImpl()
+```
+
+추적: 이 함수를 부르는 곳은 의존성 전체에서 딱 하나, `@expo/ui` 의 `ExpoUIModule` **`OnDestroy`** 다(우리가 설치한 게 아니라 `expo-router` 가 끌고 온 패키지). 즉 React 컨텍스트가 내려갈 때 — **reload 때만** 불린다. Metro 재시작이 개발 빌드를 자동 reload 시켰고, 설치된 APK 의 네이티브 라이브러리에 그 구현이 연결돼 있지 않아 죽었다. 의존성은 Phase 3 이후 그대로라 우리 변경 탓이 아니고, 평소 화면 사용 경로에서는 불리지 않는다.
+
+해결: 앱을 **강제 종료 후 다시 열기**(콜드 스타트는 OnDestroy 를 타지 않는다). 그 뒤 로그인·카드 확인 모두 정상. 교훈 두 가지 — `.env` 를 바꾸면 Metro `--clear` 가 필수이고, 그다음엔 흔들어서 Reload 대신 앱을 껐다 켠다.
 
 ## 7장. 실행과 확인
 

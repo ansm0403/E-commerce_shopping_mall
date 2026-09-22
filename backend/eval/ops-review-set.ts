@@ -28,6 +28,8 @@
  *                                          코드 조각은 서비스가 SourceReaderService.read 로 그 커밋에서 읽어 저장한다(GitHub 접근).
  *                                          같은 인시던트의 옛 분석 행에 project 가 없으면 메모의 project 로 채운다(relatedFiles 정규화 힌트)
  *   notes list                             DB 의 메모 목록(인시던트 · 코드 범위 · 커밋 · 글자 수)
+ *   chips --ids 54,55 | --after 54         각 분석의 **조치 코드 이름 대조** 결과(Phase 8 A) — 대기 카드에 붙는 칩과 같은 계산(IdentifierCheckService).
+ *                                          채점이 끝난 분석도 볼 수 있다(pending 은 안내 채점이 끝난 카드를 내려주지 않는다). 파일은 GitHub raw(커밋별 Redis 캐시)
  *
  * 옵션:
  *   --delay <ms>   호출 간 대기(기본 13000). 백엔드 상한은 분당 LLM 호출 12회(Phase 5) — v1/v2 는 2회, v3 는 5회를 예약하므로
@@ -57,10 +59,11 @@ import { SentryApiClient } from '../src/ops/sentry-api.client';
 import { OpsService } from '../src/ops/ops.service';
 import { SourceReaderService } from '../src/ops/source-reader.service';
 import { OpsNoteService } from '../src/ops/ops-note.service';
+import { IdentifierCheckService } from '../src/ops/identifier-check.service';
 import { OpsIncidentNoteEntity } from '../src/ops/entity/ops-incident-note.entity';
 import { OpsAnalysisEntity } from '../src/ops/entity/ops-analysis.entity';
 import { REVIEW_CHECK_KEYS } from '../src/ops/entity/ops-review.entity';
-import type { AnalysisResponse } from '../src/ops/dto/analysis.dto';
+import type { AiAnalysis, AnalysisResponse, ToolCallRecord } from '../src/ops/dto/analysis.dto';
 import type { ReviewRateStats } from '../src/ops/dto/review.dto';
 import { scrubText } from '../src/common/utils/scrub-text';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -68,7 +71,7 @@ import type { Repository } from 'typeorm';
 import { INCIDENT_NOTES } from './ops-incident-notes';
 import { sleep } from './eval-utils';
 
-type Command = 'list' | 'seed' | 'test' | 'stats' | 'notes';
+type Command = 'list' | 'seed' | 'test' | 'stats' | 'notes' | 'chips';
 type Arm = 'v1' | 'v2' | 'v3' | 'v1.1' | 'v2.1' | 'v3.1';
 const ARMS: Arm[] = ['v1', 'v2', 'v3', 'v1.1', 'v2.1', 'v3.1'];
 /** 팔 → 분석 옵션. 버전 이름표는 서비스가 프롬프트로 정하므로 여기선 켜고 끄기만 한다. `.1` = 서비스 지도(배포 구성 사실) 포함 */
@@ -113,8 +116,8 @@ interface RunRecord {
 
 function parseArgs(argv: string[]): Args {
   const command = argv[0] as Command;
-  if (!['list', 'seed', 'test', 'stats', 'notes'].includes(command)) {
-    console.error('사용법: ops-review-set.ts <list|seed|test|stats|notes seed|notes list> [--ids a,b] [--arms v1,v2,v3] [--period 30d] [--limit 40] [--readable] [--after id] [--delay ms] [--dry-run] [--allow-empty-pool]');
+  if (!['list', 'seed', 'test', 'stats', 'notes', 'chips'].includes(command)) {
+    console.error('사용법: ops-review-set.ts <list|seed|test|stats|notes seed|notes list|chips> [--ids a,b] [--arms v1,v2,v3] [--period 30d] [--limit 40] [--readable] [--after id] [--delay ms] [--dry-run] [--allow-empty-pool]');
     process.exit(2);
   }
   const sub = command === 'notes' ? argv[1] : undefined;
@@ -263,6 +266,53 @@ async function main() {
         console.log(`  ${v.promptVersion.padEnd(8)} ${cells.join('')}`);
       }
       console.log('\n  ① causeLocation=원인 위치 일치 · ② noInventedIdentifiers=지어낸 식별자 없음 · ③ applicableAsIs=그대로 적용 가능 · ④ confidenceFits=확신도 적정\n');
+      return;
+    }
+
+    if (args.command === 'chips') {
+      // Phase 8 A — DoD ①의 표. listPending 과 같은 입력(정규화된 relatedFiles · 메모 코드 경로/ref · tool_calls)으로 같은 서비스를 부른다.
+      const checker = app.get(IdentifierCheckService);
+      const analysisRepo = app.get<Repository<OpsAnalysisEntity>>(getRepositoryToken(OpsAnalysisEntity));
+      const where = args.ids.length > 0 ? `a.id = ANY($1::int[])` : args.after !== undefined ? `a.id >= $1` : null;
+      if (!where) throw new Error('chips 는 --ids 54,55 또는 --after 54 가 필요하다');
+      const rows: Array<{
+        id: number; incident_id: string; prompt_version: string; project: string | null; result_json: AiAnalysis;
+        tool_calls: ToolCallRecord[] | null; code_path: string | null; code_ref: string | null;
+      }> = await analysisRepo.query(
+        `SELECT a.id, a.incident_id, a.prompt_version, COALESCE(a.project, n.project) AS project, a.result_json, a.tool_calls, n.code_path, n.code_ref
+           FROM ops_analyses a LEFT JOIN ops_incident_notes n ON n.incident_id = a.incident_id
+          WHERE a.status = 'ok' AND (a.model IS NULL OR a.model <> 'simulated') AND ${where}
+          ORDER BY a.id`,
+        [args.ids.length > 0 ? args.ids.map(Number) : args.after],
+      );
+      if (rows.length === 0) throw new Error('해당하는 ok 분석이 없다');
+      const inputs = rows.map((r) => ({
+        analysisId: r.id,
+        incidentId: r.incident_id,
+        suggestedFix: r.result_json?.suggestedFix ?? '',
+        relatedFiles: OpsReviewService.blindResult(r.result_json, r.project).relatedFiles ?? [],
+        toolCalls: Array.isArray(r.tool_calls) ? r.tool_calls : null,
+        noteCodePath: r.code_path,
+        noteCodeRef: r.code_ref,
+      }));
+      const started = Date.now();
+      const results = await checker.checkMany(inputs);
+      console.log(`\n조치 코드 이름 대조 — ${rows.length}장 (${Date.now() - started}ms, 파일은 커밋별 Redis 캐시)\n`);
+      console.log('  id   version  incident      대조파일  이름수  실제 코드에 없는 이름                 라이브러리 꼴');
+      let caught = 0;
+      for (const r of rows) {
+        const c = results.get(r.id);
+        const cell = c === null || c === undefined ? '(대조할 코드 없음)' : c.checkedCount === 0 ? '(조치에 코드 이름 없음)' : c.unknown.length > 0 ? c.unknown.join(', ') : '✓ 모두 있음';
+        if (c && c.unknown.length > 0) caught++;
+        console.log(
+          `  ${String(r.id).padStart(3)}  ${r.prompt_version.padEnd(8)} ${r.incident_id.padEnd(13)} ${String(c?.checkedFiles.length ?? 0).padStart(8)}  ${String(c?.checkedCount ?? 0).padStart(5)}  ${cell.padEnd(36)} ${(c?.maybeLibrary ?? []).join(', ')}`,
+        );
+      }
+      const files = new Set<string>();
+      for (const c of results.values()) for (const f of c?.checkedFiles ?? []) files.add(f);
+      console.log(`\n  잡힌 카드 ${caught}/${rows.length} · 대조에 쓴 파일 ${files.size}개:`);
+      for (const f of [...files].sort()) console.log(`    ${f}`);
+      console.log('\n  ⚠ 같은 인시던트의 두 팔은 같은 파일 집합으로 대조된다(블라인드). 잡지 못하는 것: 다시 쓴 코드(#54) · 파일에 다른 뜻으로 있는 이름(#56 data)\n');
       return;
     }
 

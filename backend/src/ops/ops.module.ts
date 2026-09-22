@@ -15,6 +15,7 @@ import { OpsIncidentNoteEntity } from './entity/ops-incident-note.entity';
 import { OpsReviewService } from './ops-review.service';
 import { OpsNoteService } from './ops-note.service';
 import { SourceReaderService } from './source-reader.service';
+import { IdentifierCheckService } from './identifier-check.service';
 
 /**
  * Ops Companion(RN 운영 앱) 백엔드 모듈 — Phase 0~3.
@@ -31,6 +32,8 @@ import { SourceReaderService } from './source-reader.service';
  *   DB 는 ops_analyses.tool_calls 컬럼 하나. 새 외부 연결(GitHub)이지만 비밀값은 없다(public 저장소).
  * - Phase 7: ops_incident_notes + OpsNoteService(사실 메모 upsert). ⚠ OpsAnalysisService 는 이것을 주입받지 않는다 —
  *   메모(정답)가 LLM 입력에 들어가면 다음 분석이 오염된다. 대기 목록(OpsReviewService.listPending)만 SQL 로 JOIN 해 카드에 싣는다.
+ * - Phase 8: IdentifierCheckService(조치 코드 이름 대조 — SourceReaderService.readFile 로 파일 전체를 읽어 순수 함수에 넘긴다).
+ *   OpsReviewService 가 대기 카드에 칩을 붙일 때만 쓴다. DB 변경 없음.
  */
 @Module({
   imports: [
@@ -45,7 +48,16 @@ import { SourceReaderService } from './source-reader.service';
     AuthModule,
   ],
   controllers: [OpsController],
-  providers: [OpsService, OpsAnalysisService, OpsReviewService, OpsNoteService, SourceReaderService, OpsPollerService, SentryApiClient],
+  providers: [
+    OpsService,
+    OpsAnalysisService,
+    OpsReviewService,
+    OpsNoteService,
+    SourceReaderService,
+    IdentifierCheckService,
+    OpsPollerService,
+    SentryApiClient,
+  ],
   exports: [OpsService],
 })
 export class OpsModule {}
