@@ -5,7 +5,8 @@ import { OpsAnalysisEntity } from './entity/ops-analysis.entity';
 import { OpsReviewEntity, REVIEW_CHECK_KEYS, type OpsReviewCheckKey } from './entity/ops-review.entity';
 import type { OpsIncidentNoteEntity } from './entity/ops-incident-note.entity';
 import { SourceReaderService } from './source-reader.service';
-import type { AiAnalysis } from './dto/analysis.dto';
+import { IdentifierCheckService } from './identifier-check.service';
+import type { AiAnalysis, ToolCallRecord } from './dto/analysis.dto';
 import { toNoteView } from './dto/note.dto';
 import {
   CreateReviewDto,
@@ -53,6 +54,7 @@ export class OpsReviewService {
     private readonly reviews: Repository<OpsReviewEntity>,
     @InjectRepository(OpsAnalysisEntity)
     private readonly analyses: Repository<OpsAnalysisEntity>,
+    private readonly identifierCheck: IdentifierCheckService,
   ) {}
 
   /**
@@ -70,6 +72,9 @@ export class OpsReviewService {
    * 만든 v1·v2 가 번갈아 나와 평가자가 패턴을 눈치챈다(블라인드 붕괴). 진짜 난수면 화면을 다시 당길 때마다 카드가 재배열된다.
    * 해시는 둘 다 피한다. 메모 우선은 팔을 드러내지 않는다(같은 인시던트의 두 팔이 같은 메모를 본다) — Phase 7 재채점 대상
    * 14장이 메모 없는 옛 카드 36장 뒤에 흩어지지 않게 하기 위해서다.
+   *
+   * Phase 8: 카드마다 `identifierCheck`(조치 코드 이름 대조)를 붙인다. 대조 파일은 인시던트 단위 합집합이라 두 팔이 같은 파일을 받고,
+   * tool_calls 는 읽는 커밋을 고르는 데만 쓰이고 응답에는 없다(v3.1 에만 있어 팔을 드러낸다 — Phase 7 함정 3).
    */
   async listPending(reviewerId: number): Promise<PendingReviewItem[]> {
     const rows: Array<{
@@ -81,6 +86,7 @@ export class OpsReviewService {
       model: string | null;
       createdAt: Date;
       project: string | null;
+      tool_calls: ToolCallRecord[] | null;
       note_id: number | null;
       note_project: string | null;
       symptom: string | null;
@@ -94,7 +100,7 @@ export class OpsReviewService {
       code_text: string | null;
       note_updated_at: Date | null;
     }> = await this.analyses.query(
-      `SELECT a.id, a.incident_id, a.incident_title, a.exception_text, a.result_json, a.model, a."createdAt",
+      `SELECT a.id, a.incident_id, a.incident_title, a.exception_text, a.result_json, a.model, a."createdAt", a.tool_calls,
               COALESCE(a.project, n.project) AS project,
               n.id AS note_id, n.project AS note_project, n.symptom, n.cause_location, n.fix_direction, n.common_mistakes,
               n.code_path, n.code_ref, n.code_start_line, n.code_end_line, n.code_text, n."updatedAt" AS note_updated_at
@@ -118,7 +124,7 @@ export class OpsReviewService {
       [reviewerId, String(reviewerId), OpsReviewService.PENDING_LIMIT],
     );
 
-    return rows.map((r) => ({
+    const items: PendingReviewItem[] = rows.map((r) => ({
       analysisId: r.id,
       incidentId: r.incident_id,
       incidentTitle: r.incident_title,
@@ -144,7 +150,27 @@ export class OpsReviewService {
               updatedAt: r.note_updated_at ?? undefined,
             } as unknown as OpsIncidentNoteEntity),
       checklist: REVIEW_CHECKLIST,
+      identifierCheck: null,
     }));
+
+    // 이름 대조(Phase 8) — 정규화된 relatedFiles(블라인드 결과) 기준. 실패해도 카드는 나간다(칩만 null)
+    try {
+      const checks = await this.identifierCheck.checkMany(
+        rows.map((r, i) => ({
+          analysisId: r.id,
+          incidentId: r.incident_id,
+          suggestedFix: typeof r.result_json?.suggestedFix === 'string' ? r.result_json.suggestedFix : '',
+          relatedFiles: items[i].result.relatedFiles ?? [],
+          toolCalls: Array.isArray(r.tool_calls) ? r.tool_calls : null,
+          noteCodePath: r.code_path,
+          noteCodeRef: r.code_ref,
+        })),
+      );
+      for (const item of items) item.identifierCheck = checks.get(item.analysisId) ?? null;
+    } catch (e) {
+      this.logger.warn(`이름 대조 실패 — 칩 없이 내려준다: ${(e as Error).message}`);
+    }
+    return items;
   }
 
   /**

@@ -991,7 +991,25 @@ seed 첫 실측(2026-09-22, analysis #14, flash-lite 3.4초): CORS 이슈에 대
 - 정의(2026-09-23, 사용자 승인 — "하나의 Phase 8 로"):
   - **A. 이름 대조 칩**: 조치 코드의 식별자(`process.env.X`·JSX 속성 포함, 예약어·내장·조치 안에서 선언한 이름 제외)를 메모 코드 ∪ relatedFiles 파일 전체와 대조 → 대기 카드에 "실제 코드에 없는 이름" 칩. 판정 제안은 그대로. 사전 점검(실측 아님): v1.1 #66 `FRONTEND_URL`·`callback` · #58 `DEFAULT_IMAGE_URL` · #62 `currentId` · #56 `data`(JSX) 예상, v3.1 #67 `ForbiddenException` 은 거짓 양성 후보, **#54 는 못 잡는다**(이름은 실재하고 코드를 다시 썼다 — 한계).
   - **B. 고리 닫기**: 앱이 찾고 사람이 승인한 프론트 버그 5건(배열 가드) + CSP `worker-src` 수정 → 저장소에 남기는 프로브로 **수정 전 재현 → 수정 후 0건**(로컬, 운영은 수정 후만) → PR 에 "이슈 → 승인된 분석 → 수정" 표. 선택: 앱에서 해결 처리(`POST /ops/incidents/:id/resolve` → Sentry 이슈 resolved) — 현재 토큰이 읽기 전용이라 사용자가 `event:write` 토큰을 발급해야 가능. 재발하면 기존 폴러가 다시 푸시(재발 감시).
-- 인수인계: `docs/roadmap/_next-session-phase8.md`.
+- 인수인계: `docs/roadmap/_next-session-phase8.md`(Phase 종료 후 삭제 — 내용은 아래 진행표와 9편으로).
+
+**진행(2026-09-23) — 구현·검증 완료(브랜치 `feat/ops-closing-loop`), 운영 반영·실기기 확인 대기. DB 변경 0**
+
+| 단계 | 내용 | 상태 |
+|---|---|---|
+| A-① 순수 함수 | `ops/identifier-check.ts` — 코드 구간(펜스·코드 같은 줄·인라인 백틱·**주석의 표현식**) → 이름 추출(예약어·내장·React 기본·소문자 태그·`data-*`·한 글자·**조치가 선언한 이름** 제외) → 소스 이름 집합(**주석 벗김**)과 대조 → `unknown` / `maybeLibrary`(`…Exception` 꼴) | ✅ 단위 31(규칙 17 + 14장 실제 텍스트 픽스처 `__fixtures__/identifier-check.phase8.json`) |
+| A-② I/O | `ops/identifier-check.service.ts` — **인시던트 단위 합집합**(메모 코드 파일 ∪ 두 팔의 relatedFiles, 상한 6) · ref = 메모 → tool_calls 첫 성공 → main · `SourceReaderService.readFile`(파일 전체, Redis 캐시) · 이름 0 이면 GitHub 무접촉 · 실패는 그 파일만 제외 · 이름 0 인 카드도 같은 `checkedFiles` | ✅ 단위 9 |
+| A-③ 카드 | `listPending` SELECT 에 `tool_calls`(응답엔 없음) → `identifierCheck` 부착(실패 시 null) · `PendingReviewItem.identifierCheck` · e2e `PENDING_KEYS` + 픽스처 `checkedCount 0` | ✅ 단위 · e2e F 5건 |
+| A-④ 앱 | `GuidancePanel.tsx` `IdentifierChip`(네 상태: 없는 이름 ⚠ / 모두 있음 ✓ / 조치에 이름 없음 / 대조할 코드 없음 · 라이브러리 꼴 약한 표시 · 대조 파일 접이식) · `review.tsx` 순서 메모 → 분석 → **칩** → 항목 · `suggestVerdict` 불변 | ✅ tsc · ⏳ 실기기 |
+| A-⑤ 표 | `ops-review-set.ts chips --ids|--after` → **14장 실측**: v1.1 **4/7**(#58 `DEFAULT_IMAGE_URL` · #60 `ProductItem` · #62 `currentId` · #66 `FRONTEND_URL`) · v3.1 unknown **0**, 라이브러리 꼴 1(#67 `ForbiddenException`). 인수인계 예상과 다른 셋: `callback`(#66)은 매개변수라 잡지 않음(규칙) · `data`(#56)는 파일에 변수로 있어 못 잡음(한계) · `ProductItem`(#60)은 예상에 없던 진짜 지어낸 이름. #54 는 이름 0(전부 스스로 선언) — 한계 그대로 | ✅ DoD (A)1·2 |
+| B-① 근거 표 | 이슈 → 승인된 분석 → 메모 → 수정: 7747401267 `useCategories.ts` · 7747419604/7747420327 `ProductSection.tsx` · 7747419820 `ProductCard.tsx` · 7747424036 `RelatedProducts.tsx` · (부수) CSP `worker-src 'self' blob:` | ✅ PR 본문 |
+| B-② 프로브 | `scripts/probe/probe.mjs`(+README) — `playwright-core` + 설치된 Chrome(`channel:'chrome'`, 브라우저 다운로드 없음) · 케이스 5 · **Sentry 전송 기본 차단** · BROKEN/OK/NO_HIT · 수정 후 화면 확인 · `pageerror` 에 우리 파일 첫 프레임 · `--json` | ✅ |
+| B-③ 전/후 | 로컬 **수정 전 5/5 BROKEN**(`nodes is not iterable` · `null (reading 'id')` · `products.map` · `images.find` · `response.filter`) → 가드 4파일 → **2건 그대로 BROKEN, hits 3 → 4** → **네 번째 호출 지점 `CategoryTabSection.tsx`**(같은 응답·같은 `products.map`, 첫 크래시가 가려 Sentry 스택·메모·AI 분석 어디에도 없었다) 수정 → **5/5 OK, 화면 확인 5/5** · 프론트 tsc | ✅ 로컬 · ⏳ 운영(머지 → Vercel → `--allow-sentry` 1회 → Sentry 새 이벤트 0) |
+| B-④ 해결 처리 | Sentry 토큰이 읽기 전용(`event:read`) → **건너뜀**. Sentry 웹에서 수동 Resolve 5건(사용자) | ⏭ |
+| 문서 | 9편 `09-closing-the-loop.md` · README 목차 · CLAUDE.md §5 · PROJECT_CARD 차별점 카드 · 이 절 · `_next-session-phase8.md` 삭제 | ✅ |
+
+- 결정(추천 1개로 진행, 사용자 위임 원칙): ① 조치가 선언한 이름은 대조하지 않는다(자기 완결적 — `callback` 을 잡으려면 규칙을 깨야 하고 `(product) =>` 류가 전부 거짓 양성이 된다) ② 소스 쪽은 주석을 벗긴다(`FRONTEND_URL` 이 주석에만 있었다) — 문자열은 남긴다 ③ 라이브러리 꼴은 `maybeLibrary` 로 분리(카드가 약하게 표시) ④ 대조 파일은 인시던트 단위 합집합 + 이름 0 인 카드도 같은 목록(파일 수가 팔을 드러내지 않게) ⑤ 이름 0 이면 파일을 읽지 않는다(e2e·산문 조치가 GitHub 를 부르지 않게) ⑥ `playwright-core` 를 루트 devDependency 로(브라우저 미다운로드, CI 부담 없음).
+- 밟은 함정(9편 6장): 소스 주석의 `FRONTEND_URL` · 첫 크래시가 가린 네 번째 호출 지점 · 화살표 반환 타입 정규식이 줄을 넘어 다음 `=>` 를 삼킴 · 병렬 Bash 호출의 cwd 공유로 `yarn add` 가 `backend/package.json` 에 들어감 · `.bin/jest` 는 셸 스크립트.
 - **확장 메모(범위 밖, 2026-09-23 대화)**: 범용화는 3단계 — ① 내 프로젝트 여럿(설정 테이블: Sentry 프로젝트·저장소·폴더·서비스 지도, 3~5일) ② 독립 서비스 분리(별도 백엔드·DB·인증·토큰 암호화, AI 도움 시 4~7일) ③ 다른 사람이 가입하는 SaaS(테넌트 분리·OAuth/GitHub App·팀별 LLM 비용, 수개월). 한 회사가 자기 도메인용으로 내부 도구를 두는 형태라면 지금 구조(한 조직·한 모노레포)도 현실적이다 — 다만 서비스 지도·저장소·폴더 목록이 코드에 박혀 있어 ① 은 회사가 바뀌어도 필요하다.
 
 ### 명시적 비목표 (v1에서 하지 않는 것)

@@ -203,6 +203,22 @@ export class SourceReaderService {
   }
 
   /**
+   * 파일 **전체** 텍스트(Phase 8 이름 대조용). 경로 검증·ref 해석·캐시는 read 와 같고, 줄 번호와 scrubText 가 없다 —
+   * 이 텍스트는 LLM 에 가지 않고 서버 안에서 이름만 뽑는 데 쓰인다(IdentifierCheckService). 앱으로도 나가지 않는다.
+   */
+  async readFile(
+    path: unknown,
+    ref: string,
+  ): Promise<{ ok: true; path: string; ref: string; text: string } | { ok: false; path: string; ref: string; reason: string }> {
+    const resolvedRef = SourceReaderService.COMMIT_REF.test(ref ?? '') ? ref.toLowerCase() : this.defaultRef;
+    const checked = SourceReaderService.checkPath(path);
+    if (!checked.ok) return { ok: false, path: String(path ?? ''), ref: resolvedRef, reason: checked.reason };
+    const file = await this.fetchFile(resolvedRef, checked.path);
+    if (!file.ok) return { ok: false, path: checked.path, ref: resolvedRef, reason: file.reason };
+    return { ok: true, path: checked.path, ref: resolvedRef, text: file.text };
+  }
+
+  /**
    * 파일 전체를 받아 Redis 에 둔다. 같은 파일의 다른 줄 범위를 이어서 읽는 것이 흔하므로 조각이 아니라 전체를 캐시한다.
    * 없는 파일(404)도 짧게 기억한다 — 모델이 같은 잘못된 경로를 반복 요청해도 GitHub 를 다시 부르지 않는다.
    */

@@ -110,6 +110,23 @@ export function normalizeChecks(input: OpsReviewChecks | null | undefined): Reco
 }
 
 /**
+ * 조치 코드 이름 대조 결과(Phase 8 A) — 확인 항목 ②의 **근거** 칩. 판정이 아니다(승인/반려 제안 규칙에 넣지 않는다).
+ * 같은 인시던트의 두 팔은 같은 checkedFiles 를 받는다(인시던트 단위 합집합 — 블라인드).
+ * 카드가 그리는 세 상태: unknown 있음 → "실제 코드에 없는 이름" · 없음 → "모두 실제 코드에 있음" · checkedCount 0 → "조치에 코드 이름 없음".
+ * 항목 자체가 null 이면 대조할 파일을 하나도 읽지 못한 것("대조할 코드 없음").
+ */
+export interface IdentifierCheckView {
+  /** 대조에 쓴 파일 — `frontend/src/hooks/useCategories.ts@7e3784f` 꼴 */
+  checkedFiles: string[];
+  /** 조치 코드에서 뽑아 대조한 이름 수(선언한 이름·예약어·내장 제외) */
+  checkedCount: number;
+  /** 대조 파일 어디에도 없는 이름 */
+  unknown: string[];
+  /** 없지만 `…Exception`·`…Module` 같은 프레임워크 클래스 꼴 — 라이브러리 이름일 수 있어 약하게 표시 */
+  maybeLibrary: string[];
+}
+
+/**
  * GET /v1/ops/analyses/pending 의 항목 — 이 평가자가 아직 **안내와 함께** 채점하지 않은, 구조화에 성공한 분석.
  *
  * ⚠ promptVersion 을 **일부러 싣지 않는다.** 평가는 블라인드다(Phase 4 결정 ①) — 평가자가 "이건 v2 니까"
@@ -129,6 +146,8 @@ export interface PendingReviewItem {
   createdAt: string;
   note: IncidentNoteView | null;
   checklist: readonly ReviewChecklistItem[];
+  /** Phase 8: 조치 코드 이름 대조. null = 대조할 파일을 읽지 못했다 */
+  identifierCheck: IdentifierCheckView | null;
 }
 
 export interface ReviewResponse {

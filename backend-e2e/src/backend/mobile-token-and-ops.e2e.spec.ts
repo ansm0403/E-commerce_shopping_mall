@@ -334,7 +334,8 @@ describe('모바일 토큰 전략 + ops 인시던트 조회 (HTTP e2e)', () => {
     // relatedFiles 는 카드에 나갈 때 저장소 경로로 정규화된다(Phase 7 블라인드) — project 가 프론트면 `./src/x.ts` → `frontend/src/x.ts`
     const RESULT = { severity: 'low', rootCause: 'e2e 픽스처 원인', suggestedFix: '조치 없음', relatedFiles: ['./src/x.ts', 'backend/src/main.ts'], confidence: 'high' };
     const BLIND_FILES = ['frontend/src/x.ts', 'backend/src/main.ts'];
-    const PENDING_KEYS = ['analysisId', 'checklist', 'createdAt', 'exceptionText', 'incidentId', 'incidentTitle', 'model', 'note', 'result'];
+    // Phase 8: identifierCheck(조치 코드 이름 대조). 픽스처 조치('조치 없음')엔 코드 이름이 없어 GitHub 를 부르지 않고 checkedCount 0 으로 온다
+    const PENDING_KEYS = ['analysisId', 'checklist', 'createdAt', 'exceptionText', 'identifierCheck', 'incidentId', 'incidentTitle', 'model', 'note', 'result'];
     const CHECK_KEYS = ['causeLocation', 'noInventedIdentifiers', 'applicableAsIs', 'confidenceFits'];
     const NOTE = { symptom: 'e2e 증상', causeLocation: 'e2e 원인 위치', fixDirection: 'e2e 조치 방향', commonMistakes: 'e2e 오답', project: 'e-commerse-frontend' };
     let okId: number;
@@ -387,6 +388,7 @@ describe('모바일 토큰 전략 + ops 인시던트 조회 (HTTP e2e)', () => {
         model: FIXTURE_MODEL,
         result: { ...RESULT, relatedFiles: BLIND_FILES },
         note: null,
+        identifierCheck: { checkedFiles: [], checkedCount: 0, unknown: [], maybeLibrary: [] },
       });
       expect(mine.checklist.map((c: { key: string }) => c.key)).toEqual(CHECK_KEYS);
       expect(res.data.some((p: { analysisId: number }) => p.analysisId === failedId)).toBe(false);

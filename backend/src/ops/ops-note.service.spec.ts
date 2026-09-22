@@ -160,6 +160,8 @@ describe('사실 메모는 LLM 입력에 들어가지 않는다(인수인계 함
         { provide: getRepositoryToken(OpsIncidentNoteEntity), useValue: {} },
         { provide: getRepositoryToken((await import('./entity/ops-review.entity')).OpsReviewEntity), useValue: {} },
         { provide: getRepositoryToken((await import('./entity/ops-analysis.entity')).OpsAnalysisEntity), useValue: { query } },
+        // Phase 8: 이름 대조 서비스도 메모를 읽지 않는다 — 여기서는 의존성만 채운다(대조 규칙은 identifier-check.spec 이 고정)
+        { provide: (await import('./identifier-check.service')).IdentifierCheckService, useValue: { checkMany: jest.fn() } },
       ],
     }).compile();
     await module.get(OpsReviewService).selectFewShot('1');
