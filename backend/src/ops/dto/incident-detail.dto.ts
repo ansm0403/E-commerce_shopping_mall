@@ -7,7 +7,11 @@ import { IncidentSummary } from './incident-summary.dto';
  * 앱 상세 화면이 그리는 것(예외·스택·breadcrumbs)만 남기고 나머지는 백엔드에서 버린다(§7 ⑤).
  */
 export interface IncidentStackFrame {
-  /** 예: "app:///_next/static/chunks/5585-….js", "src/order/order.service.ts" */
+  /**
+   * 프로젝트마다 꼴이 다르다 — 백엔드 "webpack://shopping-mall/backend/src/main.ts"(--enable-source-maps) ·
+   * 프론트 "./src/hooks/useCategories.ts"(Vercel 소스맵 업로드 후, Phase 6) · 앱 "app:///ops-companion/app/(tabs)/profile.tsx" ·
+   * 소스맵 없는 옛 이벤트 "app:///_next/static/chunks/5585-….js". 저장소 경로로 바꾸는 것은 SourceReaderService.normalizeFramePath
+   */
   filename: string | null;
   function: string | null;
   lineNo: number | null;

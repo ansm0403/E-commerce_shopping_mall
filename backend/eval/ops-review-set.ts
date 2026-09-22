@@ -9,7 +9,10 @@
  *   TS_NODE_PROJECT=eval/tsconfig.eval.json node -r ts-node/register/transpile-only eval/ops-review-set.ts <명령> [옵션]
  *
  * 명령:
- *   list  [--period 30d] [--limit 40]      Sentry 이슈 후보를 출력한다(id · 프로젝트 · 횟수 · 제목). 여기서 seed/test id 를 고른다
+ *   list  [--period 30d] [--limit 40] [--readable]
+ *                                          Sentry 이슈 후보를 출력한다(id · 프로젝트 · 횟수 · 제목). 여기서 seed/test id 를 고른다.
+ *                                          --readable 은 이슈마다 최신 이벤트를 한 번 더 받아(이슈당 Sentry 1회, 60초 캐시) read_source 가
+ *                                          읽을 수 있는 파일 수와 읽는 커밋을 열로 찍는다(Phase 6). 0 인 이슈로는 도구 효과를 잴 수 없다(6편 6-4)
  *   seed  --ids a,b,c                      각 id 를 v1(fewShot:false) 로 분석한다 → 앱에서 채점해 승인 풀을 만든다
  *   test  --ids d,e,f [--arms v1,v2] [--allow-empty-pool]
  *                                          각 id 를 --arms 의 버전으로 **각각** 분석한다(번갈아, 기본 v1,v2).
@@ -17,7 +20,9 @@
  *                                          `.1` 접미(v1.1·v2.1·v3.1) = 서비스 지도(배포 구성 사실) 포함 — Phase 5 네 번째 시도 (a).
  *                                          v2 가 포함됐는데 승인 풀이 비어 있으면 중단 — v2 가 v1 과 같은 프롬프트가 돼 비교가 성립하지 않는다.
  *                                          Phase 4 의 test 세트를 `--arms v3` 로 다시 돌리면 같은 인시던트의 v1·v2·v3 가 나란히 생긴다
- *   stats                                  promptVersion 별 분석 수·구조화 실패율·승인율·평균 별점
+ *   stats [--after <analysisId>]           promptVersion 별 분석 수·구조화 실패율·승인율·평균 별점.
+ *                                          --after 는 그 분석 id 이상만 센다 — v1.1·v3.1 은 Phase 5 에서도 쓴 이름표라 새 세트(Phase 6)만
+ *                                          보려면 세트 첫 행의 id 로 자른다
  *
  * 옵션:
  *   --delay <ms>   호출 간 대기(기본 13000). 백엔드 상한은 분당 LLM 호출 12회(Phase 5) — v1/v2 는 2회, v3 는 5회를 예약하므로
@@ -44,6 +49,8 @@ import { AppModule } from '../src/app/app.module';
 import { OpsAnalysisService } from '../src/ops/ops-analysis.service';
 import { OpsReviewService } from '../src/ops/ops-review.service';
 import { SentryApiClient } from '../src/ops/sentry-api.client';
+import { OpsService } from '../src/ops/ops.service';
+import { SourceReaderService } from '../src/ops/source-reader.service';
 import type { AnalysisResponse } from '../src/ops/dto/analysis.dto';
 import { scrubText } from '../src/common/utils/scrub-text';
 import { sleep } from './eval-utils';
@@ -70,6 +77,10 @@ interface Args {
   dryRun: boolean;
   allowEmptyPool: boolean;
   arms: Arm[];
+  /** list: 이슈마다 최신 이벤트를 한 번 더 불러(이슈당 Sentry 1회) read_source 가 읽을 수 있는 파일 수를 센다(Phase 6 결정 ②) */
+  readable: boolean;
+  /** stats: 이 분석 id 이상만 집계 — 같은 버전 이름표를 쓴 옛 행(Phase 5 의 v1.1·v3.1)과 새 세트를 가른다 */
+  after?: number;
 }
 
 interface RunRecord {
@@ -88,7 +99,7 @@ interface RunRecord {
 function parseArgs(argv: string[]): Args {
   const command = argv[0] as Command;
   if (!['list', 'seed', 'test', 'stats'].includes(command)) {
-    console.error('사용법: ops-review-set.ts <list|seed|test|stats> [--ids a,b] [--arms v1,v2,v3] [--period 30d] [--limit 40] [--delay ms] [--dry-run] [--allow-empty-pool]');
+    console.error('사용법: ops-review-set.ts <list|seed|test|stats> [--ids a,b] [--arms v1,v2,v3] [--period 30d] [--limit 40] [--readable] [--after id] [--delay ms] [--dry-run] [--allow-empty-pool]');
     process.exit(2);
   }
   const get = (flag: string): string | undefined => {
@@ -103,6 +114,8 @@ function parseArgs(argv: string[]): Args {
     delayMs: Number(get('--delay') ?? 13_000),
     dryRun: argv.includes('--dry-run'),
     allowEmptyPool: argv.includes('--allow-empty-pool'),
+    readable: argv.includes('--readable'),
+    after: get('--after') !== undefined ? Number(get('--after')) : undefined,
     arms: (get('--arms') ?? 'v1,v2')
       .split(',')
       .map((s) => s.trim())
@@ -159,24 +172,45 @@ async function main() {
     const analysis = app.get(OpsAnalysisService);
     const review = app.get(OpsReviewService);
     const sentry = app.get(SentryApiClient);
+    const ops = app.get(OpsService);
 
     if (args.command === 'list') {
       if (!sentry.isEnabled()) throw new Error('SENTRY_AUTH_TOKEN / SENTRY_ORG_SLUG 미설정');
       const issues = await sentry.listIssues(args.period, { limit: args.limit, sort: 'freq' });
       console.log(`\nSentry 이슈 후보 (${args.period}, 발생 많은 순, ${issues.length}건)\n`);
-      console.log('  id            project                횟수   level    제목');
+      console.log(`  id            project                횟수   level    ${args.readable ? '읽기  릴리즈    ' : ''}제목`);
       for (const i of issues) {
+        // --readable: 최신 이벤트의 프레임을 normalizeFramePath 에 통과시켜 "읽을 수 있는 파일 수"를 센다.
+        // 옛 세트 6건이 전부 0 이었던 것(6편 6-4)을 고를 때 미리 보기 위한 열이다. 0 인 이슈는 test 세트에서 뺀다.
+        let extra = '';
+        if (args.readable) {
+          try {
+            const { item } = await ops.getIncident(i.id);
+            const seen = new Set<string>();
+            for (const f of item.exception?.frames ?? []) {
+              const p = SourceReaderService.normalizeFramePath(f.filename, item.project);
+              if (p) seen.add(p);
+            }
+            const rel = item.release ?? '';
+            const refLabel = SourceReaderService.COMMIT_REF.test(rel) ? rel.slice(0, 7) : rel ? 'HEAD' : '-';
+            extra = `${String(seen.size).padStart(4)}  ${refLabel.padEnd(9)} `;
+          } catch (e) {
+            extra = `   ?  ${'err'.padEnd(9)} `;
+            console.error(`  (상세 조회 실패 ${i.id}: ${(e as Error).message})`);
+          }
+        }
         console.log(
-          `  ${i.id.padEnd(13)} ${(i.project?.slug ?? '-').padEnd(22)} ${String(i.count).padStart(5)}  ${(i.level ?? '-').padEnd(8)} ${(scrubText(i.title) ?? '').slice(0, 70)}`,
+          `  ${i.id.padEnd(13)} ${(i.project?.slug ?? '-').padEnd(22)} ${String(i.count).padStart(5)}  ${(i.level ?? '-').padEnd(8)} ${extra}${(scrubText(i.title) ?? '').slice(0, 70)}`,
         );
       }
       console.log('\nseed 와 test 는 겹치지 않게 고른다. 예: seed --ids A,B,C / test --ids D,E,F,G,H,I');
+      if (args.readable) console.log('읽기 = read_source 가 읽을 수 있는 파일 수(0 이면 도구 효과를 잴 수 없다) · 릴리즈 = 읽는 커밋(HEAD 는 릴리즈가 커밋 꼴이 아님)');
       return;
     }
 
     if (args.command === 'stats') {
-      const { versions } = await review.getStats();
-      console.log('\npromptVersion 별 집계 (model=simulated 제외)\n');
+      const { versions } = await review.getStats(args.after !== undefined ? { minAnalysisId: args.after } : {});
+      console.log(`\npromptVersion 별 집계 (model=simulated 제외${args.after !== undefined ? `, 분석 id ≥ ${args.after}` : ''})\n`);
       console.log('  version  analyses  ok  parse_failed  실패율   reviews  approved  rejected  승인율   평균별점  도구호출');
       for (const v of versions) {
         const pct = (n: number | null) => (n === null ? '   -  ' : `${(n * 100).toFixed(1).padStart(5)}%`);

@@ -56,6 +56,27 @@ describe('SourceReaderService — read_source 도구의 실행부(설계 §9 Pha
     ])('%s → %s', (input, expected) => {
       expect(SourceReaderService.normalizeFramePath(input)).toBe(expected);
     });
+
+    // Phase 6 — 프론트(Vercel 소스맵 업로드 후)의 실이벤트 꼴(2026-09-22, 이슈 7747401267):
+    //   inApp  filename=./src/hooks/useCategories.ts  absPath=app:///_next/static/chunks/app/(main)/src/hooks/useCategories.ts
+    //   lib    filename=../node_modules/axios/dist/browser/axios.cjs
+    // 빌드 cwd 가 frontend/ 라 저장소 폴더 이름이 없다 → project slug 를 힌트로 붙인다.
+    it.each([
+      ['./src/hooks/useCategories.ts', 'e-commerse-frontend', 'frontend/src/hooks/useCategories.ts'],
+      ['./src/components/common/SearchBar/CategorySelect.tsx', 'e-commerse-frontend', 'frontend/src/components/common/SearchBar/CategorySelect.tsx'],
+      ['src/lib/axios/axios-http-client.ts', 'e-commerse-frontend', 'frontend/src/lib/axios/axios-http-client.ts'],
+      ['../node_modules/axios/dist/browser/axios.cjs', 'e-commerse-frontend', null], // 라이브러리 — .. 거절
+      ['./src/../.env.local', 'e-commerse-frontend', null], // .. 세그먼트
+      ['./.env.local', 'e-commerse-frontend', null], // 허용 폴더(src/) 밖
+      ['app:///_next/static/chunks/8577-a802262ffa48f8c4.js', 'e-commerse-frontend', null], // 소스맵 이전 이벤트는 여전히 null
+      ['./src/hooks/useCategories.ts', null, null], // 힌트 없으면 폴더를 특정할 수 없다
+      ['./src/hooks/useCategories.ts', 'unknown-project', null],
+      ['./src/main.ts', 'e-commerse-backend', 'backend/src/main.ts'],
+      ['webpack://shopping-mall/backend/src/main.ts', 'e-commerse-frontend', 'backend/src/main.ts'], // 폴더 이름이 있으면 힌트보다 우선
+      ['app:///ops-companion/app/(tabs)/profile.tsx', 'ops-companion', 'ops-companion/app/(tabs)/profile.tsx'],
+    ])('%s (project=%s) → %s', (input, project, expected) => {
+      expect(SourceReaderService.normalizeFramePath(input, project)).toBe(expected);
+    });
   });
 
   describe('checkPath — fetch 전에 거절하는 것', () => {

@@ -133,8 +133,17 @@ export class OpsReviewService {
   /**
    * promptVersion 별 집계 — Phase 4 DoD 의 "v1 vs v2 승인율"이 이 숫자다.
    * 평가는 행 단위로 센다(평가자가 여럿이면 분석 하나에 여러 건). 승인율 분모는 approved + rejected.
+   *
+   * `minAnalysisId`(Phase 6): 이 id 이상인 분석만 센다. 같은 버전 이름표(v1.1·v3.1)가 Phase 5 의 CORS 재현·부작용 측정에도
+   * 쓰였으므로, 새 평가 세트만 보려면 세트의 첫 분석 id 로 자른다(스크립트 `stats --after`). 없으면 전체(옛 동작).
    */
-  async getStats(): Promise<ReviewStats> {
+  async getStats(filter: { minAnalysisId?: number } = {}): Promise<ReviewStats> {
+    const params: unknown[] = [];
+    let extraWhere = '';
+    if (typeof filter.minAnalysisId === 'number' && Number.isFinite(filter.minAnalysisId)) {
+      params.push(Math.floor(filter.minAnalysisId));
+      extraWhere = ` AND a.id >= $${params.length}`;
+    }
     const rows: Array<{
       prompt_version: string;
       analyses: number;
@@ -157,9 +166,10 @@ export class OpsReviewService {
               COUNT(DISTINCT a.id) FILTER (WHERE jsonb_typeof(a.tool_calls) = 'array' AND jsonb_array_length(a.tool_calls) > 0)::int AS tool_called
          FROM ops_analyses a
          LEFT JOIN ops_reviews r ON r.analysis_id = a.id
-        WHERE ${OpsReviewService.NOT_SIMULATED}
+        WHERE ${OpsReviewService.NOT_SIMULATED}${extraWhere}
         GROUP BY a.prompt_version
         ORDER BY a.prompt_version`,
+      params,
     );
 
     const versions: ReviewVersionStats[] = rows.map((r) => {

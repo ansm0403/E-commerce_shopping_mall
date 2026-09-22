@@ -1,0 +1,32 @@
+{
+  "runAt": "2026-09-22T02:04:56.876Z",
+  "command": "test",
+  "ids": [
+    "7747401267"
+  ],
+  "arms": [
+    "v3.1"
+  ],
+  "delayMs": 31000,
+  "records": [
+    {
+      "incidentId": "7747401267",
+      "arm": "v3.1",
+      "analysisId": 53,
+      "status": "ok",
+      "promptVersion": "v3.1",
+      "fewShotIds": null,
+      "toolCalls": [
+        {
+          "path": "frontend/src/hooks/useCategories.ts",
+          "ref": "7e3784f4e6ef1cb22d3eeaf123e902f288fa6f4b",
+          "startLine": 1,
+          "endLine": 29,
+          "ok": true,
+          "lines": 29
+        }
+      ],
+      "latencyMs": 5155
+    }
+  ]
+}

@@ -58,6 +58,17 @@ export class SourceReaderService {
   static readonly CACHE_PREFIX = 'ops:src:';
 
   static readonly ALLOWED_PREFIXES = ['backend/src/', 'frontend/src/', 'ops-companion/app/', 'ops-companion/src/'];
+  /**
+   * Sentry 프로젝트 slug → 저장소 폴더(Phase 6). 프레임 filename 에 저장소 폴더 이름이 없을 때만 쓰는 힌트다.
+   * 프론트(Next.js + Vercel 소스맵 업로드)의 프레임은 `./src/hooks/useCategories.ts` 꼴이라 — 빌드 cwd 가 `frontend/`
+   * 이므로 `frontend/` 가 빠진다(실측 2026-09-22). 백엔드(`webpack://shopping-mall/backend/src/…`)·앱(`app:///ops-companion/…`)은
+   * 폴더 이름이 들어 있어 이 표를 타지 않는다.
+   */
+  static readonly PROJECT_ROOTS: Readonly<Record<string, string>> = {
+    'e-commerse-frontend': 'frontend',
+    'e-commerse-backend': 'backend',
+    'ops-companion': 'ops-companion',
+  };
   /** 이름만으로 거절하는 파일. 허용 폴더 안에 있어도 읽지 않는다 */
   static readonly DENIED_NAME =
     /(^|\/)(\.env[^/]*|[^/]*\.(pem|key|p12|jks|keystore)|google-services\.json|[^/]*firebase-adminsdk[^/]*)$/i;
@@ -108,9 +119,14 @@ export class SourceReaderService {
    *  - `webpack://shopping-mall/backend/src/main.ts`(--enable-source-maps 적용 후 백엔드) → `backend/src/main.ts`
    *  - `app:///ops-companion/app/(tabs)/profile.tsx`(앱, 소스맵 업로드) → `ops-companion/app/(tabs)/profile.tsx`
    *  - `C:\\…\\backend\\src\\x.ts`(로컬 개발 서버) → `backend/src/x.ts`
+   *  - `./src/hooks/useCategories.ts` + project `e-commerse-frontend`(프론트, Vercel 소스맵 업로드 후) → `frontend/src/hooks/useCategories.ts`
+   *  - `../node_modules/axios/dist/browser/axios.cjs`(프론트 라이브러리 프레임) → null(`..` 거절)
    *  - `/app/backend/dist/main.js`(소스맵 없는 옛 운영 이벤트)·`_next/static/chunks/…`(프론트, 소스맵 미업로드) → null
+   *
+   * `project`(Sentry slug)는 filename 에 저장소 폴더 이름이 없을 때만 쓰는 힌트다(PROJECT_ROOTS). 폴더 이름이 있으면
+   * project 와 무관하게 그 자리부터 자른다 — 백엔드·앱의 기존 동작은 그대로다.
    */
-  static normalizeFramePath(filename: string | null | undefined): string | null {
+  static normalizeFramePath(filename: string | null | undefined, project?: string | null): string | null {
     if (typeof filename !== 'string' || filename.length === 0) return null;
     const unified = filename.replace(/\\/g, '/').split(/[?#]/)[0];
     let best = -1;
@@ -120,8 +136,18 @@ export class SourceReaderService {
       if (idx >= 0 && (best === -1 || idx < best)) best = idx;
       if (unified.startsWith(prefix)) best = best === -1 ? 0 : Math.min(best, 0);
     }
-    if (best === -1) return null;
-    const candidate = unified.slice(unified[best] === '/' ? best + 1 : best);
+    if (best >= 0) {
+      const candidate = unified.slice(unified[best] === '/' ? best + 1 : best);
+      return SourceReaderService.checkPath(candidate).ok ? candidate : null;
+    }
+
+    // 폴더 이름이 없는 프레임: 프로젝트 힌트로 저장소 폴더를 앞에 붙인다. 앞의 `./` 하나만 접고(webpack 상대경로),
+    // `../`·절대경로·URL 은 checkPath 가 거절한다 — `../node_modules/…` 가 `frontend/../node_modules` 로 새지 않는다.
+    const root = project ? SourceReaderService.PROJECT_ROOTS[project] : undefined;
+    if (!root) return null;
+    const relative = unified.startsWith('./') ? unified.slice(2) : unified;
+    if (relative.startsWith('/') || /^[a-z]+:/i.test(relative) || relative.startsWith('../')) return null;
+    const candidate = `${root}/${relative}`;
     return SourceReaderService.checkPath(candidate).ok ? candidate : null;
   }
 
