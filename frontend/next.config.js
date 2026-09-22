@@ -97,6 +97,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'", // emotion/styled-components용
               "img-src 'self' data: https:",
               "font-src 'self' data:",
+              "worker-src 'self' blob:", // Sentry Session Replay 압축 워커(blob URL). 없으면 default-src 'self' 가 적용돼 차단된다(ops-companion 학습 노트 7편 6-7)
               `connect-src ${connectSrc}`, // API + HMR + 포트원
               "frame-src https://*.portone.io https://*.iamport.co https://*.kakaopay.com https://*.kakao.com", // 포트원 결제창 iframe + 카카오페이
               "object-src 'none'",

@@ -42,7 +42,9 @@ function CategoryProducts({ categoryId }: { categoryId: number }) {
   });
 
   const result = data?.data as PaginatedProducts | undefined;
-  const products = result?.data ?? [];
+  // ProductSection 과 같은 가드(배열 아님 · null 항목). 같은 응답을 읽는 네 번째 호출 지점 — Sentry 스택은 ProductSection 만 가리켰고,
+  // AI 분석도 사실 메모도 이 파일을 적지 않았다. 수정 후 프로브가 홈에서 같은 에러를 다시 내서 드러났다(Phase 8 B, 9편 6장)
+  const products = Array.isArray(result?.data) ? result.data.filter((p) => p != null) : [];
 
   if (isError) {
     return (

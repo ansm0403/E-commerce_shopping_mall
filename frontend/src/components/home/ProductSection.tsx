@@ -30,7 +30,9 @@ export default function ProductSection({
 
   // axios 응답: data.data = { data: Product[], meta: {...} }
   const result = data?.data as PaginatedProducts | undefined;
-  const products = result?.data ?? [];
+  // 배열이 아닌 목록(Sentry 7747420327 "x.map is not a function") · 목록 안의 null 항목(7747419604 "null.id") 둘 다 여기서 막는다.
+  // `?? []` 는 null/undefined 만 막아 문자열은 통과했고, 항목 null 은 아래 product.id 에서 던졌다(Ops Companion 분석 #57·#61).
+  const products = Array.isArray(result?.data) ? result.data.filter((p) => p != null) : [];
 
   return (
     <section className="py-10">

@@ -23,7 +23,9 @@ export default function RelatedProducts({
     })
   );
 
-  const response = data?.data?.data ?? [];
+  // 응답 몸통이 배열이 아니면(Sentry 7747424036 ".filter is not a function") 빈 목록 — `?? []` 는 null/undefined 만 막았다(Ops Companion 분석 #63)
+  const raw = data?.data?.data;
+  const response: any[] = Array.isArray(raw) ? raw : [];
 
   const products = response
     .filter((p: any) => p.id !== currentProductId)
