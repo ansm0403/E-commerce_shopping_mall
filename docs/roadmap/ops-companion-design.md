@@ -931,9 +931,9 @@ seed 첫 실측(2026-09-22, analysis #14, flash-lite 3.4초): CORS 이슈에 대
 | ② 프로브 → 실이벤트 → 프레임 꼴 확정 | 스크래치패드 playwright 스크립트(`channel:'chrome'`), Sentry API 로 아티팩트 번들·최신 이벤트 확인 | ✅ |
 | ③ `normalizeFramePath` + 단위 | `PROJECT_ROOTS` · 두 번째 인자 · 프론트 케이스 12건 · `buildSourceContext` 한 줄 · DTO 주석 | ✅ ops 단위 159 · tsc |
 | ④ 로컬 v3.1 분석 | #53 → `tool_calls` 에 `frontend/src/hooks/useCategories.ts` | ✅ |
-| ⑤ 백엔드 배포 | 마이그레이션 없음 | ⏳ PR 뒤 |
+| ⑤ 백엔드 배포 | PR #39 → main `77c4f19` → 이미지(`APP_VERSION=77c4f19`, `.map` 8개) → EC2 `migrate.js` "pending 없음" → `up -d` → nginx reload → health `77c4f19` · ops 401 · `/products` 200(직접·Vercel 프록시). ⚠ 로컬 C 드라이브가 가득 차(여유 1GB) 빌드가 `COPY . .` 에서 두 번 EOF 로 죽었다 — Docker 빌드 캐시 정리 + 재부팅 후 성공 | ✅ 2026-09-22 · ✅ **운영 확인**: 실기기(운영 API)에서 7747401267 을 분석 → "AI 가 읽은 코드" `frontend/src/hooks/useCategories.ts:1-29` — 운영 DB 의 첫 프론트 읽기. 조치(`Array.isArray(tree) ? tree : []`)는 맞지만 원인 서술에 "`data` 가 `undefined` 일 때 방어 부족"이 섞였다(실제로는 `= []` 기본값이 `undefined` 를 막고, 깨진 건 **배열 아닌 객체**) — Phase 7 확인 항목 ①이 잡아야 할 종류의 반쯤 맞은 답 |
 | ⑥ 세트 선정·생성·채점 | `list --readable` → 7건 → `test --arms v1.1,v3.1` 14건 · 실기기 14장 · `stats --after 54` | ✅ 위 채점 행 |
-| ⑦ 문서 | 7편 · 이 절 · infra-story(0-1·3-4·5장·6장·용어·갱신 기록) · README · CLAUDE.md · 인수인계 `_next-session-phase6-close.md` | ✅ |
+| ⑦ 문서 | 7편 · 이 절 · infra-story(0-1·3-4·5장·6장·용어·갱신 기록) · README · CLAUDE.md · 인수인계(마감 후 삭제) | ✅ |
 
 **부수 발견(범위 밖, 기록)**: `next.config.js` CSP 에 `worker-src` 가 없어 Sentry Session Replay 의 압축 워커(blob)가 차단된다(콘솔 CSP 위반, 이벤트 유실은 없음) · `useCategories.flattenTree`·`ProductCard` 는 형태가 깨진 응답을 방어하지 않는다(이번 세트의 인시던트가 그 근거).
 

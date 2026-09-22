@@ -31,12 +31,13 @@
 
 ## 현재 상태 (2026-09-22)
 
-- **Phase 6 는 채점까지 끝났고 커밋은 안 됐다.** 브랜치 `docs/phase5-close`(PR #39 열림, 원격 `02710f0`) 위에 백엔드 7파일 · 문서 5파일 · 신규 4파일이 미커밋이다. 목록과 권장 커밋 분할은 `docs/roadmap/_next-session-phase6-close.md` "현재 상태"·"절차". **Phase 7 착수 전에 Phase 6 을 먼저 커밋할지 사용자에게 확인하라** — 같은 브랜치에 섞이면 PR 이 두 Phase 를 담는다.
+- **Phase 6 는 종료됐다.** main `77c4f19`(PR #39) 운영 배포·운영 확인까지 끝났다(2026-09-22). 운영 첫 프론트 읽기의 답은 조치는 맞고 원인 서술은 반쯤 맞았다 — "`data` 가 `undefined` 일 때 방어 부족"이라 했지만 실제로는 `= []` 가 `undefined` 를 막고 깨진 건 배열 아닌 객체다. **이것이 확인 항목 ①이 잡아야 할 예**이니 메모·카드 문구를 쓸 때 참고하라.
+- 작업 브랜치 `feat/ops-guided-review`(main `77c4f19` 에서 분기)에 Phase 6 마감 문서 커밋이 하나 있다(미푸시일 수 있음 — `git status -sb` 로 확인). Phase 7 은 이 브랜치에 이어 쌓는다.
 - Phase 6 채점 수치(`stats --after 54`): v1.1 7/7 · 별점 3.43 · 도구 0 / v3.1 7/7 · 4.29 · 도구 7. 쌍별 v3.1 5승 1무 1패.
 - 로컬 DB: 분석 #14~#67. Phase 6 세트 = #54~#67(인시던트 7건 × v1.1·v3.1). 평가자 1명(로컬 demo admin 계정).
 - 로컬 백엔드(4000)는 Phase 6 번들로 떠 있을 수 있다(`netstat -ano | findstr :4000`).
-- 앱 `.env` 는 채점 때 **LAN IP(`172.30.1.85`)** 로 바꿔 둔 상태일 수 있다. 재채점도 로컬이 필요하므로 그대로 두되, 끝나면 운영으로 되돌린다.
-- 운영 백엔드는 `7e3784f`(Phase 6 변경 미배포).
+- 앱 `.env` 는 지금 **운영**을 가리킨다(운영 확인 때 되돌렸다). 재채점은 로컬 DB 에 있는 #54~#67 대상이므로 그때 LAN IP 로 바꾸고, 끝나면 되돌린다.
+- 운영 백엔드는 `77c4f19`(Phase 6 포함).
 
 ---
 
@@ -71,7 +72,7 @@
 
 ## 진행 순서 (작게, 확인 수단 먼저)
 
-① **Phase 6 커밋 여부를 사용자에게 확인** → ② 마이그레이션 1건(`ops_incident_notes` + `ops_reviews.guided`·`checks jsonb` + 기존 행 보존) → 로컬 `migration:run` → ③ 메모 seed 스크립트(`ops-review-set.ts notes seed` 또는 별도 파일 — 설계 §9 Phase 7 표 7건 + 원인 위치 코드 자동 추출) → ④ 백엔드: `listPending` 을 guided 기준으로 · 응답에 `note`·relatedFiles 정규화 · `CreateReviewDto` 에 `checks`·`guided` · `getStats` 에 guided 전/후 → 단위(메모가 LLM 입력에 안 들어감 · 기존 평가 보존 · 블라인드 유지) + e2e(pending 키 목록이 바뀌므로 `mobile-token-and-ops` F 절 갱신) → ⑤ 앱: 카드 "채점 안내" 접이식 섹션 + 체크 4개 → 판정 제안 · tsc → ⑥ **사용자가 14장 재채점**(실기기, 로컬 백엔드) → ⑦ `stats --after 54` 로 guided 전/후 · 항목 ② 실패가 v1.1 에만 나오는지 → ⑧ 문서(8편 `08-<영문-케밥>.md` · 설계 §9 Phase 7 진행·수치 · README · CLAUDE.md · infra-story 는 변화 없으면 갱신 기록만) → 이 파일 삭제.
+① 브랜치 `feat/ops-guided-review` 확인 → ② 마이그레이션 1건(`ops_incident_notes` + `ops_reviews.guided`·`checks jsonb` + 기존 행 보존) → 로컬 `migration:run` → ③ 메모 seed 스크립트(`ops-review-set.ts notes seed` 또는 별도 파일 — 설계 §9 Phase 7 표 7건 + 원인 위치 코드 자동 추출) → ④ 백엔드: `listPending` 을 guided 기준으로 · 응답에 `note`·relatedFiles 정규화 · `CreateReviewDto` 에 `checks`·`guided` · `getStats` 에 guided 전/후 → 단위(메모가 LLM 입력에 안 들어감 · 기존 평가 보존 · 블라인드 유지) + e2e(pending 키 목록이 바뀌므로 `mobile-token-and-ops` F 절 갱신) → ⑤ 앱: 카드 "채점 안내" 접이식 섹션 + 체크 4개 → 판정 제안 · tsc → ⑥ **사용자가 14장 재채점**(실기기, 로컬 백엔드) → ⑦ `stats --after 54` 로 guided 전/후 · 항목 ② 실패가 v1.1 에만 나오는지 → ⑧ 문서(8편 `08-<영문-케밥>.md` · 설계 §9 Phase 7 진행·수치 · README · CLAUDE.md · infra-story 는 변화 없으면 갱신 기록만) → 이 파일 삭제.
 
 ⚠ ⑥ 전에 앱에서 카드 한 장을 사용자와 함께 보고 문구가 읽히는지 확인하라 — 이번 Phase 의 목적 자체가 "채점자가 이해할 수 있는가"다.
 
