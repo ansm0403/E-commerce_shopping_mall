@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Res, UseGuards } from '@nestjs/common';
 import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -8,9 +8,11 @@ import { Role } from '../user/entity/role.entity';
 import { OpsService } from './ops.service';
 import { OpsAnalysisService } from './ops-analysis.service';
 import { OpsReviewService } from './ops-review.service';
+import { OpsNoteService } from './ops-note.service';
 import { IncidentSummary } from './dto/incident-summary.dto';
 import { AnalysisResponse, CreateAnalysisDto } from './dto/analysis.dto';
 import { CreateReviewDto, PendingReviewItem, ReviewResponse, ReviewStats } from './dto/review.dto';
+import { IncidentNoteView, UpsertNoteDto } from './dto/note.dto';
 import { IncidentDetail } from './dto/incident-detail.dto';
 import { RegisterDeviceDto } from './dto/register-device.dto';
 import { ReleaseHealth } from './dto/release-health.dto';
@@ -28,6 +30,7 @@ export class OpsController {
     private readonly opsService: OpsService,
     private readonly analysisService: OpsAnalysisService,
     private readonly reviewService: OpsReviewService,
+    private readonly noteService: OpsNoteService,
   ) {}
 
   /**
@@ -73,6 +76,27 @@ export class OpsController {
   ): Promise<AnalysisResponse> {
     const { item, cached } = await this.analysisService.analyze(id, dto);
     res.setHeader('X-Cache', cached ? 'HIT' : 'MISS');
+    return item;
+  }
+
+  /**
+   * PUT /v1/ops/incidents/:id/note — 인시던트별 사실 메모 upsert(Phase 7). 인시던트당 하나라 PUT(통째로 덮어쓰기).
+   * body.code 가 있으면 서버가 그 커밋의 코드를 읽어 함께 저장한다(읽기 실패 400 — 반쯤 채운 메모를 남기지 않는다).
+   * 처음이면 X-Note: CREATED, 덮어썼으면 UPDATED(평가 저장의 X-Review 와 같은 관례).
+   *
+   * Sentry 를 부르지 않는다 — 옛 인시던트(24h 목록 밖)에도 메모를 달 수 있어야 하고, 스크립트가 seed 할 때 토큰 없이도 돌아야 한다.
+   * DemoAccountGuard 를 걸지 않는다: 분석·평가 엔드포인트와 같은 이유(로컬 관리자가 데모 계정). 메모는 LLM 입력에 들어가지 않으므로
+   * 잘못 써도 오염되는 것은 채점 안내뿐이고, 다시 PUT 하면 고쳐진다.
+   */
+  @Put('incidents/:id/note')
+  async upsertNote(
+    @User('sub') authorId: number,
+    @Param('id') id: string,
+    @Body() dto: UpsertNoteDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<IncidentNoteView> {
+    const { item, created } = await this.noteService.upsert(id, dto, authorId ?? null);
+    res.setHeader('X-Note', created ? 'CREATED' : 'UPDATED');
     return item;
   }
 

@@ -11,7 +11,9 @@ import { OpsPollStateEntity } from './entity/ops-poll-state.entity';
 import { OpsPushLogEntity } from './entity/ops-push-log.entity';
 import { OpsAnalysisEntity } from './entity/ops-analysis.entity';
 import { OpsReviewEntity } from './entity/ops-review.entity';
+import { OpsIncidentNoteEntity } from './entity/ops-incident-note.entity';
 import { OpsReviewService } from './ops-review.service';
+import { OpsNoteService } from './ops-note.service';
 import { SourceReaderService } from './source-reader.service';
 
 /**
@@ -27,6 +29,8 @@ import { SourceReaderService } from './source-reader.service';
  *   프롬프트에 승인된 예시를 넣는다 — 순환 고리(설계 §1.4)의 ④→② 화살표가 이 의존성이다.
  * - Phase 5: SourceReaderService(GitHub raw 읽기 + Redis 캐시). OpsAnalysisService 가 read_source 도구의 실행부로 쓴다.
  *   DB 는 ops_analyses.tool_calls 컬럼 하나. 새 외부 연결(GitHub)이지만 비밀값은 없다(public 저장소).
+ * - Phase 7: ops_incident_notes + OpsNoteService(사실 메모 upsert). ⚠ OpsAnalysisService 는 이것을 주입받지 않는다 —
+ *   메모(정답)가 LLM 입력에 들어가면 다음 분석이 오염된다. 대기 목록(OpsReviewService.listPending)만 SQL 로 JOIN 해 카드에 싣는다.
  */
 @Module({
   imports: [
@@ -36,11 +40,12 @@ import { SourceReaderService } from './source-reader.service';
       OpsPushLogEntity,
       OpsAnalysisEntity,
       OpsReviewEntity,
+      OpsIncidentNoteEntity,
     ]),
     AuthModule,
   ],
   controllers: [OpsController],
-  providers: [OpsService, OpsAnalysisService, OpsReviewService, SourceReaderService, OpsPollerService, SentryApiClient],
+  providers: [OpsService, OpsAnalysisService, OpsReviewService, OpsNoteService, SourceReaderService, OpsPollerService, SentryApiClient],
   exports: [OpsService],
 })
 export class OpsModule {}

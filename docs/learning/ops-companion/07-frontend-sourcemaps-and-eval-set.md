@@ -3,7 +3,7 @@
 > 대상: [1편](./01-rn-first-app.md)~[6편](./06-source-reading.md)을 읽었다고 본다. 6편의 `read_source` 도구·`normalizeFramePath`·버전 규칙(v3 = 도구가 프롬프트에 들어간 분석, `.1` = 서비스 지도)과 5편의 평가 세트 스크립트는 다시 풀지 않는다.
 > 원본 설계: [`docs/roadmap/ops-companion-design.md`](../../roadmap/ops-companion-design.md) §9 Phase 6(정의 · 결정 5건 · 실측 · 진행)
 > 짝지어 읽을 코드: [source-reader.service.ts](../../../backend/src/ops/source-reader.service.ts)(`PROJECT_ROOTS` · `normalizeFramePath`) · [ops-analysis.service.ts](../../../backend/src/ops/ops-analysis.service.ts)(`buildSourceContext`) · [ops-review.service.ts](../../../backend/src/ops/ops-review.service.ts)(`getStats`) · [ops-review-set.ts](../../../backend/eval/ops-review-set.ts)(`list --readable` · `stats --after`) · [next.config.js](../../../frontend/next.config.js)(`withSentryConfig`)
-> 작성 시점: 2026-09-22 (브랜치 `docs/phase5-close` 위에서 이어 작업 — **코드·세트 생성·실기기 채점 14장까지 완료**, 배포는 PR 뒤)
+> 작성 시점: 2026-09-22 (main `77c4f19` = PR #39 — **코드·세트·채점 14장·운영 배포·운영 확인까지 완료**)
 
 ---
 
@@ -378,7 +378,8 @@ TS_NODE_PROJECT=eval/tsconfig.eval.json node -r ts-node/register/transpile-only 
 - [x] 읽을 수 있는 인시던트 ≥ 4건으로 새 test 세트(7건) × v1.1·v3.1 생성
 - [x] 블라인드 채점 14장 → `stats --after 54` → **도구 유무만 다른 첫 비교표**(승인율 7/7 = 7/7 · 별점 3.43 → 4.29 · `toolCalled` 0 → 7) — **DoD ③**
 - [x] e2e `mobile-token-and-ops` 22/22(새 번들의 로컬 4000)
-- [ ] 백엔드 배포(`normalizeFramePath` 변경 — 마이그레이션 없음) — PR 뒤
+- [x] 백엔드 배포 — main `77c4f19`(PR #39), 2026-09-22, 마이그레이션 없음, health `77c4f19`
+- [x] 운영에서 프론트 인시던트 1건을 v3.1 로 분석 → "AI 가 읽은 코드" `frontend/src/hooks/useCategories.ts:1-29`(실기기, 운영 API, 2026-09-22). 조치는 맞고 원인 서술은 반쯤 맞다 — 8장
 
 ## 7-3. 안 될 때
 
@@ -399,9 +400,19 @@ TS_NODE_PROJECT=eval/tsconfig.eval.json node -r ts-node/register/transpile-only 
 
 # 8장. 다음 — 첫 비교표는 나왔고, 축은 별점이었다
 
+- **운영 첫 프론트 읽기에서 본 것.** 배포 후 같은 인시던트(7747401267)를 운영에서 분석하자 모델이 `useCategories.ts` 1~29줄을 읽고 `Array.isArray(tree) ? tree : []` 를 제안했다 — 조치는 맞다. 그런데 원인에 "`useQuery` 의 `data` 가 `undefined` 일 수 있는데 방어가 없다"를 섞었다. 19행 `data: tree = []` 가 바로 그 방어이고, 실제로 깨진 것은 `undefined` 가 아니라 **배열이 아닌 객체**다. 코드를 읽고도 틀린 세부를 자신 있게 말한 것이고, 안내 없는 채점(승인/반려)으로는 이런 "반쯤 맞은 답"을 가를 수 없다. Phase 7 의 확인 항목 ①(원인이 사실 메모와 같은가)이 잡아야 할 정확한 예다.
+
 - **결과 한 줄.** 승인율은 7/7 = 7/7 로 갈리지 않았고, 별점은 3.43 → 4.29(쌍별 5승 1무 1패). 도구의 몫은 6편의 결론("지어내지 않는다")에 더해 **"실제 줄을 인용한 답이 더 쓸모 있어 보인다"** 로 좁혀졌다. 승인율만으로는 도구 효과가 안 보인다 — 다음 측정은 별점을 주축으로 두거나, 승인/반려보다 고운 척도(예: "조치를 그대로 적용할 수 있는가")가 필요하다.
 - **표본과 인위성.** 7건 중 6건이 프로브 이벤트라 "형태가 깨진 응답" 한 부류에 몰려 있고, 승인율 천장이 그 증거다. 자연 발생 인시던트(특히 스택이 한 줄을 안 가리키는 것)가 쌓이면 같은 두 팔로 다시 잰다. 평가자도 1명이다.
 - **채점자에게 근거를 준다(Phase 7).** 위 "타당성 한계"의 해소. 정답지를 주는 게 아니라 인시던트별 **사실 메모**(무엇이 어떻게 깨졌나 — 두 팔에 똑같이 붙으므로 블라인드는 유지)와 **확인 항목 4개**(원인이 메모의 파일·함수를 가리키나 · 조치 코드가 실제 파일의 식별자만 쓰나 · 그대로 적용 가능한가 · 확신도가 근거에 비해 과한가)를 카드에 보여주고, 항목 체크에서 승인/반려를 파생한다. 도메인 지식 없이도 확인할 수 있는 항목(②)이 6편 이후 도구의 실제 몫("지어내지 않음")과 정확히 겹친다. 평가는 upsert 라 같은 14장을 다시 채점할 수 있고, 안내 전후의 차이가 "안내 없는 채점은 무엇을 쟀나"의 답이 된다. 메모가 쌓이면 어시스턴트 트랙의 골든셋 + LLM judge(ex-ai-assistant Phase 7)로 넘어갈 수 있다.
 - **"도구가 좋아지면 채점이 덜 필요한가"** — 아니다. 4편 오답 → 5편 반려 → 6편 #43 반려 → #45 승인이라는 서사 자체가 채점 기록이고, 지도·프롬프트를 고칠 때마다 같은 세트로 회귀를 잡는 것도 채점이다. 바뀌어야 하는 것은 척도(승인/반려 → 항목)와 재료(쉬운 프로브 → 자연 발생·원인이 다른 파일)다. CORS 는 파일을 더 읽어서 풀린 것이 아니라(그 사실은 저장소 밖) 지도로 풀렸으므로, 도구의 "다른 파일 읽기"가 그 부류를 해결한다는 기대는 접어야 한다.
 - **코드 수정 후보(범위 밖, 기록)**: `useCategories.flattenTree` 의 배열 가드 · `ProductCard` 의 null 항목 방어 · CSP `worker-src 'self' blob:`(6-8). 이번 세트의 인시던트들이 곧 그 근거다.
 - **배포.** `normalizeFramePath` 변경은 백엔드 이미지 재배포가 필요하다(마이그레이션 없음). 그 전까지 운영의 프론트 인시던트 분석은 v3.1 이지만 "읽을 수 있는 파일 없음"으로 돈다.
+
+## 부록. 배포에서 밟은 함정 — 로컬 디스크가 가득 차면 Docker 빌드가 EOF 로 죽는다
+
+PR #39 머지 후 이미지 빌드가 `COPY . .` 단계에서 두 번 연속 `failed to receive status: rpc error: code = Unavailable desc = error reading from server: EOF` 로 끝났다. 코드 문제가 아니라 **C 드라이브 여유가 1GB** 였다. Docker Desktop(Windows)은 데이터를 C 드라이브의 가상 디스크 파일(`docker_data.vhdx`) 하나에 담고, 빌드 컨텍스트를 복사하며 그 파일이 커지려다 실패하면 데몬 연결이 끊긴다. 에러 문구에 "디스크"라는 말이 없어 원인을 짐작하기 어렵다.
+
+- 조치: `docker builder prune -f --keep-storage 8GB`(최근 캐시 8GB 만 남김, 14GB 회수 — 가상 디스크 **안쪽**이 비어 빌드가 파일을 키울 필요가 없어진다) + 사용자가 재부팅으로 호스트 9GB 확보 → 빌드 성공.
+- 가상 디스크 파일은 **스스로 줄지 않는다**. 이미지·캐시를 지워도 호스트 여유는 그대로이고, 돌려받으려면 Docker 를 끄고(`wsl --shutdown`) diskpart `compact vdisk` 로 압축해야 한다(Windows Home 은 `Optimize-VHD` 없음).
+- 확인 명령: `docker system df`(안쪽 사용량) vs `docker_data.vhdx` 파일 크기(호스트 차지분). 이번엔 42.5GB 파일 안에서 21.6GB 만 쓰고 있었다.

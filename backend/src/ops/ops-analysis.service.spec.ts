@@ -725,12 +725,16 @@ describe('OpsAnalysisService — AI 분석 파이프라인(설계 §3.4)', () =>
         OpsAnalysisService.summarizeIncident(
           incident({ title: `${long} kim.shop@example.com`, exception: { type: null, value: 'v', frames: [] } }),
         ),
-      ).toEqual({ incidentTitle: 't'.repeat(OpsAnalysisService.TITLE_MAX), exceptionText: 'Error: v' });
+      ).toEqual({ incidentTitle: 't'.repeat(OpsAnalysisService.TITLE_MAX), exceptionText: 'Error: v', project: 'e-commerse-frontend' });
 
       expect(OpsAnalysisService.summarizeIncident(incident({ exception: null }))).toEqual({
         incidentTitle: 'AxiosError: Network Error',
         exceptionText: null,
+        project: 'e-commerse-frontend',
       });
+      // Phase 7: project 는 relatedFiles 정규화 힌트로 행에 남긴다. 없거나 빈 문자열이면 null
+      expect(OpsAnalysisService.summarizeIncident(incident({ project: null })).project).toBeNull();
+      expect(OpsAnalysisService.summarizeIncident(incident({ project: '  ' })).project).toBeNull();
     });
   });
 });

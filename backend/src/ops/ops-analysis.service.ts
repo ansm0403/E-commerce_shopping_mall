@@ -492,7 +492,11 @@ export class OpsAnalysisService {
    * 행에 남길 인시던트 요약 두 줄(평가 카드 머리글 · few-shot 예시의 "입력"). 둘 다 scrubText 를 거친다 —
    * 이 값은 나중에 다른 인시던트의 프롬프트에 예시로 다시 들어가므로 LLM 입력과 같은 기준으로 마스킹한다.
    */
-  static summarizeIncident(incident: IncidentDetail): { incidentTitle: string | null; exceptionText: string | null } {
+  static summarizeIncident(incident: IncidentDetail): {
+    incidentTitle: string | null;
+    exceptionText: string | null;
+    project: string | null;
+  } {
     const title = scrubText(incident.title)?.trim() || null;
     const exc = incident.exception
       ? `${incident.exception.type ?? 'Error'}: ${scrubText(incident.exception.value) ?? ''}`.trim()
@@ -500,6 +504,8 @@ export class OpsAnalysisService {
     return {
       incidentTitle: title ? title.slice(0, OpsAnalysisService.TITLE_MAX) : null,
       exceptionText: exc && exc !== 'Error:' ? exc.slice(0, OpsAnalysisService.EXCEPTION_MAX) : null,
+      // Phase 7: 평가 대기 응답이 relatedFiles 를 정규화할 때의 힌트(엔티티 주석). Sentry slug 그대로, 80자 상한
+      project: typeof incident.project === 'string' && incident.project.trim() ? incident.project.trim().slice(0, 80) : null,
     };
   }
 

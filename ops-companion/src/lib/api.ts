@@ -311,11 +311,39 @@ export async function requestAnalysis(id: string, options: AnalyzeOptions = {}):
 
 export type ReviewVerdict = 'approved' | 'rejected';
 
+/** 확인 항목 4개의 키(Phase 7). 백엔드 REVIEW_CHECK_KEYS 와 같다 — 카드의 체크 하나가 키 하나 */
+export type ReviewCheckKey = 'causeLocation' | 'noInventedIdentifiers' | 'applicableAsIs' | 'confidenceFits';
+/** 각 항목의 답: true=통과(✓) · false=실패(✗) · null=판단 못 함 */
+export type ReviewChecks = Partial<Record<ReviewCheckKey, boolean | null>>;
+
+/** 확인 항목 정의 — 문구는 백엔드가 내려준다(고칠 때 앱을 다시 빌드하지 않기 위해) */
+export interface ReviewChecklistItem {
+  key: ReviewCheckKey;
+  label: string;
+  howTo: string;
+}
+
 /**
- * GET /v1/ops/analyses/pending 의 항목 — 내가 아직 채점하지 않은, 구조화에 성공한 분석.
+ * 인시던트별 사실 메모(Phase 7) — "무엇이 깨졌나 · 원인 위치 · 조치 방향 · 흔한 오답" + 원인 위치의 실제 코드.
+ * 사람이 쓴 정답이고, 같은 인시던트의 어느 분석 카드에나 똑같이 붙는다(블라인드 유지). LLM 은 이것을 보지 못한다.
+ */
+export interface IncidentNote {
+  incidentId: string;
+  project: string | null;
+  symptom: string;
+  causeLocation: string;
+  fixDirection: string;
+  commonMistakes: string | null;
+  code: { path: string; ref: string; startLine: number; endLine: number; text: string } | null;
+  updatedAt: string;
+}
+
+/**
+ * GET /v1/ops/analyses/pending 의 항목 — 내가 아직 **안내와 함께** 채점하지 않은, 구조화에 성공한 분석.
  *
  * promptVersion 이 **없다**. 평가는 블라인드다(설계 §9 Phase 4 결정 ①) — "이건 v2 니까" 하고 후하게 줄 수 있는
  * 정보는 카드에서 숨기는 게 아니라 백엔드가 응답에서 뺀다. 버전은 채점이 끝난 뒤 집계에서만 드러난다.
+ * Phase 7: `result.relatedFiles` 는 백엔드가 저장소 경로로 정규화해 준다 · `note` 는 사실 메모(없으면 null) · `checklist` 는 항목 정의.
  */
 export interface PendingReview {
   analysisId: number;
@@ -326,6 +354,8 @@ export interface PendingReview {
   result: AiAnalysis;
   model: string | null;
   createdAt: string;
+  note: IncidentNote | null;
+  checklist: ReviewChecklistItem[];
 }
 
 export interface ReviewInput {
@@ -333,6 +363,9 @@ export interface ReviewInput {
   /** 1~5. 별점을 안 고르고 스와이프만 하면 보내지 않는다 */
   rating?: number;
   comment?: string;
+  /** 안내(메모+확인 항목)와 함께 채점했는가. Phase 7 앱은 항상 true — 백엔드가 안내 전 판정과 다른 행으로 보관한다 */
+  guided?: boolean;
+  checks?: ReviewChecks;
 }
 
 export interface ReviewResult {
@@ -342,6 +375,8 @@ export interface ReviewResult {
   verdict: ReviewVerdict;
   rating: number | null;
   comment: string | null;
+  guided: boolean;
+  checks: Record<ReviewCheckKey, boolean | null> | null;
   createdAt: string;
   updatedAt: string;
 }
