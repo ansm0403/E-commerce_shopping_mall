@@ -6,11 +6,12 @@ import { OpsReviewEntity, REVIEW_CHECK_KEYS, type OpsReviewCheckKey } from './en
 import type { OpsIncidentNoteEntity } from './entity/ops-incident-note.entity';
 import { SourceReaderService } from './source-reader.service';
 import { IdentifierCheckService } from './identifier-check.service';
-import type { AiAnalysis, ToolCallRecord } from './dto/analysis.dto';
-import { toNoteView } from './dto/note.dto';
+import type { AiAnalysis, AnalysisResponse, ReviewSummary, ToolCallRecord } from './dto/analysis.dto';
+import { toNoteView, type IncidentNoteView } from './dto/note.dto';
 import {
   CreateReviewDto,
   FewShotExample,
+  IdentifierCheckView,
   PendingReviewItem,
   REVIEW_CHECKLIST,
   ReviewCheckStats,
@@ -381,6 +382,53 @@ export class OpsReviewService {
       exceptionText: r.exception_text,
       result: r.result_json,
     }));
+  }
+
+  /**
+   * S4(분석 상세)용 이름 대조 — 대기 카드(listPending)와 **같은 입력·같은 서비스**로 한 장만 계산한다(Phase 8 후속).
+   * 그 조치를 붙여 넣으려는 사람이 "코드에 없는 이름" 경고를 채점 카드가 아니라 여기서 먼저 봐야 한다.
+   * 구조화 실패 행(result 없음)은 대조할 코드가 없으니 null.
+   */
+  async identifierCheckFor(item: AnalysisResponse, note: IncidentNoteView | null): Promise<IdentifierCheckView | null> {
+    if (item.status !== 'ok' || !item.result) return null;
+    const project = item.project ?? note?.project ?? null;
+    const relatedFiles = OpsReviewService.blindResult(item.result, project).relatedFiles ?? [];
+    const checks = await this.identifierCheck.checkMany([
+      {
+        analysisId: item.id,
+        incidentId: item.incidentId,
+        suggestedFix: typeof item.result.suggestedFix === 'string' ? item.result.suggestedFix : '',
+        relatedFiles,
+        toolCalls: Array.isArray(item.toolCalls) ? item.toolCalls : null,
+        noteCodePath: note?.code?.path ?? null,
+        noteCodeRef: note?.code?.ref ?? null,
+      },
+    ]);
+    return checks.get(item.id) ?? null;
+  }
+
+  /**
+   * 이 분석에 대한 사람 채점 요약(S4 한 줄). 행이 몇 개 안 되니 SQL 집계 대신 그대로 읽어 센다.
+   * `mine` 은 요청한 관리자의 판정 — 안내 채점(guided) 행이 있으면 그것을, 없으면 안내 전 행을.
+   * ⚠ 대기 카드(S5)에는 싣지 않는다 — 채점 중에 남의 판정이 보이면 블라인드의 취지가 흔들린다.
+   */
+  async summarizeReviews(analysisId: number, reviewerId: number | null): Promise<ReviewSummary> {
+    const rows = await this.reviews.find({ where: { analysisId } });
+    const approved = rows.filter((r) => r.verdict === 'approved').length;
+    const rejected = rows.filter((r) => r.verdict === 'rejected').length;
+    const rated = rows.filter((r) => typeof r.rating === 'number');
+    const avgRating = rated.length > 0 ? OpsReviewService.round(rated.reduce((s, r) => s + (r.rating as number), 0) / rated.length) : null;
+    const mineRow =
+      reviewerId === null
+        ? undefined
+        : rows.filter((r) => r.reviewerId === reviewerId).sort((a, b) => Number(b.guided === true) - Number(a.guided === true))[0];
+    return {
+      reviews: rows.length,
+      approved,
+      rejected,
+      avgRating,
+      mine: mineRow ? { verdict: mineRow.verdict, rating: mineRow.rating ?? null, guided: mineRow.guided === true } : null,
+    };
   }
 
   static toResponse(row: OpsReviewEntity): ReviewResponse {

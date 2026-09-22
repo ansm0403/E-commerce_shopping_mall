@@ -631,6 +631,11 @@ export class OpsAnalysisService {
       fewShotIds: row.fewShotIds ?? null,
       toolCalls: row.toolCalls ?? null,
       createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : String(row.createdAt),
+      project: row.project ?? null,
+      // 아래 셋은 컨트롤러가 채운다(OpsController.enrichAnalysis) — 이 서비스는 메모·채점을 모른다(LLM 입력 격리)
+      note: null,
+      identifierCheck: null,
+      reviewSummary: null,
     };
   }
 

@@ -11,9 +11,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, Share, StyleSheet, Text, View } from 'react-native';
 import { requireOptionalNativeModule } from 'expo';
-import type { AiAnalysis, AnalysisToolCall, IncidentAnalysis } from '../../lib/api';
+import type { AiAnalysis, AnalysisToolCall, IdentifierCheck, IncidentAnalysis } from '../../lib/api';
 import { timeAgo } from '../../lib/format';
 import { colors, severityColor, spacing } from '../../theme';
+import { IdentifierChip } from './IdentifierChip';
 
 const SEVERITY_LABEL: Record<string, string> = {
   critical: '치명적',
@@ -176,10 +177,13 @@ function ToolCallsSection({ toolCalls, copyText }: { toolCalls: unknown; copyTex
 export function AnalysisCard({
   result,
   toolCalls,
+  identifierCheck,
 }: {
   result: Partial<AiAnalysis> | null | undefined;
   /** 백엔드의 tool_calls(Phase 5). 안 넘기면(평가 카드 등) 섹션을 그리지 않는다 */
   toolCalls?: unknown;
+  /** 조치 코드 이름 대조(Phase 8). "추천 조치" 바로 아래에 칩으로. undefined 면 그리지 않는다(옛 백엔드) */
+  identifierCheck?: IdentifierCheck | null;
 }) {
   const severity = typeof result?.severity === 'string' ? result.severity : null;
   const confidence = typeof result?.confidence === 'string' ? result.confidence : null;
@@ -211,6 +215,8 @@ export function AnalysisCard({
           {nonEmpty(result?.suggestedFix) ?? '(추천 조치가 없습니다)'}
         </Text>
       </View>
+      {/* Phase 8: 조치 코드의 이름이 실제 파일에 있는가 — 붙여 넣기 전에 봐야 하는 경고라 조치 바로 아래 */}
+      <IdentifierChip check={identifierCheck} />
 
       <SectionHeader title="관련 파일" copyText={files.length > 0 ? files.join('\n') : null} />
       <View style={styles.card}>
