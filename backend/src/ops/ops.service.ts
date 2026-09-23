@@ -40,9 +40,15 @@ export class OpsService {
 
   /** 앱 목록 화면 기준 집계 기간. 설계 §5.1 의 실측 URL 과 동일 */
   static readonly STATS_PERIOD = '24h';
+  /**
+   * 데모 계정(포트폴리오 방문자)의 목록 기간. 온콜 앱의 24h 는 조용한 날 빈 화면이라 체험이 끝난다 —
+   * 방문자에게는 지난 2주를 보여준다. 캐시 키가 다르므로 관리자의 24h 목록과 섞이지 않는다.
+   */
+  static readonly DEMO_STATS_PERIOD = '14d';
   /** 캐시 TTL. 앱 폴링/새로고침 주기보다 짧게 잡아 "1분 이내 최신"을 보장 */
   static readonly CACHE_TTL_SEC = 60;
   static readonly CACHE_KEY = `ops:incidents:${OpsService.STATS_PERIOD}`;
+  static readonly DEMO_CACHE_KEY = `ops:incidents:${OpsService.DEMO_STATS_PERIOD}`;
   static readonly DETAIL_CACHE_PREFIX = 'ops:incident:';
   /**
    * Release Health 집계 기간. 인시던트(24h)보다 훨씬 길게 잡는다 —
@@ -70,7 +76,18 @@ export class OpsService {
    * (userId, expoPushToken) 유니크에 걸려 행이 늘지 않고, 앱을 지웠다 다시 깔아
    * disabledAt 이 찍혀 있던 토큰도 되살아난다.
    */
-  async registerDevice(userId: number, dto: RegisterDeviceDto): Promise<{ registered: true }> {
+  async registerDevice(
+    userId: number,
+    dto: RegisterDeviceDto,
+    actor: { isDemo?: boolean } = {},
+  ): Promise<{ registered: boolean; reason?: 'demo' }> {
+    // 데모 계정(포트폴리오 방문자)의 기기는 등록하지 않는다 — 외부인의 폰에 운영 장애 푸시가 며칠씩 가는 것은
+    // 체험이 아니라 유출이다. 403 이 아니라 200 인 이유: 앱은 켤 때마다 이 호출을 하므로 에러 화면이 아니라
+    // 프로필의 "푸시 알림" 한 줄로 이유를 보여주는 편이 맞다(폴러 쪽도 is_demo 사용자를 발송에서 뺀다 — 이중 방어).
+    if (actor.isDemo === true) {
+      this.logger.log(`push token 등록 건너뜀(데모 계정): user=${userId}`);
+      return { registered: false, reason: 'demo' };
+    }
     await this.deviceTokens.upsert(
       {
         userId,
@@ -93,29 +110,36 @@ export class OpsService {
    *  - 미설정 → 503 (빈 배열을 주면 "장애 0건"으로 오해하므로 명시적으로 알린다)
    *  - Sentry 실패 → 502 (상태코드/사유는 서버 로그에만)
    */
-  async getIncidents(): Promise<{ items: IncidentSummary[]; cached: boolean }> {
+  async getIncidents(
+    actor: { isDemo?: boolean } = {},
+  ): Promise<{ items: IncidentSummary[]; cached: boolean; period: string }> {
     if (!this.isEnabled()) {
       throw new ServiceUnavailableException(
         'Sentry 연동이 설정되지 않았습니다 (SENTRY_AUTH_TOKEN / SENTRY_ORG_SLUG).',
       );
     }
 
-    const cached = await this.redisService.getCache<IncidentSummary[]>(OpsService.CACHE_KEY);
+    // 데모 계정은 기간이 다르다(DEMO_STATS_PERIOD) — 캐시 키도 기간별이라 두 목록이 서로 덮어쓰지 않는다.
+    const demo = actor.isDemo === true;
+    const period = demo ? OpsService.DEMO_STATS_PERIOD : OpsService.STATS_PERIOD;
+    const cacheKey = demo ? OpsService.DEMO_CACHE_KEY : OpsService.CACHE_KEY;
+
+    const cached = await this.redisService.getCache<IncidentSummary[]>(cacheKey);
     if (Array.isArray(cached)) {
-      return { items: cached, cached: true };
+      return { items: cached, cached: true, period };
     }
 
     let issues: SentryIssue[];
     try {
-      issues = await this.sentry.listIssues(OpsService.STATS_PERIOD);
+      issues = await this.sentry.listIssues(period);
     } catch (err) {
       this.logger.error(`Sentry 조회 실패: ${(err as Error).message}`);
       throw new BadGatewayException('Sentry API 호출에 실패했습니다.');
     }
 
     const items = issues.map((i) => OpsService.toSummary(i));
-    await this.redisService.setCache(OpsService.CACHE_KEY, items, OpsService.CACHE_TTL_SEC);
-    return { items, cached: false };
+    await this.redisService.setCache(cacheKey, items, OpsService.CACHE_TTL_SEC);
+    return { items, cached: false, period };
   }
 
   /**

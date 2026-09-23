@@ -3,6 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import {
   ConflictException,
+  ForbiddenException,
   HttpException,
   NotFoundException,
   ServiceUnavailableException,
@@ -105,7 +106,7 @@ describe('OpsAnalysisService — AI 분석 파이프라인(설계 §3.4)', () =>
   let ops: { getIncident: jest.Mock };
   let reviews: { selectFewShot: jest.Mock };
   let reader: { isEnabled: jest.Mock; getRepo: jest.Mock; resolveRef: jest.Mock; read: jest.Mock };
-  let redis: { reserveRateLimit: jest.Mock; acquireLock: jest.Mock; releaseLock: jest.Mock };
+  let redis: { reserveRateLimit: jest.Mock; checkRateLimit: jest.Mock; acquireLock: jest.Mock; releaseLock: jest.Mock };
   let llm: { isEnabled: jest.Mock; generate: jest.Mock; generateWithTools: jest.Mock };
   let repo: { findOne: jest.Mock; create: jest.Mock; save: jest.Mock };
   let env: Record<string, string | undefined>;
@@ -139,6 +140,7 @@ describe('OpsAnalysisService — AI 분석 파이프라인(설계 §3.4)', () =>
     };
     redis = {
       reserveRateLimit: jest.fn().mockResolvedValue(true),
+      checkRateLimit: jest.fn().mockResolvedValue(true),
       acquireLock: jest.fn().mockResolvedValue(true),
       releaseLock: jest.fn().mockResolvedValue(undefined),
     };
@@ -332,6 +334,61 @@ describe('OpsAnalysisService — AI 분석 파이프라인(설계 §3.4)', () =>
     await expect(service.analyze('7742806116')).rejects.toBeInstanceOf(ConflictException);
     expect(llm.generate).not.toHaveBeenCalled();
     expect(redis.releaseLock).not.toHaveBeenCalled();
+  });
+
+  describe('데모 계정(포트폴리오 방문자, actor.isDemo) — 2026-09-23 외부 배포', () => {
+    const DEMO = { isDemo: true };
+
+    it('force(다시 분석) → 403. LLM 키·Sentry 를 확인하기 전이라 키 없는 서버에서도 같은 답이고, 행도 만들지 않는다', async () => {
+      llm.isEnabled.mockReturnValue(false);
+      await expect(service.analyze('7742806116', { force: true }, DEMO)).rejects.toBeInstanceOf(ForbiddenException);
+      expect(ops.getIncident).not.toHaveBeenCalled();
+      expect(repo.save).not.toHaveBeenCalled();
+    });
+
+    it('simulate 도 403 — 캐시를 건너뛰는 길은 전부 막는다', async () => {
+      await expect(service.analyze('7742806116', { simulate: 'parse_failed' }, DEMO)).rejects.toBeInstanceOf(ForbiddenException);
+      expect(llm.generate).not.toHaveBeenCalled();
+    });
+
+    it('저장된 분석이 있으면 그대로 준다 — 시간당 상한을 세지 않는다(조회는 무제한)', async () => {
+      repo.findOne.mockResolvedValue({ id: 7, incidentId: '7742806116', status: 'ok', resultJson: {}, promptVersion: 'v3.1', createdAt: new Date() });
+      const { cached } = await service.analyze('7742806116', {}, DEMO);
+      expect(cached).toBe(true);
+      expect(redis.checkRateLimit).not.toHaveBeenCalled();
+      expect(llm.generate).not.toHaveBeenCalled();
+    });
+
+    it('아직 분석이 없는 인시던트는 새로 만들 수 있다 — 시간당 상한(기본 6, 방문자 합산)을 먼저 센 뒤 분당 LLM 예약으로 간다', async () => {
+      llm.generate.mockResolvedValueOnce(VALID_JSON);
+      const { cached, item } = await service.analyze('7742806116', {}, DEMO);
+      expect(cached).toBe(false);
+      expect(item.status).toBe('ok');
+      expect(redis.checkRateLimit).toHaveBeenCalledWith('ops:analysis:demo', 6, 3600);
+      expect(redis.reserveRateLimit).toHaveBeenCalledWith('ops:analysis:llm', 2, 12, 60);
+    });
+
+    it('시간당 상한 초과 → 429, LLM 예약도 락도 하지 않는다', async () => {
+      redis.checkRateLimit.mockResolvedValue(false);
+      const err = await service.analyze('7742806116', {}, DEMO).catch((e) => e);
+      expect(err).toBeInstanceOf(HttpException);
+      expect((err as HttpException).getStatus()).toBe(429);
+      expect(redis.reserveRateLimit).not.toHaveBeenCalled();
+      expect(redis.acquireLock).not.toHaveBeenCalled();
+    });
+
+    it('OPS_ANALYSIS_DEMO_MAX_PER_HOUR 로 상한을 바꿀 수 있고, 데모가 아니면 이 상한을 세지 않는다', async () => {
+      env.OPS_ANALYSIS_DEMO_MAX_PER_HOUR = '2';
+      await build();
+      llm.generate.mockResolvedValue(VALID_JSON);
+      await service.analyze('7742806116', {}, DEMO);
+      expect(redis.checkRateLimit).toHaveBeenCalledWith('ops:analysis:demo', 2, 3600);
+
+      redis.checkRateLimit.mockClear();
+      await service.analyze('7742806116', {}, { isDemo: false });
+      await service.analyze('7742806116');
+      expect(redis.checkRateLimit).not.toHaveBeenCalled();
+    });
   });
 
   describe('강제 실패 시뮬레이션(DoD "AI 가 스키마를 어겨도 앱이 깨지지 않는다" 검증용)', () => {

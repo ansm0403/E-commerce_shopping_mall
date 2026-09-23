@@ -49,6 +49,12 @@ export class OpsReviewService {
 
   /** 평가 대상·예시·집계 공통 — 시뮬레이션 행 제외 */
   private static readonly NOT_SIMULATED = `(a.model IS NULL OR a.model <> 'simulated')`;
+  /**
+   * 집계·few-shot 공통 — **데모 계정(포트폴리오 방문자)의 판정 제외**. 방문자의 스와이프는 저장은 되지만(자기 화면은 반응해야 한다)
+   * 승인율 표에도, 다음 분석의 예시 풀에도 들어가지 않는다. 외부인 한 명이 few-shot 예시를 고르게 두면 순환 고리가 오염된다.
+   * DB 변경 없이 users.is_demo 로 가른다(별칭 r = ops_reviews).
+   */
+  private static readonly HUMAN_REVIEWER = `NOT EXISTS (SELECT 1 FROM users u WHERE u.id = r.reviewer_id AND u.is_demo = true)`;
 
   constructor(
     @InjectRepository(OpsReviewEntity)
@@ -77,7 +83,17 @@ export class OpsReviewService {
    * Phase 8: 카드마다 `identifierCheck`(조치 코드 이름 대조)를 붙인다. 대조 파일은 인시던트 단위 합집합이라 두 팔이 같은 파일을 받고,
    * tool_calls 는 읽는 커밋을 고르는 데만 쓰이고 응답에는 없다(v3.1 에만 있어 팔을 드러낸다 — Phase 7 함정 3).
    */
-  async listPending(reviewerId: number): Promise<PendingReviewItem[]> {
+  async listPending(reviewerId: number, opts: { showAll?: boolean } = {}): Promise<PendingReviewItem[]> {
+    // 데모 계정(showAll): 방문자 모두가 한 계정을 쓰므로 "내가 채점한 카드"를 빼면 두 번째 방문자부터 빈 화면이다 —
+    // 판정 유무를 보지 않고 항상 전체 카드(최신 1장 규칙은 그대로)를 준다. 저장은 여전히 upsert 라 행이 늘지 않는다.
+    const reviewerConditions = opts.showAll
+      ? ''
+      : `AND NOT EXISTS (
+                SELECT 1 FROM ops_reviews r WHERE r.analysis_id = a.id AND r.reviewer_id = $1 AND r.guided = true
+              )
+          AND (n.id IS NOT NULL OR NOT EXISTS (
+                SELECT 1 FROM ops_reviews r2 WHERE r2.analysis_id = a.id AND r2.reviewer_id = $1
+              ))`;
     const rows: Array<{
       id: number;
       incident_id: string;
@@ -109,20 +125,15 @@ export class OpsReviewService {
          LEFT JOIN ops_incident_notes n ON n.incident_id = a.incident_id
         WHERE a.status = 'ok' AND a.result_json IS NOT NULL
           AND ${OpsReviewService.NOT_SIMULATED}
-          AND NOT EXISTS (
-                SELECT 1 FROM ops_reviews r WHERE r.analysis_id = a.id AND r.reviewer_id = $1 AND r.guided = true
-              )
           AND a.id = (
                 SELECT MAX(b.id) FROM ops_analyses b
                  WHERE b.incident_id = a.incident_id AND b.prompt_version = a.prompt_version
                    AND b.status = 'ok' AND (b.model IS NULL OR b.model <> 'simulated')
               )
-          AND (n.id IS NOT NULL OR NOT EXISTS (
-                SELECT 1 FROM ops_reviews r2 WHERE r2.analysis_id = a.id AND r2.reviewer_id = $1
-              ))
-        ORDER BY (n.id IS NULL), md5(a.id::text || ':' || $2)
-        LIMIT $3`,
-      [reviewerId, String(reviewerId), OpsReviewService.PENDING_LIMIT],
+          ${reviewerConditions}
+        ORDER BY (n.id IS NULL), md5(a.id::text || ':' || $1::text)
+        LIMIT $2`,
+      [reviewerId, OpsReviewService.PENDING_LIMIT],
     );
 
     const items: PendingReviewItem[] = rows.map((r) => ({
@@ -313,7 +324,7 @@ export class OpsReviewService {
               COUNT(r.id) FILTER (WHERE r.guided AND n.id IS NOT NULL)::int                AS g_with_note,
               ${checkColumns}
          FROM ops_analyses a
-         LEFT JOIN ops_reviews r ON r.analysis_id = a.id
+         LEFT JOIN ops_reviews r ON r.analysis_id = a.id AND ${OpsReviewService.HUMAN_REVIEWER}
          LEFT JOIN ops_incident_notes n ON n.incident_id = a.incident_id
         WHERE ${OpsReviewService.NOT_SIMULATED}${extraWhere}
         GROUP BY a.prompt_version
@@ -368,6 +379,7 @@ export class OpsReviewService {
          FROM ops_reviews r
          JOIN ops_analyses a ON a.id = r.analysis_id
         WHERE r.verdict = 'approved'
+          AND ${OpsReviewService.HUMAN_REVIEWER}
           AND a.status = 'ok' AND a.result_json IS NOT NULL
           AND ${OpsReviewService.NOT_SIMULATED}
           AND a.incident_id <> $1
@@ -413,7 +425,9 @@ export class OpsReviewService {
    * ⚠ 대기 카드(S5)에는 싣지 않는다 — 채점 중에 남의 판정이 보이면 블라인드의 취지가 흔들린다.
    */
   async summarizeReviews(analysisId: number, reviewerId: number | null): Promise<ReviewSummary> {
-    const rows = await this.reviews.find({ where: { analysisId } });
+    const all = await this.reviews.find({ where: { analysisId }, relations: { reviewer: true } });
+    // 집계는 사람(비데모) 판정만 — stats·few-shot 과 같은 기준. `mine` 은 요청자 자신의 것이므로 데모여도 보여준다.
+    const rows = all.filter((r) => r.reviewer?.isDemo !== true);
     const approved = rows.filter((r) => r.verdict === 'approved').length;
     const rejected = rows.filter((r) => r.verdict === 'rejected').length;
     const rated = rows.filter((r) => typeof r.rating === 'number');
@@ -421,7 +435,7 @@ export class OpsReviewService {
     const mineRow =
       reviewerId === null
         ? undefined
-        : rows.filter((r) => r.reviewerId === reviewerId).sort((a, b) => Number(b.guided === true) - Number(a.guided === true))[0];
+        : all.filter((r) => r.reviewerId === reviewerId).sort((a, b) => Number(b.guided === true) - Number(a.guided === true))[0];
     return {
       reviews: rows.length,
       approved,

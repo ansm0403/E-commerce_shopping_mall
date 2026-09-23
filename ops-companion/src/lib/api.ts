@@ -115,6 +115,17 @@ export async function login(email: string, password: string): Promise<LoginRespo
 }
 
 /**
+ * POST /auth/demo-login — 비밀번호 없이 데모 관리자로 로그인(포트폴리오 방문자용, 웹 로그인 화면의 버튼과 같은 경로).
+ * 계정 정보는 앱에도 README 에도 없다 — 서버 환경변수(DEMO_ADMIN_*)만 안다. 서버가 DEMO_LOGIN_ENABLED 가 아니면 403.
+ * 같은 axios 인스턴스라 X-Client: mobile 이 붙고 refreshToken 도 body 로 온다(백엔드 auth.controller demoLogin).
+ * 데모 토큰(isDemo)은 조회·AI 분석·채점은 되고 재분석·메모·푸시 등록은 서버가 막는다(ops.controller 주석).
+ */
+export async function demoLogin(): Promise<LoginResponse> {
+  const { data } = await api.post<LoginResponse>('/auth/demo-login', {});
+  return data;
+}
+
+/**
  * GET /auth/me 는 login 응답과 달리 User 엔티티를 그대로 내려준다 — roles 가 `{ name: 'admin' }`
  * 객체 배열이다(login 은 문자열 배열). 앱 안에서는 AuthUser 한 형태로 통일한다.
  * 안 하면 앱 재시작(부팅 시 /auth/me) 후 프로필의 권한 칸이 "[object Object]" 로 보인다.
@@ -224,9 +235,17 @@ export async function fetchReleaseHealth(): Promise<ReleaseHealth> {
 /**
  * POST /v1/ops/devices — 이 기기로 푸시를 받겠다고 백엔드에 알린다(설계 §5.1).
  * 앱이 켜질 때마다 불러도 안전하다(백엔드가 upsert).
+ * 데모 계정이면 백엔드가 저장하지 않고 `{ registered: false, reason: 'demo' }` 를 준다(외부 방문자의 폰에 운영 장애 푸시 금지).
+ * 옛 백엔드는 `{ registered: true }` 만 주므로 reason 은 optional.
  */
-export async function registerDevice(expoPushToken: string, platform: 'ios' | 'android'): Promise<void> {
-  await api.post('/ops/devices', { expoPushToken, platform });
+export interface RegisterDeviceResponse {
+  registered: boolean;
+  reason?: 'demo';
+}
+
+export async function registerDevice(expoPushToken: string, platform: 'ios' | 'android'): Promise<RegisterDeviceResponse> {
+  const { data } = await api.post<RegisterDeviceResponse>('/ops/devices', { expoPushToken, platform });
+  return data;
 }
 
 // ─── AI 분석 (Phase 3, 설계 §3.4 · §5.4) ──────────────────────

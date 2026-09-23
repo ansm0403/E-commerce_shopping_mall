@@ -325,18 +325,22 @@ RootNavigator (AuthContext의 user 유무로 분기)
 |---|---|---|
 | `GET /v1/ops/incidents` | Sentry API 프록시. 인시던트 목록(축약형) — ✅ **구현 완료(2026-09-17)**: `backend/src/ops/`, admin 전용, Redis 60s 캐시(`X-Cache` HIT·MISS 헤더), 키 미설정 시 503 | 0 |
 | `GET /v1/ops/incidents/:id` | 인시던트 상세 — ✅ **구현 완료(2026-09-20, `0cc8301`)**: issue 단건 + 최신 event 를 합쳐 예외·스택(최근 호출이 앞, 30 프레임)·breadcrumbs(30개) 만 남긴다. request/user entry(헤더·쿠키·IP)는 읽지 않고 자유 텍스트는 `scrubText`. id 는 숫자만 받아 경로 조작 차단, 없는 이슈 404, Redis 60s 캐시 | 1 |
-| `POST /v1/ops/devices` | 기기 Expo push token 등록 — ✅ **구현 완료(2026-09-20)**: `(userId, 토큰)` upsert + Expo 토큰 정규식 검증. `DemoAccountGuard` 는 걸지 않는다(저장되는 것이 본인 기기 주소뿐이고, 막으면 데모 로그인으로 앱이 못 돈다) | 1 |
+| `POST /v1/ops/devices` | 기기 Expo push token 등록 — ✅ **구현 완료(2026-09-20)**: `(userId, 토큰)` upsert + Expo 토큰 정규식 검증. `DemoAccountGuard` 는 걸지 않는다(앱이 켤 때마다 부르는 호출이라 403 은 에러 화면). **외부 배포(2026-09-23)**: 데모 계정(`isDemo`)은 저장하지 않고 `{registered:false, reason:'demo'}` — 외부 폰에 운영 장애 푸시 금지. 폴러도 `is_demo` 사용자를 발송에서 뺀다 | 1 · 외부 배포 |
 | ~~`POST /v1/ops/webhooks/sentry`~~ | ~~Sentry webhook 수신~~ → **폐기(2026-09-16)**. §3.3 의 폴링 스케줄러로 대체 | 1 |
 | `POST /v1/ops/incidents/:id/analysis` | AI 분석 생성(또는 캐시된 분석 반환) — ✅ **구현 완료(2026-09-21)**: `ops-analysis.service.ts`. `getIncident` 재사용 → 프롬프트 조립(`scrubText`) → `LlmClient.generate` → `parseAnalysis` 검증, 위반 시 사유를 실어 **1회 교정 재시도** → `ops_analyses` 저장. body 없이 부르면 최근 행(상태 무관, `X-Cache: HIT`), `{force:true}` 면 재분석, `{simulate:'parse_failed'}` 는 **비운영 전용** 강제 실패. LLM 키 없음 503 · 분당 상한(`OPS_ANALYSIS_MAX_PER_MIN`, 기본 5) 초과 429 · 같은 이슈 동시 409. 실제 LLM 호출은 단위 테스트 15건이 모킹으로 고정, e2e 는 시뮬레이션 경로만. **Phase 5(2026-09-22)**: `read_source` 도구(`source-reader.service.ts`, GitHub raw + Redis 캐시, 폴더 허용 목록·80줄·3회) → `generateWithTools` → 교정 재시도는 도구 없이. 응답에 `toolCalls`(읽은 파일 기록). body `readSource:false` 가 도구 없는 팔. 상한은 `OPS_ANALYSIS_MAX_LLM_PER_MIN`(분당 LLM 호출 수, 기본 12) 예약형으로 교체 | 3 · 5 |
 | `GET /v1/ops/analyses/pending` | 평가 대기 중인 분석 목록 — ✅ **구현(2026-09-22, `ops-review.service.ts`)**: 이 평가자가 아직 채점하지 않은 `status=ok`·비시뮬레이션 행. **promptVersion 을 응답에서 뺀다**(블라인드). 순서는 `md5(id:reviewerId)` — 평가자별 고정 뒤섞기(시간순이면 v1·v2 가 번갈아 나와 패턴이 읽히고, 난수면 새로고침마다 재배열). 상한 50. **Phase 7**: "이 평가자의 **안내 채점(guided)** 이 없는 분석"으로 조건이 바뀌었다(옛 채점은 남긴 채 재채점) · 응답에 `note`(사실 메모, 없으면 null)·`checklist`(항목 4개 정의) 동봉 · `result.relatedFiles` 를 저장소 경로로 **정규화**(팔마다 꼴이 달라 버전이 새던 자리) · 메모 있는 카드 먼저 | 4 · 7 |
 | `POST /v1/ops/analyses/:id/review` | 평가 저장 (verdict, rating) — ✅ **구현(2026-09-22)**: `{verdict, rating?, comment?}` → `ops_reviews` **upsert**(같은 평가자 재평가는 통째로 덮어씀, `X-Review: CREATED|UPDATED`). parse_failed·simulated 행 400, 없는 분석 404. **Phase 7**: `+ guided?: boolean, checks?: {causeLocation, noInventedIdentifiers, applicableAsIs, confidenceFits}` — upsert 키가 `(analysis, reviewer, guided)` 라 안내 채점은 안내 전 판정과 **다른 행** | 4 · 7 |
 | `GET /v1/ops/analyses/stats` | (설계에 없던 추가) promptVersion 별 분석 수·구조화 실패율·승인율·평균 별점 — DoD 의 숫자가 나오는 경로. 앱 화면은 없다(채점 중에 보면 블라인드가 깨진다). `model='simulated'` 제외. **Phase 7**: 같은 꼴의 `unguided`·`guided`(+`withNote`·항목별 `pass/fail/unknown`) 를 버전마다 덧붙인다 | 4 · 7 |
-| `PUT /v1/ops/incidents/:id/note` | ✅ **Phase 7(2026-09-22, `ops-note.service.ts`)**: 인시던트별 사실 메모 upsert(`symptom·causeLocation·fixDirection·commonMistakes?·project?·code?{path,startLine,endLine,ref?}`). `code` 가 있으면 서버가 `SourceReaderService.read` 로 그 커밋의 코드를 읽어 함께 저장(실패 400, 저장 안 함). Sentry 를 부르지 않는다(옛 인시던트에도 달 수 있게). `X-Note: CREATED|UPDATED`. ⚠ 메모는 **LLM 입력에 절대 들어가지 않는다**(단위 테스트로 고정) | 7 |
+| `PUT /v1/ops/incidents/:id/note` | ✅ **Phase 7(2026-09-22, `ops-note.service.ts`)**: 인시던트별 사실 메모 upsert(`symptom·causeLocation·fixDirection·commonMistakes?·project?·code?{path,startLine,endLine,ref?}`). `code` 가 있으면 서버가 `SourceReaderService.read` 로 그 커밋의 코드를 읽어 함께 저장(실패 400, 저장 안 함). Sentry 를 부르지 않는다(옛 인시던트에도 달 수 있게). `X-Note: CREATED|UPDATED`. ⚠ 메모는 **LLM 입력에 절대 들어가지 않는다**(단위 테스트로 고정). **외부 배포(2026-09-23)**: `DemoAccountGuard` — 모두가 보는 "정답"이고 앱에 편집 화면이 없다 | 7 · 외부 배포 |
 
 - **인증 확정(2026-09-15)**: `@UseGuards(JwtAuthGuard, RolesGuard)` + `@Roles(Role.ADMIN)`.
   `Role` 은 `buyer | seller | admin`(`backend/src/user/entity/role.entity.ts`).
   ⚠ **데모 관리자 계정 주의** — 쓰기성 동작에는 `DemoAccountGuard` 가 걸려 차단될 수 있으니,
   앱 테스트는 데모 계정이 아닌 실제 관리자 계정으로 한다.
+- **데모 계정 규칙 한눈에(2026-09-23 외부 배포, §9 "외부 배포")** — 토큰 payload `isDemo` 로 백엔드가 적용, DB 변경 0:
+  목록 `GET /ops/incidents` 24h → **14d**(`X-Period` 헤더) · 분석 `POST …/analysis` 는 저장분 조회 + 아직 없는 인시던트만 새로(시간당 `OPS_ANALYSIS_DEMO_MAX_PER_HOUR`, 기본 6, 방문자 합산), `force`·`simulate` 403 ·
+  평가 `POST …/review` 저장은 되나 **집계(stats)·few-shot·S4 요약에서 제외**(`OpsReviewService.HUMAN_REVIEWER` = `users.is_demo` JOIN) + 대기 목록은 판정 유무와 무관하게 **항상 전체**(`listPending(showAll)`) ·
+  메모 PUT `DemoAccountGuard` · 기기 등록 미저장 · `POST /auth/demo-login` 이 `X-Client: mobile` 을 존중(body refreshToken).
 - ~~webhook 엔드포인트는 JWT 대신 서명/시크릿 검증~~ → **불필요해졌다(2026-09-16)**. 폴링으로 바꾸면서
   공개 수신 엔드포인트 자체가 없어졌으므로 서명 검증 조사도, `ThrottlerModule` 예외 고민도 사라진다(§3.3).
   대신 **Sentry API 토큰이 새 비밀값으로 늘어난다** — 백엔드 환경변수에만 두고 앱에는 절대 내려보내지 않는다(§7).
@@ -1012,6 +1016,18 @@ seed 첫 실측(2026-09-22, analysis #14, flash-lite 3.4초): CORS 이슈에 대
 
 - 결정(추천 1개로 진행, 사용자 위임 원칙): ① 조치가 선언한 이름은 대조하지 않는다(자기 완결적 — `callback` 을 잡으려면 규칙을 깨야 하고 `(product) =>` 류가 전부 거짓 양성이 된다) ② 소스 쪽은 주석을 벗긴다(`FRONTEND_URL` 이 주석에만 있었다) — 문자열은 남긴다 ③ 라이브러리 꼴은 `maybeLibrary` 로 분리(카드가 약하게 표시) ④ 대조 파일은 인시던트 단위 합집합 + 이름 0 인 카드도 같은 목록(파일 수가 팔을 드러내지 않게) ⑤ 이름 0 이면 파일을 읽지 않는다(e2e·산문 조치가 GitHub 를 부르지 않게) ⑥ `playwright-core` 를 루트 devDependency 로(브라우저 미다운로드, CI 부담 없음).
 - 밟은 함정(9편 6장): 소스 주석의 `FRONTEND_URL` · 첫 크래시가 가린 네 번째 호출 지점 · 화살표 반환 타입 정규식이 줄을 넘어 다음 `=>` 를 삼킴 · 병렬 Bash 호출의 cwd 공유로 `yarn add` 가 `backend/package.json` 에 들어감 · `.bin/jest` 는 셸 스크립트.
+### 외부 배포 — 포트폴리오 방문자가 설치해 써 보게 (2026-09-23, Phase 가 아니라 마감 작업. 브랜치 `feat/ops-public-demo`)
+- 배경: 웹 쇼핑몰에는 방문자용 데모 관리자 계정(`DEMO_ADMIN_*`, `DemoAccountGuard`)이 있지만 앱은 개발 빌드(Metro 필요)로만 확인해 왔다. 이력서 제출 전, **PC 없이 설치해서 바로 로그인**되는 형태와 **외부인이 눌러도 안전한 경계**를 정한다.
+- 결정(추천 1개로 진행, 위임 원칙):
+  1. **배포 = EAS `preview` 프로필**(release APK, JS 내장, 내부 배포 링크/QR). Expo Go(PC Metro 필요·푸시 불가)·개발 빌드(Metro 필요)·Play 내부 테스트(스토어 비목표·유료 계정·심사)는 제외. **EAS Update 도 같이 도입**(`expo-updates`, 채널 `preview`, `runtimeVersion=appVersion`) — 빌드마다 설치 링크가 바뀌므로 JS 수정마다 방문자에게 재설치를 시키지 않으려면 지금(어차피 재빌드) 넣는 것이 가장 싸다. 새 비밀값 0.
+  2. **계정 = 앱 로그인 화면의 "데모 계정으로 체험하기" 버튼**(README 에 계정을 적지 않는다). 웹과 같은 `POST /auth/demo-login` 이고, `X-Client: mobile` 을 존중하도록 컨트롤러 한 줄(안 하면 15분 뒤 갱신 실패). 서버가 `DEMO_LOGIN_ENABLED` 로 켜고 끈다(재빌드 불필요).
+  3. **경계는 백엔드가 토큰 `isDemo` 로**(앱 화면은 안내) — 표는 §5.1 "데모 계정 규칙 한눈에". 원칙: *조회는 그대로, 핵심 장면(분석·채점)은 되게 하되 쿼터·공용 데이터·외부 푸시는 막는다.* 통째로 `DemoAccountGuard` 를 건 것은 메모 PUT 하나뿐이다.
+  4. **조용한 날 대비**: 데모 목록 기간 24h → 14d(캐시 키 분리) + 평가 탭은 항상 전체 카드(방문자 모두가 한 계정) + 빈 화면 문구에 "평가 탭에서 지난 분석" 안내 + 로그인 화면 한 줄 소개 + 탭 화면 배너(`features/demo/DemoBanner`).
+  5. **노출 데이터**: 실제 운영 Sentry(저장소가 public 이라 파일 경로·스택은 공개 정보) — 상세는 `scrubText`(이메일·전화) + request/user entry 미전달 + breadcrumb URL 쿼리스트링 제거(기존). 추가 마스킹 없음.
+- 검증: 백엔드 단위 239(ops 9 스위트 + auth.controller) · e2e `mobile-token-and-ops` G 절 6건(데모 로그인 모바일 분기 · 기기 미저장 · force/simulate 403 · 메모 403 · `X-Period` · 채점 저장/showAll/stats 제외) · 앱 tsc · preview 빌드 실기기.
+- 남은 사용자 액션: `docker push`(이미지 2태그) → EC2 pull/up/reload → health 단언 · 앱 설치 링크를 `ops-companion/README.md` 와 루트 README(별도 세션)에 · 데모 계정이 운영 DB 에 있고 `DEMO_LOGIN_ENABLED=true` 인지 웹 로그인 화면의 데모 버튼으로 확인(이 세션은 운영 조회가 차단돼 확인하지 못했다).
+- 상세: `docs/learning/ops-companion/appendix-public-demo.md`.
+
 - **확장 메모(범위 밖, 2026-09-23 대화)**: 범용화는 3단계 — ① 내 프로젝트 여럿(설정 테이블: Sentry 프로젝트·저장소·폴더·서비스 지도, 3~5일) ② 독립 서비스 분리(별도 백엔드·DB·인증·토큰 암호화, AI 도움 시 4~7일) ③ 다른 사람이 가입하는 SaaS(테넌트 분리·OAuth/GitHub App·팀별 LLM 비용, 수개월). 한 회사가 자기 도메인용으로 내부 도구를 두는 형태라면 지금 구조(한 조직·한 모노레포)도 현실적이다 — 다만 서비스 지도·저장소·폴더 목록이 코드에 박혀 있어 ① 은 회사가 바뀌어도 필요하다.
 
 ### 명시적 비목표 (v1에서 하지 않는 것)

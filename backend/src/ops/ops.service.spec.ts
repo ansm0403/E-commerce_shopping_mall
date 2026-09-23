@@ -81,9 +81,25 @@ describe('OpsService', () => {
 
     const out = await service.getIncidents();
 
-    expect(out).toEqual({ items: cachedItems, cached: true });
+    expect(out).toEqual({ items: cachedItems, cached: true, period: '24h' });
     expect(sentry.listIssues).not.toHaveBeenCalled();
     expect(redis.setCache).not.toHaveBeenCalled();
+  });
+
+  it('데모 계정(isDemo)은 최근 14d 를 보고, 캐시 키가 달라 관리자의 24h 목록과 섞이지 않는다', async () => {
+    sentry.listIssues.mockResolvedValue([issue()]);
+
+    const out = await service.getIncidents({ isDemo: true });
+
+    expect(out.period).toBe('14d');
+    expect(out.items).toHaveLength(1);
+    expect(sentry.listIssues).toHaveBeenCalledWith('14d');
+    expect(redis.getCache).toHaveBeenCalledWith('ops:incidents:14d');
+    expect(redis.setCache).toHaveBeenCalledWith('ops:incidents:14d', out.items, 60);
+
+    // isDemo 가 false/생략이면 종전 그대로
+    await service.getIncidents({ isDemo: false });
+    expect(sentry.listIssues).toHaveBeenLastCalledWith('24h');
   });
 
   it('Sentry 호출 실패는 502 로 감싼다(원문은 로그에만)', async () => {
@@ -252,6 +268,16 @@ describe('OpsService', () => {
         { userId: 27, expoPushToken: 'ExponentPushToken[phone-A]', platform: 'android', disabledAt: null },
         { conflictPaths: ['userId', 'expoPushToken'] },
       );
+    });
+
+    it('데모 계정(isDemo)은 저장하지 않고 registered:false 로 이유를 돌려준다 — 외부 방문자의 폰에 운영 장애 푸시가 가면 안 된다', async () => {
+      await expect(
+        service.registerDevice(900, { expoPushToken: 'ExponentPushToken[visitor]', platform: 'android' }, { isDemo: true }),
+      ).resolves.toEqual({ registered: false, reason: 'demo' });
+      expect(deviceTokens.upsert).not.toHaveBeenCalled();
+
+      await service.registerDevice(27, { expoPushToken: 'ExponentPushToken[phone-A]', platform: 'android' }, { isDemo: false });
+      expect(deviceTokens.upsert).toHaveBeenCalledTimes(1);
     });
   });
   describe('getReleaseHealth', () => {

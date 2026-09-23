@@ -25,7 +25,7 @@ const ctx = { ipAddress: '127.0.0.1', userAgent: 'jest', deviceId: undefined };
 
 describe('AuthController', () => {
   let controller: AuthController;
-  let authService: jest.Mocked<Pick<AuthService, 'login' | 'refresh' | 'logout'>>;
+  let authService: jest.Mocked<Pick<AuthService, 'login' | 'refresh' | 'logout' | 'demoLogin'>>;
   let res: jest.Mocked<Pick<Response, 'cookie' | 'clearCookie'>>;
 
   beforeEach(async () => {
@@ -33,6 +33,10 @@ describe('AuthController', () => {
       login: jest.fn().mockResolvedValue(tokenResult),
       refresh: jest.fn().mockResolvedValue({ ...tokenResult, accessToken: 'access.jwt.2', refreshToken: 'refresh.jwt.2' }),
       logout: jest.fn().mockResolvedValue({ message: '로그아웃 되었습니다.' }),
+      demoLogin: jest.fn().mockResolvedValue({
+        ...tokenResult,
+        user: { id: 1, email: 'demo-admin@portfolio.local', nickName: '데모 관리자', roles: ['admin'], isDemo: true },
+      }),
     };
     res = { cookie: jest.fn(), clearCookie: jest.fn() };
 
@@ -110,6 +114,23 @@ describe('AuthController', () => {
         controller.refresh(reqWith(undefined), res as unknown as Response, ctx.ipAddress, {}),
       ).rejects.toBeInstanceOf(UnauthorizedException);
       expect(authService.refresh).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('demo-login (RN 앱의 "데모 계정으로 체험하기" 도 같은 경로)', () => {
+    it('헤더 없음(웹): 종전 그대로 — body 에 refreshToken 없음, 쿠키는 비지속(rememberMe 없음)', async () => {
+      const out = await controller.demoLogin(res as unknown as Response, ctx.ipAddress, ctx.userAgent, undefined, undefined);
+
+      expect(out).toEqual({ accessToken: 'access.jwt', expiresIn: 900, tokenType: 'Bearer', user: expect.objectContaining({ isDemo: true, roles: ['admin'] }) });
+      expect(out).not.toHaveProperty('refreshToken');
+      expect(res.cookie).toHaveBeenCalledWith('refreshToken', 'refresh.jwt', expect.not.objectContaining({ maxAge: expect.anything() }));
+    });
+
+    it('X-Client: mobile — body 에 refreshToken 이 추가된다(없으면 앱이 15분 뒤 갱신에 실패한다)', async () => {
+      const out = await controller.demoLogin(res as unknown as Response, ctx.ipAddress, ctx.userAgent, undefined, 'mobile');
+
+      expect(out).toMatchObject({ accessToken: 'access.jwt', refreshToken: 'refresh.jwt', user: { isDemo: true } });
+      expect(authService.demoLogin).toHaveBeenCalledWith({ ipAddress: ctx.ipAddress, userAgent: ctx.userAgent, deviceId: undefined });
     });
   });
 

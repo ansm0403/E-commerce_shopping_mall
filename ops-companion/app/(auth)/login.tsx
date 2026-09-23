@@ -33,14 +33,24 @@ function messageOf(error: unknown): string {
   return '로그인에 실패했습니다. 네트워크 상태를 확인해주세요.';
 }
 
+/** 데모 로그인은 비밀번호가 없어 401 이 아니라 403(서버가 데모를 껐다)이 온다 — 문구를 따로 둔다 */
+function demoMessageOf(error: unknown): string {
+  const status = (error as AxiosError)?.response?.status;
+  if (status === 403) return '데모 로그인이 지금은 꺼져 있습니다.';
+  if (status === 429) return '로그인 시도가 많습니다. 5분 뒤에 다시 시도해주세요.';
+  return messageOf(error);
+}
+
 export default function LoginScreen() {
-  const { signIn } = useAuth();
+  const { signIn, signInDemo } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDemoSubmitting, setIsDemoSubmitting] = useState(false);
 
-  const canSubmit = email.trim().length > 0 && password.length > 0 && !isSubmitting;
+  const busy = isSubmitting || isDemoSubmitting;
+  const canSubmit = email.trim().length > 0 && password.length > 0 && !busy;
 
   async function handleSubmit() {
     if (!canSubmit) return;
@@ -55,6 +65,20 @@ export default function LoginScreen() {
     }
   }
 
+  // 포트폴리오 방문자 경로 — 계정 정보를 앱에 넣지 않는다. 서버가 DEMO_LOGIN_ENABLED 로 켜고 끈다(웹 로그인 화면의 버튼과 같은 API).
+  async function handleDemo() {
+    if (busy) return;
+    setError(null);
+    setIsDemoSubmitting(true);
+    try {
+      await signInDemo();
+    } catch (err) {
+      setError(demoMessageOf(err));
+    } finally {
+      setIsDemoSubmitting(false);
+    }
+  }
+
   return (
     <SafeAreaView style={styles.screen}>
       <KeyboardAvoidingView
@@ -62,6 +86,9 @@ export default function LoginScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <Text style={styles.title}>Ops Companion</Text>
+        <Text style={styles.tagline}>
+          쇼핑몰 운영자용 온콜 앱 — Sentry 장애를 보고, AI 가 소스 코드를 읽어 원인을 분석하고, 사람이 그 답을 채점합니다.
+        </Text>
         <Text style={styles.subtitle}>관리자 계정으로 로그인하세요.</Text>
 
         <TextInput
@@ -102,9 +129,23 @@ export default function LoginScreen() {
           )}
         </Pressable>
 
+        <Pressable
+          style={[styles.demoButton, busy && styles.buttonDisabled]}
+          onPress={handleDemo}
+          disabled={busy}
+          accessibilityRole="button"
+        >
+          {isDemoSubmitting ? (
+            <ActivityIndicator color={colors.accent} />
+          ) : (
+            <Text style={styles.demoButtonText}>데모 계정으로 체험하기</Text>
+          )}
+        </Pressable>
+
         <View style={styles.hintBox}>
           <Text style={styles.hint}>
-            관리자 권한이 있는 계정만 인시던트를 볼 수 있습니다.
+            관리자 권한이 있는 계정만 인시던트를 볼 수 있습니다.{'\n'}
+            데모 계정은 실제 운영 데이터를 조회·분석·채점할 수 있고, 푸시·메모 저장·재분석은 꺼져 있습니다.
           </Text>
         </View>
       </KeyboardAvoidingView>
@@ -116,6 +157,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   container: { flex: 1, justifyContent: 'center', paddingHorizontal: spacing.lg, gap: spacing.sm },
   title: { color: colors.text, fontSize: 28, fontWeight: '700' },
+  tagline: { color: colors.textMuted, fontSize: 13, lineHeight: 19 },
   subtitle: { color: colors.textMuted, fontSize: 14, marginBottom: spacing.md },
   input: {
     backgroundColor: colors.surface,
@@ -137,6 +179,14 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: { opacity: 0.5 },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  demoButton: {
+    borderColor: colors.accent,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+  },
+  demoButtonText: { color: colors.accent, fontSize: 15, fontWeight: '600' },
   hintBox: { marginTop: spacing.lg },
   hint: { color: colors.textMuted, fontSize: 12, textAlign: 'center' },
 });

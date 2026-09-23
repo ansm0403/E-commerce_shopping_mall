@@ -515,4 +515,126 @@ describe('모바일 토큰 전략 + ops 인시던트 조회 (HTTP e2e)', () => {
       expect(stats.data.versions.every((x: { promptVersion: string }) => x.promptVersion !== 'simulated')).toBe(true);
     });
   });
+
+  /**
+   * G. 데모 계정(포트폴리오 방문자, 토큰 payload isDemo=true) — 2026-09-23 외부 배포(설계 §9 "외부 배포").
+   *   · demo-login 도 X-Client: mobile 이면 body 에 refreshToken(DEMO_LOGIN_ENABLED 가 아닌 서버면 403 만 확인)
+   *   · 기기 등록은 저장하지 않고 {registered:false, reason:'demo'} · 재분석(force)·simulate 는 403 · 메모 PUT 은 403(DemoAccountGuard)
+   *   · 목록은 최근 14d(X-Period) · 평가는 저장되지만 대기 목록에서 빠지지 않고(showAll) stats 에도 세지 않는다
+   *   전부 is_demo 사용자 한 명으로 고정한다 — 실제 데모 관리자(.env)는 건드리지 않는다.
+   */
+  describe('G. 데모 계정 — 조회는 되고, 쿼터·공용 데이터·푸시를 건드리는 길은 막힌다', () => {
+    const FIXTURE_MODEL = 'e2e-fixture-demo';
+    const FIXTURE_VERSION = 'e2e-demo-v1';
+    const INCIDENT = 'e2e-demo-issue-1';
+    const RESULT = { severity: 'low', rootCause: 'e2e 데모 픽스처', suggestedFix: '조치 없음', relatedFiles: [], confidence: 'low' };
+    let demo: { accessToken: string; refreshToken: string };
+    let demoId: number;
+    let okId: number;
+
+    beforeAll(async () => {
+      demoId = await createUser(ds, { email: emails.demoAdmin, role: 'admin', isDemo: true });
+      const res = await loginRaw(emails.demoAdmin, MOBILE);
+      demo = { accessToken: res.data.accessToken, refreshToken: res.data.refreshToken };
+      expect(res.data.user).toMatchObject({ isDemo: true, roles: ['admin'] });
+
+      const [ok] = await ds.query(
+        `INSERT INTO ops_analyses (incident_id, status, result_json, raw_text, prompt_version, model, latency_ms, incident_title, exception_text)
+         VALUES ($4, 'ok', $1, NULL, $2, $3, 0, 'e2e 데모 픽스처 제목', 'E2eError: demo') RETURNING id`,
+        [JSON.stringify(RESULT), FIXTURE_VERSION, FIXTURE_MODEL, INCIDENT],
+      );
+      okId = ok.id;
+      // 이전 실행이 (가드 없는 옛 서버로) 메모를 남겼을 수 있다 — "403 이면 행이 없다" 단언이 그 잔재에 걸리지 않게
+      await ds.query(`DELETE FROM ops_incident_notes WHERE incident_id = $1`, [INCIDENT]);
+    });
+
+    afterAll(async () => {
+      await ds.query(`DELETE FROM ops_analyses WHERE model = $1`, [FIXTURE_MODEL]);
+      await ds.query(`DELETE FROM ops_incident_notes WHERE incident_id = $1`, [INCIDENT]);
+    });
+
+    it('POST /auth/demo-login + X-Client: mobile → body 에 refreshToken 과 isDemo 관리자(웹 경로는 종전 그대로 쿠키만)', async () => {
+      // demo-login 도 IP 당 로그인 상한을 센다 — 앞 스위트들이 창구를 다 썼을 수 있으니 loginRaw 처럼 비우고 간다
+      await resetLoginRateLimits();
+      const mobile = await axios.post('/auth/demo-login', {}, { headers: MOBILE });
+      if (mobile.status === 403) {
+        // DEMO_LOGIN_ENABLED 가 아닌 서버 — 분기 자체는 컨트롤러 단위 테스트가 고정한다
+        expect(mobile.data.message).toMatch(/데모/);
+        return;
+      }
+      expect(mobile.status).toBe(200);
+      expect(typeof mobile.data.refreshToken).toBe('string');
+      expect(mobile.data.user).toMatchObject({ isDemo: true });
+      expect(mobile.data.user.roles).toContain('admin');
+
+      const web = await axios.post('/auth/demo-login', {});
+      expect(web.status).toBe(200);
+      expect(web.data).not.toHaveProperty('refreshToken');
+      expect(refreshCookieOf(web)).toBeDefined();
+    });
+
+    it('기기 등록: 201 이지만 저장하지 않는다 — {registered:false, reason:"demo"}, 표에 행 없음', async () => {
+      const res = await axios.post(
+        '/ops/devices',
+        { expoPushToken: 'ExponentPushToken[e2e-demo-visitor-0001]', platform: 'android' },
+        auth(demo.accessToken),
+      );
+      expect(res.status).toBe(201);
+      expect(res.data).toEqual({ registered: false, reason: 'demo' });
+      expect(await ds.query(`SELECT 1 FROM ops_device_tokens WHERE user_id = $1`, [demoId])).toHaveLength(0);
+    });
+
+    it('AI 분석: force·simulate 는 403 — LLM 키·Sentry 설정과 무관하게 같은 답이고 행도 생기지 않는다', async () => {
+      const a = auth(demo.accessToken);
+      const before = (await ds.query(`SELECT COUNT(*)::int AS n FROM ops_analyses`))[0].n;
+      const forced = await axios.post('/ops/incidents/7742806116/analysis', { force: true }, a);
+      expect(forced.status).toBe(403);
+      expect(forced.data.message).toMatch(/데모/);
+      expect((await axios.post('/ops/incidents/7742806116/analysis', { simulate: 'parse_failed' }, a)).status).toBe(403);
+      expect((await ds.query(`SELECT COUNT(*)::int AS n FROM ops_analyses`))[0].n).toBe(before);
+    });
+
+    it('사실 메모 PUT → 403(DemoAccountGuard). 관리자 경로는 그대로다', async () => {
+      const body = { symptom: '데모', causeLocation: '데모', fixDirection: '데모' };
+      const res = await axios.put(`/ops/incidents/${INCIDENT}/note`, body, auth(demo.accessToken));
+      expect(res.status).toBe(403);
+      expect(res.data.message).toMatch(/데모 계정/);
+      expect(await ds.query(`SELECT 1 FROM ops_incident_notes WHERE incident_id = $1`, [INCIDENT])).toHaveLength(0);
+    });
+
+    it('인시던트 목록: X-Period 가 14d(관리자는 24h) — 키 미설정 서버면 둘 다 503', async () => {
+      const res = await axios.get('/ops/incidents', auth(demo.accessToken));
+      const admin = await axios.get('/ops/incidents', auth(adminMobile.accessToken));
+      if (res.status === 503) {
+        expect(admin.status).toBe(503);
+        return;
+      }
+      expect(res.status).toBe(200);
+      expect(res.headers['x-period']).toBe('14d');
+      expect(admin.headers['x-period']).toBe('24h');
+    });
+
+    it('평가: 저장은 되지만(201) 대기 목록에서 빠지지 않고(showAll), stats 에는 세지 않으며, 관리자의 대기 목록엔 영향이 없다', async () => {
+      const a = auth(demo.accessToken);
+      const pendingBefore = await axios.get('/ops/analyses/pending', a);
+      expect(pendingBefore.data.some((p: { analysisId: number }) => p.analysisId === okId)).toBe(true);
+
+      const saved = await axios.post(`/ops/analyses/${okId}/review`, { verdict: 'approved', rating: 5, guided: true }, a);
+      expect(saved.status).toBe(201);
+      expect(saved.data).toMatchObject({ reviewerId: demoId, verdict: 'approved' });
+
+      // 방문자 모두가 한 계정을 쓰므로 채점해도 카드가 사라지지 않는다(뒤 방문자가 빈 화면을 보지 않게)
+      const pendingAfter = await axios.get('/ops/analyses/pending', a);
+      expect(pendingAfter.data.some((p: { analysisId: number }) => p.analysisId === okId)).toBe(true);
+
+      // 승인율·few-shot 풀에는 들어가지 않는다 — 외부인의 스와이프가 순환 고리를 오염시키지 않게
+      const stats = await axios.get('/ops/analyses/stats', auth(adminMobile.accessToken));
+      const v = stats.data.versions.find((x: { promptVersion: string }) => x.promptVersion === FIXTURE_VERSION);
+      expect(v).toMatchObject({ analyses: 1, reviews: 0, approved: 0, approvalRate: null });
+
+      // 관리자는 아직 채점하지 않았으니 자기 대기 목록에서 그 카드를 본다(데모의 판정은 남의 목록을 건드리지 않는다)
+      const adminPending = await axios.get('/ops/analyses/pending', auth(adminMobile.accessToken));
+      expect(adminPending.data.some((p: { analysisId: number }) => p.analysisId === okId)).toBe(true);
+    });
+  });
 });

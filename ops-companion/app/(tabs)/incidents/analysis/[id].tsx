@@ -25,13 +25,18 @@ import { useAnalysis, useReanalyze } from '../../../../src/features/analysis/que
 import { AnalysisCard, AnalysisMeta, CopyButton, FallbackCard, analysisToText } from '../../../../src/features/analysis/AnalysisCard';
 import { ReviewSummaryCard } from '../../../../src/features/analysis/ReviewSummaryCard';
 import { GuidancePanel } from '../../../../src/features/review/GuidancePanel';
+import { useIsDemo } from '../../../../src/features/demo/DemoBanner';
 import { colors, spacing } from '../../../../src/theme';
 
-function errorMessage(error: unknown): { title: string; body: string; canRetry: boolean } {
+function errorMessage(error: unknown, isDemo = false): { title: string; body: string; canRetry: boolean } {
   const status = (error as AxiosError)?.response?.status;
+  const serverMessage = ((error as AxiosError)?.response?.data as { message?: string } | undefined)?.message;
   if (status === 404) return { title: '찾을 수 없는 인시던트', body: '삭제됐거나 다른 이슈로 병합됐을 수 있습니다.', canRetry: false };
+  // 데모 계정의 403(재분석)·429(시간당 새 분석 상한)는 서버 문구가 이유를 말한다 — 그대로 보여준다
+  if (status === 403 && isDemo) return { title: '데모 계정에서는 할 수 없습니다', body: serverMessage ?? '데모 계정은 저장된 분석만 볼 수 있습니다.', canRetry: false };
   if (status === 403) return { title: '권한 없음', body: '관리자 권한이 필요합니다.', canRetry: false };
   if (status === 503) return { title: 'AI 분석 미설정', body: '백엔드에 LLM API 키 또는 Sentry 연동이 설정되지 않았습니다.', canRetry: false };
+  if (status === 429 && isDemo) return { title: '데모 분석 한도', body: serverMessage ?? '데모 계정의 새 분석은 시간당 한도가 있습니다. 이미 분석된 인시던트는 볼 수 있습니다.', canRetry: false };
   if (status === 429) return { title: '요청이 잠시 몰렸습니다', body: '무료 요금제의 분당 한도입니다. 1분 뒤 다시 시도해주세요.', canRetry: true };
   if (status === 409) return { title: '이미 분석 중입니다', body: '다른 곳에서 같은 인시던트를 분석하고 있습니다. 잠시 후 다시 열어주세요.', canRetry: true };
   if (status === 502) return { title: '불러오지 못했습니다', body: 'Sentry 조회에 실패했습니다. 잠시 후 다시 시도해주세요.', canRetry: true };
@@ -68,17 +73,19 @@ export default function AnalysisScreen() {
   const router = useRouter();
   const { data, isPending, isError, error, refetch } = useAnalysis(id);
   const reanalyze = useReanalyze(id);
+  // 데모 계정은 서버가 force 를 403 으로 막는다 — "다시 분석" 버튼을 아예 그리지 않는다(눌러서 거절당하는 것보다 낫다)
+  const isDemo = useIsDemo();
 
   const onReanalyze = useCallback(
     (simulate?: 'parse_failed') => {
       reanalyze.mutate(simulate ? { simulate } : undefined, {
         onError: (err) => {
-          const message = errorMessage(err);
+          const message = errorMessage(err, isDemo);
           Alert.alert(message.title, message.body);
         },
       });
     },
-    [reanalyze],
+    [reanalyze, isDemo],
   );
 
   if (isPending) {
@@ -92,7 +99,7 @@ export default function AnalysisScreen() {
   }
 
   if (isError) {
-    const message = errorMessage(error);
+    const message = errorMessage(error, isDemo);
     return (
       <SafeAreaView style={styles.centered} edges={['bottom']}>
         <Text style={styles.stateTitle}>{message.title}</Text>
@@ -135,15 +142,17 @@ export default function AnalysisScreen() {
               <Text style={styles.reviewText}>이 분석 평가하기</Text>
               <Text style={styles.reviewHint}>승인한 분석은 다음 AI 분석의 예시가 됩니다</Text>
             </Pressable>
-            <Pressable style={[styles.secondaryButton, isRetrying && styles.disabled]} onPress={() => onReanalyze()} disabled={isRetrying}>
-              <Text style={styles.secondaryText}>{isRetrying ? '다시 분석 중…' : '다시 분석'}</Text>
-            </Pressable>
+            {!isDemo ? (
+              <Pressable style={[styles.secondaryButton, isRetrying && styles.disabled]} onPress={() => onReanalyze()} disabled={isRetrying}>
+                <Text style={styles.secondaryText}>{isRetrying ? '다시 분석 중…' : '다시 분석'}</Text>
+              </Pressable>
+            ) : null}
           </>
         ) : (
           <FallbackCard rawText={data.rawText} onRetry={() => onReanalyze()} isRetrying={isRetrying} />
         )}
 
-        {__DEV__ ? (
+        {__DEV__ && !isDemo ? (
           // 개발 빌드 전용: 백엔드가 LLM 없이 구조화 실패 행을 만들게 해 fallback UI 를 실기기에서 확인한다(DoD "강제 실패 테스트").
           // 운영 백엔드는 이 옵션을 무시하므로 눌러도 실제 분석이 한 번 더 나갈 뿐이다 — 개발 빌드에서만 보인다.
           <Pressable style={[styles.devButton, isRetrying && styles.disabled]} onPress={() => onReanalyze('parse_failed')} disabled={isRetrying}>

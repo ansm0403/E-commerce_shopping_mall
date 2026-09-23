@@ -142,7 +142,9 @@ export class OpsPollerService {
    * 전송이 통째로 실패하면 선점을 되돌려 다음 주기에 다시 시도하게 한다.
    */
   private async notify(candidates: SentryIssueListItem[], now: Date): Promise<number> {
-    const tokens = await this.deviceTokens.find({ where: { disabledAt: IsNull() } });
+    // 데모 계정(is_demo)의 기기는 등록 자체를 막지만(OpsService.registerDevice), 그 전에 등록된 행이 남아 있어도
+    // 여기서 한 번 더 거른다 — 외부 방문자의 폰에 운영 장애 알림이 가면 안 된다. TypeORM 은 관계 조건을 자동 JOIN 한다.
+    const tokens = await this.deviceTokens.find({ where: { disabledAt: IsNull(), user: { isDemo: false } } });
     if (tokens.length === 0) return 0;
 
     const byUser = new Map<number, OpsDeviceTokenEntity[]>();

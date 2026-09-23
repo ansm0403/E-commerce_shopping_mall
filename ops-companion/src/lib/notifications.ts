@@ -20,7 +20,8 @@ import { registerDevice } from './api';
 export type PushRegistration =
   | { status: 'registered'; token: string }
   | { status: 'denied' }
-  | { status: 'unsupported'; reason: 'expo-go' | 'simulator' | 'no-project-id' }
+  /** demo = 데모 계정이라 백엔드가 등록을 받지 않았다(외부 방문자의 폰에 운영 장애 푸시 금지) */
+  | { status: 'unsupported'; reason: 'expo-go' | 'simulator' | 'no-project-id' | 'demo' }
   | { status: 'error'; message: string };
 
 /**
@@ -92,7 +93,11 @@ export async function registerForPushNotifications(): Promise<PushRegistration> 
     if (!projectId) return { status: 'unsupported', reason: 'no-project-id' };
 
     const { data: token } = await Notifications.getExpoPushTokenAsync({ projectId });
-    await registerDevice(token, Platform.OS === 'ios' ? 'ios' : 'android');
+    const result = await registerDevice(token, Platform.OS === 'ios' ? 'ios' : 'android');
+    if (!result.registered) {
+      // 백엔드가 받지 않았다(지금은 데모 계정뿐). 토큰은 발급됐지만 발송 대상이 아니므로 화면에도 보여주지 않는다.
+      return { status: 'unsupported', reason: result.reason ?? 'demo' };
+    }
     return { status: 'registered', token };
   } catch (err) {
     return { status: 'error', message: (err as Error).message };
@@ -112,7 +117,9 @@ export function describeRegistration(reg: PushRegistration | null): string {
         ? '불가 — Expo Go 는 원격 푸시를 받지 못합니다(개발 빌드 필요)'
         : reg.reason === 'simulator'
           ? '불가 — 실기기에서만 동작합니다'
-          : '불가 — EAS projectId 가 설정되지 않았습니다';
+          : reg.reason === 'demo'
+            ? '꺼짐 — 데모 계정은 장애 알림을 받지 않습니다'
+            : '불가 — EAS projectId 가 설정되지 않았습니다';
     case 'error':
       return `실패 — ${reg.message}`;
   }

@@ -8263,6 +8263,7 @@ __metadata:
     expo-router: "npm:~57.0.22"
     expo-secure-store: "npm:~57.0.4"
     expo-status-bar: "npm:~57.0.1"
+    expo-updates: "npm:~57.0.23"
     react: "npm:19.2.3"
     react-dom: "npm:19.2.3"
     react-native: "npm:0.86.3"
@@ -14602,6 +14603,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"expo-eas-client@npm:~57.0.4":
+  version: 57.0.4
+  resolution: "expo-eas-client@npm:57.0.4"
+  checksum: 10c0/e1c352c7cac311250e50520ae4f4bb5300f8d48c09df73013bda6c9d29846616a77e044b86d75aff61e42da68c4138fc0d581217b292496a834873efd4b543cb
+  languageName: node
+  linkType: hard
+
 "expo-file-system@npm:~57.0.7":
   version: 57.0.7
   resolution: "expo-file-system@npm:57.0.7"
@@ -14837,6 +14845,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"expo-structured-headers@npm:~57.0.1":
+  version: 57.0.1
+  resolution: "expo-structured-headers@npm:57.0.1"
+  checksum: 10c0/8c2a8380fed2506020bb4dc9d1b22bb1243569c7aeda98749cc83f61f296b7c65785fe48cb07b5ef45cc4767402edff50ad4f693cc4c3f8b347b94da7c9c8120
+  languageName: node
+  linkType: hard
+
 "expo-symbols@npm:^57.0.3":
   version: 57.0.3
   resolution: "expo-symbols@npm:57.0.3"
@@ -14858,6 +14873,39 @@ __metadata:
   peerDependencies:
     expo: "*"
   checksum: 10c0/8ab3eb93281e83d5d91b1e6b7d315d7f64bb55b344a2919db942c256f1639ddbe4c6f0147f0c809cbebf08ab2c54243f6bf805129b8a5a07f86c8923463b98e9
+  languageName: node
+  linkType: hard
+
+"expo-updates@npm:~57.0.23":
+  version: 57.0.23
+  resolution: "expo-updates@npm:57.0.23"
+  dependencies:
+    "@expo/code-signing-certificates": "npm:^0.0.6"
+    "@expo/plist": "npm:^0.8.1"
+    "@expo/spawn-async": "npm:^1.8.0"
+    arg: "npm:^4.1.0"
+    chalk: "npm:^4.1.2"
+    debug: "npm:^4.3.4"
+    expo-eas-client: "npm:~57.0.4"
+    expo-manifests: "npm:~57.0.2"
+    expo-structured-headers: "npm:~57.0.1"
+    expo-updates-interface: "npm:~57.0.2"
+    getenv: "npm:^2.0.0"
+    glob: "npm:^13.0.0"
+    ignore: "npm:^5.3.1"
+    nullthrows: "npm:^1.1.1"
+    resolve-from: "npm:^5.0.0"
+  peerDependencies:
+    expo: "*"
+    expo-dev-client: "*"
+    react: "*"
+    react-native: "*"
+  peerDependenciesMeta:
+    expo-dev-client:
+      optional: true
+  bin:
+    expo-updates: bin/cli.js
+  checksum: 10c0/c43df37c847fa49a7afd924489159cad4ffddd6c4ff6b04e734bc0d391e080b7b1ceb4b38b05360f176d4d8f6e7a2cd583495fdd278f907910222900d6ff3cfc
   languageName: node
   linkType: hard
 
