@@ -1,5 +1,9 @@
 # 작업: 웹 → 앱 연동 확인 페이지 ("내가 낸 에러가 앱에 뜬다")
 
+> **진행 상태(2026-09-23 저녁)**: A~E **구현 완료**(브랜치 `feat/ops-web-app-link`). 검증 = 폴러 단위 23(신규 1) · 프론트 tsc · 앱 typecheck · 백엔드 번들에 shared 런타임 참조 0.
+> 계획과 달라진 것 2가지(설계 §9 "진행" · 부록 §7): ① 백엔드는 shared 를 값으로 import 하지 않는다(운영 이미지에 링크 없음 → `import type`+`typeof` 고정) ② 판정은 includes(Sentry 제목 `ErrorName: message`).
+> 남은 것 = F 절(사용자 콘솔 2건 + 배포) → 운영 DoD 5건 → 실측 시간을 설계 §9 에 기입 → 이 문서 삭제. DoD ② 의 파일 경로는 `frontend/src/app/(admin)/admin/ops-app/visitor-test.ts` 다(계획의 `app-test/page.tsx` 는 옛 이름).
+
 > 2026-09-23 작성. 외부 배포(`feat/ops-public-demo`, preview APK versionCode 4)를 실기기로 돌려 본 사용자 관찰에서 나온 작업.
 > **README 전면 갱신(`_next-session-readme.md`)보다 먼저 한다** — README 의 운영 앱 절에 "웹에서 에러를 내고 앱에서 확인해 보세요" 한 줄이 들어가야 하므로.
 

@@ -9,9 +9,12 @@ import { colors, spacing } from '../../theme';
 
 const VERDICT_LABEL = { approved: '승인', rejected: '반려' } as const;
 
+const formatMine = (mine: NonNullable<ReviewSummary['mine']>) =>
+  `내 판정: ${VERDICT_LABEL[mine.verdict] ?? mine.verdict}${mine.rating !== null ? ` · 별점 ${mine.rating}` : ''}${mine.guided ? ' (안내 채점)' : ''}`;
+
 export function ReviewSummaryCard({ summary }: { summary: ReviewSummary | null | undefined }) {
   if (summary === undefined) return null;
-  if (!summary || summary.reviews === 0) {
+  if (!summary || (summary.reviews === 0 && !summary.mine)) {
     return (
       <View style={styles.panel}>
         <Text style={styles.title}>사람 채점 · 아직 없음</Text>
@@ -19,11 +22,19 @@ export function ReviewSummaryCard({ summary }: { summary: ReviewSummary | null |
       </View>
     );
   }
+  if (summary.reviews === 0 && summary.mine) {
+    // 집계(reviews)는 데모 계정의 채점을 빼지만 `mine` 은 요청자 자신의 판정이라 데모여도 온다(OpsReviewService.summarizeReviews).
+    // 웹 → 앱 연동 확인(설계 §9)의 마지막 고리 — 방문자가 방금 채점한 새 인시던트에서 자기 판정이 보여야 한다.
+    return (
+      <View style={styles.panel}>
+        <Text style={styles.title}>사람 채점 · 아직 없음 — {formatMine(summary.mine)}</Text>
+        <Text style={styles.hint}>내 판정은 저장됐지만 데모 계정의 채점은 집계에 들어가지 않습니다. 다른 사람의 판정이 쌓이면 여기에 승인/반려 수가 보입니다.</Text>
+      </View>
+    );
+  }
   const parts = [`승인 ${summary.approved}`, `반려 ${summary.rejected}`];
   if (summary.avgRating !== null) parts.push(`별점 ${summary.avgRating.toFixed(1)}`);
-  const mine = summary.mine
-    ? `내 판정: ${VERDICT_LABEL[summary.mine.verdict] ?? summary.mine.verdict}${summary.mine.rating !== null ? ` · 별점 ${summary.mine.rating}` : ''}${summary.mine.guided ? ' (안내 채점)' : ''}`
-    : null;
+  const mine = summary.mine ? formatMine(summary.mine) : null;
   const tone = summary.rejected > summary.approved ? colors.error : summary.approved > 0 ? colors.success : colors.textMuted;
 
   return (
