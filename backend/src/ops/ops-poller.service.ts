@@ -8,6 +8,7 @@ import { ExpoPushClient, ExpoPushMessage } from './expo-push.client';
 import { OpsDeviceTokenEntity } from './entity/ops-device-token.entity';
 import { OpsPollStateEntity } from './entity/ops-poll-state.entity';
 import { OpsPushLogEntity } from './entity/ops-push-log.entity';
+import { isVisitorTestTitle } from './visitor-test';
 
 /** 한 주기의 결과 요약 — 로그와 테스트가 함께 읽는다 */
 export interface PollOutcome {
@@ -32,6 +33,9 @@ export interface PollOutcome {
  *  · 우리가 처음 보는 이슈는 즉시. 이미 보낸 이슈는 쿨다운(기본 6시간) 뒤에 다시.
  *    "새 이슈만" 으로 하면 같은 에러로 데모를 두 번 찍을 수 없고, 쿨다운이 없으면
  *    514회 발생한 CORS 이슈 같은 것이 주기마다 울린다.
+ *  · **방문자 테스트 이슈(제목에 `[방문자 테스트`)는 건너뛴다**(2026-09-23, 설계 §9 "웹 → 앱 연동 확인" 결정 ④) —
+ *    웹 관리자 "운영 앱" 페이지의 버튼이 만드는 진짜 Sentry 이슈다. 방문자가 누를 때마다 온콜 폰이 울리면 안 된다.
+ *    목록·상세·분석에서는 **보여야** 하므로 여기(푸시)만 거른다. Slack 은 Sentry 알림 규칙의 제목 필터가 맡는다.
  */
 @Injectable()
 export class OpsPollerService {
@@ -127,11 +131,13 @@ export class OpsPollerService {
     return { status: 'polled', candidates: candidates.length, sent };
   }
 
-  /** 커서보다 새로운가 + 레벨 + 프로젝트 화이트리스트 */
+  /** 커서보다 새로운가 + 레벨 + 프로젝트 화이트리스트 + 방문자 테스트 이슈가 아닌가 */
   private isPushTarget(issue: SentryIssueListItem, since: Date): boolean {
     if (!OpsPollerService.PUSH_LEVELS.has(issue.level)) return false;
     const slug = issue.project?.slug;
     if (!slug || !this.projectSlugs.includes(slug)) return false;
+    // 목록 응답에는 태그가 없다 — 제목이 유일한 단서. 커서는 그대로 전진하므로(poll 의 newest) 매 주기 다시 훑지 않는다.
+    if (isVisitorTestTitle(issue.title)) return false;
 
     const lastSeen = Date.parse(issue.lastSeen);
     return Number.isFinite(lastSeen) && lastSeen > since.getTime();

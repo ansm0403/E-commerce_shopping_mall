@@ -127,6 +127,25 @@ describe('OpsPollerService', () => {
       expect(sendSpy).not.toHaveBeenCalled();
     });
 
+    it('방문자 테스트 이슈(제목에 "[방문자 테스트")는 폰을 울리지 않는다 — 웹 "운영 앱" 페이지의 버튼이 만드는 이슈', async () => {
+      await build();
+      sentry.listIssues.mockResolvedValue([
+        // Sentry 제목은 `ErrorName: message` 꼴 — 접두어가 맨 앞이 아니다(includes 판정을 고정)
+        issue({ id: 'visitor', title: 'VisitorTestError: [방문자 테스트 A7K2] 웹→앱 연동 확인용 에러', lastSeen: '2026-09-20T12:06:00Z' }),
+        issue({ id: 'real', lastSeen: '2026-09-20T12:04:00Z' }),
+      ]);
+
+      const out = await service.poll(NOW);
+
+      // 진짜 장애 1건만 후보. 방문자 이슈는 커서만 전진시키고(다음 주기에 다시 훑지 않게) 발송 대상에서 빠진다.
+      expect(out).toEqual({ status: 'polled', candidates: 1, sent: 1 });
+      const [messages] = sendSpy.mock.calls[0] as [Array<{ data: { incidentId: string } }>];
+      expect(messages.map((m) => m.data.incidentId)).toEqual(['real']);
+      expect(pollState.save).toHaveBeenCalledWith(
+        expect.objectContaining({ lastSeenAt: new Date('2026-09-20T12:06:00Z'), lastIssueId: 'real' }),
+      );
+    });
+
     it('커서보다 오래된 이슈는 이미 본 것이라 다시 보내지 않는다', async () => {
       await build();
       sentry.listIssues.mockResolvedValue([issue({ lastSeen: '2026-09-20T11:59:00Z' })]);

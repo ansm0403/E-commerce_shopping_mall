@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: '/admin/settlements', label: '정산 관리' },
   { href: '/admin/categories',  label: '카테고리' },
   { href: '/admin/audit-logs',  label: '감사 로그' },
+  { href: '/admin/ops-app',     label: '운영 앱' },
 ] as const;
 
 export default function AdminSidebar() {
