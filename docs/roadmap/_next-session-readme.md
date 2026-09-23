@@ -73,7 +73,7 @@
 ## 앱 배포 링크 자리 (2026-09-23 외부 배포 세션에서 추가 — README 갱신 때 채울 것)
 
 - 별도 세션(브랜치 `feat/ops-public-demo`)에서 **외부 방문자용 preview APK + 데모 계정 경로**를 만들었다. 루트 README 의 Ops Companion 절에 넣을 문구:
-  - "**설치해서 써 보기**: 안드로이드 설치 링크 `https://expo.dev/accounts/ansmoon/projects/ops-companion/builds/9cd9b05b-ade8-4f29-afcd-363b6b7eafaf`(preview versionCode 4, 2026-09-23 — `ops-companion/README.md` "설치해서 써 보기" 절과 같은 값) → 로그인 화면 **데모 계정으로 체험하기**(계정 정보 없음, 서버가 켜고 끈다). 실제 운영 Sentry 데이터(최근 14일). 조회·AI 분석·채점 가능, 재분석·메모·푸시는 데모 계정에서 꺼짐."
+  - "**설치해서 써 보기**: 안드로이드 설치 링크 `https://expo.dev/artifacts/eas/hzxaIa-NMrH-AITYKN2Vz7zJdqMdvuaFEWwjkdTQV1E.apk`(preview versionCode 4, 2026-09-23 — `ops-companion/README.md` "설치해서 써 보기" 절과 같은 값. **빌드 페이지가 아니라 APK 직링크** — 페이지는 익명 방문자에게 오류. 아티팩트는 2026-10-06 만료 → GitHub Release 자산으로 옮길 것) → 로그인 화면 **데모 계정으로 체험하기**(계정 정보 없음, 서버가 켜고 끈다). 실제 운영 Sentry 데이터(최근 14일). 조회·AI 분석·채점 가능, 재분석·메모·푸시는 데모 계정에서 꺼짐."
   - 근거 문서: `ops-companion/README.md`(설치·표·배포 방식 비교) · `docs/learning/ops-companion/appendix-public-demo.md`(왜 그렇게 정했나) · 설계 §9 "외부 배포".
   - **"웹에서 에러 내기" 한 줄(2026-09-23 구현, `feat/ops-web-app-link`)**: "웹 로그인 → **관리자 페이지 체험하기** → 관리자 메뉴 **운영 앱**(`/admin/ops-app`) → **테스트 에러 보내기** → 페이지가 앱과 같은 API 로 '앱 목록에 노출 ✓' 를 보여주면 앱에서 `[방문자 테스트 XXXX]` 를 열어 분석·채점해 보세요." — 근거 `ops-companion/README.md` "설치해서 써 보기" 4번 · 부록 §7.
 - 빌드마다 링크가 바뀐다 — README 에는 링크를 직접 적지 말고 `ops-companion/README.md` 절로 링크하는 편이 안전하다.

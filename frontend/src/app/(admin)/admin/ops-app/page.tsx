@@ -8,10 +8,13 @@ import LinkCheckSection from './components/LinkCheckSection';
  * AdminGuard 는 (admin) layout 이 이미 건다.
  */
 
-/** preview 빌드 설치 링크 — `ops-companion/README.md` "설치해서 써 보기" 와 같은 값. 빌드마다 바뀐다(QR 도 같이 재생성) */
-const INSTALL_URL =
-  'https://expo.dev/accounts/ansmoon/projects/ops-companion/builds/9cd9b05b-ade8-4f29-afcd-363b6b7eafaf';
-const INSTALL_BUILD_LABEL = 'preview 빌드 versionCode 4 · 2026-09-23 · Android APK';
+/**
+ * preview 빌드 설치 링크 — `ops-companion/README.md` "설치해서 써 보기" 와 같은 값. 빌드마다 바뀐다(QR 도 같이 재생성).
+ * expo.dev 빌드 **페이지**(`/accounts/…/builds/<id>`)가 아니라 **APK 아티팩트 직링크**다 — 페이지는 로그인하지 않은 방문자에게
+ * "Something went wrong" 을 보여줬다(2026-09-23 실기기). 직링크는 익명 200(≈108MB). EAS 아티팩트는 빌드 후 14일에 만료된다.
+ */
+const INSTALL_URL = 'https://expo.dev/artifacts/eas/hzxaIa-NMrH-AITYKN2Vz7zJdqMdvuaFEWwjkdTQV1E.apk';
+const INSTALL_BUILD_LABEL = 'preview 빌드 versionCode 4 · 2026-09-23 · Android APK 약 108MB';
 /** `npx qrcode -o frontend/public/images/ops-app-install-qr.png -w 220 "<INSTALL_URL>"` 로 만든 정적 PNG(외부 이미지 도메인 없음 — CSP) */
 const INSTALL_QR_SRC = '/images/ops-app-install-qr.png';
 

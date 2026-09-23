@@ -8,7 +8,8 @@
 
 PC·Metro·Expo 계정 없이, 안드로이드 폰 하나면 된다.
 
-1. 폰에서 설치 링크를 연다 → **https://expo.dev/accounts/ansmoon/projects/ops-companion/builds/9cd9b05b-ade8-4f29-afcd-363b6b7eafaf** (preview 빌드 versionCode 4, 2026-09-23. 같은 페이지의 QR 을 찍어도 된다)
+1. 폰에서 설치 링크를 연다 → **https://expo.dev/artifacts/eas/hzxaIa-NMrH-AITYKN2Vz7zJdqMdvuaFEWwjkdTQV1E.apk** (preview 빌드 versionCode 4, 2026-09-23, 약 108MB. 웹 관리자 "운영 앱" 페이지의 QR 도 같은 링크다)
+   - **빌드 페이지 링크(`expo.dev/accounts/…/builds/<id>`)가 아니라 APK 직링크다** — 빌드 페이지는 로그인하지 않은 방문자에게 "Something went wrong" 을 보여줬다(2026-09-23 실기기). 직링크는 `eas build:list --json` 의 `artifacts.buildUrl`. **EAS 아티팩트는 빌드 후 14일에 만료**된다(이 빌드는 2026-10-06) — 이력서 기간 동안 살아 있어야 하면 APK 를 GitHub Release 자산으로 올리고 이 링크·웹 페이지 상수·QR 을 그 URL 로 바꾼다.
    - 스토어 밖 APK 라 "출처를 알 수 없는 앱 설치" 를 한 번 허용해야 한다. iOS 는 지원하지 않는다(설계 §9 비목표).
 2. 앱을 열고 로그인 화면의 **"데모 계정으로 체험하기"** 를 누른다. 계정 정보는 앱에도 이 문서에도 없다 — 서버가 켜 둔 데모 로그인(`POST /v1/auth/demo-login`, 웹 로그인 화면의 "관리자 페이지 체험하기" 와 같은 경로)이다.
 3. 보이는 것은 **실제 운영 Sentry 데이터**다(쇼핑몰 프론트·백엔드의 최근 14일 이슈 — 관리자 계정은 24시간). 이메일·전화는 백엔드가 마스킹하고, 요청 헤더·쿠키·IP 는 애초에 내려오지 않는다(설계 §5.2 · §7).
