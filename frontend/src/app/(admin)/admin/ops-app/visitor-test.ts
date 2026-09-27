@@ -76,6 +76,39 @@ export function sendVisitorTestError(code: string): VisitorTestSend {
   return { code, eventId, sentAt: new Date() };
 }
 
+export type SendConfirmation =
+  | { status: 'confirmed'; statusCode?: number }
+  | { status: 'failed'; reason: 'no-client' | 'timeout' | 'rejected'; statusCode?: number };
+
+/**
+ * 전송이 **실제로 서버에 닿았는지** 기다린다. `captureException` 이 돌려주는 event id 는 브라우저 안에서 만든 값이라
+ * 전송 성공의 증거가 아니다 — 2026-09-27 운영 실기기에서 광고 차단기(EasyPrivacy 는 Sentry 터널 경로 `/monitoring?o=…&p=…` 까지 막는다)가
+ * 전송을 막았는데 화면은 "Sentry event 899f…" 를 보여줬다. SDK 는 응답을 받은 뒤 `afterSendEvent` 훅을 부르고,
+ * fetch 가 차단돼 거부되면 훅이 오지 않는다 → 시간 제한으로 실패를 판정한다.
+ */
+export function waitForSend(eventId: string | undefined, timeoutMs = 8000): Promise<SendConfirmation> {
+  const client = Sentry.getClient();
+  if (!client || !eventId) return Promise.resolve({ status: 'failed', reason: 'no-client' });
+  return new Promise((resolve) => {
+    let done = false;
+    let off: (() => void) | undefined;
+    const finish = (result: SendConfirmation) => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      off?.();
+      resolve(result);
+    };
+    off = client.on('afterSendEvent', (event, response) => {
+      if (event.event_id !== eventId) return;
+      const code = response?.statusCode;
+      if (code === undefined || (code >= 200 && code < 300)) finish({ status: 'confirmed', statusCode: code });
+      else finish({ status: 'failed', reason: 'rejected', statusCode: code });
+    });
+    const timer = setTimeout(() => finish({ status: 'failed', reason: 'timeout' }), timeoutMs);
+  });
+}
+
 /** 남은 쿨다운(ms). localStorage 가 막힌 환경(시크릿 등)에서는 0 — 쿨다운은 예의이지 보안이 아니다 */
 export function readCooldownRemainingMs(now: number = Date.now()): number {
   try {

@@ -5,11 +5,13 @@
  * 그 이슈가 앱 목록에 나타나는 것을 지켜본다(설계 §9 "웹 → 앱 연동 확인" 결정 ⑨). 나타나면 "앱에서 열기" 딥링크(결정 ⑩).
  *
  * 흐름: 코드 생성 → sendVisitorTestError → 추적기 3단계(보냄 ✓ / Sentry 수집 중 / 앱 목록 노출 ✓)
- *  · 폴링은 20초 간격 최대 9회(3분). 백엔드 목록 캐시가 60초라 더 자주 물을 이유가 없다.
+ *  · "보냄 ✓" 는 SDK 가 서버 응답을 받은 뒤(`waitForSend`)에만 켠다 — 광고 차단기가 전송을 막아도 event id 는 만들어지므로
+ *    id 만 보고 ✓ 를 켜면 거짓 안심이 된다(2026-09-27 운영 실기기). 실패면 붉은 안내.
+ *  · 폴링은 20초 간격 최대 9회(3분). 백엔드 목록 캐시가 60초라 더 자주 물을 이유가 없다. 운영 실측은 첫 확인(20초 이내)에 노출.
  *  · 페이지를 떠나면 폴링을 멈춘다(cleanup).
  *  · 노출 확인 후 상세(`GET /ops/incidents/:id`)에서 첫 발생 시각을 읽어 버튼 시각과 나란히 보여준다(결정 ⑦).
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { authClient } from '../../../../../lib/axios/axios-http-client';
 import {
   VISITOR_TEST_COOLDOWN_MS,
@@ -20,6 +22,8 @@ import {
   readCooldownRemainingMs,
   sendVisitorTestError,
   visitorTestMarker,
+  waitForSend,
+  type SendConfirmation,
   type VisitorTestSend,
 } from '../visitor-test';
 
@@ -56,11 +60,16 @@ export const appDeepLink = (incidentId: string) => `opscompanion://incidents/${i
 const isMobileUserAgent = () =>
   typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 
+const AD_BLOCKER_HINT =
+  '광고 차단기(uBlock·AdGuard 등)가 Sentry 전송을 막았을 가능성이 큽니다. 차단기를 끄거나 이 사이트를 허용한 뒤 페이지를 새로고침하고 다시 보내세요.';
+
 export default function LinkCheckSection() {
   const [sentryOn, setSentryOn] = useState<boolean | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [cooldownMs, setCooldownMs] = useState(0);
   const [sent, setSent] = useState<VisitorTestSend | null>(null);
+  const [sendState, setSendState] = useState<'pending' | SendConfirmation['status']>('pending');
+  const [sendCode, setSendCode] = useState<number | undefined>(undefined);
   const [stage, setStage] = useState<TrackerStage>('idle');
   const [attempts, setAttempts] = useState(0);
   const [found, setFound] = useState<FoundIncident | null>(null);
@@ -137,10 +146,18 @@ export default function LinkCheckSection() {
     const result = sendVisitorTestError(code);
     markVisitorTestSent(result.sentAt.getTime());
     setCooldownMs(VISITOR_TEST_COOLDOWN_MS);
+    setSendState('pending');
+    setSendCode(undefined);
     setSent(result);
+    // 서버 응답이 온 뒤에만 "보냄 ✓". 차단돼서 응답이 없으면 8초 뒤 실패로 판정한다.
+    void waitForSend(result.eventId).then((confirmation) => {
+      setSendState(confirmation.status);
+      setSendCode(confirmation.statusCode);
+    });
   };
 
   const marker = sent ? visitorTestMarker(sent.code) : null;
+  const sendFailed = sendState === 'failed';
 
   return (
     <section style={card}>
@@ -149,6 +166,10 @@ export default function LinkCheckSection() {
         아래 버튼은 이 브라우저에서 <strong>진짜 에러</strong>를 만들어 쇼핑몰 프론트의 Sentry 프로젝트로 보냅니다
         (미리 심어 둔 데이터가 아닙니다). 운영 앱은 같은 Sentry 를 읽으므로, 잠시 뒤 앱 인시던트 목록에
         방문자 코드가 붙은 항목이 나타납니다. 이 페이지도 앱과 <strong>같은 API</strong>로 그 항목을 기다렸다가 표시합니다.
+      </p>
+      <p style={{ ...muted, color: '#b91c1c', fontWeight: 600 }}>
+        광고 차단기(uBlock·AdGuard 등)를 켠 브라우저에서는 전송이 막힙니다. 차단기가 Sentry 를 추적기로 분류해 이 사이트의 전송 경로까지
+        차단하기 때문입니다. 누르기 전에 차단기를 끄거나 이 사이트를 허용해 주세요.
       </p>
 
       {sentryOn === false && (
@@ -186,12 +207,31 @@ export default function LinkCheckSection() {
             <div style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', letterSpacing: '0.5px' }}>{marker}</div>
             <div style={{ fontSize: '12px', color: '#64748b' }}>
               보낸 시각(KST) <strong style={{ color: '#0f172a' }}>{formatKst(sent.sentAt)}</strong>
-              {sent.eventId ? <> · Sentry event {sent.eventId.slice(0, 8)}…</> : null}
+              {sendState === 'confirmed' && sent.eventId ? <> · Sentry 응답 확인 · event {sent.eventId.slice(0, 8)}…</> : null}
             </div>
           </div>
 
+          {sendFailed && (
+            <div style={danger}>
+              <strong>전송이 확인되지 않았습니다.</strong> {AD_BLOCKER_HINT}
+              {sendCode ? ` (Sentry 응답 ${sendCode})` : ''}
+            </div>
+          )}
+
           <ol style={{ margin: 0, paddingLeft: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <Step done label="브라우저에서 보냄" detail={`fingerprint: portfolio-visitor-test / ${sent.code}`} />
+            <Step
+              done={sendState === 'confirmed'}
+              active={sendState === 'pending'}
+              failed={sendFailed}
+              label="브라우저에서 보냄"
+              detail={
+                sendState === 'pending'
+                  ? 'Sentry 응답 기다리는 중…'
+                  : sendFailed
+                    ? '응답 없음 — 위 안내를 보세요'
+                    : `fingerprint: portfolio-visitor-test / ${sent.code}`
+              }
+            />
             <Step
               done={stage === 'found'}
               active={stage === 'polling'}
@@ -207,6 +247,7 @@ export default function LinkCheckSection() {
             <Step
               done={stage === 'found'}
               active={stage === 'polling'}
+              failed={stage === 'timeout'}
               label="앱 목록에 노출 (GET /ops/incidents — 앱과 같은 API)"
               detail={
                 stage === 'found' && found
@@ -214,7 +255,11 @@ export default function LinkCheckSection() {
                   : stage === 'polling'
                     ? `20초마다 확인 중… (${attempts}/${POLL_MAX_ATTEMPTS})${pollError ? ` — 마지막 조회 실패: ${pollError}` : ''}`
                     : stage === 'timeout'
-                      ? '아직 안 보이면 앱 목록을 당겨서 새로고침해 보세요(캐시 만료 후 재조회). Sentry 쿼터·네트워크 문제일 수도 있습니다.'
+                      ? (
+                          <span style={{ color: '#b91c1c', fontWeight: 600 }}>
+                            3분 동안 보이지 않았습니다. {AD_BLOCKER_HINT} 차단기가 아니라면 앱 목록을 당겨서 새로고침해 보세요(캐시 만료 후 재조회).
+                          </span>
+                        )
                       : ''
               }
             />
@@ -231,7 +276,7 @@ export default function LinkCheckSection() {
                 </a>
               ) : (
                 <div style={{ fontSize: '13px', color: '#166534' }}>
-                  폰에서 이 페이지를 열면 "앱에서 열기" 버튼이 나타나 앱의 이 인시던트로 바로 이동합니다
+                  폰에서 이 페이지를 열고 다시 보내면 "앱에서 열기" 버튼이 나타나 앱의 그 인시던트로 바로 이동합니다
                   (<code>{appDeepLink(found.id)}</code>). PC 에서는 앱 목록에서 위 제목을 찾으세요.
                 </div>
               )}
@@ -263,8 +308,20 @@ export default function LinkCheckSection() {
   );
 }
 
-function Step({ done, active, label, detail }: { done: boolean; active?: boolean; label: string; detail: string }) {
-  const color = done ? '#16a34a' : active ? '#2563eb' : '#94a3b8';
+function Step({
+  done,
+  active,
+  failed,
+  label,
+  detail,
+}: {
+  done: boolean;
+  active?: boolean;
+  failed?: boolean;
+  label: string;
+  detail: ReactNode;
+}) {
+  const color = done ? '#16a34a' : failed ? '#dc2626' : active ? '#2563eb' : '#94a3b8';
   return (
     <li style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
       <span
@@ -282,10 +339,10 @@ function Step({ done, active, label, detail }: { done: boolean; active?: boolean
           background: color,
         }}
       >
-        {done ? '✓' : active ? '…' : ''}
+        {done ? '✓' : failed ? '!' : active ? '…' : ''}
       </span>
       <span style={{ display: 'flex', flexDirection: 'column' }}>
-        <span style={{ fontSize: '14px', fontWeight: 600, color: done ? '#0f172a' : '#475569' }}>{label}</span>
+        <span style={{ fontSize: '14px', fontWeight: 600, color: done ? '#0f172a' : failed ? '#b91c1c' : '#475569' }}>{label}</span>
         {detail ? <span style={{ fontSize: '12px', color: '#64748b' }}>{detail}</span> : null}
       </span>
     </li>
@@ -311,6 +368,15 @@ const warn: React.CSSProperties = {
   borderRadius: '8px',
   padding: '10px 12px',
   fontSize: '13px',
+};
+const danger: React.CSSProperties = {
+  background: '#fef2f2',
+  border: '1px solid #fca5a5',
+  color: '#b91c1c',
+  borderRadius: '8px',
+  padding: '10px 12px',
+  fontSize: '13px',
+  lineHeight: 1.6,
 };
 const codeBox: React.CSSProperties = {
   background: '#f8fafc',
