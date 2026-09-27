@@ -37,7 +37,7 @@ export default function AdminOpsAppPage() {
           (Sentry → 앱 → AI 분석 → 사람 채점 → 개선). 푸시 알림·딥링크·생체 잠금·소스맵까지 운영 백엔드와 붙어 돕니다.
         </p>
         <p style={{ ...p, fontSize: '13px', color: '#64748b' }}>
-          이 페이지는 그 고리의 첫 칸, "실제 장애가 들어온다" 를 방문자가 스스로 확인하는 곳입니다 — 아래 버튼이 만든 에러가
+          이 페이지는 그 고리의 첫 칸, &quot;실제 장애가 들어온다&quot; 를 방문자가 스스로 확인하는 곳입니다 — 아래 버튼이 만든 에러가
           앱에 나타나면, 앱이 보여주는 다른 인시던트도 같은 길로 들어온 실제 데이터입니다.
         </p>
       </section>
@@ -59,10 +59,10 @@ export default function AdminOpsAppPage() {
               <a href={INSTALL_URL} target="_blank" rel="noreferrer" style={{ color: '#2563eb', wordBreak: 'break-all' }}>
                 {INSTALL_URL}
               </a>
-              <div style={{ fontSize: '12px', color: '#64748b' }}>{INSTALL_BUILD_LABEL}. 스토어 밖 APK 라 "출처를 알 수 없는 앱 설치" 를 한 번 허용해야 합니다. iOS 는 지원하지 않습니다.</div>
+              <div style={{ fontSize: '12px', color: '#64748b' }}>{INSTALL_BUILD_LABEL}. 스토어 밖 APK 라 &quot;출처를 알 수 없는 앱 설치&quot; 를 한 번 허용해야 합니다. iOS 는 지원하지 않습니다.</div>
             </li>
             <li>
-              앱을 열고 로그인 화면의 <strong>"데모 계정으로 체험하기"</strong> 를 누릅니다 — 지금 이 웹의 "관리자 페이지 체험하기" 와
+              앱을 열고 로그인 화면의 <strong>&quot;데모 계정으로 체험하기&quot;</strong> 를 누릅니다 — 지금 이 웹의 &quot;관리자 페이지 체험하기&quot; 와
               같은 데모 관리자 계정입니다. 계정 정보를 입력할 필요가 없습니다.
             </li>
             <li>

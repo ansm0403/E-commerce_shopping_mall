@@ -91,15 +91,15 @@ export function waitForSend(eventId: string | undefined, timeoutMs = 8000): Prom
   if (!client || !eventId) return Promise.resolve({ status: 'failed', reason: 'no-client' });
   return new Promise((resolve) => {
     let done = false;
-    let off: (() => void) | undefined;
     const finish = (result: SendConfirmation) => {
       if (done) return;
       done = true;
       clearTimeout(timer);
-      off?.();
+      off();
       resolve(result);
     };
-    off = client.on('afterSendEvent', (event, response) => {
+    // finish 는 아래 리스너·타이머에서만 불리므로 off·timer 는 그때 이미 초기화돼 있다
+    const off = client.on('afterSendEvent', (event, response) => {
       if (event.event_id !== eventId) return;
       const code = response?.statusCode;
       if (code === undefined || (code >= 200 && code < 300)) finish({ status: 'confirmed', statusCode: code });
