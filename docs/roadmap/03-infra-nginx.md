@@ -290,7 +290,7 @@ certbot 사이드카가 12시간마다 `renew` 를 시도하고(만료 30일 전
 |---|---|---|
 | 12-1 | **4b — 진짜 손님 IP 복원**(§5-2 의 3안 구현: Vercel 측 헤더 주입 + 백엔드 정규화 미들웨어) | 설계 확정, 코드 미착수. 완료 시 v2 의 "after 데이터" 확보 |
 | 12-2 | PortOne 웹훅 등록 — `https://api.ansmoon.dev/v1/payments/webhook`, 웹훅버전 **V2** / 모드 **테스트** / json | ✅ **2026-09-28 등록·도달 확인** — 콘솔 호출 테스트가 PortOne 발신 IP `52.78.5.241` 에서 도착(감사 로그 `PAYMENT_WEBHOOK` success, 2026-09-27T18:06:48Z). 응답은 NestJS 기본 201(2xx 라 재전송 없음). 시크릿은 발급만 — 코드가 아직 서명을 검증하지 않아 미사용(12-3) |
-| 12-3 | 웹훅 서명 검증(Standard Webhooks) | 파킹(수신 즉시 PortOne 재조회라 위조 결제완료는 현재도 불가) |
+| 12-3 | 웹훅 서명 검증(Standard Webhooks) + 발신 IP 제한 | ✅ **2026-09-28 구현**(브랜치 `feat/payment-webhook-hardening`) — 앱 층: `payment/webhook-signature.ts`(HMAC-SHA256, `webhook-id.timestamp.원문`, 5분 오차, 시크릿 2개 병행 허용) + `PortOneWebhookVerifier`(시크릿 있음 → 검증·실패 401 / 없음+운영 → 503 fail-closed / 없음+로컬 → 건너뜀) + `main.ts` `rawBody: true`. 네트워크 층: `nginx/default.conf` `location = /v1/payments/webhook { allow 52.78.5.241; deny all; }`. **배포 순서**: EC2 `.env` 에 `PORTONE_WEBHOOK_SECRET` 먼저 → 이미지 → nginx conf 교체 + reload(런북 §12-3). 위조 결제완료는 원래 불가(재조회)였고, 이 두 겹이 막는 것은 엔드포인트 남용과 만료 주문 자동 환불 분기 오용 |
 | 12-4 | `next.config.js:176-179` 주석 정정("nginx 전환 시 rewrites 제거"는 폐기된 v1 설계) | 미착수 |
 | 12-7 | CORS 거부를 500 → **403**, `main.ts:54` 주석 정정(§8 부수 발견) | 미착수 |
 | 12-8 | `.env` 의 `PROTOCOL=https` / `HOST=api.ansmoon.dev` 교정(§8 함정 6) | **RN 착수 전 권장** |
