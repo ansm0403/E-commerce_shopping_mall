@@ -425,7 +425,7 @@ curl -s https://api.ansmoon.dev/v1/health   # version == 새 GIT_SHA
 | # | 내용 | 비고 |
 |---|---|---|
 | 12-1 | **4b — 진짜 손님 IP 복원**: Vercel 측 코드(middleware + BFF fetch 헬퍼)가 `x-proxy-secret` + `x-client-ip`(**덮어쓰기**) 주입 → 백엔드 정규화 미들웨어(비밀 일치 시 XFF 를 그 한 값으로 교체, 원문은 `x-original-forwarded-for` 보존, 비밀 env 없으면 no-op) | 설계 확정(2026-08-29). 코드 작성 후 별도 미니 런북. 이후 Redis 키가 진짜 IP 로 바뀌는 것이 v2 문서의 "after 데이터" |
-| 12-2 | PortOne 웹훅 등록: `https://api.ansmoon.dev/v1/payments/webhook`, 웹훅버전 **결제모듈 V2**, 모드 **테스트**, `application/json` → 호출 테스트 | 사용자 결정: 나중에. 도메인 기준이라 서버가 또 바뀌어도 불변 |
+| 12-2 | PortOne 웹훅 등록: `https://api.ansmoon.dev/v1/payments/webhook`, 웹훅버전 **결제모듈 V2**, 모드 **테스트**, `application/json` → 호출 테스트 | ✅ 2026-09-28 완료. 호출 테스트가 `52.78.5.241` 에서 도착해 감사 로그 `PAYMENT_WEBHOOK` 에 남음. 실연동 전환 시 실연동 모드 웹훅을 하나 더 등록해야 한다 |
 | 12-3 | 웹훅 서명 검증(Standard Webhooks, `PORTONE_WEBHOOK_SECRET`) | 파킹. 수신 즉시 PortOne 재조회라 위조 결제완료는 현재도 불가 |
 | 12-4 | `frontend/next.config.js:176-179` 주석 정정 — "nginx 전환 시 rewrites 제거" 는 v1 설계(폐기). 실제로는 유지 + 값만 교체 | 문서 v2 와 함께 |
 | 12-5 | `03-infra-nginx.md` v2 작성 + 외부 액션 체크리스트 (결정 16개·로컬 실측·이관 통합 사유·trust proxy 결정 변천) | E·F 종료 산출물 |
