@@ -104,7 +104,7 @@ flowchart LR
 - **회원/인증** — `/login` `/register` `/verify-email` → `POST /auth/register|login|refresh|logout`, `GET /auth/me`, 이메일 인증(SMTP + Redis TTL), 로그인 IP 당 10회/5분 제한, 세션 목록·개별 해제. 로그인 화면의 데모 관리자 버튼은 `POST /auth/demo-login`.
 - **상품 탐색** — `/`(홈) `/products` `/products/[id]` → `GET /products`(카테고리·키워드·정렬·커서 페이지네이션), `GET /categories`(계층 + 카테고리별 스펙 JSONB 6종). 상품 상세에 **AI 리뷰 요약** 카드 — `GET /products/:id/review-summary`(public, `product_summaries` 캐시 + 리뷰 변경 시 stale → 다음 열람에 백그라운드 재생성, LLM 키 없으면 no-op).
 - **장바구니 → 주문 → 결제** — `/cart` `/checkout` `/checkout/complete` → `POST /orders`, `POST /payments/verify`, `POST /payments/webhook`. 주문 상태 `PENDING_PAYMENT → PAID → PREPARING → SHIPPED → DELIVERED → COMPLETED`, 판매자 단위로 **Shipment 분리**. 결제 완료 확정은 **브라우저의 verify 와 PortOne 서버의 웹훅 두 경로**가 같은 검증(PortOne 재조회 + 금액 대조)과 같은 `SELECT … FOR UPDATE` 가드를 공유합니다. 웹훅은 운영 콘솔에 등록돼 있고(2026-09-28), 실제 결제에서 웹훅이 verify 보다 24ms 먼저 도착해도 주문이 한 상태로 정착하는 것을 감사 로그로 확인했습니다.
-- **마이페이지** — `/my/orders`(취소·구매확정) `/my/reviews` `/my/inquiries` `/my/wishlist` `/my/password` `/my/seller-apply`(판매자 신청·상태·반려 사유·재신청).
+- **마이페이지** — `/my/orders`(취소·구매확정) `/my/reviews` `/my/seller-apply`(판매자 신청·상태·반려 사유·재신청). stub: `/my`(인덱스) · `/my/inquiries` · `/my/wishlist` · `/my/password`. 문의는 백엔드(`/inquiries` 작성·조회·삭제, `/seller/inquiries` 답변)만 있고 **프론트 화면이 없다**(상품 상세 탭에도 작성 폼 없음). 위시리스트는 상품 상세의 토글만 있고 목록 화면은 stub.
 
 ### 판매자 (`/seller/*`, SELLER 역할 — `SellerGuard`)
 
@@ -368,7 +368,7 @@ AI 어시스턴트: AssistantConversation ─1:M─ AssistantMessage
 | 인증 | `POST /auth/register|login|demo-login|refresh|logout|logout-all` · `GET /auth/me|sessions|verify-email` · `DELETE /auth/sessions/:tokenId` | Public / User |
 | 상품·카테고리 | `GET /products` `GET /products/:id` `GET /products/:id/review-summary` `GET /categories` · `POST /products` `PATCH /products/:id` `PATCH /products/:id/status` `POST /products/:id/images` `GET /products/my/:id` `DELETE /products/:id` | Public / Seller |
 | 장바구니·주문·결제 | `/cart` CRUD · `POST /orders` `GET /orders` `GET /orders/:orderNumber` `PATCH /orders/:orderNumber/cancel|confirm` · `POST /payments/verify` `POST /payments/:id/cancel` `POST /payments/webhook` | Buyer / webhook 은 서명 검증 + nginx IP 제한 |
-| 리뷰·문의·찜 | `/reviews` · `/inquiries` · `/wishlist` | User |
+| 리뷰·문의·찜 | `/reviews` · `/inquiries`(API 만 — 프론트 화면 없음) · `/wishlist`(토글만 화면 있음) | User |
 | 판매자 | `POST /seller/apply` `GET /seller/me` · `GET /seller/orders` `PATCH /seller/orders/:orderNumber/ship` · `GET /seller/settlements` `GET /seller/settlements/summary` · `/seller/inquiries` | Buyer / Seller |
 | 관리자 | `GET /seller/applications` `PATCH /seller/applications/:id/approve|reject` · `GET /admin/products` `PATCH /admin/products/:id/approve|reject` · `GET /admin/orders` `GET /admin/orders/:orderNumber` `PATCH /admin/orders/:orderNumber/deliver` · `GET /admin/settlements` `PATCH /admin/settlements/:id/confirm|pay` · `GET /admin/audit-logs` · `GET /admin/dashboard/kpi|order-trend|security|funnel` · `/admin/categories` `/admin/payments` | Admin |
 | AI 어시스턴트 | `POST /admin/assistant/chat` `POST /admin/assistant/stream`(SSE) `GET /admin/assistant/conversations/:id/messages` | Admin |

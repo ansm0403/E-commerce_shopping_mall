@@ -51,7 +51,7 @@
 
 ## 5. 현재 구현 상태 (큰 그림)
 **되어 있음**
-- 구매자 커머스 전 구간: 회원/인증 → 카테고리/상품/검색 → 장바구니 → 주문 → PortOne 결제 → 주문조회/취소/구매확정 → 리뷰/위시리스트/문의.
+- 구매자 커머스 전 구간: 회원/인증 → 카테고리/상품/검색 → 장바구니 → 주문 → PortOne 결제 → 주문조회/취소/구매확정 → 리뷰. **⚠ 문의는 프론트 화면이 전무**(2026-09-28 확인 — 상품 상세 탭에 작성 폼 없음, `my/inquiries`·`seller/inquiries` stub, `service/inquiry.ts` 없음. 백엔드 `/inquiries`·`/seller/inquiries` 는 완성). 위시리스트는 상품 상세 토글만, `my/wishlist`·`my/password`·`my`(인덱스) 는 stub. `02-2-buyer-mypage.md` 계획은 미착수.
 - 관리자 **대시보드**(KPI·주문추이·보안·퍼널 차트) — `(admin)/admin/dashboard` 실구현.
 - 관리자 **감사 로그 조회** — `(admin)/admin/audit-logs` 실구현(트리아지 3버킷 요약 + 포렌식 검색: 필터·표·페이지네이션). 백엔드 `GET /v1/admin/audit-logs` 연결, 행위자 닉네임/이메일 보강. 상세 `docs/roadmap/ex-audit-log-admin.md`.
 - 관리자 **상품 승인/반려** — `(admin)/admin/products` 실구현(승인상태 탭·목록·페이지네이션 + 승인/반려 모달). 백엔드 `GET /v1/admin/products`·`PATCH .../approve|reject` 연결. **승인=게시**: `approve()`가 DRAFT 상품을 PUBLISHED로 승격(재승인 시 셀러의 숨김 선택은 존중) + Redis 캐시 무효화로 즉시 상점 노출·주문 가능. 반려 상품은 셀러 수정=재제출로 PENDING 복귀(§1-A②에서 해소). 상세 `docs/roadmap/02-admin-core.md` §2-A②.
