@@ -11,7 +11,10 @@
  *
  * 왜 스냅샷 전체를 되돌리지 않나: 카드 두 장을 연달아 스와이프하면 요청 두 개가 동시에 떠 있다. 첫 번째가 실패했을 때
  * "onMutate 시점의 목록 전체"로 되돌리면 두 번째(성공한) 카드까지 살아난다. 그래서 **실패한 카드 한 장만** 다시 끼운다.
- * 왜 성공 후 invalidate 하지 않나: 서버 상태와 캐시가 이미 같다(그 카드가 빠진 목록). 다시 당기면 왕복만 낭비다.
+ * 왜 목록을 성공 후 invalidate 하지 않나: 서버 상태와 캐시가 이미 같다(그 카드가 빠진 목록). 다시 당기면 왕복만 낭비다.
+ * 대신 **분석 화면 캐시(`['analysis', incidentId]`)는 무효화한다** — S4 의 "사람 채점 요약"이 방금 낸 판정을 보여야 한다.
+ * 분석 쿼리는 staleTime Infinity 라 여기서 비우지 않으면 앱을 껐다 켤 때까지 "아직 없음" 이 남는다(2026-09-28 운영 실기기에서 실제로 밟음 —
+ * 웹→앱 연동 확인의 마지막 장면이 이 화면이다). 재조회는 force 없는 POST 라 LLM 을 부르지 않는다(저장된 행, X-Cache HIT).
  */
 import { AxiosError } from 'axios';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -44,6 +47,11 @@ export function useSubmitReview() {
       const removed = current.find((p) => p.analysisId === analysisId) ?? null;
       queryClient.setQueryData<PendingReview[]>(pendingReviewsKey, current.filter((p) => p.analysisId !== analysisId));
       return { removed };
+    },
+
+    onSuccess: () => {
+      // 어느 인시던트의 분석인지 카드가 모를 수 있어(analysisId 만 안다) 분석 쿼리 전체를 stale 로 — 마운트된 화면만 다시 받는다
+      void queryClient.invalidateQueries({ queryKey: ['analysis'] });
     },
 
     onError: (_error, _vars, context) => {
