@@ -104,11 +104,11 @@ preview APK 를 실기기로 돌려 본 관찰 하나가 이 절을 만들었다
 
 **fingerprint.** Sentry 는 같은 에러를 한 이슈로 묶는다. 그대로 두면 모든 방문자의 테스트가 이슈 하나에 이벤트로만 쌓여 "내 코드가 앱에 나타난다" 는 증거가 사라진다. `scope.setFingerprint(['portfolio-visitor-test', code])` 로 **방문자마다 이슈 하나**. 코드는 4자, 혼동 문자(0/O/1/I) 제외. 두 번째 증거는 앱 상세의 첫 발생 시각 — 버튼을 누른 시각(KST)을 페이지에 남겨 두므로 미리 심은 데이터로는 못 만드는 값이다.
 
-**폴러 필터.** 방문자가 누를 때마다 사용자 폰과 Slack 에 장애 알림이 가면 안 된다. 푸시 폴러 `isPushTarget` 이 제목에 `[방문자 테스트` 가 있으면 건너뛴다(목록 응답에는 태그가 없어 제목이 유일한 단서). 목록·상세·분석·채점은 손대지 않는다 — 방문자 이슈는 **보여야** 한다. Slack 은 Sentry 알림 규칙의 제목 필터(콘솔). 접두어 문자열은 `@shopping-mall/shared` 의 `OPS_VISITOR_TEST_PREFIX` 하나 — 프론트·백엔드·알림 규칙·README 가 같은 값을 쓰고, 바꾸면 넷을 같이 바꾼다.
+**폴러 필터.** 방문자가 누를 때마다 사용자 폰에 장애 알림이 가면 안 된다. 푸시 폴러 `isPushTarget` 이 제목에 `[방문자 테스트` 가 있으면 건너뛴다(목록 응답에는 태그가 없어 제목이 유일한 단서). 목록·상세·분석·채점은 손대지 않는다 — 방문자 이슈는 **보여야** 한다. 알림 통로는 이 푸시뿐이다: 계획에는 "Slack 은 Sentry 알림 규칙의 제목 필터" 가 있었지만, Sentry→Slack 통합은 Team 플랜 전용이라 **2026-09-16 체험 만료 후 이미 없다**(`docs/roadmap/ex-sentry-slack.md` ⛔) — 구현 후 사용자가 짚어 정정(2026-09-27). 접두어 문자열은 `@shopping-mall/shared` 의 `OPS_VISITOR_TEST_PREFIX` 하나 — 프론트·백엔드·README 가 같은 값을 쓰고, 바꾸면 셋을 같이 바꾼다.
 
 **밟은 함정 둘.**
 - **백엔드는 shared 를 값으로 import 하면 안 된다.** 계획은 "상수 하나를 shared 에서 양쪽이 import" 였는데, Nx webpack 은 buildable 워크스페이스 패키지를 번들에 넣지 않고 `require('@shopping-mall/shared')` 로 남기고, 운영 이미지는 `yarn workspaces focus --production` 으로 node_modules 를 만들어 그 링크가 없다(이미지 안에서 `node -e "require('@shopping-mall/shared')"` → `Cannot find module`). 지금까지 백엔드의 shared 사용이 전부 `import type` 이었던 것이 우연이 아니었다. 그래서 백엔드 `ops/visitor-test.ts` 에 값을 한 번 더 적되 `const OPS_VISITOR_TEST_PREFIX: typeof SharedPrefix = '[방문자 테스트'` 로 shared 의 리터럴 타입에 묶었다 — 어느 한쪽만 바꾸면 tsc 가 막는다. 번들에 shared 참조가 0 인 것을 빌드로 확인했다.
-- **Sentry 제목은 `ErrorName: message` 꼴.** `startsWith('[방문자 테스트')` 는 영원히 false 다(제목이 `VisitorTestError: [방문자 테스트 A7K2] …`). 판정은 `includes`, 알림 규칙도 "does not contain". 단위 테스트가 그 제목 모양을 그대로 박아 고정한다.
+- **Sentry 제목은 `ErrorName: message` 꼴.** `startsWith('[방문자 테스트')` 는 영원히 false 다(제목이 `VisitorTestError: [방문자 테스트 A7K2] …`). 판정은 `includes`. 단위 테스트가 그 제목 모양을 그대로 박아 고정한다.
 
 **앱 한 줄.** S4 의 "내 판정" 은 백엔드가 이미 데모 계정에도 채우는데(`summarizeReviews.mine`), 앱 `ReviewSummaryCard` 가 `reviews === 0` 이면 카드를 통째로 "아직 없음" 으로 그려 방문자 자신의 판정이 안 보였다 — 비데모 채점이 0건인 새 인시던트에서는 늘 그렇다. `reviews 0 && mine` 분기를 하나 더 둔 것이 이 작업의 "고리 닫기" 다(JS 만 바뀌므로 `eas update`).
 

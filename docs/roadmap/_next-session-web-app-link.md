@@ -34,7 +34,7 @@
 | 1 | **에러는 브라우저에서 진짜로 낸다** — 백엔드 "테스트 에러 API" 없음. 페이지의 이름 있는 함수에서 `new Error(...)` 를 만들고 `Sentry.captureException` 으로 프론트 Sentry 프로젝트에 보낸다(throw 해서 `global-error` 화면을 띄우지 않는다) | 실제 장애와 같은 길(프론트 프로젝트 → 소스맵 → 앱이 `frontend/src/...` 프레임을 읽음). AI 분석 v3.1 이 이 페이지 소스를 읽고 "의도된 테스트 에러"라고 답하는 장면까지 이어진다 |
 | 2 | **제목 = `[방문자 테스트 A7K2] 웹→앱 연동 확인용 에러`** + `fingerprint: ['portfolio-visitor-test', code]` + `tags: { visitor_test: 'true' }` | Sentry 는 같은 에러를 한 이슈로 묶는다 → 코드를 fingerprint 에 넣어 **방문자마다 이슈 하나**. 방문자가 고른 값이 다른 시스템(앱)에 나타나는 것이 가장 단순한 "진짜" 증거. 코드 4자, 혼동 문자(0/O/1/I) 제외 |
 | 3 | **"같은 에러를 다시 보내서 평가 확인"은 하지 않는다** | 두 번 보내도 새 인시던트가 생기지 않는다(이벤트 수만 증가). 채점 뒤 같은 인시던트를 다시 열면 S4 가 `mine` 을 보여준다(위 앱 한 줄 수정 후) |
-| 4 | **푸시 폴러는 접두어 `[방문자 테스트` 로 시작하는 이슈를 건너뛴다**. Slack `#sentry-errors` 는 Sentry 알림 규칙에 제목 필터(사용자 콘솔 작업) | 방문자가 누를 때마다 사용자 폰과 Slack 에 장애 알림이 가면 안 된다. 폴러는 목록 API 의 `title` 로 판단(태그는 목록 응답에 없음). 접두어 상수는 `@shopping-mall/shared` 에 하나(`OPS_VISITOR_TEST_PREFIX`) — 프론트·백엔드가 같은 문자열 |
+| 4 | **푸시 폴러는 접두어 `[방문자 테스트` 로 시작하는 이슈를 건너뛴다**. ~~Slack `#sentry-errors` 는 Sentry 알림 규칙에 제목 필터(사용자 콘솔 작업)~~ **정정(2026-09-27)**: Sentry→Slack 통합은 2026-09-16 체험 만료 후 없다(`ex-sentry-slack.md` ⛔) — 통로는 푸시뿐 | 방문자가 누를 때마다 사용자 폰과 Slack 에 장애 알림이 가면 안 된다. 폴러는 목록 API 의 `title` 로 판단(태그는 목록 응답에 없음). 접두어 상수는 `@shopping-mall/shared` 에 하나(`OPS_VISITOR_TEST_PREFIX`) — 프론트·백엔드가 같은 문자열 |
 | 5 | **분석·채점은 데모 규칙 그대로**(새 분석 시간당 6건, 채점 저장되나 집계 제외) | 이미 있는 벽으로 충분. 방문자 이슈는 14일 뒤 데모 목록에서 자연히 빠진다. Sentry 이슈 자체는 프로젝트 설정 auto-resolve(사용자 콘솔) 로 정리 |
 | 6 | **쿨다운 브라우저당 60초**(localStorage) | 연타로 이슈를 양산하지 않게. 서버 측 상한은 두지 않는다(Sentry 무료 쿼터 5k 이벤트/월, 이슈 하나당 이벤트 1건) |
 | 7 | **"진짜"의 두 번째 증거 = 앱 상세의 첫 발생 시각** | 버튼을 누른 시각(KST)을 페이지에 남겨 "앱 상세의 첫 발생 시각과 같다"를 안내. 미리 심은 데이터로는 못 만드는 값. 응답에 이미 있는 필드라 추가 작업 없음 |
@@ -77,7 +77,7 @@
 - CLAUDE.md §5 외부 배포 줄에 한 문장. `_next-session-readme.md` 의 Ops Companion 절 제안에 "웹에서 에러 내기" 한 줄 추가.
 
 ### F. 사용자 콘솔 작업 (코드로 못 함 — 세션 끝에 한 번에 요청)
-- Sentry 알림 규칙(Slack `#sentry-errors`): 조건에 "issue title does not contain `[방문자 테스트`".
+- ~~Sentry 알림 규칙(Slack `#sentry-errors`): 조건에 "issue title does not contain `[방문자 테스트`".~~ 불필요 — Slack 통합이 이미 없다(2026-09-27 정정).
 - Sentry 프론트 프로젝트 설정 → Auto Resolve: 14 days(방문자 이슈 정리).
 - 배포: 백엔드 이미지 2태그 빌드 → push → EC2 pull/up/reload → health 버전(SSH 는 auto 모드에서 차단 — 명령을 적어 준다). main 머지 = Vercel 자동 배포. 그 다음 `eas update`.
 
@@ -96,7 +96,7 @@
 - `yarn nx serve backend` 는 옛 `dist/main.js` 로 먼저 뜬다(메모리 `ops_public_demo` 함정 ①) — e2e 전 4000 PID 생성 시각 vs 번들 mtime.
 - 병렬 Bash 는 cwd 공유 — 절대경로. 긴 한글 문서는 Write 도구.
 - 프론트 `instrumentation-client.ts` 에 `beforeSend` 없음 — 테스트 이벤트가 걸러질 일은 없다. 다만 `tracesSampleRate` 는 무관(에러 이벤트는 100%).
-- `[방문자 테스트` 접두어를 바꾸면 폴러 필터·Sentry 알림 규칙·README 셋을 같이 바꾼다 — 상수 하나로 묶은 이유.
+- `[방문자 테스트` 접두어를 바꾸면 폴러 필터·README 를 같이 바꾼다 — 상수 하나로 묶은 이유. (Sentry 알림 규칙은 없다 — 위 정정.)
 
 ## 범위 밖
 

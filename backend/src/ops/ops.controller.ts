@@ -30,7 +30,7 @@ import { ReleaseHealth } from './dto/release-health.dto';
  *  · 사실 메모 PUT                                    DemoAccountGuard — 모두가 보는 "정답"이고 앱에 편집 화면도 없다
  *  · 기기 등록                                        저장하지 않고 `{registered:false, reason:'demo'}` — 외부 폰에 운영 장애 푸시 금지
  *  · 방문자 테스트 이슈(제목에 `[방문자 테스트`)      목록·상세·분석·채점 **그대로**(방문자가 자기 이슈를 찾아야 한다). 푸시 폴러만 건너뜀(`ops-poller.service.ts`),
- *                                                     Slack 은 Sentry 알림 규칙 제목 필터. 제목 규칙은 `@shopping-mall/shared` `OPS_VISITOR_TEST_PREFIX`(웹 `/admin/ops-app` 이 만든다)
+ *                                                     알림 통로는 푸시뿐(Sentry→Slack 통합은 2026-09-16 이후 없음). 제목 규칙은 `@shopping-mall/shared` `OPS_VISITOR_TEST_PREFIX`(웹 `/admin/ops-app` 이 만든다)
  * 로컬 개발의 관리자가 데모 계정이면 메모 PUT 만 막힌다 — 메모는 스크립트(`ops-review-set.ts notes seed`)가 DB 로 직접 넣으므로 영향 없다.
  */
 @Controller('ops')

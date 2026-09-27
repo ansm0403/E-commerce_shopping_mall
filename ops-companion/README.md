@@ -8,8 +8,8 @@
 
 PC·Metro·Expo 계정 없이, 안드로이드 폰 하나면 된다.
 
-1. 폰에서 설치 링크를 연다 → **https://expo.dev/artifacts/eas/hzxaIa-NMrH-AITYKN2Vz7zJdqMdvuaFEWwjkdTQV1E.apk** (preview 빌드 versionCode 4, 2026-09-23, 약 108MB. 웹 관리자 "운영 앱" 페이지의 QR 도 같은 링크다)
-   - **빌드 페이지 링크(`expo.dev/accounts/…/builds/<id>`)가 아니라 APK 직링크다** — 빌드 페이지는 로그인하지 않은 방문자에게 "Something went wrong" 을 보여줬다(2026-09-23 실기기). 직링크는 `eas build:list --json` 의 `artifacts.buildUrl`. **EAS 아티팩트는 빌드 후 14일에 만료**된다(이 빌드는 2026-10-06) — 이력서 기간 동안 살아 있어야 하면 APK 를 GitHub Release 자산으로 올리고 이 링크·웹 페이지 상수·QR 을 그 URL 로 바꾼다.
+1. 폰에서 설치 링크를 연다 → **https://github.com/ansm0403/E-commerce_shopping_mall/releases/download/ops-companion-v1.0.0-4/ops-companion-preview-4.apk** (preview 빌드 versionCode 4, 2026-09-23, 약 108MB. 웹 관리자 "운영 앱" 페이지의 QR 도 같은 링크다)
+   - **GitHub Release 자산**(태그 `ops-companion-v1.0.0-4`, 2026-09-27)이다. expo.dev 빌드 페이지(`/accounts/…/builds/<id>`)는 로그인하지 않은 방문자에게 "Something went wrong" 을 보여줬고, `eas build:list --json` 의 `artifacts.buildUrl`(APK 직링크)은 **빌드 후 14일에 만료**된다(이 빌드는 2026-10-06). Release 자산은 만료가 없다. 새 빌드를 올릴 때는 APK 를 내려받아 새 태그의 Release 에 첨부하고 이 링크·웹 페이지 상수(`frontend/src/app/(admin)/admin/ops-app/page.tsx` `INSTALL_URL`)·QR(`npx qrcode -o frontend/public/images/ops-app-install-qr.png -w 220 -m 2 "<URL>"`)을 같이 바꾼다.
    - 스토어 밖 APK 라 "출처를 알 수 없는 앱 설치" 를 한 번 허용해야 한다. iOS 는 지원하지 않는다(설계 §9 비목표).
 2. 앱을 열고 로그인 화면의 **"데모 계정으로 체험하기"** 를 누른다. 계정 정보는 앱에도 이 문서에도 없다 — 서버가 켜 둔 데모 로그인(`POST /v1/auth/demo-login`, 웹 로그인 화면의 "관리자 페이지 체험하기" 와 같은 경로)이다.
 3. 보이는 것은 **실제 운영 Sentry 데이터**다(쇼핑몰 프론트·백엔드의 최근 14일 이슈 — 관리자 계정은 24시간). 이메일·전화는 백엔드가 마스킹하고, 요청 헤더·쿠키·IP 는 애초에 내려오지 않는다(설계 §5.2 · §7).
@@ -26,7 +26,7 @@ PC·Metro·Expo 계정 없이, 안드로이드 폰 하나면 된다.
 | 사실 메모 저장(`PUT …/note`) | ❌ 403 (`DemoAccountGuard`) | 모든 카드에 "정답"으로 붙는 공용 데이터. 앱에 편집 화면도 없다 |
 | 푸시 알림 등록 | ❌ 프로필에 "꺼짐 — 데모 계정은 장애 알림을 받지 않습니다" | 외부인의 폰에 운영 장애 푸시가 며칠씩 가면 체험이 아니라 유출. 폴러도 `is_demo` 사용자를 발송에서 뺀다 |
 | Sentry 테스트 에러 · 생체 잠금 | ✅ | 앱 자신의 Sentry 프로젝트(DSN 은 공개값, 같은 에러 60초 1건) · 기기 안에서만 처리 |
-| **방문자 테스트 이슈**(웹 "운영 앱" 페이지가 만든 `[방문자 테스트 XXXX]`) | ✅ 목록·상세·AI 분석·채점 전부 그대로(관리자 24h 목록에도 보인다) | 방문자가 자기 이슈를 찾아야 한다. 대신 **푸시 폴러가 제목으로 건너뛰고**(`ops-poller.service.ts`) Slack 은 Sentry 알림 규칙의 제목 필터 — 방문자가 누를 때마다 온콜 폰이 울리면 안 된다. 접두어는 `@shopping-mall/shared` `OPS_VISITOR_TEST_PREFIX` 하나. 이슈는 Sentry auto-resolve(14일)로 정리 |
+| **방문자 테스트 이슈**(웹 "운영 앱" 페이지가 만든 `[방문자 테스트 XXXX]`) | ✅ 목록·상세·AI 분석·채점 전부 그대로(관리자 24h 목록에도 보인다) | 방문자가 자기 이슈를 찾아야 한다. 대신 **푸시 폴러가 제목으로 건너뛴다**(`ops-poller.service.ts`) — 방문자가 누를 때마다 온콜 폰이 울리면 안 된다. 알림 통로는 이 푸시뿐(Sentry→Slack 통합은 Team 플랜 전용, 2026-09-16 체험 만료 후 없음). 접두어는 `@shopping-mall/shared` `OPS_VISITOR_TEST_PREFIX` 하나. 이슈는 Sentry auto-resolve(14일)로 정리 |
 
 ## 처음 한 번
 

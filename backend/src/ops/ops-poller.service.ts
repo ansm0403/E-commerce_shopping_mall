@@ -35,7 +35,8 @@ export interface PollOutcome {
  *    514회 발생한 CORS 이슈 같은 것이 주기마다 울린다.
  *  · **방문자 테스트 이슈(제목에 `[방문자 테스트`)는 건너뛴다**(2026-09-23, 설계 §9 "웹 → 앱 연동 확인" 결정 ④) —
  *    웹 관리자 "운영 앱" 페이지의 버튼이 만드는 진짜 Sentry 이슈다. 방문자가 누를 때마다 온콜 폰이 울리면 안 된다.
- *    목록·상세·분석에서는 **보여야** 하므로 여기(푸시)만 거른다. Slack 은 Sentry 알림 규칙의 제목 필터가 맡는다.
+ *    목록·상세·분석에서는 **보여야** 하므로 여기(푸시)만 거른다. 알림 통로는 이 푸시뿐이다 — Sentry→Slack 통합은
+ *    Team 플랜 전용이라 2026-09-16 체험 만료 후 없다(docs/roadmap/ex-sentry-slack.md).
  */
 @Injectable()
 export class OpsPollerService {
