@@ -147,7 +147,7 @@ flowchart LR
 
 - **Sentry 3프로젝트**(프론트 `@sentry/nextjs` · 백엔드 `@sentry/nestjs` · 앱 `@sentry/react-native`). DSN 없으면 전부 no-op. 백엔드는 `release = 배포 커밋 SHA` + `node --enable-source-maps` 로 스택이 `backend/src/main.ts:60` 꼴, 프론트는 Vercel 빌드에서 Debug ID 번들 업로드, 앱은 EAS 빌드에서 업로드. 프론트 axios 실패는 TanStack Query 가 "처리된 예외"로 삼켜 Sentry 자동 포착을 타지 않는다 — 명시적 `reportApiError`([블로그 글](docs/blog/sentry-axios-silent-failure.md)).
 - **알림 통로**: CI 결과 → Slack `#deployments`, Claude Code 훅 → `#claude-hooks`. Sentry → Slack 통합은 Team 플랜 전용이라 2026-09-16 이후 **없음** — 장애 알림은 **운영 앱 푸시**뿐. 외부 감시 UptimeRobot(`/v1/health`, 5분, 탐지 5분 33초 실측). 전체 지도와 사각지대는 [ex-observability-map.md](docs/roadmap/ex-observability-map.md).
-- **보안**: Helmet + CSP(`worker-src 'self' blob:` 포함), 전역 레이트리밋 100req/60s, 로그인 10회/5분, `ClassSerializerInterceptor` + `@Exclude()`, 데모 계정은 `DemoAccountGuard` 로 쓰기 차단, nginx 뒤 `TRUST_PROXY_HOPS=1`.
+- **보안**: Helmet + CSP(`worker-src 'self' blob:` 포함), 전역 레이트리밋 100req/60s, 로그인 10회/5분, `ClassSerializerInterceptor` + `@Exclude()`, 데모 계정은 `DemoAccountGuard` 로 쓰기 차단, nginx 뒤 `TRUST_PROXY_HOPS=1`. PortOne 웹훅은 **Standard Webhooks 서명 검증**(HMAC-SHA256, 원문 body 기준, [webhook-signature.ts](backend/src/payment/webhook-signature.ts)) + nginx 발신 IP 제한 두 겹으로 발신자를 확인하고, 본문은 믿지 않고 PortOne 에 재조회해 대조합니다.
 
 ---
 

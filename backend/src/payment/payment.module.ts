@@ -8,6 +8,7 @@ import { ProductEntity } from '../product/entity/product.entity';
 import { ShipmentEntity } from '../order/entity/shipment.entity';
 import { PaymentController, PaymentWebhookController, AdminPaymentController } from './payment.controller';
 import { PaymentService } from './payment.service';
+import { PortOneWebhookVerifier } from './portone-webhook-verifier';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
@@ -23,7 +24,7 @@ import { AuthModule } from '../auth/auth.module';
     AuthModule,
   ],
   controllers: [PaymentController, PaymentWebhookController, AdminPaymentController],
-  providers: [PaymentService],
+  providers: [PaymentService, PortOneWebhookVerifier],
   exports: [PaymentService],
 })
 export class PaymentModule {}

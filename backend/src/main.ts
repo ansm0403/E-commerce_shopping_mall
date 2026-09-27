@@ -23,7 +23,9 @@ async function bootstrap() {
   // raw Date 를 그대로 직렬화하는 audit 조회 API 가 어긋났다. TZ=UTC 면 읽기/쓰기가 모두 UTC 로 일치.
   process.env.TZ = 'UTC';
 
-  const app = await NestFactory.create(AppModule);
+  // rawBody: PortOne 웹훅 서명 검증(Standard Webhooks)은 파싱 전 **원문 바이트**가 필요하다.
+  // body 파서가 req.rawBody 에 원문을 같이 남긴다(payment/portone-webhook-verifier.ts).
+  const app = await NestFactory.create(AppModule, { rawBody: true });
 
   // Cookie Parser 미들웨어 (쿠키 읽기 위해 필요)
   app.use(cookieParser());

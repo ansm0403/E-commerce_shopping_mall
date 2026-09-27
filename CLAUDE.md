@@ -35,7 +35,7 @@
 - **DB 스키마**: **TypeORM 마이그레이션으로만 변경**(2026-08-18 도입, synchronize 전면 off). 절차: 엔티티 수정 → `nx run @shopping-mall/backend:migration:generate --name=<이름>` → `src/database/migrations/index.ts` **명시적 등록**(글롭은 nx 단일 번들이라 조용히 실패) → `migration:run`. CLI DataSource는 `src/database/data-source.ts`(cwd=backend 필수). 상세 `docs/roadmap/ex-db-migration.md`.
 - 공통 엔티티 `BaseModel`(id/createdAt/updatedAt). 페이지네이션 page/cursor 둘 다 지원(`common/`).
 - **인프라 모듈** `intrastructure/`(오타 그대로): `redis/`, `emailVerify/`(SMTP), `ai/`(LLM 클라이언트 — 프로바이더 비종속 `LlmClient`, 현재 Gemini `@google/genai`, 추후 Claude). 이벤트 `EventEmitterModule`, 레이트리밋 `ThrottlerModule`(전역 100req/60s), 감사로그 `audit/`.
-- **결제**: PortOne(iamport) 연동 + 웹훅(`payment/`).
+- **결제**: PortOne V2 연동 + 웹훅(`payment/`). 웹훅은 운영 콘솔에 등록돼 있고(2026-09-28, `Transaction.Paid` 가 verify 보다 먼저 도착한 실측 있음) **두 겹으로 발신자를 확인**한다 — 앱 층 Standard Webhooks 서명 검증(`webhook-signature.ts` + `PortOneWebhookVerifier`, `PORTONE_WEBHOOK_SECRET` 없으면 운영 503·로컬 건너뜀, `main.ts` `rawBody: true` 필수) + nginx `location = /v1/payments/webhook` 발신 IP `52.78.5.241` allow. 본문은 여전히 믿지 않고 PortOne 재조회로 대조한다.
 - **AI 어시스턴트**: `admin/assistant/`(관리자 자연어 질의 → tool use로 기존 서비스 호출, SSE 스트리밍). 상세 `docs/roadmap/ex-ai-assistant.md`.
 - 모듈: auth, user, seller, category, product, review, cart, order, payment, settlement, inquiry, wish-list, audit, admin(+assistant), common, intrastructure(+ai), seed, data, **ops**(RN 운영 앱 전용 — Sentry 인시던트 프록시).
 - **모바일 클라이언트 분기**: 요청 헤더 `X-Client: mobile` 이면 `login`/`refresh` 응답 body 에 refreshToken 을 함께 담고, `refresh`/`logout` 은 `쿠키 ?? body.refreshToken` 순으로 읽는다(RN 앱엔 쿠키를 구워줄 BFF 가 없음). 헤더 없으면 웹 동작 100% 불변. `auth.controller.ts buildTokenResponse`. 상세 `docs/roadmap/ops-companion-design.md` §5.6.

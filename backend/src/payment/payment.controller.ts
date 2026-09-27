@@ -1,12 +1,17 @@
 import {
   Body,
   Controller,
+  Headers,
+  HttpCode,
   Param,
   Post,
+  RawBodyRequest,
   Req,
   UseGuards,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import { SkipThrottle } from '@nestjs/throttler';
+import { PortOneWebhookVerifier } from './portone-webhook-verifier';
 import { PaymentService } from './payment.service';
 import { VerifyPaymentDto } from './dto/verify-payment.dto';
 import { CancelPaymentDto } from './dto/cancel-payment.dto';
@@ -45,16 +50,33 @@ export class PaymentController {
   }
 }
 
-/** PortOne 웹훅 — 인증 없이 서버 간 통신 */
-// PortOne 서버에서 오는 요청이므로 IP가 고정되지 않아 Rate Limit 제외
+/**
+ * PortOne 웹훅 — JWT 대신 **서명 검증**(Standard Webhooks, PortOneWebhookVerifier)으로 발신자를 확인한다.
+ * 발신 IP(52.78.5.241) 제한은 nginx(nginx/default.conf 의 `location = /v1/payments/webhook`)가 한 겹 더 맡는다.
+ * PortOne 서버의 재전송이 전역 Rate Limit(IP 당 100/분)에 걸리지 않도록 제외한다.
+ */
 @SkipThrottle()
 @Controller('payments')
 export class PaymentWebhookController {
-  constructor(private readonly paymentService: PaymentService) {}
+  constructor(
+    private readonly paymentService: PaymentService,
+    private readonly verifier: PortOneWebhookVerifier,
+  ) {}
 
+  /**
+   * 200 을 명시한다 — PortOne 은 2xx 만 성공으로 보고, 그 외에는 최대 5회(0→1→4→16→64→256분) 재전송한다.
+   * 서명 검증은 ValidationPipe 가 만든 dto 가 아니라 **원문(rawBody)** 으로 한다 — 파싱·재직렬화하면 서명이 어긋난다.
+   * 검증 실패(401)도 @Auditable 이 success:false 로 남긴다 — 위조 시도 자체가 보안 기록이다.
+   */
   @Post('webhook')
+  @HttpCode(200)
   @Auditable(AuditAction.PAYMENT_WEBHOOK)
-  handleWebhook(@Body() dto: WebhookPaymentDto) {
+  handleWebhook(
+    @Req() req: RawBodyRequest<Request>,
+    @Headers() headers: Record<string, string | string[] | undefined>,
+    @Body() dto: WebhookPaymentDto,
+  ) {
+    this.verifier.assertValid(req.rawBody, headers);
     return this.paymentService.handleWebhook(dto);
   }
 }
