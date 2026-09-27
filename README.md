@@ -103,7 +103,7 @@ flowchart LR
 
 - **회원/인증** — `/login` `/register` `/verify-email` → `POST /auth/register|login|refresh|logout`, `GET /auth/me`, 이메일 인증(SMTP + Redis TTL), 로그인 IP 당 10회/5분 제한, 세션 목록·개별 해제. 로그인 화면의 데모 관리자 버튼은 `POST /auth/demo-login`.
 - **상품 탐색** — `/`(홈) `/products` `/products/[id]` → `GET /products`(카테고리·키워드·정렬·커서 페이지네이션), `GET /categories`(계층 + 카테고리별 스펙 JSONB 6종). 상품 상세에 **AI 리뷰 요약** 카드 — `GET /products/:id/review-summary`(public, `product_summaries` 캐시 + 리뷰 변경 시 stale → 다음 열람에 백그라운드 재생성, LLM 키 없으면 no-op).
-- **장바구니 → 주문 → 결제** — `/cart` `/checkout` `/checkout/complete` → `POST /orders`, `POST /payments/verify`, `POST /payments/webhook`. 주문 상태 `PENDING_PAYMENT → PAID → PREPARING → SHIPPED → DELIVERED → COMPLETED`, 판매자 단위로 **Shipment 분리**.
+- **장바구니 → 주문 → 결제** — `/cart` `/checkout` `/checkout/complete` → `POST /orders`, `POST /payments/verify`, `POST /payments/webhook`. 주문 상태 `PENDING_PAYMENT → PAID → PREPARING → SHIPPED → DELIVERED → COMPLETED`, 판매자 단위로 **Shipment 분리**. 결제 완료 확정은 **브라우저의 verify 와 PortOne 서버의 웹훅 두 경로**가 같은 검증(PortOne 재조회 + 금액 대조)과 같은 `SELECT … FOR UPDATE` 가드를 공유합니다. 웹훅은 운영 콘솔에 등록돼 있고(2026-09-28), 실제 결제에서 웹훅이 verify 보다 24ms 먼저 도착해도 주문이 한 상태로 정착하는 것을 감사 로그로 확인했습니다.
 - **마이페이지** — `/my/orders`(취소·구매확정) `/my/reviews` `/my/inquiries` `/my/wishlist` `/my/password` `/my/seller-apply`(판매자 신청·상태·반려 사유·재신청).
 
 ### 판매자 (`/seller/*`, SELLER 역할 — `SellerGuard`)
@@ -147,7 +147,7 @@ flowchart LR
 
 - **Sentry 3프로젝트**(프론트 `@sentry/nextjs` · 백엔드 `@sentry/nestjs` · 앱 `@sentry/react-native`). DSN 없으면 전부 no-op. 백엔드는 `release = 배포 커밋 SHA` + `node --enable-source-maps` 로 스택이 `backend/src/main.ts:60` 꼴, 프론트는 Vercel 빌드에서 Debug ID 번들 업로드, 앱은 EAS 빌드에서 업로드. 프론트 axios 실패는 TanStack Query 가 "처리된 예외"로 삼켜 Sentry 자동 포착을 타지 않는다 — 명시적 `reportApiError`([블로그 글](docs/blog/sentry-axios-silent-failure.md)).
 - **알림 통로**: CI 결과 → Slack `#deployments`, Claude Code 훅 → `#claude-hooks`. Sentry → Slack 통합은 Team 플랜 전용이라 2026-09-16 이후 **없음** — 장애 알림은 **운영 앱 푸시**뿐. 외부 감시 UptimeRobot(`/v1/health`, 5분, 탐지 5분 33초 실측). 전체 지도와 사각지대는 [ex-observability-map.md](docs/roadmap/ex-observability-map.md).
-- **보안**: Helmet + CSP(`worker-src 'self' blob:` 포함), 전역 레이트리밋 100req/60s, 로그인 10회/5분, `ClassSerializerInterceptor` + `@Exclude()`, 데모 계정은 `DemoAccountGuard` 로 쓰기 차단, nginx 뒤 `TRUST_PROXY_HOPS=1`. PortOne 웹훅은 **Standard Webhooks 서명 검증**(HMAC-SHA256, 원문 body 기준, [webhook-signature.ts](backend/src/payment/webhook-signature.ts)) + nginx 발신 IP 제한 두 겹으로 발신자를 확인하고, 본문은 믿지 않고 PortOne 에 재조회해 대조합니다.
+- **보안**: Helmet + CSP(`worker-src 'self' blob:` 포함), 전역 레이트리밋 100req/60s, 로그인 10회/5분, `ClassSerializerInterceptor` + `@Exclude()`, 데모 계정은 `DemoAccountGuard` 로 쓰기 차단, nginx 뒤 `TRUST_PROXY_HOPS=1`. PortOne 웹훅은 **Standard Webhooks 서명 검증**(HMAC-SHA256, 원문 body 기준, [webhook-signature.ts](backend/src/payment/webhook-signature.ts)) + nginx 발신 IP 제한(`52.78.5.241` 만 allow) 두 겹으로 발신자를 확인하고, 본문은 믿지 않고 PortOne 에 재조회해 대조합니다. 운영 확인: 외부 IP 의 POST 는 nginx 가 403, PortOne 콘솔 호출 테스트는 서명 검증을 지나 200.
 
 ---
 
@@ -228,7 +228,7 @@ AI 분석의 재료: 스택트레이스 + `read_source(path, start, end)` 도구
 
 ## 5. 인프라 · 배포
 
-**형상** — EC2 한 대에 Docker Compose 5개(postgres · redis · backend · nginx · certbot). 보안그룹은 22/80/443 만 열고 4000·5432·6379 는 호스트에 노출하지 않습니다. `nginx/default.conf` 가 80(ACME + 301) / 443(TLS 종단 + 프록시), certbot 사이드카가 12시간마다 renew, nginx 는 6시간마다 reload. 왜 이렇게 했는지와 함정 6건은 [03-infra-nginx.md](docs/roadmap/03-infra-nginx.md), 복붙 절차는 [런북](docs/roadmap/03-infra-nginx-runbook.md).
+**형상** — EC2 한 대에 Docker Compose 5개(postgres · redis · backend · nginx · certbot). 보안그룹은 22/80/443 만 열고 4000·5432·6379 는 호스트에 노출하지 않습니다. `nginx/default.conf` 가 80(ACME + 301) / 443(TLS 종단 + 프록시), `location = /v1/payments/webhook` 은 PortOne 발신 IP 만 allow, certbot 사이드카가 12시간마다 renew, nginx 는 6시간마다 reload. 왜 이렇게 했는지와 함정 6건은 [03-infra-nginx.md](docs/roadmap/03-infra-nginx.md), 복붙 절차는 [런북](docs/roadmap/03-infra-nginx-runbook.md).
 
 **배포 절차**(백엔드) — EC2 안에서 빌드하면 t3.small 이 OOM 이라 로컬에서 빌드합니다.
 
@@ -367,7 +367,7 @@ AI 어시스턴트: AssistantConversation ─1:M─ AssistantMessage
 |---|---|---|
 | 인증 | `POST /auth/register|login|demo-login|refresh|logout|logout-all` · `GET /auth/me|sessions|verify-email` · `DELETE /auth/sessions/:tokenId` | Public / User |
 | 상품·카테고리 | `GET /products` `GET /products/:id` `GET /products/:id/review-summary` `GET /categories` · `POST /products` `PATCH /products/:id` `PATCH /products/:id/status` `POST /products/:id/images` `GET /products/my/:id` `DELETE /products/:id` | Public / Seller |
-| 장바구니·주문·결제 | `/cart` CRUD · `POST /orders` `GET /orders` `GET /orders/:orderNumber` `PATCH /orders/:orderNumber/cancel|confirm` · `POST /payments/verify` `POST /payments/:id/cancel` `POST /payments/webhook` | Buyer / Public(webhook) |
+| 장바구니·주문·결제 | `/cart` CRUD · `POST /orders` `GET /orders` `GET /orders/:orderNumber` `PATCH /orders/:orderNumber/cancel|confirm` · `POST /payments/verify` `POST /payments/:id/cancel` `POST /payments/webhook` | Buyer / webhook 은 서명 검증 + nginx IP 제한 |
 | 리뷰·문의·찜 | `/reviews` · `/inquiries` · `/wishlist` | User |
 | 판매자 | `POST /seller/apply` `GET /seller/me` · `GET /seller/orders` `PATCH /seller/orders/:orderNumber/ship` · `GET /seller/settlements` `GET /seller/settlements/summary` · `/seller/inquiries` | Buyer / Seller |
 | 관리자 | `GET /seller/applications` `PATCH /seller/applications/:id/approve|reject` · `GET /admin/products` `PATCH /admin/products/:id/approve|reject` · `GET /admin/orders` `GET /admin/orders/:orderNumber` `PATCH /admin/orders/:orderNumber/deliver` · `GET /admin/settlements` `PATCH /admin/settlements/:id/confirm|pay` · `GET /admin/audit-logs` · `GET /admin/dashboard/kpi|order-trend|security|funnel` · `/admin/categories` `/admin/payments` | Admin |
