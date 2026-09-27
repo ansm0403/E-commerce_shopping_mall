@@ -41,7 +41,8 @@
 
 | Phase | 문서 | 목표 | 비중 |
 |---|---|---|---|
-| **1** | [01-seller-core.md](./01-seller-core.md) | 셀러 핵심: 상품 등록·관리, 주문/배송, 정산 조회 | 최우선 |
+| **1** | [01-seller-core.md](./01-seller-core.md) | 셀러 핵심: 상품 등록·관리, 주문/배송, 정산 조회 | ✅ 2026-07-28 |
+| **1-2** | [01-2-seller-dashboard-inquiry.md](./01-2-seller-dashboard-inquiry.md) | 셀러 센터 완성: 관리자 셸 공유 `(seller)` 그룹 · 대시보드(기존 API 조합) · 상품 문의(구매자 → 셀러 → 관리자) | 📋 설계 2026-09-28, 이력서 전 구현 |
 | **2** | [02-admin-core.md](./02-admin-core.md) | 관리자 핵심: 셀러 승인, 상품 승인, 주문 관리, 정산 지급 | 높음 |
 | **2-2** | [02-2-buyer-mypage.md](./02-2-buyer-mypage.md) | 구매자 마이페이지: 프로필·위시리스트·내 문의·비밀번호 | 높음 |
 | **3** | [03-infra-nginx.md](./03-infra-nginx.md) **(v2 · 완주)** + [런북](./03-infra-nginx-runbook.md) | nginx 리버스 프록시 + HTTPS(`api.ansmoon.dev`) + AWS 계정 이관 | ✅ 2026-09-15 |
