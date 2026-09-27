@@ -35,6 +35,7 @@ const containerStyle: React.CSSProperties = {
 
 const groupStyle: React.CSSProperties = {
   display: 'flex',
+  flexWrap: 'wrap', // 폰에서 "시작 [date] ~ 종료 [date]" 가 한 줄에 안 들어가면 두 줄로
   alignItems: 'center',
   gap: '6px',
 };
@@ -124,7 +125,7 @@ export default function DashboardFilters() {
         ))}
       </div>
 
-      <div style={{ ...groupStyle, marginLeft: '8px' }}>
+      <div style={groupStyle}>
         <span style={labelStyle}>시작</span>
         <input
           type="date"

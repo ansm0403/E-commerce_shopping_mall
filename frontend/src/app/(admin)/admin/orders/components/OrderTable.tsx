@@ -10,6 +10,7 @@ import {
   BADGE_TONE,
   cardStyle,
   formatDateShort,
+  tableScrollStyle,
   tableStyle,
   tdStyle,
   thStyle,
@@ -47,7 +48,8 @@ export default function OrderTable() {
 
   return (
     <div style={cardStyle}>
-      <table style={tableStyle}>
+      <div style={tableScrollStyle}>
+        <table style={tableStyle}>
         <thead>
           <tr>
             <th style={thStyle}>주문일 (KST)</th>
@@ -111,7 +113,8 @@ export default function OrderTable() {
             </tr>
           ))}
         </tbody>
-      </table>
+        </table>
+      </div>
 
       <AdminPagination meta={data?.meta} onPageChange={goPage} />
     </div>

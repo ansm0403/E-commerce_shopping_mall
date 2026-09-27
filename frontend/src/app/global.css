@@ -512,3 +512,12 @@ html[data-splash="active"] body > *:not(.splash-container) {
     animation-delay: 0ms !important;
   }
 }
+
+/* 가로 스크롤 내비(관리자 모바일 칩 줄 등)에서 스크롤바만 숨긴다 — 스크롤 자체는 그대로 */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

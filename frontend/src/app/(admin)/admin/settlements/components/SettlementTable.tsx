@@ -17,6 +17,7 @@ import {
   BADGE_TONE,
   cardStyle,
   formatDateShort,
+  tableScrollStyle,
   tableStyle,
   tdStyle,
   thStyle,
@@ -89,7 +90,8 @@ export default function SettlementTable() {
           {errorMessage}
         </p>
       )}
-      <table style={tableStyle}>
+      <div style={tableScrollStyle}>
+        <table style={tableStyle}>
         <thead>
           <tr>
             <th style={thStyle}>생성일 (KST)</th>
@@ -174,7 +176,8 @@ export default function SettlementTable() {
             </tr>
           ))}
         </tbody>
-      </table>
+        </table>
+      </div>
 
       <AdminPagination meta={toAdminPageMeta(data?.meta)} onPageChange={goPage} />
     </div>

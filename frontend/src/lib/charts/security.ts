@@ -119,5 +119,24 @@ export function buildSecurityOption(data: SecurityResponse): EChartsOption {
         },
       },
     ],
+    /**
+     * 폰(컨테이너 480px 미만) 전용 덧칠 — ECharts 가 컨테이너 폭을 보고 스스로 고른다(React 상태 없음).
+     * 이중 Y축 이름("건수"/"실패율(%)")이 상단 범례와 겹치고, 좌우 여백 115px 가 350px 폭에서 그래프를 절반으로
+     * 줄이던 것을 푼다. `media` 는 루트에 둬도 ECharts 가 나머지를 baseOption 으로 읽는다(OptionManager.parseRawOption).
+     */
+    media: [
+      {
+        query: { maxWidth: 480 },
+        option: {
+          legend: { top: 0, itemWidth: 14, itemHeight: 10, textStyle: { fontSize: 11 } },
+          grid: { left: 36, right: 40, top: 36, bottom: 28 },
+          xAxis: { axisLabel: { rotate: 0, fontSize: 10, formatter: (v: string) => v.slice(5) } }, // 'MM-DD' (연도는 부제에)
+          yAxis: [
+            { name: '', axisLabel: { formatter: '{value}', fontSize: 10 } },
+            { name: '', axisLabel: { formatter: '{value}%', fontSize: 10 } },
+          ],
+        },
+      },
+    ],
   };
 }

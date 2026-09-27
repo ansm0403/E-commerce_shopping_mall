@@ -23,6 +23,12 @@ const tableStyle: React.CSSProperties = {
   width: '100%',
   borderCollapse: 'collapse',
   fontSize: '13px',
+  minWidth: '760px', // 폰에서는 카드 안에서 가로 스크롤(아래 tableScrollStyle) — table-ui 와 같은 규칙
+};
+
+const tableScrollStyle: React.CSSProperties = {
+  overflowX: 'auto',
+  WebkitOverflowScrolling: 'touch',
 };
 
 const thStyle: React.CSSProperties = {
@@ -54,8 +60,10 @@ const badge = (bg: string, color: string): React.CSSProperties => ({
 
 const footerStyle: React.CSSProperties = {
   display: 'flex',
+  flexWrap: 'wrap',
   alignItems: 'center',
   justifyContent: 'space-between',
+  gap: '8px',
   padding: '12px 16px',
   fontSize: '13px',
   color: '#475569',
@@ -124,7 +132,8 @@ export default function AuditTable() {
 
   return (
     <div style={cardStyle} id="forensic">
-      <table style={tableStyle}>
+      <div style={tableScrollStyle}>
+        <table style={tableStyle}>
         <thead>
           <tr>
             <th style={thStyle}>시각 (KST)</th>
@@ -228,7 +237,8 @@ export default function AuditTable() {
             );
           })}
         </tbody>
-      </table>
+        </table>
+      </div>
 
       {meta && meta.total > 0 && (
         <div style={footerStyle}>

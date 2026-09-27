@@ -165,7 +165,7 @@ export default function AssistantChat() {
       style={{
         display: 'flex',
         flexDirection: 'column',
-        height: 'calc(100vh - 200px)',
+        height: 'calc(100dvh - 200px)', // 모바일 주소창이 접히고 펼쳐질 때 100vh 는 넘치거나 남는다
         minHeight: 420,
         border: '1px solid #e2e8f0',
         borderRadius: 12,
@@ -206,10 +206,10 @@ export default function AssistantChat() {
       {/* 메시지 영역 */}
       <div
         ref={scrollRef}
+        className="p-3 md:p-5"
         style={{
           flex: 1,
           overflowY: 'auto',
-          padding: 20,
           display: 'flex',
           flexDirection: 'column',
           gap: 14,
@@ -240,9 +240,9 @@ export default function AssistantChat() {
           return (
             <div
               key={i}
+              className="max-w-[92%] md:max-w-[78%]"
               style={{
                 alignSelf: isUser ? 'flex-end' : 'flex-start',
-                maxWidth: '78%',
                 padding: '10px 14px',
                 borderRadius: 12,
                 fontSize: 14,

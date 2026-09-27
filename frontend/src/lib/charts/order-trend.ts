@@ -109,5 +109,18 @@ export function buildOrderTrendOption(data: OrderTrendResponse): EChartsOption {
       minInterval: 1, // 정수 단위 (주문 건수에 소수점은 무의미)
     },
     series,
+    // 폰(컨테이너 480px 미만): 범례 최대 5개가 두 줄로 밀리며 x축과 겹쳐서 하단 여백을 넓히고, 좌측 여백을 줄인다.
+    media: [
+      {
+        query: { maxWidth: 480 },
+        option: {
+          legend: { bottom: 0, itemWidth: 14, itemHeight: 10, textStyle: { fontSize: 11 } },
+          grid: { left: 36, right: 12, top: 16, bottom: 84 }, // x 라벨 1줄 + 범례 최대 2줄(전기 비교 켬)
+          // 'YYYY-MM-DD' 를 그대로 기울이면 하단 범례와 겹친다 → 'MM-DD' 로 줄이고 눕히지 않는다(연도는 부제에 있다)
+          xAxis: { axisLabel: { fontSize: 10, rotate: 0, formatter: (v: string) => v.slice(5) } },
+          yAxis: { axisLabel: { fontSize: 10 } },
+        },
+      },
+    ],
   };
 }

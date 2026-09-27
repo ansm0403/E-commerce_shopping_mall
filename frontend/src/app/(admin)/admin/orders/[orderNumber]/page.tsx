@@ -18,6 +18,7 @@ import {
   BADGE_TONE,
   cardStyle,
   formatDateShort,
+  tableScrollStyle,
   tableStyle,
   tdStyle,
   thStyle,
@@ -68,7 +69,7 @@ export default function AdminOrderDetailPage({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+      <header style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
           <p style={{ margin: 0, fontSize: '13px' }}>
             <Link href="/admin/orders" style={{ color: '#2563eb', textDecoration: 'underline' }}>
@@ -111,7 +112,7 @@ export default function AdminOrderDetailPage({
       )}
 
       {/* 수령/결제 정보 */}
-      <section style={{ ...cardStyle, padding: '16px', display: 'flex', gap: '48px', flexWrap: 'wrap' }}>
+      <section style={{ ...cardStyle, padding: '16px', display: 'flex', gap: '16px 48px', flexWrap: 'wrap' }}>
         <dl style={dlStyle}>
           <dt style={dtStyle}>수령인</dt>
           <dd style={ddStyle}>{order.recipientName} · {order.recipientPhone}</dd>
@@ -137,7 +138,8 @@ export default function AdminOrderDetailPage({
 
       {/* 주문 상품 */}
       <section style={cardStyle}>
-        <table style={tableStyle}>
+        <div style={tableScrollStyle}>
+          <table style={tableStyle}>
           <thead>
             <tr>
               <th style={thStyle}>상품</th>
@@ -160,12 +162,14 @@ export default function AdminOrderDetailPage({
               </tr>
             ))}
           </tbody>
-        </table>
+          </table>
+        </div>
       </section>
 
       {/* 배송건 (셀러 단위) */}
       <section style={cardStyle}>
-        <table style={tableStyle}>
+        <div style={tableScrollStyle}>
+          <table style={tableStyle}>
           <thead>
             <tr>
               <th style={thStyle}>배송건 (셀러 ID)</th>
@@ -218,7 +222,8 @@ export default function AdminOrderDetailPage({
               </tr>
             ))}
           </tbody>
-        </table>
+          </table>
+        </div>
       </section>
     </div>
   );
@@ -237,7 +242,8 @@ const dlStyle: React.CSSProperties = {
   columnGap: '12px',
   margin: 0,
   fontSize: '13px',
-  minWidth: '280px',
+  flex: '1 1 280px',
+  minWidth: 0, // 280px 고정이면 폰(콘텐츠 폭 ~358px)에서 카드 밖으로 삐져나간다
 };
 
 const dtStyle: React.CSSProperties = { color: '#64748b' };

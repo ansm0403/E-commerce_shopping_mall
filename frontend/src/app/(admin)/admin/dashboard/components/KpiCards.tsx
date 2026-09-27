@@ -7,8 +7,14 @@ const cardStyle: React.CSSProperties = {
   borderRadius: '12px',
   padding: '20px',
   boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)',
-  flex: 1,
   minWidth: 0,
+};
+
+/** 4장이 폭에 맞춰 4열 → 2열(폰 2×2) 로 접힌다. flex 였을 땐 폰에서 4장이 한 줄에 끼어 글자가 세로로 섰다. */
+const gridStyle: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+  gap: '16px',
 };
 
 const labelStyle: React.CSSProperties = {
@@ -55,7 +61,7 @@ export default function KpiCards() {
 
   if (isLoading) {
     return (
-      <div style={{ display: 'flex', gap: '16px' }}>
+      <div style={gridStyle}>
         {[1, 2, 3, 4].map((i) => (
           <div key={i} style={{ ...cardStyle, height: '100px', background: '#e2e8f0' }} />
         ))}
@@ -75,7 +81,7 @@ export default function KpiCards() {
   const failureExceeded = loginFailureRate.value > loginFailureRate.threshold;
 
   return (
-    <div style={{ display: 'flex', gap: '16px' }}>
+    <div style={gridStyle}>
       <div style={cardStyle}>
         <div style={labelStyle}>오늘 주문</div>
         <div style={valueStyle}>{formatNumber(todayOrders.value)}건</div>

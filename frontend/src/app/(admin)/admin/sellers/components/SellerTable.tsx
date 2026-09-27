@@ -11,6 +11,7 @@ import {
   BADGE_TONE,
   cardStyle,
   formatDateTime,
+  tableScrollStyle,
   tableStyle,
   tdStyle,
   thStyle,
@@ -55,7 +56,8 @@ export default function SellerTable() {
 
   return (
     <div style={cardStyle}>
-      <table style={tableStyle}>
+      <div style={tableScrollStyle}>
+        <table style={tableStyle}>
         <thead>
           <tr>
             <th style={thStyle}>신청일 (KST)</th>
@@ -151,7 +153,8 @@ export default function SellerTable() {
             );
           })}
         </tbody>
-      </table>
+        </table>
+      </div>
 
       <AdminPagination meta={meta} onPageChange={goPage} />
 

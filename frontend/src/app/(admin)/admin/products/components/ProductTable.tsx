@@ -16,6 +16,7 @@ import {
   BADGE_TONE,
   cardStyle,
   formatDateShort,
+  tableScrollStyle,
   tableStyle,
   tdStyle,
   thStyle,
@@ -55,7 +56,8 @@ export default function ProductTable() {
 
   return (
     <div style={cardStyle}>
-      <table style={tableStyle}>
+      <div style={tableScrollStyle}>
+        <table style={tableStyle}>
         <thead>
           <tr>
             <th style={thStyle}>등록일 (KST)</th>
@@ -172,7 +174,8 @@ export default function ProductTable() {
             );
           })}
         </tbody>
-      </table>
+        </table>
+      </div>
 
       <AdminPagination meta={data?.meta} onPageChange={goPage} />
 

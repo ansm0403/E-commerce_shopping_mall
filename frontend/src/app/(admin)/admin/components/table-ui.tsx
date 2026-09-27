@@ -21,6 +21,18 @@ export const tableStyle: React.CSSProperties = {
   width: '100%',
   borderCollapse: 'collapse',
   fontSize: '13px',
+  // 폰에서 7열이 110px 로 접히지 않게 — 표는 폭을 지키고 `tableScrollStyle` 래퍼가 가로로 스크롤한다.
+  minWidth: '720px',
+};
+
+/**
+ * `<table style={tableStyle}>` 을 감싸는 가로 스크롤 래퍼.
+ * `cardStyle` 이 `overflow: hidden` 이라 래퍼 없이는 폰에서 오른쪽 열이 그냥 잘린다.
+ * 관리자 표는 밀도가 본질이라 카드형으로 다시 짜지 않고 스크롤을 택했다(2026-09-28).
+ */
+export const tableScrollStyle: React.CSSProperties = {
+  overflowX: 'auto',
+  WebkitOverflowScrolling: 'touch',
 };
 
 export const thStyle: React.CSSProperties = {
@@ -79,10 +91,12 @@ export const tabStyle = (active: boolean): React.CSSProperties => ({
   color: active ? '#2563eb' : '#475569',
   borderRadius: '999px',
   cursor: 'pointer',
+  whiteSpace: 'nowrap', // 좁은 폭에서 "결제 대 / 기" 로 꺾이지 않게 — 줄바꿈은 칩 단위(filterBar wrap)로만
 });
 
 export const filterBarStyle: React.CSSProperties = {
   display: 'flex',
+  flexWrap: 'wrap',
   gap: '8px',
   padding: '10px 12px',
   background: '#ffffff',
@@ -92,8 +106,10 @@ export const filterBarStyle: React.CSSProperties = {
 
 const footerStyle: React.CSSProperties = {
   display: 'flex',
+  flexWrap: 'wrap',
   alignItems: 'center',
   justifyContent: 'space-between',
+  gap: '8px',
   padding: '12px 16px',
   fontSize: '13px',
   color: '#475569',

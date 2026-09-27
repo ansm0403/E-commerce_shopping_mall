@@ -15,7 +15,7 @@ const cardStyle: React.CSSProperties = {
   borderRadius: '12px',
   padding: '20px',
   boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)',
-  flex: 1,
+  flex: '1 1 240px', // basis 0 이면 wrap 컨테이너에서도 세 장이 한 줄에 110px 씩 끼어 앉는다 — 240px 아래로는 줄바꿈
   minWidth: 0,
   display: 'flex',
   flexDirection: 'column',
