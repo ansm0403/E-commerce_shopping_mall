@@ -268,7 +268,7 @@ export default function LinkCheckSection() {
           {stage === 'found' && found && (
             <div style={okBox}>
               <div style={{ fontWeight: 700, color: '#166534' }}>
-                앱 목록에 노출됐습니다 — 앱 상세의 "처음 N분 전" 이 위 보낸 시각과 맞는지 보세요.
+                앱 목록에 노출됐습니다 — 앱 상세의 &quot;처음 N분 전&quot; 이 위 보낸 시각과 맞는지 보세요.
               </div>
               {isMobile ? (
                 <a href={appDeepLink(found.id)} style={deepLinkBtn}>
@@ -276,7 +276,7 @@ export default function LinkCheckSection() {
                 </a>
               ) : (
                 <div style={{ fontSize: '13px', color: '#166534' }}>
-                  폰에서 이 페이지를 열고 다시 보내면 "앱에서 열기" 버튼이 나타나 앱의 그 인시던트로 바로 이동합니다
+                  폰에서 이 페이지를 열고 다시 보내면 &quot;앱에서 열기&quot; 버튼이 나타나 앱의 그 인시던트로 바로 이동합니다
                   (<code>{appDeepLink(found.id)}</code>). PC 에서는 앱 목록에서 위 제목을 찾으세요.
                 </div>
               )}
@@ -289,17 +289,17 @@ export default function LinkCheckSection() {
         <h3 style={h3}>앱에서 할 일</h3>
         <ol style={{ margin: 0, paddingLeft: '20px', color: '#334155', fontSize: '14px', lineHeight: 1.7 }}>
           <li>
-            인시던트 목록에서 <strong>{marker ?? '[방문자 테스트 XXXX]'}</strong> 를 찾습니다(또는 위 "앱에서 열기").
+            인시던트 목록에서 <strong>{marker ?? '[방문자 테스트 XXXX]'}</strong> 를 찾습니다(또는 위 &quot;앱에서 열기&quot;).
             안 보이면 목록을 당겨서 새로고침 — 백엔드 캐시가 60초입니다.
           </li>
-          <li>상세의 "처음 N분 전" 을 위 보낸 시각과 비교합니다 — 미리 심은 데이터로는 못 만드는 값입니다.</li>
+          <li>상세의 &quot;처음 N분 전&quot; 을 위 보낸 시각과 비교합니다 — 미리 심은 데이터로는 못 만드는 값입니다.</li>
           <li>
             <strong>AI 분석</strong>을 누릅니다. 분석이 이 페이지의 소스 파일(<code>ops-app/visitor-test.ts</code>)을 GitHub 에서 읽고
-            "의도된 테스트 에러" 라고 답하는지 보세요. 데모 계정의 새 분석은 <strong>시간당 6건</strong>(방문자 합산) — 한도면
+            &quot;의도된 테스트 에러&quot; 라고 답하는지 보세요. 데모 계정의 새 분석은 <strong>시간당 6건</strong>(방문자 합산) — 한도면
             이미 분석된 다른 인시던트로 이어서 보세요.
           </li>
           <li>
-            <strong>평가 탭</strong>에서 그 분석을 채점(승인/반려·별점)한 뒤, 분석 화면을 다시 열면 "내 판정" 이 보입니다.
+            <strong>평가 탭</strong>에서 그 분석을 채점(승인/반려·별점)한 뒤, 분석 화면을 다시 열면 &quot;내 판정&quot; 이 보입니다.
             데모 계정의 채점은 저장되지만 집계에는 들어가지 않습니다.
           </li>
         </ol>

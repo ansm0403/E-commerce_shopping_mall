@@ -315,11 +315,12 @@ PORTONE_API_SECRET=                       # 결제 검증. 없으면 결제 단�
 | `yarn nx build shared` | 공용 타입을 바꿨을 때(소비 측은 `dist/` 를 읽는다) |
 | `yarn nx run @shopping-mall/backend:migration:generate --name=<이름>` · `migration:show` · `migration:revert` | 마이그레이션 (cwd 는 nx 가 backend 로 맞춘다) |
 | `yarn nx run @shopping-mall/backend:seed` · `seed:full` · `seed:reset` | 빌드된 `dist/main.js` 를 `NODE_SEED=true` 로 실행해 데모 관리자·역할·카테고리(+상품·주문 30일치) 시드 — [데이터 가이드](docs/roadmap/ex-db-migration-data-guide.md) |
-| `yarn nx test backend` · `yarn nx e2e backend-e2e` | 단위(spec 30 파일, ops 9) · HTTP e2e 5 파일(**이미 떠 있는 4000 을 대상**으로 돈다, `e2e-` 접두 계정을 만들고 스스로 정리) |
+| `yarn nx test frontend` | 프론트 단위 5 파일 40건(jsdom + Testing Library) — authClient **동시 401 → refresh 1회·큐 재시도** 인터셉터, JWT payload 판독, 셀러 신청 화면 4분기(미신청·심사 중·승인·반려) 렌더링, API 실패 Sentry 리포터, 홈 렌더 스모크 |
+| `yarn nx test backend` · `yarn nx e2e backend-e2e` | 단위(spec 32 파일, ops 9) · HTTP e2e 5 파일(**이미 떠 있는 4000 을 대상**으로 돈다, `e2e-` 접두 계정을 만들고 스스로 정리) |
 | `node scripts/probe/probe.mjs` | 프론트 프로브 — 헤드리스 Chrome 으로 API 응답만 깨뜨려 5개 케이스 재현(서버 무접촉, [README](scripts/probe/README.md)) |
 | `cd backend && node -r ts-node/register/transpile-only eval/run-eval.ts` · 같은 방식으로 `eval/run-judge.ts` · `eval/ops-review-set.ts list|test|stats|chips|notes` | AI 어시스턴트 골든셋·judge / 운영 앱 평가 세트(백엔드 4000 + LLM 키 필요) |
 
-> 로컬 Node 22 에서는 `nx test backend` 가 `jest.config.ts` 파싱에서 실패합니다(CI 의 Node 24 는 정상). 로컬 우회는 `node node_modules/jest/bin/jest.js --config '{...}'` 처럼 인라인 config 로.
+> 로컬 Node 22 에서는 `nx test backend` 가 `jest.config.ts` 파싱에서 실패합니다(CI 의 Node 24 는 정상, `nx test frontend` 는 Node 22 에서도 정상). 로컬 우회는 `node node_modules/jest/bin/jest.js --config '{...}'` 처럼 인라인 config 로.
 
 ---
 
