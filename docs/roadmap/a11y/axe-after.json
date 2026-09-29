@@ -1,0 +1,38 @@
+[
+  {
+    "name": "홈",
+    "path": "/",
+    "finalPath": "/",
+    "violations": []
+  },
+  {
+    "name": "상품 목록",
+    "path": "/products",
+    "finalPath": "/products",
+    "violations": []
+  },
+  {
+    "name": "상품 상세",
+    "path": "/products/349",
+    "finalPath": "/products/349",
+    "violations": []
+  },
+  {
+    "name": "로그인",
+    "path": "/login",
+    "finalPath": "/login",
+    "violations": []
+  },
+  {
+    "name": "장바구니",
+    "path": "/cart",
+    "finalPath": "/cart",
+    "violations": []
+  },
+  {
+    "name": "주문서",
+    "path": "/checkout",
+    "finalPath": "/checkout",
+    "violations": []
+  }
+]

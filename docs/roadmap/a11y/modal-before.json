@@ -1,0 +1,47 @@
+{
+  "dialogName": {
+    "ariaLabel": "주문 취소",
+    "labelledby": null
+  },
+  "focusAfterOpen": "button \"주문 취소\"",
+  "focusMovedIn": false,
+  "tabSequence": [
+    {
+      "el": "a \"공지사항\"",
+      "inDialog": false
+    },
+    {
+      "el": "a \"자주 묻는 질문\"",
+      "inDialog": false
+    },
+    {
+      "el": "a \"1:1 문의\"",
+      "inDialog": false
+    },
+    {
+      "el": "a \"반품/교환\"",
+      "inDialog": false
+    },
+    {
+      "el": "a \"회사 소개\"",
+      "inDialog": false
+    },
+    {
+      "el": "a \"채용 정보\"",
+      "inDialog": false
+    },
+    {
+      "el": "a \"제휴 문의\"",
+      "inDialog": false
+    },
+    {
+      "el": "a \"사업자 정보\"",
+      "inDialog": false
+    }
+  ],
+  "tabEscapes": 8,
+  "shiftTabInDialog": false,
+  "closedByEsc": true,
+  "focusAfterClose": "a \"제휴 문의\"",
+  "focusReturned": false
+}

@@ -1,0 +1,241 @@
+[
+  {
+    "name": "홈",
+    "path": "/",
+    "finalPath": "/",
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "nodes": [
+          {
+            "target": ".text-\\[11px\\]",
+            "html": "<span class=\"text-[11px] text-gray-400 group-hover:text-indigo-500 transition-colors\">장바구니</span>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.53 (foreground color: #9ca3af, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "select-name",
+        "impact": "critical",
+        "help": "Select element must have an accessible name",
+        "nodes": [
+          {
+            "target": "select",
+            "html": "<select class=\"text-sm h-full px-4 bg-transparent text-gray-600 focus:outline-none cursor-pointer border-0\">",
+            "summary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "상품 목록",
+    "path": "/products",
+    "finalPath": "/products",
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "nodes": [
+          {
+            "target": ".text-\\[11px\\]",
+            "html": "<span class=\"text-[11px] text-gray-400 group-hover:text-indigo-500 transition-colors\">장바구니</span>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.53 (foreground color: #9ca3af, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "select-name",
+        "impact": "critical",
+        "help": "Select element must have an accessible name",
+        "nodes": [
+          {
+            "target": "select",
+            "html": "<select class=\"text-sm h-full px-4 bg-transparent text-gray-600 focus:outline-none cursor-pointer border-0\">",
+            "summary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "상품 상세",
+    "path": "/products/349",
+    "finalPath": "/products/349",
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "nodes": [
+          {
+            "target": ".text-\\[11px\\]",
+            "html": "<span class=\"text-[11px] text-gray-400 group-hover:text-indigo-500 transition-colors\">장바구니</span>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.53 (foreground color: #9ca3af, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".text-yellow-400.text-base.leading-none",
+            "html": "<span class=\"text-yellow-400 text-base leading-none\">★★★⯨☆</span>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 1.53 (foreground color: #facc15, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".gap-2.items-center.flex > .text-secondary-400.text-sm",
+            "html": "<span class=\"text-secondary-400 text-sm\">(0개 리뷰)</span>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.56 (foreground color: #94a3b8, background color: #ffffff, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".text-green-600",
+            "html": "<p class=\"text-green-600 text-xs font-medium\">🚚 무료배송</p>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.94 (foreground color: #16a34a, background color: #eef2ff, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".gap-3.items-center.flex > .text-secondary-400.text-sm",
+            "html": "<span class=\"text-sm text-secondary-400\">최대 10개</span>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.56 (foreground color: #94a3b8, background color: #ffffff, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".space-y-0\\.5.text-xs > .text-secondary-400",
+            "html": "<p class=\"text-secondary-400\">카테고리</p>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.56 (foreground color: #94a3b8, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "select-name",
+        "impact": "critical",
+        "help": "Select element must have an accessible name",
+        "nodes": [
+          {
+            "target": "select",
+            "html": "<select class=\"text-sm h-full px-4 bg-transparent text-gray-600 focus:outline-none cursor-pointer border-0\">",
+            "summary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "로그인",
+    "path": "/login",
+    "finalPath": "/login",
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "nodes": [
+          {
+            "target": ".mt-1",
+            "html": "<button type=\"submit\" class=\"mt-1 px-3 py-2.5 rou...\">",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.55 (foreground color: #ffffff, background color: #50acd6, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".mb-3",
+            "html": "<p class=\"text-xs text-gray-400 text-center mb-3\">채용 담당자 · 시연자용</p>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.53 (foreground color: #9ca3af, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".mt-2",
+            "html": "<p class=\"text-xs text-gray-400 text-center mt-2\">가입 없이 관리자 대시보드를 둘러볼 수 있습니다. 일부 기능은 제한됩니다.</p>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.53 (foreground color: #9ca3af, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "장바구니",
+    "path": "/cart",
+    "finalPath": "/cart",
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "nodes": [
+          {
+            "target": ".text-\\[11px\\]",
+            "html": "<span class=\"text-[11px] text-gray-400 group-hover:text-indigo-500 transition-colors\">1개 담음</span>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.99 (foreground color: #6366f1, background color: #eef2ff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".ml-2",
+            "html": "<span class=\"ml-2 text-lg font-normal text-secondary-400\">(1개 상품)</span>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.56 (foreground color: #94a3b8, background color: #ffffff, font size: 13.5pt (18px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".mb-0\\.5",
+            "html": "<p class=\"text-xs text-secondary-400 mb-0.5\">삼성</p>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.56 (foreground color: #94a3b8, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".self-start",
+            "html": "<button class=\"self-start mt-1 text-xs text-secondary-400 hover:text-red-400 underline underline-offset-2 transition-colors disabled:opacity-50\">전체 비우기</button>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.56 (foreground color: #94a3b8, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".text-green-600",
+            "html": "<span class=\"text-green-600 font-medium\">무료</span>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.29 (foreground color: #16a34a, background color: #ffffff, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "select-name",
+        "impact": "critical",
+        "help": "Select element must have an accessible name",
+        "nodes": [
+          {
+            "target": "select",
+            "html": "<select class=\"text-sm h-full px-4 bg-transparent text-gray-600 focus:outline-none cursor-pointer border-0\">",
+            "summary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "주문서",
+    "path": "/checkout",
+    "finalPath": "/checkout",
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "nodes": [
+          {
+            "target": ".text-\\[11px\\]",
+            "html": "<span class=\"text-[11px] text-gray-400 group-hover:text-indigo-500 transition-colors\">1개 담음</span>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.53 (foreground color: #9ca3af, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".min-w-0 > .text-secondary-400.text-xs",
+            "html": "<p class=\"text-xs text-secondary-400\">삼성</p>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.56 (foreground color: #94a3b8, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".text-green-600",
+            "html": "<span class=\"text-green-600 font-medium\">무료</span>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.29 (foreground color: #16a34a, background color: #ffffff, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "select-name",
+        "impact": "critical",
+        "help": "Select element must have an accessible name",
+        "nodes": [
+          {
+            "target": "select",
+            "html": "<select class=\"text-sm h-full px-4 bg-transparent text-gray-600 focus:outline-none cursor-pointer border-0\">",
+            "summary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+          }
+        ]
+      }
+    ]
+  }
+]

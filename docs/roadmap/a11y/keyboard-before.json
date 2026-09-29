@@ -1,0 +1,2431 @@
+[
+  {
+    "name": "홈",
+    "path": "/",
+    "tabStops": 80,
+    "noFocusRing": [],
+    "noName": [
+      {
+        "key": "select||170|54",
+        "tag": "select",
+        "role": null,
+        "name": "",
+        "href": null,
+        "ring": true
+      }
+    ],
+    "pointerOnly": [
+      "div \"지금 쇼핑하기→‹›\"",
+      "div \"\"",
+      "div \"\""
+    ],
+    "stops": [
+      {
+        "key": "button|🎉 신규 회원가입 시 10% 할인 쿠폰 증정|24|8",
+        "tag": "button",
+        "role": null,
+        "name": "🎉 신규 회원가입 시 10% 할인 쿠폰 증정",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|로그인/회원가입|1148|8",
+        "tag": "button",
+        "role": null,
+        "name": "로그인/회원가입",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|SHOPMALL|24|58",
+        "tag": "button",
+        "role": null,
+        "name": "SHOPMALL",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "select||170|54",
+        "tag": "select",
+        "role": null,
+        "name": "",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "input|상품명을 검색해주세요.|317|64",
+        "tag": "input",
+        "role": null,
+        "name": "상품명을 검색해주세요.",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|검색|1016|54",
+        "tag": "button",
+        "role": null,
+        "name": "검색",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|장바구니|1132|48",
+        "tag": "button",
+        "role": null,
+        "name": "장바구니",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|카테고리|24|121",
+        "tag": "button",
+        "role": null,
+        "name": "카테고리",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|HOME|224|117",
+        "tag": "button",
+        "role": null,
+        "name": "HOME",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|의류|289|117",
+        "tag": "button",
+        "role": null,
+        "name": "의류",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|뷰티|341|117",
+        "tag": "button",
+        "role": null,
+        "name": "뷰티",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|신발|393|117",
+        "tag": "button",
+        "role": null,
+        "name": "신발",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|책|445|117",
+        "tag": "button",
+        "role": null,
+        "name": "책",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|식품|483|117",
+        "tag": "button",
+        "role": null,
+        "name": "식품",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|생활용품|535|117",
+        "tag": "button",
+        "role": null,
+        "name": "생활용품",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|이전 슬라이드|68|393",
+        "tag": "button",
+        "role": null,
+        "name": "이전 슬라이드",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|다음 슬라이드|776|393",
+        "tag": "button",
+        "role": null,
+        "name": "다음 슬라이드",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|슬라이드 1|417|603",
+        "tag": "button",
+        "role": null,
+        "name": "슬라이드 1",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|슬라이드 2|435|603",
+        "tag": "button",
+        "role": null,
+        "name": "슬라이드 2",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|슬라이드 3|453|603",
+        "tag": "button",
+        "role": null,
+        "name": "슬라이드 3",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "a|더보기›|1157|731",
+        "tag": "a",
+        "role": null,
+        "name": "더보기›",
+        "href": "/products?sortBy=viewCount&sortOrder=DESC",
+        "ring": true
+      },
+      {
+        "key": "a|건성[스킨푸드] 로열허니 배리어크림63,000원★2.8|72|771",
+        "tag": "a",
+        "role": null,
+        "name": "건성[스킨푸드] 로열허니 배리어크림63,000원★2.8",
+        "href": "/products/46",
+        "ring": true
+      },
+      {
+        "key": "a|여름23FW 노스페이스 패딩614,000원★2.4|356|771",
+        "tag": "a",
+        "role": null,
+        "name": "여름23FW 노스페이스 패딩614,000원★2.4",
+        "href": "/products/60",
+        "ring": true
+      },
+      {
+        "key": "a|-12%자기계발SF 보다 Vol.1 얼음14,000원15,909원★3.1|641|771",
+        "tag": "a",
+        "role": null,
+        "name": "-12%자기계발SF 보다 Vol.1 얼음14,000원15,909원★3.1",
+        "href": "/products/220",
+        "ring": true
+      },
+      {
+        "key": "a|겨울블랙야크 구스다운 롱패딩229,000원★3.5|925|771",
+        "tag": "a",
+        "role": null,
+        "name": "겨울블랙야크 구스다운 롱패딩229,000원★3.5",
+        "href": "/products/70",
+        "ring": true
+      },
+      {
+        "key": "a|-18%소설반지의 제왕49,800원60,732원★3.8|72|1149",
+        "tag": "a",
+        "role": null,
+        "name": "-18%소설반지의 제왕49,800원60,732원★3.8",
+        "href": "/products/206",
+        "ring": true
+      },
+      {
+        "key": "a|만화룬의 아이들 17,000원★4.0|356|1149",
+        "tag": "a",
+        "role": null,
+        "name": "만화룬의 아이들 17,000원★4.0",
+        "href": "/products/241",
+        "ring": true
+      },
+      {
+        "key": "a|-10%여름노스페이스 NJ1DR53A 남성 레귤러핏 경량패딩239,000원265,556원★4.4|641|1149",
+        "tag": "a",
+        "role": null,
+        "name": "-10%여름노스페이스 NJ1DR53A 남성 레귤러핏 경량패딩239,000",
+        "href": "/products/100",
+        "ring": true
+      },
+      {
+        "key": "a|생활용품무선 진공청소기1,760,000원★3.5|925|1149",
+        "tag": "a",
+        "role": null,
+        "name": "생활용품무선 진공청소기1,760,000원★3.5",
+        "href": "/products/349",
+        "ring": true
+      },
+      {
+        "key": "a|더보기›|1157|1637",
+        "tag": "a",
+        "role": null,
+        "name": "더보기›",
+        "href": "/products?sortBy=createdAt&sortOrder=DESC",
+        "ring": true
+      },
+      {
+        "key": "a|생활용품무선 진공청소기1,760,000원★3.5|72|1677",
+        "tag": "a",
+        "role": null,
+        "name": "생활용품무선 진공청소기1,760,000원★3.5",
+        "href": "/products/349",
+        "ring": true
+      },
+      {
+        "key": "a|-12%생활용품계량컵 안깨지는 계량컵 비커 카페 제과용품18,000원20,455원★3.5|356|1677",
+        "tag": "a",
+        "role": null,
+        "name": "-12%생활용품계량컵 안깨지는 계량컵 비커 카페 제과용품18,000원20",
+        "href": "/products/348",
+        "ring": true
+      },
+      {
+        "key": "a|생활용품아크릴 미니 화장대 2단32,000원★3.1|641|1677",
+        "tag": "a",
+        "role": null,
+        "name": "생활용품아크릴 미니 화장대 2단32,000원★3.1",
+        "href": "/products/347",
+        "ring": true
+      },
+      {
+        "key": "a|-18%생활용품클린풀 투인원 유리창 방충망 청소솔15,000원18,293원★3.2|925|1677",
+        "tag": "a",
+        "role": null,
+        "name": "-18%생활용품클린풀 투인원 유리창 방충망 청소솔15,000원18,293",
+        "href": "/products/346",
+        "ring": true
+      },
+      {
+        "key": "a|생활용품슬라이딩 도어 후크9,000원★3.0|72|2056",
+        "tag": "a",
+        "role": null,
+        "name": "생활용품슬라이딩 도어 후크9,000원★3.0",
+        "href": "/products/345",
+        "ring": true
+      },
+      {
+        "key": "a|-15%생활용품모노 전기포트 1.5L 커피포트 분유 대용량 주전자42,000원49,412원★4.5|356|2056",
+        "tag": "a",
+        "role": null,
+        "name": "-15%생활용품모노 전기포트 1.5L 커피포트 분유 대용량 주전자42,0",
+        "href": "/products/344",
+        "ring": true
+      },
+      {
+        "key": "a|생활용품전면 거울(여닫이) 누드 라이트 욕실 수납장58,000원★3.0|641|2056",
+        "tag": "a",
+        "role": null,
+        "name": "생활용품전면 거울(여닫이) 누드 라이트 욕실 수납장58,000원★3.0",
+        "href": "/products/343",
+        "ring": true
+      },
+      {
+        "key": "a|-22%생활용품[브라운]NEW 액티브 블레이드 핸드블랜더65,000원83,333원★3.8|925|2056",
+        "tag": "a",
+        "role": null,
+        "name": "-22%생활용품[브라운]NEW 액티브 블레이드 핸드블랜더65,000원83",
+        "href": "/products/342",
+        "ring": true
+      },
+      {
+        "key": "a|더보기›|1157|2543",
+        "tag": "a",
+        "role": null,
+        "name": "더보기›",
+        "href": "/products?sortBy=rating&sortOrder=DESC",
+        "ring": true
+      },
+      {
+        "key": "a|간편식델몬트 오렌지 주스 1L4,500원★5.0|72|2583",
+        "tag": "a",
+        "role": null,
+        "name": "간편식델몬트 오렌지 주스 1L4,500원★5.0",
+        "href": "/products/253",
+        "ring": true
+      },
+      {
+        "key": "a|-20%소설호모 데우스22,000원27,500원★5.0|356|2583",
+        "tag": "a",
+        "role": null,
+        "name": "-20%소설호모 데우스22,000원27,500원★5.0",
+        "href": "/products/178",
+        "ring": true
+      },
+      {
+        "key": "a|-10%부츠Air Jordan 1 High OG Midnight Navy220,000원244,444원★5.0|641|2583",
+        "tag": "a",
+        "role": null,
+        "name": "-10%부츠Air Jordan 1 High OG Midnight Navy",
+        "href": "/products/139",
+        "ring": true
+      },
+      {
+        "key": "a|봄스튜디오 니콜슨 소르테 차콜 그레이145,000원★5.0|925|2583",
+        "tag": "a",
+        "role": null,
+        "name": "봄스튜디오 니콜슨 소르테 차콜 그레이145,000원★5.0",
+        "href": "/products/99",
+        "ring": true
+      },
+      {
+        "key": "a|민감성아베다 콜로이달 오트밀 클렌저19,000원★5.0|72|2962",
+        "tag": "a",
+        "role": null,
+        "name": "민감성아베다 콜로이달 오트밀 클렌저19,000원★5.0",
+        "href": "/products/22",
+        "ring": true
+      },
+      {
+        "key": "a|음료삼립 PIG 감자마요 스쿱샐러드 300g3,700원★4.9|356|2962",
+        "tag": "a",
+        "role": null,
+        "name": "음료삼립 PIG 감자마요 스쿱샐러드 300g3,700원★4.9",
+        "href": "/products/271",
+        "ring": true
+      },
+      {
+        "key": "a|-15%과자오뚜기 콘치즈 피자 300g15,900원18,706원★4.8|641|2962",
+        "tag": "a",
+        "role": null,
+        "name": "-15%과자오뚜기 콘치즈 피자 300g15,900원18,706원★4.8",
+        "href": "/products/290",
+        "ring": true
+      },
+      {
+        "key": "a|신선식품호재준 유기가공식품 인증 블루베리23,000원★4.8|925|2962",
+        "tag": "a",
+        "role": null,
+        "name": "신선식품호재준 유기가공식품 인증 블루베리23,000원★4.8",
+        "href": "/products/256",
+        "ring": true
+      },
+      {
+        "key": "a|더보기›|1157|3450",
+        "tag": "a",
+        "role": null,
+        "name": "더보기›",
+        "href": "/products?categoryId=1",
+        "ring": true
+      },
+      {
+        "key": "button|의류|72|3490",
+        "tag": "button",
+        "role": null,
+        "name": "의류",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|뷰티|140|3490",
+        "tag": "button",
+        "role": null,
+        "name": "뷰티",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|신발|208|3490",
+        "tag": "button",
+        "role": null,
+        "name": "신발",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|책|276|3490",
+        "tag": "button",
+        "role": null,
+        "name": "책",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|식품|330|3490",
+        "tag": "button",
+        "role": null,
+        "name": "식품",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|생활용품|398|3490",
+        "tag": "button",
+        "role": null,
+        "name": "생활용품",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "a|여름23FW 노스페이스 패딩614,000원★2.4|72|3546",
+        "tag": "a",
+        "role": null,
+        "name": "여름23FW 노스페이스 패딩614,000원★2.4",
+        "href": "/products/60",
+        "ring": true
+      },
+      {
+        "key": "a|겨울블랙야크 구스다운 롱패딩229,000원★3.5|356|3546",
+        "tag": "a",
+        "role": null,
+        "name": "겨울블랙야크 구스다운 롱패딩229,000원★3.5",
+        "href": "/products/70",
+        "ring": true
+      },
+      {
+        "key": "a|-10%여름노스페이스 NJ1DR53A 남성 레귤러핏 경량패딩239,000원265,556원★4.4|641|3546",
+        "tag": "a",
+        "role": null,
+        "name": "-10%여름노스페이스 NJ1DR53A 남성 레귤러핏 경량패딩239,000",
+        "href": "/products/100",
+        "ring": true
+      },
+      {
+        "key": "a|여름에잇세컨즈 오버사이즈 맨투맨39,000원★4.1|925|3546",
+        "tag": "a",
+        "role": null,
+        "name": "여름에잇세컨즈 오버사이즈 맨투맨39,000원★4.1",
+        "href": "/products/56",
+        "ring": true
+      },
+      {
+        "key": "a|-18%봄K2 네이비 바람막이 자켓89,000원108,537원★3.8|72|3924",
+        "tag": "a",
+        "role": null,
+        "name": "-18%봄K2 네이비 바람막이 자켓89,000원108,537원★3.8",
+        "href": "/products/87",
+        "ring": true
+      },
+      {
+        "key": "a|-20%봄코스 COS 여자 웨이스티드 사틴 맥시 슬립 드레스 원피스99,000원123,750원★4.3|356|3924",
+        "tag": "a",
+        "role": null,
+        "name": "-20%봄코스 COS 여자 웨이스티드 사틴 맥시 슬립 드레스 원피스99,",
+        "href": "/products/79",
+        "ring": true
+      },
+      {
+        "key": "a|-10%봄미쏘 플라워 원피스89,000원98,889원★3.6|641|3924",
+        "tag": "a",
+        "role": null,
+        "name": "-10%봄미쏘 플라워 원피스89,000원98,889원★3.6",
+        "href": "/products/63",
+        "ring": true
+      },
+      {
+        "key": "a|-15%봄유니클로 캐주얼 집업 가디건52,000원61,176원★4.5|925|3924",
+        "tag": "a",
+        "role": null,
+        "name": "-15%봄유니클로 캐주얼 집업 가디건52,000원61,176원★4.5",
+        "href": "/products/67",
+        "ring": true
+      },
+      {
+        "key": "a|공지사항|56|4668",
+        "tag": "a",
+        "role": null,
+        "name": "공지사항",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|자주 묻는 질문|56|4704",
+        "tag": "a",
+        "role": null,
+        "name": "자주 묻는 질문",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|1:1 문의|56|4740",
+        "tag": "a",
+        "role": null,
+        "name": "1:1 문의",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|반품/교환|56|4776",
+        "tag": "a",
+        "role": null,
+        "name": "반품/교환",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|회사 소개|456|4668",
+        "tag": "a",
+        "role": null,
+        "name": "회사 소개",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|채용 정보|456|4704",
+        "tag": "a",
+        "role": null,
+        "name": "채용 정보",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|제휴 문의|456|4740",
+        "tag": "a",
+        "role": null,
+        "name": "제휴 문의",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|사업자 정보|456|4776",
+        "tag": "a",
+        "role": null,
+        "name": "사업자 정보",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|이용약관|856|4668",
+        "tag": "a",
+        "role": null,
+        "name": "이용약관",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|개인정보처리방침|856|4704",
+        "tag": "a",
+        "role": null,
+        "name": "개인정보처리방침",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|쿠키 정책|856|4740",
+        "tag": "a",
+        "role": null,
+        "name": "쿠키 정책",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|이용 조건|856|4776",
+        "tag": "a",
+        "role": null,
+        "name": "이용 조건",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|Facebook|56|4881",
+        "tag": "a",
+        "role": null,
+        "name": "Facebook",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|Instagram|112|4881",
+        "tag": "a",
+        "role": null,
+        "name": "Instagram",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|Twitter|168|4881",
+        "tag": "a",
+        "role": null,
+        "name": "Twitter",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|YouTube|224|4881",
+        "tag": "a",
+        "role": null,
+        "name": "YouTube",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|개인정보처리방침|952|5247",
+        "tag": "a",
+        "role": null,
+        "name": "개인정보처리방침",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|이용약관|1088|5247",
+        "tag": "a",
+        "role": null,
+        "name": "이용약관",
+        "href": "#",
+        "ring": true
+      }
+    ]
+  },
+  {
+    "name": "상품 목록",
+    "path": "/products",
+    "tabStops": 72,
+    "noFocusRing": [],
+    "noName": [
+      {
+        "key": "select||170|54",
+        "tag": "select",
+        "role": null,
+        "name": "",
+        "href": null,
+        "ring": true
+      }
+    ],
+    "pointerOnly": [],
+    "stops": [
+      {
+        "key": "button|🎉 신규 회원가입 시 10% 할인 쿠폰 증정|24|8",
+        "tag": "button",
+        "role": null,
+        "name": "🎉 신규 회원가입 시 10% 할인 쿠폰 증정",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|로그인/회원가입|1148|8",
+        "tag": "button",
+        "role": null,
+        "name": "로그인/회원가입",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|SHOPMALL|24|58",
+        "tag": "button",
+        "role": null,
+        "name": "SHOPMALL",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "select||170|54",
+        "tag": "select",
+        "role": null,
+        "name": "",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "input|상품명을 검색해주세요.|317|64",
+        "tag": "input",
+        "role": null,
+        "name": "상품명을 검색해주세요.",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|검색|1016|54",
+        "tag": "button",
+        "role": null,
+        "name": "검색",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|장바구니|1132|48",
+        "tag": "button",
+        "role": null,
+        "name": "장바구니",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|카테고리|24|121",
+        "tag": "button",
+        "role": null,
+        "name": "카테고리",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|HOME|224|117",
+        "tag": "button",
+        "role": null,
+        "name": "HOME",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|의류|289|117",
+        "tag": "button",
+        "role": null,
+        "name": "의류",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|뷰티|341|117",
+        "tag": "button",
+        "role": null,
+        "name": "뷰티",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|신발|393|117",
+        "tag": "button",
+        "role": null,
+        "name": "신발",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|책|445|117",
+        "tag": "button",
+        "role": null,
+        "name": "책",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|식품|483|117",
+        "tag": "button",
+        "role": null,
+        "name": "식품",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|생활용품|535|117",
+        "tag": "button",
+        "role": null,
+        "name": "생활용품",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|전체|72|249",
+        "tag": "button",
+        "role": null,
+        "name": "전체",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|의류|140|249",
+        "tag": "button",
+        "role": null,
+        "name": "의류",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|뷰티|210|249",
+        "tag": "button",
+        "role": null,
+        "name": "뷰티",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|신발|280|249",
+        "tag": "button",
+        "role": null,
+        "name": "신발",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|책|350|249",
+        "tag": "button",
+        "role": null,
+        "name": "책",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|식품|406|249",
+        "tag": "button",
+        "role": null,
+        "name": "식품",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|생활용품|476|249",
+        "tag": "button",
+        "role": null,
+        "name": "생활용품",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|최신순|780|315",
+        "tag": "button",
+        "role": null,
+        "name": "최신순",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|인기순|854|315",
+        "tag": "button",
+        "role": null,
+        "name": "인기순",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|평점순|928|315",
+        "tag": "button",
+        "role": null,
+        "name": "평점순",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|낮은 가격순|1002|315",
+        "tag": "button",
+        "role": null,
+        "name": "낮은 가격순",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|높은 가격순|1109|315",
+        "tag": "button",
+        "role": null,
+        "name": "높은 가격순",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "a|생활용품무선 진공청소기1,760,000원★3.5|72|363",
+        "tag": "a",
+        "role": null,
+        "name": "생활용품무선 진공청소기1,760,000원★3.5",
+        "href": "/products/349",
+        "ring": true
+      },
+      {
+        "key": "a|-12%생활용품계량컵 안깨지는 계량컵 비커 카페 제과용품18,000원20,455원★3.5|302|363",
+        "tag": "a",
+        "role": null,
+        "name": "-12%생활용품계량컵 안깨지는 계량컵 비커 카페 제과용품18,000원20",
+        "href": "/products/348",
+        "ring": true
+      },
+      {
+        "key": "a|생활용품아크릴 미니 화장대 2단32,000원★3.1|533|363",
+        "tag": "a",
+        "role": null,
+        "name": "생활용품아크릴 미니 화장대 2단32,000원★3.1",
+        "href": "/products/347",
+        "ring": true
+      },
+      {
+        "key": "a|-18%생활용품클린풀 투인원 유리창 방충망 청소솔15,000원18,293원★3.2|763|363",
+        "tag": "a",
+        "role": null,
+        "name": "-18%생활용품클린풀 투인원 유리창 방충망 청소솔15,000원18,293",
+        "href": "/products/346",
+        "ring": true
+      },
+      {
+        "key": "a|생활용품슬라이딩 도어 후크9,000원★3.0|994|363",
+        "tag": "a",
+        "role": null,
+        "name": "생활용품슬라이딩 도어 후크9,000원★3.0",
+        "href": "/products/345",
+        "ring": true
+      },
+      {
+        "key": "a|-15%생활용품모노 전기포트 1.5L 커피포트 분유 대용량 주전자42,000원49,412원★4.5|72|665",
+        "tag": "a",
+        "role": null,
+        "name": "-15%생활용품모노 전기포트 1.5L 커피포트 분유 대용량 주전자42,0",
+        "href": "/products/344",
+        "ring": true
+      },
+      {
+        "key": "a|생활용품전면 거울(여닫이) 누드 라이트 욕실 수납장58,000원★3.0|302|665",
+        "tag": "a",
+        "role": null,
+        "name": "생활용품전면 거울(여닫이) 누드 라이트 욕실 수납장58,000원★3.0",
+        "href": "/products/343",
+        "ring": true
+      },
+      {
+        "key": "a|-22%생활용품[브라운]NEW 액티브 블레이드 핸드블랜더65,000원83,333원★3.8|533|665",
+        "tag": "a",
+        "role": null,
+        "name": "-22%생활용품[브라운]NEW 액티브 블레이드 핸드블랜더65,000원83",
+        "href": "/products/342",
+        "ring": true
+      },
+      {
+        "key": "a|생활용품코웨이 에어 카트리지 공기청정기289,000원★4.3|763|665",
+        "tag": "a",
+        "role": null,
+        "name": "생활용품코웨이 에어 카트리지 공기청정기289,000원★4.3",
+        "href": "/products/341",
+        "ring": true
+      },
+      {
+        "key": "a|-10%생활용품완전방수 식탁보 북유럽 PVC 테이블보18,000원20,000원★4.3|994|665",
+        "tag": "a",
+        "role": null,
+        "name": "-10%생활용품완전방수 식탁보 북유럽 PVC 테이블보18,000원20,0",
+        "href": "/products/340",
+        "ring": true
+      },
+      {
+        "key": "a|생활용품클래식 호텔 욕실 타올 발매트 12,000원★4.3|72|967",
+        "tag": "a",
+        "role": null,
+        "name": "생활용품클래식 호텔 욕실 타올 발매트 12,000원★4.3",
+        "href": "/products/339",
+        "ring": true
+      },
+      {
+        "key": "a|-20%생활용품우드 캔들워머 (AGM-302)35,000원43,750원★3.3|302|967",
+        "tag": "a",
+        "role": null,
+        "name": "-20%생활용품우드 캔들워머 (AGM-302)35,000원43,750원★",
+        "href": "/products/338",
+        "ring": true
+      },
+      {
+        "key": "a|-15%생활용품도어 스토퍼8,000원9,412원★2.0|533|967",
+        "tag": "a",
+        "role": null,
+        "name": "-15%생활용품도어 스토퍼8,000원9,412원★2.0",
+        "href": "/products/336",
+        "ring": true
+      },
+      {
+        "key": "a|생활용품휴대용 선풍기18,000원★3.8|763|967",
+        "tag": "a",
+        "role": null,
+        "name": "생활용품휴대용 선풍기18,000원★3.8",
+        "href": "/products/335",
+        "ring": true
+      },
+      {
+        "key": "a|-18%생활용품특대형 보관백 이불보관함 22,000원26,829원★4.2|994|967",
+        "tag": "a",
+        "role": null,
+        "name": "-18%생활용품특대형 보관백 이불보관함 22,000원26,829원★4.2",
+        "href": "/products/334",
+        "ring": true
+      },
+      {
+        "key": "a|생활용품자동 비누 디스펜서25,000원★3.5|72|1268",
+        "tag": "a",
+        "role": null,
+        "name": "생활용품자동 비누 디스펜서25,000원★3.5",
+        "href": "/products/333",
+        "ring": true
+      },
+      {
+        "key": "a|-12%생활용품JAJU 보관용 아이스 트레이15,000원17,045원★4.1|302|1268",
+        "tag": "a",
+        "role": null,
+        "name": "-12%생활용품JAJU 보관용 아이스 트레이15,000원17,045원★4",
+        "href": "/products/332",
+        "ring": true
+      },
+      {
+        "key": "a|생활용품전동 드릴 세트125,000원★3.6|533|1268",
+        "tag": "a",
+        "role": null,
+        "name": "생활용품전동 드릴 세트125,000원★3.6",
+        "href": "/products/331",
+        "ring": true
+      },
+      {
+        "key": "a|-10%생활용품스마트 양념 조미료통28,000원31,111원★4.2|763|1268",
+        "tag": "a",
+        "role": null,
+        "name": "-10%생활용품스마트 양념 조미료통28,000원31,111원★4.2",
+        "href": "/products/330",
+        "ring": true
+      },
+      {
+        "key": "a|생활용품벽걸이 흡착 욕실 코너 벽 선반 정리대38,000원★4.6|994|1268",
+        "tag": "a",
+        "role": null,
+        "name": "생활용품벽걸이 흡착 욕실 코너 벽 선반 정리대38,000원★4.6",
+        "href": "/products/329",
+        "ring": true
+      },
+      {
+        "key": "button|1|542|1594",
+        "tag": "button",
+        "role": null,
+        "name": "1",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|2|582|1594",
+        "tag": "button",
+        "role": null,
+        "name": "2",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|3|622|1594",
+        "tag": "button",
+        "role": null,
+        "name": "3",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|4|662|1594",
+        "tag": "button",
+        "role": null,
+        "name": "4",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|5|702|1594",
+        "tag": "button",
+        "role": null,
+        "name": "5",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|›|742|1594",
+        "tag": "button",
+        "role": null,
+        "name": "›",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "a|공지사항|56|1988",
+        "tag": "a",
+        "role": null,
+        "name": "공지사항",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|자주 묻는 질문|56|2024",
+        "tag": "a",
+        "role": null,
+        "name": "자주 묻는 질문",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|1:1 문의|56|2060",
+        "tag": "a",
+        "role": null,
+        "name": "1:1 문의",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|반품/교환|56|2096",
+        "tag": "a",
+        "role": null,
+        "name": "반품/교환",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|회사 소개|456|1988",
+        "tag": "a",
+        "role": null,
+        "name": "회사 소개",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|채용 정보|456|2024",
+        "tag": "a",
+        "role": null,
+        "name": "채용 정보",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|제휴 문의|456|2060",
+        "tag": "a",
+        "role": null,
+        "name": "제휴 문의",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|사업자 정보|456|2096",
+        "tag": "a",
+        "role": null,
+        "name": "사업자 정보",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|이용약관|856|1988",
+        "tag": "a",
+        "role": null,
+        "name": "이용약관",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|개인정보처리방침|856|2024",
+        "tag": "a",
+        "role": null,
+        "name": "개인정보처리방침",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|쿠키 정책|856|2060",
+        "tag": "a",
+        "role": null,
+        "name": "쿠키 정책",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|이용 조건|856|2096",
+        "tag": "a",
+        "role": null,
+        "name": "이용 조건",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|Facebook|56|2201",
+        "tag": "a",
+        "role": null,
+        "name": "Facebook",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|Instagram|112|2201",
+        "tag": "a",
+        "role": null,
+        "name": "Instagram",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|Twitter|168|2201",
+        "tag": "a",
+        "role": null,
+        "name": "Twitter",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|YouTube|224|2201",
+        "tag": "a",
+        "role": null,
+        "name": "YouTube",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|개인정보처리방침|952|2567",
+        "tag": "a",
+        "role": null,
+        "name": "개인정보처리방침",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|이용약관|1088|2567",
+        "tag": "a",
+        "role": null,
+        "name": "이용약관",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|사이트맵|1168|2567",
+        "tag": "a",
+        "role": null,
+        "name": "사이트맵",
+        "href": "#",
+        "ring": true
+      }
+    ]
+  },
+  {
+    "name": "상품 상세",
+    "path": "/products/349",
+    "tabStops": 52,
+    "noFocusRing": [],
+    "noName": [
+      {
+        "key": "select||170|54",
+        "tag": "select",
+        "role": null,
+        "name": "",
+        "href": null,
+        "ring": true
+      }
+    ],
+    "pointerOnly": [],
+    "stops": [
+      {
+        "key": "button|🎉 신규 회원가입 시 10% 할인 쿠폰 증정|24|8",
+        "tag": "button",
+        "role": null,
+        "name": "🎉 신규 회원가입 시 10% 할인 쿠폰 증정",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|로그인/회원가입|1148|8",
+        "tag": "button",
+        "role": null,
+        "name": "로그인/회원가입",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|SHOPMALL|24|58",
+        "tag": "button",
+        "role": null,
+        "name": "SHOPMALL",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "select||170|54",
+        "tag": "select",
+        "role": null,
+        "name": "",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "input|상품명을 검색해주세요.|317|64",
+        "tag": "input",
+        "role": null,
+        "name": "상품명을 검색해주세요.",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|검색|1016|54",
+        "tag": "button",
+        "role": null,
+        "name": "검색",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|장바구니|1132|48",
+        "tag": "button",
+        "role": null,
+        "name": "장바구니",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|카테고리|24|121",
+        "tag": "button",
+        "role": null,
+        "name": "카테고리",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|HOME|224|117",
+        "tag": "button",
+        "role": null,
+        "name": "HOME",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|의류|289|117",
+        "tag": "button",
+        "role": null,
+        "name": "의류",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|뷰티|341|117",
+        "tag": "button",
+        "role": null,
+        "name": "뷰티",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|신발|393|117",
+        "tag": "button",
+        "role": null,
+        "name": "신발",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|책|445|117",
+        "tag": "button",
+        "role": null,
+        "name": "책",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|식품|483|117",
+        "tag": "button",
+        "role": null,
+        "name": "식품",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|생활용품|535|117",
+        "tag": "button",
+        "role": null,
+        "name": "생활용품",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|상품 이미지 1|88|950",
+        "tag": "button",
+        "role": null,
+        "name": "상품 이미지 1",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|상품 이미지 2|271|950",
+        "tag": "button",
+        "role": null,
+        "name": "상품 이미지 2",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|상품 이미지 3|455|950",
+        "tag": "button",
+        "role": null,
+        "name": "상품 이미지 3",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|찜하기|1143|523",
+        "tag": "button",
+        "role": null,
+        "name": "찜하기",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|−|886|572",
+        "tag": "button",
+        "role": null,
+        "name": "−",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|+|962|572",
+        "tag": "button",
+        "role": null,
+        "name": "+",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|구매하기|845|633",
+        "tag": "button",
+        "role": null,
+        "name": "구매하기",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|장바구니 추가|845|699",
+        "tag": "button",
+        "role": null,
+        "name": "장바구니 추가",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|상세 설명|88|1206",
+        "tag": "button",
+        "role": null,
+        "name": "상세 설명",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|상품 스펙|206|1206",
+        "tag": "button",
+        "role": null,
+        "name": "상품 스펙",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|리뷰 (0)|323|1206",
+        "tag": "button",
+        "role": null,
+        "name": "리뷰 (0)",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|판매자 정보|430|1206",
+        "tag": "button",
+        "role": null,
+        "name": "판매자 정보",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|배송 정보|563|1206",
+        "tag": "button",
+        "role": null,
+        "name": "배송 정보",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "a|-12%생활용품계량컵 안깨지는 계량컵 비커 카페 제과용품18,000원20,455원★3.5|88|1484",
+        "tag": "a",
+        "role": null,
+        "name": "-12%생활용품계량컵 안깨지는 계량컵 비커 카페 제과용품18,000원20",
+        "href": "/products/348",
+        "ring": true
+      },
+      {
+        "key": "a|생활용품아크릴 미니 화장대 2단32,000원★3.1|312|1484",
+        "tag": "a",
+        "role": null,
+        "name": "생활용품아크릴 미니 화장대 2단32,000원★3.1",
+        "href": "/products/347",
+        "ring": true
+      },
+      {
+        "key": "a|-18%생활용품클린풀 투인원 유리창 방충망 청소솔15,000원18,293원★3.2|536|1484",
+        "tag": "a",
+        "role": null,
+        "name": "-18%생활용품클린풀 투인원 유리창 방충망 청소솔15,000원18,293",
+        "href": "/products/346",
+        "ring": true
+      },
+      {
+        "key": "a|생활용품슬라이딩 도어 후크9,000원★3.0|760|1484",
+        "tag": "a",
+        "role": null,
+        "name": "생활용품슬라이딩 도어 후크9,000원★3.0",
+        "href": "/products/345",
+        "ring": true
+      },
+      {
+        "key": "a|-15%생활용품모노 전기포트 1.5L 커피포트 분유 대용량 주전자42,000원49,412원★4.5|984|1484",
+        "tag": "a",
+        "role": null,
+        "name": "-15%생활용품모노 전기포트 1.5L 커피포트 분유 대용량 주전자42,0",
+        "href": "/products/344",
+        "ring": true
+      },
+      {
+        "key": "a|공지사항|56|2135",
+        "tag": "a",
+        "role": null,
+        "name": "공지사항",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|자주 묻는 질문|56|2171",
+        "tag": "a",
+        "role": null,
+        "name": "자주 묻는 질문",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|1:1 문의|56|2207",
+        "tag": "a",
+        "role": null,
+        "name": "1:1 문의",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|반품/교환|56|2243",
+        "tag": "a",
+        "role": null,
+        "name": "반품/교환",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|회사 소개|456|2135",
+        "tag": "a",
+        "role": null,
+        "name": "회사 소개",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|채용 정보|456|2171",
+        "tag": "a",
+        "role": null,
+        "name": "채용 정보",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|제휴 문의|456|2207",
+        "tag": "a",
+        "role": null,
+        "name": "제휴 문의",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|사업자 정보|456|2243",
+        "tag": "a",
+        "role": null,
+        "name": "사업자 정보",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|이용약관|856|2135",
+        "tag": "a",
+        "role": null,
+        "name": "이용약관",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|개인정보처리방침|856|2171",
+        "tag": "a",
+        "role": null,
+        "name": "개인정보처리방침",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|쿠키 정책|856|2207",
+        "tag": "a",
+        "role": null,
+        "name": "쿠키 정책",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|이용 조건|856|2243",
+        "tag": "a",
+        "role": null,
+        "name": "이용 조건",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|Facebook|56|2348",
+        "tag": "a",
+        "role": null,
+        "name": "Facebook",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|Instagram|112|2348",
+        "tag": "a",
+        "role": null,
+        "name": "Instagram",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|Twitter|168|2348",
+        "tag": "a",
+        "role": null,
+        "name": "Twitter",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|YouTube|224|2348",
+        "tag": "a",
+        "role": null,
+        "name": "YouTube",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|개인정보처리방침|952|2714",
+        "tag": "a",
+        "role": null,
+        "name": "개인정보처리방침",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|이용약관|1088|2714",
+        "tag": "a",
+        "role": null,
+        "name": "이용약관",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|사이트맵|1168|2714",
+        "tag": "a",
+        "role": null,
+        "name": "사이트맵",
+        "href": "#",
+        "ring": true
+      }
+    ]
+  },
+  {
+    "name": "로그인",
+    "path": "/login",
+    "tabStops": 7,
+    "noFocusRing": [],
+    "noName": [],
+    "pointerOnly": [],
+    "stops": [
+      {
+        "key": "input|이메일|405|352",
+        "tag": "input",
+        "role": null,
+        "name": "이메일",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "input|비밀번호|405|441",
+        "tag": "input",
+        "role": null,
+        "name": "비밀번호",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "input|로그인 상태 유지|405|502",
+        "tag": "input",
+        "role": null,
+        "name": "로그인 상태 유지",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|로그인|405|547",
+        "tag": "button",
+        "role": null,
+        "name": "로그인",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "a|비밀번호 찾기|554|622",
+        "tag": "a",
+        "role": null,
+        "name": "비밀번호 찾기",
+        "href": "/find-pwd",
+        "ring": true
+      },
+      {
+        "key": "a|회원가입|670|622",
+        "tag": "a",
+        "role": null,
+        "name": "회원가입",
+        "href": "/register",
+        "ring": true
+      },
+      {
+        "key": "button|관리자 페이지 체험하기 (데모 계정)|356|715",
+        "tag": "button",
+        "role": null,
+        "name": "관리자 페이지 체험하기 (데모 계정)",
+        "href": null,
+        "ring": true
+      }
+    ]
+  },
+  {
+    "name": "장바구니",
+    "path": "/cart",
+    "tabStops": 39,
+    "noFocusRing": [],
+    "noName": [
+      {
+        "key": "select||170|54",
+        "tag": "select",
+        "role": null,
+        "name": "",
+        "href": null,
+        "ring": true
+      }
+    ],
+    "pointerOnly": [],
+    "stops": [
+      {
+        "key": "button|🎉 신규 회원가입 시 10% 할인 쿠폰 증정|24|8",
+        "tag": "button",
+        "role": null,
+        "name": "🎉 신규 회원가입 시 10% 할인 쿠폰 증정",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|a11y-buyer님|1147|8",
+        "tag": "button",
+        "role": null,
+        "name": "a11y-buyer님",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|SHOPMALL|24|58",
+        "tag": "button",
+        "role": null,
+        "name": "SHOPMALL",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "select||170|54",
+        "tag": "select",
+        "role": null,
+        "name": "",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "input|상품명을 검색해주세요.|317|64",
+        "tag": "input",
+        "role": null,
+        "name": "상품명을 검색해주세요.",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|검색|994|54",
+        "tag": "button",
+        "role": null,
+        "name": "검색",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|장바구니|1110|48",
+        "tag": "button",
+        "role": null,
+        "name": "장바구니",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|카테고리|24|121",
+        "tag": "button",
+        "role": null,
+        "name": "카테고리",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|HOME|224|117",
+        "tag": "button",
+        "role": null,
+        "name": "HOME",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|의류|289|117",
+        "tag": "button",
+        "role": null,
+        "name": "의류",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|뷰티|341|117",
+        "tag": "button",
+        "role": null,
+        "name": "뷰티",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|신발|393|117",
+        "tag": "button",
+        "role": null,
+        "name": "신발",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|책|445|117",
+        "tag": "button",
+        "role": null,
+        "name": "책",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|식품|483|117",
+        "tag": "button",
+        "role": null,
+        "name": "식품",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|생활용품|535|117",
+        "tag": "button",
+        "role": null,
+        "name": "생활용품",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|+|619|282",
+        "tag": "button",
+        "role": null,
+        "name": "+",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|장바구니에서 제거|780|283",
+        "tag": "button",
+        "role": null,
+        "name": "장바구니에서 제거",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|전체 비우기|56|363",
+        "tag": "button",
+        "role": null,
+        "name": "전체 비우기",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|구매하기|872|435",
+        "tag": "button",
+        "role": null,
+        "name": "구매하기",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|쇼핑 계속하기|872|499",
+        "tag": "button",
+        "role": null,
+        "name": "쇼핑 계속하기",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "a|공지사항|56|919",
+        "tag": "a",
+        "role": null,
+        "name": "공지사항",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|자주 묻는 질문|56|955",
+        "tag": "a",
+        "role": null,
+        "name": "자주 묻는 질문",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|1:1 문의|56|991",
+        "tag": "a",
+        "role": null,
+        "name": "1:1 문의",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|반품/교환|56|1027",
+        "tag": "a",
+        "role": null,
+        "name": "반품/교환",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|회사 소개|456|919",
+        "tag": "a",
+        "role": null,
+        "name": "회사 소개",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|채용 정보|456|955",
+        "tag": "a",
+        "role": null,
+        "name": "채용 정보",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|제휴 문의|456|991",
+        "tag": "a",
+        "role": null,
+        "name": "제휴 문의",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|사업자 정보|456|1027",
+        "tag": "a",
+        "role": null,
+        "name": "사업자 정보",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|이용약관|856|919",
+        "tag": "a",
+        "role": null,
+        "name": "이용약관",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|개인정보처리방침|856|955",
+        "tag": "a",
+        "role": null,
+        "name": "개인정보처리방침",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|쿠키 정책|856|991",
+        "tag": "a",
+        "role": null,
+        "name": "쿠키 정책",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|이용 조건|856|1027",
+        "tag": "a",
+        "role": null,
+        "name": "이용 조건",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|Facebook|56|1132",
+        "tag": "a",
+        "role": null,
+        "name": "Facebook",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|Instagram|112|1132",
+        "tag": "a",
+        "role": null,
+        "name": "Instagram",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|Twitter|168|1132",
+        "tag": "a",
+        "role": null,
+        "name": "Twitter",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|YouTube|224|1132",
+        "tag": "a",
+        "role": null,
+        "name": "YouTube",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|개인정보처리방침|952|1498",
+        "tag": "a",
+        "role": null,
+        "name": "개인정보처리방침",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|이용약관|1088|1498",
+        "tag": "a",
+        "role": null,
+        "name": "이용약관",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|사이트맵|1168|1498",
+        "tag": "a",
+        "role": null,
+        "name": "사이트맵",
+        "href": "#",
+        "ring": true
+      }
+    ]
+  },
+  {
+    "name": "주문서",
+    "path": "/checkout",
+    "tabStops": 40,
+    "noFocusRing": [],
+    "noName": [
+      {
+        "key": "select||170|54",
+        "tag": "select",
+        "role": null,
+        "name": "",
+        "href": null,
+        "ring": true
+      }
+    ],
+    "pointerOnly": [],
+    "stops": [
+      {
+        "key": "button|🎉 신규 회원가입 시 10% 할인 쿠폰 증정|24|17",
+        "tag": "button",
+        "role": null,
+        "name": "🎉 신규 회원가입 시 10% 할인 쿠폰 증정",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|a11y-buyer님|1147|8",
+        "tag": "button",
+        "role": null,
+        "name": "a11y-buyer님",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|SHOPMALL|24|58",
+        "tag": "button",
+        "role": null,
+        "name": "SHOPMALL",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "select||170|54",
+        "tag": "select",
+        "role": null,
+        "name": "",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "input|상품명을 검색해주세요.|317|64",
+        "tag": "input",
+        "role": null,
+        "name": "상품명을 검색해주세요.",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|검색|994|54",
+        "tag": "button",
+        "role": null,
+        "name": "검색",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|장바구니|1110|48",
+        "tag": "button",
+        "role": null,
+        "name": "장바구니",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|카테고리|24|121",
+        "tag": "button",
+        "role": null,
+        "name": "카테고리",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|HOME|224|117",
+        "tag": "button",
+        "role": null,
+        "name": "HOME",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|의류|289|117",
+        "tag": "button",
+        "role": null,
+        "name": "의류",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|뷰티|341|117",
+        "tag": "button",
+        "role": null,
+        "name": "뷰티",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|신발|393|117",
+        "tag": "button",
+        "role": null,
+        "name": "신발",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|책|445|117",
+        "tag": "button",
+        "role": null,
+        "name": "책",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|식품|483|117",
+        "tag": "button",
+        "role": null,
+        "name": "식품",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|생활용품|535|117",
+        "tag": "button",
+        "role": null,
+        "name": "생활용품",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "input|수령인 이름|77|492",
+        "tag": "input",
+        "role": null,
+        "name": "수령인 이름",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "input|010-0000-0000|77|574",
+        "tag": "input",
+        "role": null,
+        "name": "010-0000-0000",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "input|상세 주소를 포함하여 입력해주세요|77|656",
+        "tag": "input",
+        "role": null,
+        "name": "상세 주소를 포함하여 입력해주세요",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "textarea|배송 시 요청사항 (선택)|77|738",
+        "tag": "textarea",
+        "role": null,
+        "name": "배송 시 요청사항 (선택)",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|결제하기|872|435",
+        "tag": "button",
+        "role": null,
+        "name": "결제하기",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|장바구니로 돌아가기|872|499",
+        "tag": "button",
+        "role": null,
+        "name": "장바구니로 돌아가기",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "a|공지사항|56|1184",
+        "tag": "a",
+        "role": null,
+        "name": "공지사항",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|자주 묻는 질문|56|1220",
+        "tag": "a",
+        "role": null,
+        "name": "자주 묻는 질문",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|1:1 문의|56|1256",
+        "tag": "a",
+        "role": null,
+        "name": "1:1 문의",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|반품/교환|56|1292",
+        "tag": "a",
+        "role": null,
+        "name": "반품/교환",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|회사 소개|456|1184",
+        "tag": "a",
+        "role": null,
+        "name": "회사 소개",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|채용 정보|456|1220",
+        "tag": "a",
+        "role": null,
+        "name": "채용 정보",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|제휴 문의|456|1256",
+        "tag": "a",
+        "role": null,
+        "name": "제휴 문의",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|사업자 정보|456|1292",
+        "tag": "a",
+        "role": null,
+        "name": "사업자 정보",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|이용약관|856|1184",
+        "tag": "a",
+        "role": null,
+        "name": "이용약관",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|개인정보처리방침|856|1220",
+        "tag": "a",
+        "role": null,
+        "name": "개인정보처리방침",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|쿠키 정책|856|1256",
+        "tag": "a",
+        "role": null,
+        "name": "쿠키 정책",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|이용 조건|856|1292",
+        "tag": "a",
+        "role": null,
+        "name": "이용 조건",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|Facebook|56|1397",
+        "tag": "a",
+        "role": null,
+        "name": "Facebook",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|Instagram|112|1397",
+        "tag": "a",
+        "role": null,
+        "name": "Instagram",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|Twitter|168|1397",
+        "tag": "a",
+        "role": null,
+        "name": "Twitter",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|YouTube|224|1397",
+        "tag": "a",
+        "role": null,
+        "name": "YouTube",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|개인정보처리방침|952|1763",
+        "tag": "a",
+        "role": null,
+        "name": "개인정보처리방침",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|이용약관|1088|1763",
+        "tag": "a",
+        "role": null,
+        "name": "이용약관",
+        "href": "#",
+        "ring": true
+      },
+      {
+        "key": "a|사이트맵|1168|1763",
+        "tag": "a",
+        "role": null,
+        "name": "사이트맵",
+        "href": "#",
+        "ring": true
+      }
+    ]
+  }
+]
