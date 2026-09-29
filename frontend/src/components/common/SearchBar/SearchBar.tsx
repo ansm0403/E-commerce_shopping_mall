@@ -7,9 +7,11 @@ interface SearchBarProps {
   placeholder?: string;
   className?: string;
   hideButton?: boolean;
+  /** placeholder 는 입력하면 사라지므로 이름으로 쓰지 않는다 */
+  'aria-label'?: string;
 }
 
-export default function SearchBar({ value, onChange, onSubmit, placeholder, className, hideButton }: SearchBarProps) {
+export default function SearchBar({ value, onChange, onSubmit, placeholder, className, hideButton, 'aria-label': ariaLabel }: SearchBarProps) {
   const isEmpty = value.trim() === '';
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -29,6 +31,7 @@ export default function SearchBar({ value, onChange, onSubmit, placeholder, clas
     <form onSubmit={handleSubmit} className="flex items-center w-full">
       <input
         type="text"
+        aria-label={ariaLabel}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={handleKeyDown}

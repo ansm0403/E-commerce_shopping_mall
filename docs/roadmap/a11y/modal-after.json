@@ -1,0 +1,47 @@
+{
+  "dialogName": {
+    "ariaLabel": null,
+    "labelledby": "주문 취소"
+  },
+  "focusAfterOpen": "button \"닫기\"",
+  "focusMovedIn": true,
+  "tabSequence": [
+    {
+      "el": "button \"취소 확인\"",
+      "inDialog": true
+    },
+    {
+      "el": "button \"닫기\"",
+      "inDialog": true
+    },
+    {
+      "el": "button \"닫기\"",
+      "inDialog": true
+    },
+    {
+      "el": "button \"취소 확인\"",
+      "inDialog": true
+    },
+    {
+      "el": "button \"닫기\"",
+      "inDialog": true
+    },
+    {
+      "el": "button \"닫기\"",
+      "inDialog": true
+    },
+    {
+      "el": "button \"취소 확인\"",
+      "inDialog": true
+    },
+    {
+      "el": "button \"닫기\"",
+      "inDialog": true
+    }
+  ],
+  "tabEscapes": 0,
+  "shiftTabInDialog": true,
+  "closedByEsc": true,
+  "focusAfterClose": "button \"주문 취소\"",
+  "focusReturned": true
+}

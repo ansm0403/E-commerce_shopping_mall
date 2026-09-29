@@ -101,7 +101,7 @@ export function Form<T extends FieldValues>({
           disabled={isSubmitting}
           className={twMerge(clsx(
             "mt-1 px-3 py-2.5 rounded-[10px] border-0 text-sm font-semibold text-white cursor-pointer",
-            "bg-[#50acd6] transition-[background-color,transform,box-shadow] duration-150",
+            "bg-sky-700 transition-[background-color,transform,box-shadow] duration-150",
             "hover:bg-blue-700 hover:-translate-y-px hover:shadow-[0_10px_20px_rgba(37,99,235,0.3)]",
             "active:translate-y-0 active:shadow-none",
             "disabled:bg-gray-400 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-y-0"
@@ -117,6 +117,18 @@ export function Form<T extends FieldValues>({
 /* =========================
  *  필드 컴포넌트들
  * ========================= */
+
+/**
+ * 도움말·에러 문구를 입력칸에 연결한다. 예전엔 문구가 화면에만 있고 입력칸과 끊겨 있어,
+ * 제출 실패 시 react-hook-form 이 틀린 칸으로 포커스를 옮겨도 스크린리더는 label 만 읽고 "왜 틀렸는지"를 못 읽었다.
+ */
+function fieldA11y(name: string, helperText?: string, message?: string) {
+  const ids = [helperText && `${name}-help`, message && `${name}-error`].filter(Boolean).join(' ');
+  return {
+    'aria-invalid': message ? true : undefined,
+    'aria-describedby': ids || undefined,
+  } as const;
+}
 
 type BaseFieldProps<T extends FieldValues> = {
   name: Path<T>;
@@ -152,15 +164,16 @@ export function TextField<T extends FieldValues>({
           {label}
         </label>
       )}
-      {helperText && <p className="text-xs text-gray-500">{helperText}</p>}
+      {helperText && <p id={`${name}-help`} className="text-xs text-gray-500">{helperText}</p>}
       <input
         id={name}
         type={type}
         placeholder={placeholder}
         className={INPUT_BASE}
+        {...fieldA11y(name, helperText, message)}
         {...register(name)}
       />
-      {message && <span className="text-xs text-red-500">{message}</span>}
+      {message && <span id={`${name}-error`} className="text-xs text-red-600">{message}</span>}
     </div>
   );
 }
@@ -193,15 +206,16 @@ export function TextareaField<T extends FieldValues>({
           {label}
         </label>
       )}
-      {helperText && <p className="text-xs text-gray-500">{helperText}</p>}
+      {helperText && <p id={`${name}-help`} className="text-xs text-gray-500">{helperText}</p>}
       <textarea
         id={name}
         placeholder={placeholder}
         rows={rows}
         className={twMerge(clsx(INPUT_BASE, "min-h-[80px] resize-y"))}
+        {...fieldA11y(name, helperText, message)}
         {...register(name)}
       />
-      {message && <span className="text-xs text-red-500">{message}</span>}
+      {message && <span id={`${name}-error`} className="text-xs text-red-600">{message}</span>}
     </div>
   );
 }
@@ -239,8 +253,8 @@ export function SelectField<T extends FieldValues>({
           {label}
         </label>
       )}
-      {helperText && <p className="text-xs text-gray-500">{helperText}</p>}
-      <select id={name} className={INPUT_BASE} {...register(name)}>
+      {helperText && <p id={`${name}-help`} className="text-xs text-gray-500">{helperText}</p>}
+      <select id={name} className={INPUT_BASE} {...fieldA11y(name, helperText, message)} {...register(name)}>
         {placeholder && <option value="">{placeholder}</option>}
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>
@@ -248,7 +262,7 @@ export function SelectField<T extends FieldValues>({
           </option>
         ))}
       </select>
-      {message && <span className="text-xs text-red-500">{message}</span>}
+      {message && <span id={`${name}-error`} className="text-xs text-red-600">{message}</span>}
     </div>
   );
 }
@@ -276,11 +290,11 @@ export function CheckboxField<T extends FieldValues>({
   return (
     <div className="flex flex-col gap-3">
       <label className="flex items-center gap-2 text-[13px]">
-        <input type="checkbox" {...register(name)} />
+        <input type="checkbox" {...fieldA11y(name, helperText, message)} {...register(name)} />
         {children}
       </label>
-      {helperText && <p className="text-xs text-gray-500">{helperText}</p>}
-      {message && <span className="text-xs text-red-500">{message}</span>}
+      {helperText && <p id={`${name}-help`} className="text-xs text-gray-500">{helperText}</p>}
+      {message && <span id={`${name}-error`} className="text-xs text-red-600">{message}</span>}
     </div>
   );
 }

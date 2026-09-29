@@ -7,9 +7,11 @@ interface CategorySelectProps {
   value: number | null;
   onSelect: (categoryId: number | null) => void;
   className?: string;
+  /** 보이는 label 이 없는 자리(헤더 검색창)에서 쓰는 접근 가능한 이름 */
+  'aria-label'?: string;
 }
 
-export default function CategorySelect({ value, onSelect, className }: CategorySelectProps) {
+export default function CategorySelect({ value, onSelect, className, 'aria-label': ariaLabel }: CategorySelectProps) {
   const { flat: flatCategories, isLoading, isError } = useCategories();
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -26,6 +28,7 @@ export default function CategorySelect({ value, onSelect, className }: CategoryS
 
   return (
     <select
+      aria-label={ariaLabel}
       onChange={handleChange}
       disabled={isLoading || isError}
       value={selectValue}
