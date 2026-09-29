@@ -10,10 +10,19 @@ PC·Metro·Expo 계정 없이, 안드로이드 폰 하나면 된다.
 
 1. 폰에서 설치 링크를 연다 → **https://github.com/ansm0403/E-commerce_shopping_mall/releases/download/ops-companion-v1.0.0-4/ops-companion-preview-4.apk** (preview 빌드 versionCode 4, 2026-09-23, 약 108MB. 웹 관리자 "운영 앱" 페이지의 QR 도 같은 링크다)
    - **GitHub Release 자산**(태그 `ops-companion-v1.0.0-4`, 2026-09-27)이다. expo.dev 빌드 페이지(`/accounts/…/builds/<id>`)는 로그인하지 않은 방문자에게 "Something went wrong" 을 보여줬고, `eas build:list --json` 의 `artifacts.buildUrl`(APK 직링크)은 **빌드 후 14일에 만료**된다(이 빌드는 2026-10-06). Release 자산은 만료가 없다. 새 빌드를 올릴 때는 APK 를 내려받아 새 태그의 Release 에 첨부하고 이 링크·웹 페이지 상수(`frontend/src/app/(admin)/admin/ops-app/page.tsx` `INSTALL_URL`)·QR(`npx qrcode -o frontend/public/images/ops-app-install-qr.png -w 220 -m 2 "<URL>"`)을 같이 바꾼다.
-   - 스토어 밖 APK 라 "출처를 알 수 없는 앱 설치" 를 한 번 허용해야 한다. iOS 는 지원하지 않는다(설계 §9 비목표).
+   - 스토어 밖 APK 라 "출처를 알 수 없는 앱 설치" 를 한 번 허용해야 한다. iOS 는 APK 를 설치할 수 없다 → 아래 **웹 체험판**.
 2. 앱을 열고 로그인 화면의 **"데모 계정으로 체험하기"** 를 누른다. 계정 정보는 앱에도 이 문서에도 없다 — 서버가 켜 둔 데모 로그인(`POST /v1/auth/demo-login`, 웹 로그인 화면의 "관리자 페이지 체험하기" 와 같은 경로)이다.
 3. 보이는 것은 **실제 운영 Sentry 데이터**다(쇼핑몰 프론트·백엔드의 최근 14일 이슈 — 관리자 계정은 24시간). 이메일·전화는 백엔드가 마스킹하고, 요청 헤더·쿠키·IP 는 애초에 내려오지 않는다(설계 §5.2 · §7).
 4. **웹에서 에러를 내고 앱에서 확인하기**(연동이 진짜인지 스스로 확인, 2026-09-23): 쇼핑몰 웹 로그인 화면 → **"관리자 페이지 체험하기"**(앱과 같은 데모 계정) → 관리자 메뉴 **"운영 앱"**(`/admin/ops-app`, 설치 링크·QR 도 여기 있다) → **"테스트 에러 보내기"**. 브라우저가 진짜 에러를 프론트 Sentry 프로젝트로 보내고, 페이지의 추적기가 앱과 같은 `GET /v1/ops/incidents` 를 20초마다 물어 **"앱 목록에 노출 ✓"** 와 첫 발생 시각을 보여준다(보통 1~2분 — Sentry 수집 + 백엔드 캐시 60초). 그 다음 앱(폰에서는 페이지의 "앱에서 열기" 딥링크 `opscompanion://incidents/<id>`)에서 `[방문자 테스트 XXXX]` 를 열어 첫 발생 시각을 비교하고 → AI 분석(이 에러를 만든 `frontend/src/app/(admin)/admin/ops-app/visitor-test.ts` 를 읽는지) → 평가 탭에서 채점 → 분석 화면에서 "내 판정" 을 본다. 이 이슈는 온콜 푸시·Slack 을 울리지 않는다(아래 표).
+
+### 아이폰·PC — 웹 체험판
+
+같은 코드를 웹으로 내보낸 것(react-native-web)이다. 링크를 열고 "데모 계정으로 체험하기" 를 누르면 목록·상세·AI 분석·평가(마우스 드래그로도 스와이프)·프로필이 앱과 같게 동작한다. 브라우저 종류는 상관없다(iOS 의 브라우저는 전부 WebKit).
+
+- 주소: **(배포 후 기입)**
+- 앱과 다른 점: 푸시·생체 잠금이 없다(프로필에 "불가" 로 표시). 토큰은 SecureStore 대신 **sessionStorage** — 탭을 닫으면 로그아웃된다. PC 에서는 폰 폭(최대 480px)으로 가운데 선다.
+- 웹 체험판은 "iOS 앱" 이 아니라 "같은 코드의 웹 빌드" 다. iOS **네이티브** 동작은 아래 "실기기에서 실행(Expo Go)" 방식으로 따로 확인한다.
+- 웹 전용 구현은 `*.web.ts` 파일(`src/lib/token-storage.web.ts` · `biometrics.web.ts` · `src/features/push/usePushRouting.web.ts`)이다. Metro 가 웹 번들에서만 이 파일을 고르므로 iOS·안드로이드 번들에는 들어가지 않는다.
 
 데모 계정으로 되는 것과 꺼진 것(토큰의 `isDemo` 로 **백엔드가** 판단한다 — 앱 화면은 안내일 뿐):
 
@@ -173,7 +182,7 @@ eas build --platform android --profile preview
 
 ## 방문자용 배포 — preview 빌드와 EAS Update
 
-배포 방식은 다섯 가지가 있고, "PC 없이 설치해서 바로 로그인" 이 되는 것은 둘뿐이다.
+배포 방식은 여섯 가지가 있고, "PC 없이 바로 로그인" 이 되는 것은 preview 빌드(안드로이드)와 웹 체험판(모든 기기)이다.
 
 | 방식 | 설치 | PC/Metro | 푸시 | 방문자에게 |
 |---|---|---|---|---|
@@ -182,6 +191,15 @@ eas build --platform android --profile preview
 | **preview 빌드**(`preview`) | 우리 APK, **JS 내장** | 불필요 | ✅ | **✓ 선택** — 링크/QR 로 설치, 켜면 바로 로그인 화면. 소스맵도 이 빌드에서 올라간다 |
 | Play 내부 테스트 | Play 콘솔(유료 계정·`.aab`·심사) | 불필요 | ✅ | ✗ — 스토어 배포는 비목표(설계 §9), 테스터 이메일 등록이 필요 |
 | EAS Update | (설치가 아니라) 이미 깔린 앱의 **JS 만 교체** | 불필요 | — | ✓ preview 빌드의 **동반자** — 화면 코드만 고쳤을 때 재설치 없이 반영 |
+| **웹 체험판**(`expo export -p web`) | 설치 없음, 링크 | 불필요 | ❌ | **✓ 아이폰·PC** — iOS 는 APK 를 못 깔고 TestFlight 는 유료 계정($99/년)이라 무료로 닿는 유일한 길 |
+
+**웹 체험판 배포**(Vercel, 2026-09-30 준비). `vercel.json` 이 빌드 명령(`npx expo export -p web`)·출력(`dist`)·SPA 폴백(모든 경로 → `index.html`, 새로고침·`/incidents/<id>` 직접 진입용)·**빌드 건너뛰기**(`ignoreCommand` — 이 폴더가 안 바뀐 커밋은 빌드하지 않는다. 쇼핑몰 frontend 와 같은 저장소를 보기 때문)를 정한다.
+
+1. Vercel 새 프로젝트 — 쇼핑몰 frontend 와 **같은 GitHub 저장소**를 한 번 더 가져와 **Root Directory = `ops-companion`** 만 지정한다(모노레포 = 앱마다 프로젝트 하나). 웹 체험판은 **데모 로그인만** 보인다(`login.tsx` `DEMO_ONLY` — 웹은 refresh 토큰을 스크립트가 읽는 곳에 두므로 실제 계정을 받지 않는다). 환경변수는 넣지 않는다(API 주소는 코드 기본값 `https://api.ansmoon.dev/v1`, Sentry DSN 이 없으면 웹 Sentry 는 꺼진다 — 방문자 브라우저 에러로 조직 공용 쿼터를 깎지 않으려는 선택).
+2. 배포된 도메인을 백엔드 `CORS_ORIGINS` 에 더한다(EC2 `.env` → backend 재시작). 웹은 브라우저라 Origin 이 붙고, **목록에 없는 Origin 에 백엔드는 500** 을 돌려준다. 쇼핑몰 웹처럼 Vercel 로 중계하지 않는 이유는 `src/lib/config.ts` 주석.
+3. 확인: `curl -s -o /dev/null -w "%{http_code}" -H "Origin: https://<도메인>" https://api.ansmoon.dev/v1/health` → 200.
+
+로컬 확인은 `npx expo export -p web && npx serve dist -s`. 단 `localhost` 는 운영 `CORS_ORIGINS` 에 없어 로그인이 막힌다 — 로컬 백엔드(`EXPO_PUBLIC_API_BASE_URL=http://localhost:4000/v1`, 로컬 `CORS_ORIGINS` 에 `http://localhost:3000` 과 함께 포트 추가)로 본다.
 
 **preview 빌드 만들기**(클라우드, 10~20분). `autoIncrement` 라 versionCode 가 +1 된다(Sentry 릴리즈 이름의 `+N`).
 
@@ -229,6 +247,7 @@ EXPO_PUBLIC_API_BASE_URL=http://192.168.0.10:4000/v1
 | `eas build -p android --profile preview` | **방문자 배포용** APK(JS 내장, 소스맵 업로드, versionCode +1) |
 | `eas update --channel preview --message "…"` | 설치된 preview 앱의 JS 만 교체(EAS Update) |
 | `npx expo export --platform android` | 기기 없이 번들이 되는지만 확인 |
+| `npx expo export -p web` | 웹 체험판 빌드(`dist/`, Vercel 이 같은 명령을 돌린다) |
 
 ## 구조
 

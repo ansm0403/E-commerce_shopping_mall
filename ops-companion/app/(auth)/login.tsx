@@ -33,6 +33,13 @@ function messageOf(error: unknown): string {
   return '로그인에 실패했습니다. 네트워크 상태를 확인해주세요.';
 }
 
+/**
+ * 웹 체험판은 데모 로그인만 연다. 웹은 refresh 토큰을 쿠키가 아니라 sessionStorage 에 두므로
+ * (token-storage.web.ts) 스크립트가 읽을 수 있다 — 실제 관리자 계정의 토큰을 거기 두지 않는다.
+ * 화면에서 감출 뿐이라 API 자체를 막지는 않는다. 실제 운영은 iOS·안드로이드 앱으로 한다.
+ */
+const DEMO_ONLY = Platform.OS === 'web';
+
 /** 데모 로그인은 비밀번호가 없어 401 이 아니라 403(서버가 데모를 껐다)이 온다 — 문구를 따로 둔다 */
 function demoMessageOf(error: unknown): string {
   const status = (error as AxiosError)?.response?.status;
@@ -89,45 +96,54 @@ export default function LoginScreen() {
         <Text style={styles.tagline}>
           쇼핑몰 운영자용 온콜 앱 — Sentry 장애를 보고, AI 가 소스 코드를 읽어 원인을 분석하고, 사람이 그 답을 채점합니다.
         </Text>
-        <Text style={styles.subtitle}>관리자 계정으로 로그인하세요.</Text>
+        <Text style={styles.subtitle}>
+          {DEMO_ONLY ? '웹 체험판 — 데모 계정으로 둘러볼 수 있습니다.' : '관리자 계정으로 로그인하세요.'}
+        </Text>
 
-        <TextInput
-          style={styles.input}
-          value={email}
-          onChangeText={setEmail}
-          placeholder="이메일"
-          placeholderTextColor={colors.textMuted}
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="email-address"
-          textContentType="username"
-          editable={!isSubmitting}
-        />
-        <TextInput
-          style={styles.input}
-          value={password}
-          onChangeText={setPassword}
-          placeholder="비밀번호"
-          placeholderTextColor={colors.textMuted}
-          secureTextEntry
-          textContentType="password"
-          editable={!isSubmitting}
-          onSubmitEditing={handleSubmit}
-        />
+        {DEMO_ONLY ? null : (
+          <>
+            <TextInput
+              style={styles.input}
+              value={email}
+              onChangeText={setEmail}
+              placeholder="이메일"
+              placeholderTextColor={colors.textMuted}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="email-address"
+              textContentType="username"
+              editable={!isSubmitting}
+            />
+            <TextInput
+              style={styles.input}
+              value={password}
+              onChangeText={setPassword}
+              placeholder="비밀번호"
+              placeholderTextColor={colors.textMuted}
+              secureTextEntry
+              textContentType="password"
+              editable={!isSubmitting}
+              onSubmitEditing={handleSubmit}
+            />
 
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+            {error ? <Text style={styles.error}>{error}</Text> : null}
 
-        <Pressable
-          style={[styles.button, !canSubmit && styles.buttonDisabled]}
-          onPress={handleSubmit}
-          disabled={!canSubmit}
-        >
-          {isSubmitting ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>로그인</Text>
-          )}
-        </Pressable>
+            <Pressable
+              style={[styles.button, !canSubmit && styles.buttonDisabled]}
+              onPress={handleSubmit}
+              disabled={!canSubmit}
+            >
+              {isSubmitting ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>로그인</Text>
+              )}
+            </Pressable>
+          </>
+        )}
+
+        {/* 웹은 입력칸 묶음이 없으니 데모 로그인 실패 문구를 여기에 */}
+        {DEMO_ONLY && error ? <Text style={styles.error}>{error}</Text> : null}
 
         <Pressable
           style={[styles.demoButton, busy && styles.buttonDisabled]}

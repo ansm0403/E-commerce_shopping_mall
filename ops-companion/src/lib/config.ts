@@ -7,7 +7,14 @@
  */
 import Constants from 'expo-constants';
 
-/** 백엔드 base URL. 운영 EC2 의 nginx 가 TLS 를 종단한다(설계 §3.1-1). */
+/**
+ * 백엔드 base URL. 운영 EC2 의 nginx 가 TLS 를 종단한다(설계 §3.1-1).
+ *
+ * 웹 체험판도 같은 주소를 **직접** 부른다. 브라우저라 Origin 이 붙으므로 백엔드 `CORS_ORIGINS` 에
+ * 체험판 도메인이 있어야 한다(없으면 백엔드가 500). 쇼핑몰 웹처럼 Vercel 로 중계하지 않는 이유:
+ * 이 앱은 쿠키를 쓰지 않고(refresh 는 body), 중계하면 모든 방문자가 Vercel IP 하나로 보여
+ * 로그인 레이트리밋을 함께 나눠 쓰게 된다.
+ */
 export const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL ?? 'https://api.ansmoon.dev/v1';
 

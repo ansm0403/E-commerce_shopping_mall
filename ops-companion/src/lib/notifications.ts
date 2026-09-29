@@ -21,7 +21,7 @@ export type PushRegistration =
   | { status: 'registered'; token: string }
   | { status: 'denied' }
   /** demo = 데모 계정이라 백엔드가 등록을 받지 않았다(외부 방문자의 폰에 운영 장애 푸시 금지) */
-  | { status: 'unsupported'; reason: 'expo-go' | 'simulator' | 'no-project-id' | 'demo' }
+  | { status: 'unsupported'; reason: 'expo-go' | 'simulator' | 'no-project-id' | 'demo' | 'web' }
   | { status: 'error'; message: string };
 
 /**
@@ -68,6 +68,9 @@ function getProjectId(): string | undefined {
  * (백엔드가 upsert 이므로 행이 늘지 않는다).
  */
 export async function registerForPushNotifications(): Promise<PushRegistration> {
+  // 웹 체험판은 장애 푸시 대상이 아니다. 브라우저 권한 창도 띄우지 않는다.
+  if (Platform.OS === 'web') return { status: 'unsupported', reason: 'web' };
+
   if (!Device.isDevice) {
     // 에뮬레이터·시뮬레이터에는 푸시를 보낼 대상 자체가 없다.
     return { status: 'unsupported', reason: 'simulator' };
@@ -119,7 +122,9 @@ export function describeRegistration(reg: PushRegistration | null): string {
           ? '불가 — 실기기에서만 동작합니다'
           : reg.reason === 'demo'
             ? '꺼짐 — 데모 계정은 장애 알림을 받지 않습니다'
-            : '불가 — EAS projectId 가 설정되지 않았습니다';
+            : reg.reason === 'web'
+              ? '불가 — 웹 체험판은 푸시를 받지 않습니다(안드로이드 앱에서 지원)'
+              : '불가 — EAS projectId 가 설정되지 않았습니다';
     case 'error':
       return `실패 — ${reg.message}`;
   }
