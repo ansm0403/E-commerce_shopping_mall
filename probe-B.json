@@ -1,0 +1,180 @@
+{
+  "runAt": "2026-09-28T18:34:36.721Z",
+  "base": "https://shopping-mall-frontend-dusky.vercel.app",
+  "path": "/",
+  "allowSentry": true,
+  "control": false,
+  "results": [
+    {
+      "run": 1,
+      "startedAt": "2026-09-28T18:33:50.151Z",
+      "mode": "api-down(B)",
+      "apiBlocked": 16,
+      "itemCounts": {
+        "session": 4,
+        "event": 2,
+        "replay_event": 2,
+        "replay_recording": 2
+      },
+      "errorEvents": 2,
+      "fromReportApiError": 2,
+      "distinctFingerprints": 2,
+      "sentryHttp": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "events": [
+        {
+          "eventId": "563046e0a3a84fbab1a36c8a0fe39b9a",
+          "timestamp": "2026-09-28T18:33:50.575Z",
+          "exception": "AxiosError: Network Error",
+          "fingerprint": [
+            "api",
+            "public",
+            "GET",
+            "/categories",
+            "ERR_NETWORK"
+          ],
+          "apiPath": "/categories",
+          "apiStatus": "ERR_NETWORK",
+          "fromReportApiError": true
+        },
+        {
+          "eventId": "f6d24835c419497d91a0c95a57847984",
+          "timestamp": "2026-09-28T18:33:50.579Z",
+          "exception": "AxiosError: Network Error",
+          "fingerprint": [
+            "api",
+            "public",
+            "GET",
+            "/products",
+            "ERR_NETWORK"
+          ],
+          "apiPath": "/products",
+          "apiStatus": "ERR_NETWORK",
+          "fromReportApiError": true
+        }
+      ]
+    },
+    {
+      "run": 2,
+      "startedAt": "2026-09-28T18:34:05.698Z",
+      "mode": "api-down(B)",
+      "apiBlocked": 16,
+      "itemCounts": {
+        "session": 4,
+        "event": 2,
+        "replay_event": 2,
+        "replay_recording": 2
+      },
+      "errorEvents": 2,
+      "fromReportApiError": 2,
+      "distinctFingerprints": 2,
+      "sentryHttp": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "events": [
+        {
+          "eventId": "b1f23a3914844a10a6f8b1a13d386623",
+          "timestamp": "2026-09-28T18:34:06.039Z",
+          "exception": "AxiosError: Network Error",
+          "fingerprint": [
+            "api",
+            "public",
+            "GET",
+            "/categories",
+            "ERR_NETWORK"
+          ],
+          "apiPath": "/categories",
+          "apiStatus": "ERR_NETWORK",
+          "fromReportApiError": true
+        },
+        {
+          "eventId": "38722575add0479a8d5af0c3b8347408",
+          "timestamp": "2026-09-28T18:34:06.043Z",
+          "exception": "AxiosError: Network Error",
+          "fingerprint": [
+            "api",
+            "public",
+            "GET",
+            "/products",
+            "ERR_NETWORK"
+          ],
+          "apiPath": "/products",
+          "apiStatus": "ERR_NETWORK",
+          "fromReportApiError": true
+        }
+      ]
+    },
+    {
+      "run": 3,
+      "startedAt": "2026-09-28T18:34:21.152Z",
+      "mode": "api-down(B)",
+      "apiBlocked": 16,
+      "itemCounts": {
+        "session": 4,
+        "event": 2,
+        "replay_event": 2,
+        "replay_recording": 2
+      },
+      "errorEvents": 2,
+      "fromReportApiError": 2,
+      "distinctFingerprints": 2,
+      "sentryHttp": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "events": [
+        {
+          "eventId": "23ee479f4daf49a49ab387399d4b144d",
+          "timestamp": "2026-09-28T18:34:21.516Z",
+          "exception": "AxiosError: Network Error",
+          "fingerprint": [
+            "api",
+            "public",
+            "GET",
+            "/categories",
+            "ERR_NETWORK"
+          ],
+          "apiPath": "/categories",
+          "apiStatus": "ERR_NETWORK",
+          "fromReportApiError": true
+        },
+        {
+          "eventId": "1d3b90fbf1fb494585659a8ba7da757d",
+          "timestamp": "2026-09-28T18:34:21.520Z",
+          "exception": "AxiosError: Network Error",
+          "fingerprint": [
+            "api",
+            "public",
+            "GET",
+            "/products",
+            "ERR_NETWORK"
+          ],
+          "apiPath": "/products",
+          "apiStatus": "ERR_NETWORK",
+          "fromReportApiError": true
+        }
+      ]
+    }
+  ]
+}

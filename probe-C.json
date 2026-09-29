@@ -1,0 +1,27 @@
+{
+  "runAt": "2026-09-28T18:33:45.866Z",
+  "base": "https://shopping-mall-frontend-dusky.vercel.app",
+  "path": "/",
+  "allowSentry": true,
+  "control": true,
+  "results": [
+    {
+      "run": 1,
+      "startedAt": "2026-09-28T18:33:30.217Z",
+      "mode": "control(C)",
+      "apiBlocked": 0,
+      "itemCounts": {
+        "session": 3
+      },
+      "errorEvents": 0,
+      "fromReportApiError": 0,
+      "distinctFingerprints": 0,
+      "sentryHttp": [
+        200,
+        200,
+        200
+      ],
+      "events": []
+    }
+  ]
+}
