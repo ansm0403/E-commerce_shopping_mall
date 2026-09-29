@@ -26,6 +26,7 @@ import {
   type SendConfirmation,
   type VisitorTestSend,
 } from '../visitor-test';
+import { appDeepLink, webTrialLink } from '../links';
 
 /** 앱과 같은 응답(backend `IncidentSummary`) — 여기서 쓰는 필드만 */
 interface IncidentSummary {
@@ -54,18 +55,15 @@ interface FoundIncident {
 export const POLL_INTERVAL_MS = 20_000;
 export const POLL_MAX_ATTEMPTS = 9;
 
-/** Expo 앱 scheme(app.json `scheme: opscompanion`) + 푸시가 쓰는 경로 `/incidents/<id>` 와 동일 */
-export const appDeepLink = (incidentId: string) => `opscompanion://incidents/${incidentId}`;
-
-const isMobileUserAgent = () =>
-  typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+/** 딥링크는 앱이 깔려 있을 수 있는 안드로이드에서만 — 아이폰엔 설치할 앱이 없어 눌러도 아무 일도 없다 */
+const isAndroidUserAgent = () => typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent);
 
 const AD_BLOCKER_HINT =
   '광고 차단기(uBlock·AdGuard 등)가 Sentry 전송을 막았을 가능성이 큽니다. 차단기를 끄거나 이 사이트를 허용한 뒤 페이지를 새로고침하고 다시 보내세요.';
 
 export default function LinkCheckSection() {
   const [sentryOn, setSentryOn] = useState<boolean | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isAndroid, setIsAndroid] = useState(false);
   const [cooldownMs, setCooldownMs] = useState(0);
   const [sent, setSent] = useState<VisitorTestSend | null>(null);
   const [sendState, setSendState] = useState<'pending' | SendConfirmation['status']>('pending');
@@ -79,7 +77,7 @@ export default function LinkCheckSection() {
   // 브라우저에서만 알 수 있는 것들 — SSR 과 첫 렌더를 맞추기 위해 effect 에서 읽는다
   useEffect(() => {
     setSentryOn(isSentryEnabled());
-    setIsMobile(isMobileUserAgent());
+    setIsAndroid(isAndroidUserAgent());
     setCooldownMs(readCooldownRemainingMs());
   }, []);
 
@@ -270,16 +268,21 @@ export default function LinkCheckSection() {
               <div style={{ fontWeight: 700, color: '#166534' }}>
                 앱 목록에 노출됐습니다 — 앱 상세의 &quot;처음 N분 전&quot; 이 위 보낸 시각과 맞는지 보세요.
               </div>
-              {isMobile ? (
-                <a href={appDeepLink(found.id)} style={deepLinkBtn}>
-                  앱에서 열기
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {isAndroid && (
+                  <a href={appDeepLink(found.id)} style={deepLinkBtn}>
+                    앱에서 열기
+                  </a>
+                )}
+                <a href={webTrialLink(found.id)} target="_blank" rel="noreferrer" style={webTrialBtn}>
+                  웹 체험판에서 열기
                 </a>
-              ) : (
-                <div style={{ fontSize: '13px', color: '#166534' }}>
-                  폰에서 이 페이지를 열고 다시 보내면 &quot;앱에서 열기&quot; 버튼이 나타나 앱의 그 인시던트로 바로 이동합니다
-                  (<code>{appDeepLink(found.id)}</code>). PC 에서는 앱 목록에서 위 제목을 찾으세요.
-                </div>
-              )}
+              </div>
+              <div style={{ fontSize: '13px', color: '#166534' }}>
+                {isAndroid
+                  ? '앱을 설치했다면 "앱에서 열기", 아니라면 웹 체험판으로 같은 인시던트를 엽니다.'
+                  : `웹 체험판(아이폰·PC)에서 데모 로그인하면 이 인시던트로 바로 이동합니다. 안드로이드 폰에서 이 페이지를 열면 설치한 앱으로 여는 "앱에서 열기"(${appDeepLink(found.id)})도 나타납니다.`}
+              </div>
             </div>
           )}
         </div>
@@ -289,7 +292,7 @@ export default function LinkCheckSection() {
         <h3 style={h3}>앱에서 할 일</h3>
         <ol style={{ margin: 0, paddingLeft: '20px', color: '#334155', fontSize: '14px', lineHeight: 1.7 }}>
           <li>
-            인시던트 목록에서 <strong>{marker ?? '[방문자 테스트 XXXX]'}</strong> 를 찾습니다(또는 위 &quot;앱에서 열기&quot;).
+            인시던트 목록에서 <strong>{marker ?? '[방문자 테스트 XXXX]'}</strong> 를 찾습니다(또는 위 &quot;앱에서 열기&quot; · &quot;웹 체험판에서 열기&quot;).
             안 보이면 목록을 당겨서 새로고침 — 백엔드 캐시가 60초입니다.
           </li>
           <li>상세의 &quot;처음 N분 전&quot; 을 위 보낸 시각과 비교합니다 — 미리 심은 데이터로는 못 만드는 값입니다.</li>
@@ -405,4 +408,10 @@ const deepLinkBtn: React.CSSProperties = {
   fontSize: '14px',
   fontWeight: 700,
   textDecoration: 'none',
+};
+const webTrialBtn: React.CSSProperties = {
+  ...deepLinkBtn,
+  background: '#fff',
+  color: '#166534',
+  border: '1px solid #16a34a',
 };

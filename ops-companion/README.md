@@ -19,7 +19,8 @@ PC·Metro·Expo 계정 없이, 안드로이드 폰 하나면 된다.
 
 같은 코드를 웹으로 내보낸 것(react-native-web)이다. 링크를 열고 "데모 계정으로 체험하기" 를 누르면 목록·상세·AI 분석·평가(마우스 드래그로도 스와이프)·프로필이 앱과 같게 동작한다. 브라우저 종류는 상관없다(iOS 의 브라우저는 전부 WebKit).
 
-- 주소: **(배포 후 기입)**
+- 주소: **https://e-commerce-ops-companion.vercel.app** (2026-09-30 배포 · 백엔드 `CORS_ORIGINS` 등록). 웹 관리자 "운영 앱" 페이지에 QR 이 있다.
+- 인시던트 주소(`/incidents/<id>`)를 로그인 전에 열어도 데모 로그인 뒤 그 인시던트로 간다(`usePushRouting.web.ts` — 앱에서 푸시가 하는 "로그인 후 목적지" 를 URL 로). 웹 "운영 앱" 페이지 추적기의 "웹 체험판에서 열기" 가 이 경로다.
 - 앱과 다른 점: 푸시·생체 잠금이 없다(프로필에 "불가" 로 표시). 토큰은 SecureStore 대신 **sessionStorage** — 탭을 닫으면 로그아웃된다. PC 에서는 폰 폭(최대 480px)으로 가운데 선다.
 - 웹 체험판은 "iOS 앱" 이 아니라 "같은 코드의 웹 빌드" 다. iOS **네이티브** 동작은 아래 "실기기에서 실행(Expo Go)" 방식으로 따로 확인한다.
 - 웹 전용 구현은 `*.web.ts` 파일(`src/lib/token-storage.web.ts` · `biometrics.web.ts` · `src/features/push/usePushRouting.web.ts`)이다. Metro 가 웹 번들에서만 이 파일을 고르므로 iOS·안드로이드 번들에는 들어가지 않는다.

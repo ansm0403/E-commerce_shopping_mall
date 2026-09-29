@@ -14,7 +14,8 @@
 |---|---|---|
 | 쇼핑몰 웹 | https://shopping-mall-frontend-dusky.vercel.app | 로그인 화면 **"관리자 페이지 체험하기"** 로 데모 관리자 진입(계정 정보 불필요) |
 | 백엔드 API | https://api.ansmoon.dev/v1/health | nginx + Let's Encrypt. 응답의 `version` 이 배포된 커밋 SHA, DB·Redis 중 하나라도 죽으면 503 |
-| 운영 앱(안드로이드) | [APK 설치 링크](https://github.com/ansm0403/E-commerce_shopping_mall/releases/download/ops-companion-v1.0.0-4/ops-companion-preview-4.apk) · [설치 안내](ops-companion/README.md#설치해서-써-보기-포트폴리오-방문자용) | 스토어 미배포(EAS preview 빌드). 로그인 화면 **"데모 계정으로 체험하기"**. iOS 미지원 |
+| 운영 앱(안드로이드) | [APK 설치 링크](https://github.com/ansm0403/E-commerce_shopping_mall/releases/download/ops-companion-v1.0.0-4/ops-companion-preview-4.apk) · [설치 안내](ops-companion/README.md#설치해서-써-보기-포트폴리오-방문자용) | 스토어 미배포(EAS preview 빌드). 로그인 화면 **"데모 계정으로 체험하기"** |
+| 운영 앱(아이폰·PC) | https://e-commerce-ops-companion.vercel.app | **웹 체험판** — 같은 RN 코드를 react-native-web 으로 내보낸 것. 설치 없이 데모 로그인, 푸시·생체 잠금만 없음 |
 | 저장소 | https://github.com/ansm0403/E-commerce_shopping_mall | 브랜치 → PR → main. main 푸시 = Vercel 자동 배포 |
 
 코드 규모(2026-09-28, `git ls-files` 의 `.ts/.tsx` 줄 수):
@@ -88,7 +89,7 @@ flowchart LR
 | 인증 | JWT access(15분, `jti` 필수) + refresh(7일, 해시 저장 + Redis 블랙리스트) | 로그아웃 직후 재발급 토큰이 문자열까지 같아 401 나던 운영 버그를 `jti` 로 해소 |
 | 결제 | PortOne V2 + 웹훅 | 결제 완료 ↔ 취소 동시 도달 시 `SELECT … FOR UPDATE` 로 직렬화(옛 README "유령 결제") |
 | 모노레포 | **Nx 21 · Yarn 4(berry)** · `@shopping-mall/shared`(공용 타입) | `nx affected` 로 CI 가 바뀐 프로젝트만 돌린다. 백엔드는 shared 를 **타입으로만** import(운영 이미지에 워크스페이스 링크가 없음) |
-| 운영 앱 | **Expo SDK 57 · React Native 0.86 · Expo Router · Reanimated · Gesture Handler · expo-updates** | 워크스페이스에는 있지만 Nx 타깃이 아니라 Expo CLI 로 실행. JS 만 바뀌면 EAS Update 로 재설치 없이 반영 |
+| 운영 앱 | **Expo SDK 57 · React Native 0.86 · Expo Router · Reanimated · Gesture Handler · expo-updates** | 워크스페이스에는 있지만 Nx 타깃이 아니라 Expo CLI 로 실행. JS 만 바뀌면 EAS Update 로 재설치 없이 반영. 같은 코드를 `*.web.ts` 분기로 웹 체험판(Vercel 별도 프로젝트)까지 |
 | AI | `LlmClient` 인터페이스(현재 Gemini `@google/genai`, 추후 Claude) | tool use · 스트리밍 · usage 가 프로바이더에 묶이지 않게. 무료 티어라 캐싱·상한 설계가 필요했다 |
 | 인프라 | Docker(멀티스테이지) · Docker Hub · AWS EC2 t3.small · **nginx + certbot(Let's Encrypt)** · Vercel | EC2 안에서 빌드하면 OOM 이라 로컬 빌드 → push → EC2 pull. 4000 은 호스트에 열지 않는다 |
 | 관측성 | **Sentry**(프론트·백엔드·앱, 소스맵 업로드) · UptimeRobot · GitHub Actions → Slack | 백엔드 이벤트에 `release`=커밋 SHA, 스택은 `--enable-source-maps` 로 원본 좌표 |
@@ -206,7 +207,8 @@ AI 분석의 재료: 스택트레이스 + `read_source(path, start, end)` 도구
 ### 설치해서 써 보기
 
 1. 안드로이드 폰에서 [APK](https://github.com/ansm0403/E-commerce_shopping_mall/releases/download/ops-companion-v1.0.0-4/ops-companion-preview-4.apk)(GitHub Release 자산, versionCode 4, 약 108MB) 설치 → 로그인 화면 **"데모 계정으로 체험하기"**. 보이는 것은 **실제 운영 Sentry 데이터**(최근 14일). 조회·AI 분석(시간당 6건)·채점은 되고, 재분석·메모·푸시는 데모 계정에서 꺼져 있습니다(경계는 백엔드가 토큰 `isDemo` 로 판단 — [표](ops-companion/README.md#설치해서-써-보기-포트폴리오-방문자용)).
-2. **웹에서 에러를 내고 앱에서 확인하기**: 쇼핑몰 웹 로그인 → **관리자 페이지 체험하기** → 관리자 메뉴 **운영 앱**(`/admin/ops-app`) → **테스트 에러 보내기**. 페이지가 앱과 같은 API 를 20초마다 물어 "앱 목록에 노출 ✓" 를 보여주면, 앱(폰에서는 "앱에서 열기" 딥링크)에서 `[방문자 테스트 XXXX]` 를 열어 AI 분석 → 채점 → 분석 화면의 "내 판정"까지 볼 수 있습니다. 광고 차단기가 Sentry 터널까지 막으므로 그 경우 페이지가 붉은 안내를 띄웁니다.
+   아이폰·PC 는 [웹 체험판](https://e-commerce-ops-companion.vercel.app)(설치 없음, 같은 코드의 웹 빌드 — iOS 는 APK 를 설치할 수 없다)에서 같은 버튼으로 들어갑니다.
+2. **웹에서 에러를 내고 앱에서 확인하기**: 쇼핑몰 웹 로그인 → **관리자 페이지 체험하기** → 관리자 메뉴 **운영 앱**(`/admin/ops-app`) → **테스트 에러 보내기**. 페이지가 앱과 같은 API 를 20초마다 물어 "앱 목록에 노출 ✓" 를 보여주면, 앱(안드로이드는 "앱에서 열기" 딥링크, 그 밖은 "웹 체험판에서 열기")에서 `[방문자 테스트 XXXX]` 를 열어 AI 분석 → 채점 → 분석 화면의 "내 판정"까지 볼 수 있습니다. 광고 차단기가 Sentry 터널까지 막으므로 그 경우 페이지가 붉은 안내를 띄웁니다.
 3. 개발자로 실행하려면 `cd ops-companion && yarn start`(Expo Go) — 푸시는 개발 빌드부터, 자세한 건 [ops-companion/README.md](ops-companion/README.md).
 
 ### 학습 노트 (RN 을 처음 접한다는 가정으로 코드를 다시 푼 9편)
