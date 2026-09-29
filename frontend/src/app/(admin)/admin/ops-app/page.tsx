@@ -1,4 +1,5 @@
 import LinkCheckSection from './components/LinkCheckSection';
+import { OPS_WEB_URL } from './links';
 
 /**
  * 관리자 "운영 앱" 페이지 — RN 운영 앱(Ops Companion)의 웹 쪽 입구 (설계 §9 "웹 → 앱 연동 확인" 결정 ⑧).
@@ -18,6 +19,8 @@ const INSTALL_URL =
 const INSTALL_BUILD_LABEL = 'preview 빌드 versionCode 4 · 2026-09-23 · Android APK 약 108MB';
 /** `npx qrcode -o frontend/public/images/ops-app-install-qr.png -w 220 "<INSTALL_URL>"` 로 만든 정적 PNG(외부 이미지 도메인 없음 — CSP) */
 const INSTALL_QR_SRC = '/images/ops-app-install-qr.png';
+/** `npx qrcode -o frontend/public/images/ops-app-web-qr.png -w 220 -m 2 "<OPS_WEB_URL>"` — 웹 체험판(2026-09-30) */
+const WEB_QR_SRC = '/images/ops-app-web-qr.png';
 
 export default function AdminOpsAppPage() {
   return (
@@ -43,34 +46,45 @@ export default function AdminOpsAppPage() {
       </section>
 
       <section style={card}>
-        <h2 style={h2}>설치 (Android)</h2>
-        <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-          {/* eslint-disable-next-line @next/next/no-img-element -- 정적 QR PNG, 최적화 불필요 */}
-          <img
-            src={INSTALL_QR_SRC}
-            alt="운영 앱 설치 링크 QR"
-            width={160}
-            height={160}
-            style={{ border: '1px solid #e2e8f0', borderRadius: '8px', background: '#fff', flexShrink: 0 }}
-          />
-          <ol style={{ margin: 0, paddingLeft: '20px', color: '#334155', fontSize: '14px', lineHeight: 1.7, flex: 1, minWidth: 260 }}>
-            <li>
-              폰에서 설치 링크를 엽니다(QR 을 찍어도 됩니다):{' '}
-              <a href={INSTALL_URL} target="_blank" rel="noreferrer" style={{ color: '#2563eb', wordBreak: 'break-all' }}>
-                {INSTALL_URL}
+        <h2 style={h2}>설치 · 체험</h2>
+        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+          <div style={option}>
+            <h3 style={h3}>Android — 앱 설치</h3>
+            {/* eslint-disable-next-line @next/next/no-img-element -- 정적 QR PNG, 최적화 불필요 */}
+            <img src={INSTALL_QR_SRC} alt="운영 앱 설치 링크 QR" width={140} height={140} style={qr} />
+            <p style={small}>
+              폰에서 QR 을 찍거나{' '}
+              <a href={INSTALL_URL} target="_blank" rel="noreferrer" style={link}>
+                설치 링크(APK)
               </a>
-              <div style={{ fontSize: '12px', color: '#64748b' }}>{INSTALL_BUILD_LABEL}. 스토어 밖 APK 라 &quot;출처를 알 수 없는 앱 설치&quot; 를 한 번 허용해야 합니다. iOS 는 지원하지 않습니다.</div>
-            </li>
-            <li>
-              앱을 열고 로그인 화면의 <strong>&quot;데모 계정으로 체험하기&quot;</strong> 를 누릅니다 — 지금 이 웹의 &quot;관리자 페이지 체험하기&quot; 와
-              같은 데모 관리자 계정입니다. 계정 정보를 입력할 필요가 없습니다.
-            </li>
-            <li>
-              보이는 것은 실제 운영 Sentry 데이터(최근 14일)입니다. 데모 계정은 조회·AI 분석·채점이 되고, 재분석·메모 저장·푸시 알림은 꺼져
-              있습니다(새 분석은 시간당 6건, 방문자 합산).
-            </li>
-          </ol>
+              를 엽니다. 스토어 밖 APK 라 &quot;출처를 알 수 없는 앱 설치&quot; 를 한 번 허용해야 합니다. 푸시·생체 잠금까지 전부 됩니다.
+            </p>
+            <p style={{ ...small, color: '#94a3b8' }}>{INSTALL_BUILD_LABEL}</p>
+          </div>
+          <div style={option}>
+            <h3 style={h3}>iPhone · PC — 웹 체험판</h3>
+            {/* eslint-disable-next-line @next/next/no-img-element -- 정적 QR PNG, 최적화 불필요 */}
+            <img src={WEB_QR_SRC} alt="운영 앱 웹 체험판 QR" width={140} height={140} style={qr} />
+            <p style={small}>
+              설치 없이{' '}
+              <a href={OPS_WEB_URL} target="_blank" rel="noreferrer" style={link}>
+                {OPS_WEB_URL.replace('https://', '')}
+              </a>{' '}
+              를 엽니다. 같은 React Native 코드를 웹으로 내보낸 것이라 화면·기능이 같고, 푸시·생체 잠금만 없습니다. iPhone 은 APK 를 설치할 수
+              없어 이 길로 체험합니다.
+            </p>
+          </div>
         </div>
+        <ol style={{ margin: 0, paddingLeft: '20px', color: '#334155', fontSize: '14px', lineHeight: 1.7 }}>
+          <li>
+            로그인 화면의 <strong>&quot;데모 계정으로 체험하기&quot;</strong> 를 누릅니다 — 지금 이 웹의 &quot;관리자 페이지 체험하기&quot; 와 같은
+            데모 관리자 계정입니다. 계정 정보를 입력할 필요가 없습니다.
+          </li>
+          <li>
+            보이는 것은 실제 운영 Sentry 데이터(최근 14일)입니다. 데모 계정은 조회·AI 분석·채점이 되고, 재분석·메모 저장·푸시 알림은 꺼져
+            있습니다(새 분석은 시간당 6건, 방문자 합산).
+          </li>
+        </ol>
       </section>
 
       <LinkCheckSection />
@@ -94,3 +108,16 @@ const card: React.CSSProperties = {
 };
 const h2: React.CSSProperties = { margin: 0, fontSize: '16px', fontWeight: 700, color: '#0f172a' };
 const p: React.CSSProperties = { margin: 0, fontSize: '14px', color: '#334155', lineHeight: 1.7 };
+const h3: React.CSSProperties = { margin: 0, fontSize: '14px', fontWeight: 700, color: '#0f172a' };
+const option: React.CSSProperties = {
+  flex: '1 1 260px',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '8px',
+  padding: '16px',
+  border: '1px solid #e2e8f0',
+  borderRadius: '10px',
+};
+const qr: React.CSSProperties = { border: '1px solid #e2e8f0', borderRadius: '8px', background: '#fff' };
+const small: React.CSSProperties = { margin: 0, fontSize: '13px', color: '#475569', lineHeight: 1.6 };
+const link: React.CSSProperties = { color: '#2563eb', wordBreak: 'break-all' };
