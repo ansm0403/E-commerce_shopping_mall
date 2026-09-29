@@ -2,7 +2,7 @@
 
 import { cva, type VariantProps } from 'class-variance-authority';
 import { clsx } from 'clsx';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { twMerge } from 'tailwind-merge';
 
@@ -26,6 +26,10 @@ const modalPanelVariants = cva(
     defaultVariants: { size: 'md' },
   }
 );
+
+/** Tab 으로 갈 수 있는 요소 — 포커스 가두기·첫 포커스 대상 계산용 */
+const FOCUSABLE =
+  'a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
 // ─── 타입 ────────────────────────────────────────────────────────────────────
 export interface ModalProps extends VariantProps<typeof modalPanelVariants> {
@@ -52,17 +56,55 @@ export function Modal({
   // SSR 환경에서 포털 마운트를 클라이언트에서만 실행
   const [mounted, setMounted] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
+  // onClose 가 렌더마다 새 함수여도 포커스 effect 가 다시 돌지 않게(다시 돌면 포커스가 첫 요소로 튄다)
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // ESC 키 닫기 + 배경 스크롤 잠금
+  // 포커스 관리 + ESC 닫기 + 배경 스크롤 잠금
+  // 예전엔 role/aria-modal 만 있고 포커스는 뒤 페이지에 남아 Tab 이 모달 뒤 링크로 새고, 닫은 뒤엔 제자리를 잃었다.
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || !mounted) return;
+
+    // ① 연 버튼을 기억했다가 ④ 닫힐 때 돌려준다
+    const opener = document.activeElement as HTMLElement | null;
+
+    // ② 열리면 모달 안 첫 요소로(닫기 버튼 다음의 본문 요소가 없으면 닫기 버튼)
+    const focusables = () =>
+      Array.from(
+        panelRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [],
+      ).filter((el) => !el.hasAttribute('disabled'));
+    const list = focusables();
+    (list[1] ?? list[0] ?? panelRef.current)?.focus();
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        onCloseRef.current();
+        return;
+      }
+      // ③ Tab 가두기 — 마지막에서 Tab 이면 처음으로, 처음에서 Shift+Tab 이면 마지막으로
+      if (e.key !== 'Tab') return;
+      const items = focusables();
+      if (items.length === 0) {
+        e.preventDefault();
+        return;
+      }
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement;
+      const inside = panelRef.current?.contains(active);
+      if (e.shiftKey && (active === first || !inside)) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && (active === last || !inside)) {
+        e.preventDefault();
+        first.focus();
+      }
     };
 
     document.addEventListener('keydown', handleKeyDown);
@@ -71,8 +113,9 @@ export function Modal({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = '';
+      if (opener && document.contains(opener)) opener.focus();
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, mounted]);
 
   // Overlay 클릭 시 패널 외부인지 확인 후 닫기
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -86,15 +129,18 @@ export function Modal({
   const portal = createPortal(
     <div
       ref={overlayRef}
-      role="dialog"
-      aria-modal="true"
-      aria-label={title}
       onClick={handleOverlayClick}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
     >
+      {/* dialog 역할은 배경이 아니라 실제 패널에 — 이름은 보이는 제목(h2)과 연결 */}
       <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? titleId : undefined}
+        tabIndex={-1}
         className={twMerge(
-          clsx(modalPanelVariants({ size }), className)
+          clsx(modalPanelVariants({ size }), 'outline-none', className)
         )}
       >
         {/* 닫기 버튼 */}
@@ -111,7 +157,7 @@ export function Modal({
         {/* 헤더 (title이 있을 때만 렌더) */}
         {title && (
           <div className="px-6 pt-5 pb-4 border-b border-secondary-100">
-            <h2 className="text-lg font-semibold text-secondary-900 pr-8">{title}</h2>
+            <h2 id={titleId} className="text-lg font-semibold text-secondary-900 pr-8">{title}</h2>
           </div>
         )}
 

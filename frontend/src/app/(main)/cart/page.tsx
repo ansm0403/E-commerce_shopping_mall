@@ -34,7 +34,7 @@ export default function CartPage() {
 
   if (isLoading) {
     return (
-      <div className="py-20 text-center text-secondary-400">
+      <div className="py-20 text-center text-secondary-500">
         불러오는 중...
       </div>
     );
@@ -46,7 +46,7 @@ export default function CartPage() {
       <h1 className="text-2xl font-bold text-secondary-900 mb-6">
         장바구니
         {items.length > 0 && (
-          <span className="ml-2 text-lg font-normal text-secondary-400">
+          <span className="ml-2 text-lg font-normal text-secondary-500">
             ({items.length}개 상품)
           </span>
         )}
@@ -54,7 +54,7 @@ export default function CartPage() {
 
       {/* 빈 장바구니 */}
       {items.length === 0 && (
-        <div className="py-24 flex flex-col items-center gap-4 text-secondary-400">
+        <div className="py-24 flex flex-col items-center gap-4 text-secondary-500">
           <FaShoppingCart size={48} className="text-secondary-200" />
           <p className="text-lg font-medium">장바구니가 비었습니다</p>
           <button
@@ -79,7 +79,7 @@ export default function CartPage() {
             <button
               onClick={() => clearCart.mutate()}
               disabled={clearCart.isPending}
-              className="self-start mt-1 text-xs text-secondary-400 hover:text-red-400 underline underline-offset-2 transition-colors disabled:opacity-50"
+              className="self-start mt-1 text-xs text-secondary-500 hover:text-red-600 underline underline-offset-2 transition-colors disabled:opacity-50"
             >
               전체 비우기
             </button>
@@ -99,13 +99,13 @@ export default function CartPage() {
                   <span>배송비</span>
                   <span>
                     {shippingFee === 0
-                      ? <span className="text-green-600 font-medium">무료</span>
+                      ? <span className="text-green-700 font-medium">무료</span>
                       : `${shippingFee.toLocaleString()}원`
                     }
                   </span>
                 </div>
                 {subtotal > 0 && subtotal < FREE_SHIPPING_THRESHOLD && (
-                  <p className="text-xs text-secondary-400">
+                  <p className="text-xs text-secondary-500">
                     {(FREE_SHIPPING_THRESHOLD - subtotal).toLocaleString()}원 더 담으면 무료배송
                   </p>
                 )}

@@ -104,7 +104,7 @@ export function LoginForm() {
       </Form>
 
       {errorMessage && (
-        <p className="text-sm text-red-500 text-center">{errorMessage}</p>
+        <p role="alert" className="text-sm text-red-600 text-center">{errorMessage}</p>
       )}
 
       <div className="flex items-center gap-3 text-sm">
@@ -124,7 +124,7 @@ export function LoginForm() {
       </div>
 
       <div className="w-full mt-6 pt-5 border-t border-gray-200">
-        <p className="text-xs text-gray-400 text-center mb-3">채용 담당자 · 시연자용</p>
+        <p className="text-xs text-gray-500 text-center mb-3">채용 담당자 · 시연자용</p>
         <button
           type="button"
           disabled={demoLoginMutation.isPending}
@@ -141,7 +141,7 @@ export function LoginForm() {
         >
           {demoLoginMutation.isPending ? "로그인 중..." : "관리자 페이지 체험하기 (데모 계정)"}
         </button>
-        <p className="text-xs text-gray-400 text-center mt-2">
+        <p className="text-xs text-gray-500 text-center mt-2">
           가입 없이 관리자 대시보드를 둘러볼 수 있습니다. 일부 기능은 제한됩니다.
         </p>
       </div>

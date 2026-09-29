@@ -44,7 +44,7 @@ export default function CartItemRow({ item }: CartItemRowProps) {
 
       {/* 상품 정보 */}
       <div className="flex-1 min-w-0">
-        <p className="text-xs text-secondary-400 mb-0.5">{product.brand}</p>
+        <p className="text-xs text-secondary-500 mb-0.5">{product.brand}</p>
         <p className="text-sm font-semibold text-secondary-900 truncate">{product.name}</p>
         <div className="flex items-center gap-1 mt-0.5">
           {product.discountRate && product.discountRate > 0 && (
@@ -64,16 +64,19 @@ export default function CartItemRow({ item }: CartItemRowProps) {
         <button
           onClick={handleDecrease}
           disabled={isMutating || quantity <= 1}
+          aria-label={`${product.name} 수량 줄이기`}
           className="w-8 h-8 flex items-center justify-center text-secondary-600 hover:bg-secondary-50 disabled:opacity-30 transition-colors font-bold text-lg"
         >
           −
         </button>
-        <span className="w-8 text-center text-sm font-semibold select-none">
-          {quantity}
+        {/* 수량이 바뀌면 스크린리더가 새 값을 읽는다(버튼만 누르고 결과를 못 듣던 자리) */}
+        <span className="w-8 text-center text-sm font-semibold select-none" aria-live="polite">
+          <span className="sr-only">수량 </span>{quantity}<span className="sr-only">개</span>
         </span>
         <button
           onClick={handleIncrease}
           disabled={isMutating || quantity >= product.stockQuantity}
+          aria-label={`${product.name} 수량 늘리기`}
           className="w-8 h-8 flex items-center justify-center text-secondary-600 hover:bg-secondary-50 disabled:opacity-30 transition-colors font-bold text-lg"
         >
           +
@@ -91,10 +94,10 @@ export default function CartItemRow({ item }: CartItemRowProps) {
       <button
         onClick={handleRemove}
         disabled={isMutating}
-        className="p-2 text-secondary-300 hover:text-red-400 disabled:opacity-30 transition-colors shrink-0"
-        aria-label="장바구니에서 제거"
+        className="p-2 text-secondary-500 hover:text-red-600 disabled:opacity-30 transition-colors shrink-0"
+        aria-label={`${product.name} 장바구니에서 제거`}
       >
-        <FaTrash size={14} />
+        <FaTrash size={14} aria-hidden="true" />
       </button>
     </div>
   );

@@ -40,7 +40,16 @@ export default function Banner() {
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+  // 자동 넘김은 마우스를 올릴 때만 멈췄다 → 키보드 포커스가 들어와도 멈추고(isFocused),
+  // 누구나 끌 수 있는 멈춤 버튼(isPaused)을 둔다 — WCAG 2.2.2 "5초 넘게 자동으로 움직이는 것은 멈출 수 있어야"
+  const [isFocused, setIsFocused] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+
+  // 움직임 줄이기 설정을 켠 사용자는 처음부터 멈춘 상태로
+  useEffect(() => {
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) setIsPaused(true);
+  }, []);
 
   const moveTo = useCallback((index: number) => {
     if (isTransitioning) return;
@@ -61,9 +70,9 @@ export default function Banner() {
     moveTo(index);
   };
 
-  // 자동재생: hover 및 탭 비활성화 시 일시정지
+  // 자동재생: hover·키보드 포커스·멈춤 버튼·탭 비활성화 시 일시정지
   useEffect(() => {
-    if (isHovered) return;
+    if (isHovered || isFocused || isPaused) return;
 
     const handleVisibilityChange = () => {
       // visibilitychange는 상태만 추적, interval은 아래에서 관리
@@ -79,7 +88,7 @@ export default function Banner() {
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [isHovered, goToNext]);
+  }, [isHovered, isFocused, isPaused, goToNext]);
 
   return (
     <BannerSection
@@ -89,10 +98,14 @@ export default function Banner() {
       <div className="grid grid-cols-[2fr_1fr] grid-rows-[1fr_1.5fr] gap-4 py-8 min-h-[500px]">
         {/* 메인 배너 캐러셀 */}
         {/* fallback gradient: 이미지 로드 실패 시 표시 */}
-        <div
-          className="col-start-1 row-span-2 rounded-lg overflow-hidden relative bg-[linear-gradient(135deg,#d2f9a0_0%,#dffd5b_100%)] cursor-pointer group"
+        <section
+          aria-roledescription="carousel"
+          aria-label="메인 배너"
+          className="col-start-1 row-span-2 rounded-lg overflow-hidden relative bg-[linear-gradient(135deg,#d2f9a0_0%,#dffd5b_100%)] group"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
+          onFocus={() => setIsFocused(true)}
+          onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setIsFocused(false); }}
         >
           {/* 슬라이드 트랙: hover 시 이미지 전체가 서서히 zoom-in */}
           <div
@@ -159,16 +172,27 @@ export default function Banner() {
                   index === currentIndex ? 'bg-white' : 'bg-white/40'
                 }`}
                 aria-label={`슬라이드 ${index + 1}`}
+                aria-current={index === currentIndex ? 'true' : undefined}
               />
             ))}
           </div>
-        </div>
 
-        <div className="col-start-2 row-start-1 bg-[linear-gradient(135deg,#f093fb_0%,#f5576c_100%)] cursor-pointer rounded-lg overflow-hidden group">
+          {/* 자동 넘김 멈춤/재생 */}
+          <button
+            type="button"
+            onClick={() => setIsPaused((p) => !p)}
+            aria-label={isPaused ? '배너 자동 넘김 재생' : '배너 자동 넘김 멈추기'}
+            className="absolute bottom-2.5 left-3 bg-black/40 hover:bg-black/60 text-white w-7 h-7 rounded-full flex items-center justify-center text-xs z-30"
+          >
+            <span aria-hidden="true">{isPaused ? '▶' : '❚❚'}</span>
+          </button>
+        </section>
+
+        <div className="col-start-2 row-start-1 bg-[linear-gradient(135deg,#f093fb_0%,#f5576c_100%)] rounded-lg overflow-hidden group">
           <BannerContent bannerImg="/images/banner/sub_banner1.webp" sizes="(max-width: 768px) 100vw, 400px" className="transition-transform duration-500 ease-in-out group-hover:scale-110" />
         </div>
 
-        <div className="col-start-2 row-start-2 bg-[linear-gradient(135deg,#4facfe_0%,#00f2fe_100%)] cursor-pointer rounded-lg overflow-hidden group">
+        <div className="col-start-2 row-start-2 bg-[linear-gradient(135deg,#4facfe_0%,#00f2fe_100%)] rounded-lg overflow-hidden group">
           <BannerContent bannerImg="/images/banner/sub_banner2.webp" sizes="(max-width: 768px) 100vw, 400px" className="transition-transform duration-500 ease-in-out group-hover:scale-110" />
         </div>
       </div>

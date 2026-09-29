@@ -18,15 +18,33 @@ function getOriginalPrice(price: number, discountRate: number): number | null {
   return Math.round(Number(price) / (1 - discountRate / 100));
 }
 
+const STAR_PATH =
+  'M12 2l2.9 6.26 6.86.74-5.1 4.64 1.43 6.76L12 16.9l-6.09 3.5 1.43-6.76-5.1-4.64 6.86-.74L12 2z';
+
+/**
+ * 별점 — 장식 그래픽. 평점 정보는 옆의 숫자("평점 5점 만점에 3.5점")가 전달한다.
+ * 예전엔 ★⯨☆ 글자였다 → 스크린리더가 "검은 별…"로 읽고, ⯨ 는 글꼴에 따라 깨지고, axe 는 글자 대비(1.53:1)로 잡았다.
+ */
 function StarRating({ rating }: { rating: number }) {
-  const full = Math.floor(rating);
-  const half = rating - full >= 0.5;
-  const empty = 5 - full - (half ? 1 : 0);
   return (
-    <span className="text-yellow-400 text-base leading-none">
-      {'★'.repeat(full)}
-      {half ? '⯨' : ''}
-      {'☆'.repeat(empty)}
+    <span aria-hidden="true" className="flex text-yellow-400">
+      {Array.from({ length: 5 }, (_, i) => {
+        const fill = Math.max(0, Math.min(1, rating - i));
+        // 반 개 단위 표시(예전 동작과 같게): 0.5 이상이면 반, 1 이면 전체
+        const shown = fill >= 1 ? 1 : fill >= 0.5 ? 0.5 : 0;
+        return (
+          <span key={i} className="relative inline-block w-4 h-4">
+            <svg viewBox="0 0 24 24" className="absolute inset-0 w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d={STAR_PATH} />
+            </svg>
+            <span className="absolute inset-0 overflow-hidden" style={{ width: `${shown * 100}%` }}>
+              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
+                <path d={STAR_PATH} />
+              </svg>
+            </span>
+          </span>
+        );
+      })}
     </span>
   );
 }
@@ -158,9 +176,11 @@ export default function ProductInfo({
           <div className="flex items-center gap-2">
             <StarRating rating={Number(product.rating)} />
             <span className="text-secondary-700 text-sm font-medium">
+              <span className="sr-only">평점 5점 만점에 </span>
               {Number(product.rating).toFixed(1)}
+              <span className="sr-only">점</span>
             </span>
-            <span className="text-secondary-400 text-sm">
+            <span className="text-secondary-500 text-sm">
               ({(product.reviewCount ?? 0).toLocaleString()}개 리뷰)
             </span>
           </div>
@@ -178,7 +198,8 @@ export default function ProductInfo({
       {/* ── 가격 섹션 ── */}
       <div className="bg-primary-50 rounded-xl p-4 space-y-1.5">
         {originalPrice && (
-          <p className="text-secondary-400 text-sm line-through">
+          <p className="text-secondary-500 text-sm line-through">
+            <span className="sr-only">정가 </span>
             {originalPrice.toLocaleString()}원
           </p>
         )}
@@ -194,7 +215,7 @@ export default function ProductInfo({
           <span className="text-sm text-secondary-600">원</span>
         </div>
         {displayPrice >= 50000 ? (
-          <p className="text-green-600 text-xs font-medium">🚚 무료배송</p>
+          <p className="text-green-800 text-xs font-medium"><span aria-hidden="true">🚚 </span>무료배송</p>
         ) : (
           <p className="text-secondary-500 text-xs">
             🚚 배송비 3,000원 (50,000원 이상 무료)
@@ -247,18 +268,20 @@ export default function ProductInfo({
       {/* ── 수량 선택 ── */}
       {!isOutOfStock && (
         <div className="flex items-center gap-3">
-          <span className="text-sm text-secondary-600">수량</span>
-          <div className="flex items-center border border-secondary-300 rounded-lg overflow-hidden">
+          <span className="text-sm text-secondary-600" id="product-qty-label">수량</span>
+          <div role="group" aria-labelledby="product-qty-label" className="flex items-center border border-secondary-300 rounded-lg overflow-hidden">
             <button
+              aria-label="수량 줄이기"
               onClick={() => onQuantityChange(Math.max(1, quantity - 1))}
               className="w-9 h-9 flex items-center justify-center text-secondary-600 hover:bg-secondary-50 transition-colors font-bold"
             >
               −
             </button>
-            <span className="w-10 text-center text-sm font-semibold select-none">
-              {quantity}
+            <span className="w-10 text-center text-sm font-semibold select-none" aria-live="polite">
+              {quantity}<span className="sr-only">개</span>
             </span>
             <button
+              aria-label="수량 늘리기"
               onClick={() =>
                 onQuantityChange(Math.min(product.stockQuantity, quantity + 1))
               }
@@ -267,7 +290,7 @@ export default function ProductInfo({
               +
             </button>
           </div>
-          <span className="text-sm text-secondary-400">
+          <span className="text-sm text-secondary-500">
             최대 {product.stockQuantity}개
           </span>
         </div>
@@ -294,17 +317,21 @@ export default function ProductInfo({
               : addToCart.isPending
               ? 'border-primary-300 text-primary-400 cursor-wait'
               : addToCart.isSuccess
-              ? 'border-green-500 text-green-600 bg-green-50'
+              ? 'border-green-600 text-green-700 bg-green-50'
               : 'border-primary-600 text-primary-600 hover:bg-primary-50 active:scale-95'
           }`}
         >
           {cartButtonLabel}
         </button>
+        {/* 담기 결과는 버튼 글자만 바뀌어 스크린리더가 못 들었다 → 늘 있는 status 영역에 문구를 넣어 읽게 한다 */}
+        <p role="status" className="sr-only">
+          {addToCart.isSuccess ? '장바구니에 담았습니다' : ''}
+        </p>
       </div>
 
       {/* ── 에러 메시지 (재고 부족 등) ── */}
       {addToCart.isError && (
-        <p className="text-red-500 text-sm text-center -mt-3">
+        <p role="alert" className="text-red-600 text-sm text-center -mt-3">
           {(addToCart.error as any)?.response?.data?.message ?? '오류가 발생했습니다.'}
         </p>
       )}
@@ -312,7 +339,7 @@ export default function ProductInfo({
       {/* ── 셀러 정보 ── */}
       {product.seller && (
         <div className="border-t pt-4 border-secondary-100 space-y-1">
-          <p className="text-xs text-secondary-400">판매자</p>
+          <p className="text-xs text-secondary-500">판매자</p>
           <p className="text-sm font-semibold text-secondary-800">
             {product.seller.businessName}
           </p>
@@ -323,7 +350,7 @@ export default function ProductInfo({
       {/* ── 카테고리 ── */}
       {product.category && (
         <div className="text-xs space-y-0.5">
-          <p className="text-secondary-400">카테고리</p>
+          <p className="text-secondary-500">카테고리</p>
           <p className="text-secondary-700 font-medium">{product.category.name}</p>
         </div>
       )}

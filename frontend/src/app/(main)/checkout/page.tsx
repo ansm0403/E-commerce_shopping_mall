@@ -182,7 +182,7 @@ export default function CheckoutPage() {
                       </span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-secondary-400">{item.product.brand}</p>
+                      <p className="text-xs text-secondary-500">{item.product.brand}</p>
                       <p className="text-sm font-semibold text-secondary-900 truncate">{item.product.name}</p>
                       <p className="text-xs text-secondary-500">수량 {item.quantity}개</p>
                     </div>
@@ -199,12 +199,14 @@ export default function CheckoutPage() {
               <h2 className="text-base font-bold text-secondary-900 mb-4">배송 정보</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-secondary-700 mb-1">
-                    수령인 <span className="text-red-500">*</span>
+                  <label htmlFor="checkout-recipientName" className="block text-sm font-medium text-secondary-700 mb-1">
+                    수령인 <span className="text-red-500" aria-hidden="true">*</span>
                   </label>
                   <input
                     type="text"
+                    id="checkout-recipientName"
                     name="recipientName"
+                    autoComplete="name"
                     value={form.recipientName}
                     onChange={handleChange}
                     required
@@ -213,12 +215,14 @@ export default function CheckoutPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-secondary-700 mb-1">
-                    연락처 <span className="text-red-500">*</span>
+                  <label htmlFor="checkout-recipientPhone" className="block text-sm font-medium text-secondary-700 mb-1">
+                    연락처 <span className="text-red-500" aria-hidden="true">*</span>
                   </label>
                   <input
                     type="tel"
+                    id="checkout-recipientPhone"
                     name="recipientPhone"
+                    autoComplete="tel"
                     value={form.recipientPhone}
                     onChange={handleChange}
                     required
@@ -227,12 +231,14 @@ export default function CheckoutPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-secondary-700 mb-1">
-                    배송지 주소 <span className="text-red-500">*</span>
+                  <label htmlFor="checkout-shippingAddress" className="block text-sm font-medium text-secondary-700 mb-1">
+                    배송지 주소 <span className="text-red-500" aria-hidden="true">*</span>
                   </label>
                   <input
                     type="text"
+                    id="checkout-shippingAddress"
                     name="shippingAddress"
+                    autoComplete="street-address"
                     value={form.shippingAddress}
                     onChange={handleChange}
                     required
@@ -241,10 +247,11 @@ export default function CheckoutPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-secondary-700 mb-1">
+                  <label htmlFor="checkout-memo" className="block text-sm font-medium text-secondary-700 mb-1">
                     배송 메모
                   </label>
                   <textarea
+                    id="checkout-memo"
                     name="memo"
                     value={form.memo}
                     onChange={handleChange}
@@ -271,7 +278,7 @@ export default function CheckoutPage() {
                   <span>배송비</span>
                   <span>
                     {shippingFee === 0
-                      ? <span className="text-green-600 font-medium">무료</span>
+                      ? <span className="text-green-700 font-medium">무료</span>
                       : `${shippingFee.toLocaleString()}원`
                     }
                   </span>
