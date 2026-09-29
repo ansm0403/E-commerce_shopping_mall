@@ -14,8 +14,8 @@
  * 로그인에 성공해도 로그인 화면에 그대로 머문다(expo-router/build/useScreens.js useSortedScreens —
  * guard=false 인 Screen 만 protectedScreens 로 걸러진다).
  */
-import { useEffect } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { useEffect, type ReactNode } from 'react';
+import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -87,33 +87,57 @@ function RootNavigator() {
   );
 }
 
+/**
+ * 웹 체험판 전용 틀 — PC 브라우저에서 화면이 가로로 끝까지 늘어나지 않게 폰 폭으로 가운데 세운다.
+ * 폰 브라우저(폭 480 이하)에서는 틀이 화면을 꽉 채워 차이가 없다. iOS·안드로이드에서는 그대로 통과.
+ */
+function WebFrame({ children }: { children: ReactNode }) {
+  if (Platform.OS !== 'web') return <>{children}</>;
+  return (
+    <View style={styles.webOuter}>
+      <View style={styles.webInner}>{children}</View>
+    </View>
+  );
+}
+
 export default function RootLayout() {
   useEffect(() => {
     // 다크 배경 고정 — 운영 화면은 야간에 보는 일이 많다.
   }, []);
 
   return (
-    // 제스처(평가 화면의 스와이프)는 이 뷰 안에서만 잡힌다. 안 감싸면 GestureDetector 가 조용히 동작하지 않는다 —
-    // 에러도 없이 카드가 그냥 안 움직인다. 루트에 한 번만 두면 된다(Phase 4).
-    <GestureHandlerRootView style={styles.gestureRoot}>
-      <SafeAreaProvider>
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <BiometricLockProvider>
-            <PushProvider>
-              <StatusBar style="light" />
-              <RootNavigator />
-            </PushProvider>
-            </BiometricLockProvider>
-          </AuthProvider>
-        </QueryClientProvider>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+    <WebFrame>
+      {/* 제스처(평가 화면의 스와이프)는 이 뷰 안에서만 잡힌다. 안 감싸면 GestureDetector 가 조용히 동작하지 않는다 —
+          에러도 없이 카드가 그냥 안 움직인다. 루트에 한 번만 두면 된다(Phase 4). */}
+      <GestureHandlerRootView style={styles.gestureRoot}>
+        <SafeAreaProvider>
+          <QueryClientProvider client={queryClient}>
+            <AuthProvider>
+              <BiometricLockProvider>
+                <PushProvider>
+                  <StatusBar style="light" />
+                  <RootNavigator />
+                </PushProvider>
+              </BiometricLockProvider>
+            </AuthProvider>
+          </QueryClientProvider>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    </WebFrame>
   );
 }
 
 const styles = StyleSheet.create({
   gestureRoot: { flex: 1 },
+  webOuter: { flex: 1, alignItems: 'center', backgroundColor: '#07080b' },
+  webInner: {
+    flex: 1,
+    width: '100%',
+    maxWidth: 480,
+    borderLeftWidth: StyleSheet.hairlineWidth,
+    borderRightWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+  },
   root: { flex: 1 },
   booting: {
     flex: 1,
