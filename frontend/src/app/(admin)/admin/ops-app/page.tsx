@@ -1,5 +1,5 @@
 import LinkCheckSection from './components/LinkCheckSection';
-import { OPS_WEB_URL } from './links';
+import { ANDROID_INSTALL_URL, OPS_WEB_URL } from './links';
 
 /**
  * 관리자 "운영 앱" 페이지 — RN 운영 앱(Ops Companion)의 웹 쪽 입구 (설계 §9 "웹 → 앱 연동 확인" 결정 ⑧).
@@ -10,14 +10,12 @@ import { OPS_WEB_URL } from './links';
  */
 
 /**
- * preview 빌드 설치 링크 — `ops-companion/README.md` "설치해서 써 보기" 와 같은 값. 빌드마다 바뀐다(QR 도 같이 재생성).
- * **GitHub Release 자산**이다(2026-09-27). expo.dev 빌드 페이지는 로그인하지 않은 방문자에게 "Something went wrong" 을 보여줬고,
- * EAS 아티팩트 직링크는 빌드 후 14일에 만료된다(이 빌드는 2026-10-06) — Release 자산은 만료가 없다. 익명 200, ≈108MB.
+ * 설치 링크는 **고정 주소**(`ANDROID_INSTALL_URL` = 웹 체험판 도메인의 `/android`)다. 실제 APK 는 GitHub Release 자산이고
+ * (expo.dev 빌드 페이지는 익명 방문자에게 오류, EAS 직링크는 14일 만료 — Release 는 만료 없음) `ops-companion/vercel.json` 의
+ * redirect 가 그리로 보낸다. 새 빌드 때 바꿀 것 = vercel.json destination + 아래 라벨. QR 은 다시 만들지 않는다.
  */
-const INSTALL_URL =
-  'https://github.com/ansm0403/E-commerce_shopping_mall/releases/download/ops-companion-v1.0.0-4/ops-companion-preview-4.apk';
 const INSTALL_BUILD_LABEL = 'preview 빌드 versionCode 4 · 2026-09-23 · Android APK 약 108MB';
-/** `npx qrcode -o frontend/public/images/ops-app-install-qr.png -w 220 "<INSTALL_URL>"` 로 만든 정적 PNG(외부 이미지 도메인 없음 — CSP) */
+/** `npx qrcode -o frontend/public/images/ops-app-install-qr.png -w 220 -m 2 "<ANDROID_INSTALL_URL>"` 로 만든 정적 PNG(외부 이미지 도메인 없음 — CSP) */
 const INSTALL_QR_SRC = '/images/ops-app-install-qr.png';
 /** `npx qrcode -o frontend/public/images/ops-app-web-qr.png -w 220 -m 2 "<OPS_WEB_URL>"` — 웹 체험판(2026-09-30) */
 const WEB_QR_SRC = '/images/ops-app-web-qr.png';
@@ -54,7 +52,7 @@ export default function AdminOpsAppPage() {
             <img src={INSTALL_QR_SRC} alt="운영 앱 설치 링크 QR" width={140} height={140} style={qr} />
             <p style={small}>
               폰에서 QR 을 찍거나{' '}
-              <a href={INSTALL_URL} target="_blank" rel="noreferrer" style={link}>
+              <a href={ANDROID_INSTALL_URL} target="_blank" rel="noreferrer" style={link}>
                 설치 링크(APK)
               </a>
               를 엽니다. 스토어 밖 APK 라 &quot;출처를 알 수 없는 앱 설치&quot; 를 한 번 허용해야 합니다. 푸시·생체 잠금까지 전부 됩니다.

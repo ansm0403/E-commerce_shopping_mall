@@ -4,5 +4,12 @@
   "buildCommand": "npx expo export -p web",
   "outputDirectory": "dist",
   "ignoreCommand": "git diff --quiet HEAD^ HEAD -- .",
+  "redirects": [
+    {
+      "source": "/android",
+      "destination": "https://github.com/ansm0403/E-commerce_shopping_mall/releases/download/ops-companion-v1.0.0-4/ops-companion-preview-4.apk",
+      "permanent": false
+    }
+  ],
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
