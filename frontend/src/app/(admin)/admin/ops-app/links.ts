@@ -12,3 +12,10 @@ export const appDeepLink = (incidentId: string) => `opscompanion://incidents/${i
  */
 export const OPS_WEB_URL = 'https://e-commerce-ops-companion.vercel.app';
 export const webTrialLink = (incidentId: string) => `${OPS_WEB_URL}/incidents/${incidentId}`;
+
+/**
+ * Android APK 의 **고정 주소**. 실제 APK(GitHub Release 의 특정 버전)로는 `ops-companion/vercel.json` 의
+ * `redirects`(307, 임시 이동)가 보낸다 — 새 빌드를 내도 이 주소와 QR(포트폴리오에 인쇄된 것 포함)은 그대로이고
+ * vercel.json 의 destination 한 줄만 바꾼다. 영구 이동(308)은 브라우저가 기억해 옛 APK 로 보낼 수 있어 쓰지 않는다.
+ */
+export const ANDROID_INSTALL_URL = `${OPS_WEB_URL}/android`;

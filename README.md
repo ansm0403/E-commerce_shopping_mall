@@ -14,7 +14,7 @@
 |---|---|---|
 | 쇼핑몰 웹 | https://shopping-mall-frontend-dusky.vercel.app | 로그인 화면 **"관리자 페이지 체험하기"** 로 데모 관리자 진입(계정 정보 불필요) |
 | 백엔드 API | https://api.ansmoon.dev/v1/health | nginx + Let's Encrypt. 응답의 `version` 이 배포된 커밋 SHA, DB·Redis 중 하나라도 죽으면 503 |
-| 운영 앱(안드로이드) | [APK 설치 링크](https://github.com/ansm0403/E-commerce_shopping_mall/releases/download/ops-companion-v1.0.0-4/ops-companion-preview-4.apk) · [설치 안내](ops-companion/README.md#설치해서-써-보기-포트폴리오-방문자용) | 스토어 미배포(EAS preview 빌드). 로그인 화면 **"데모 계정으로 체험하기"** |
+| 운영 앱(안드로이드) | [APK 설치 링크](https://e-commerce-ops-companion.vercel.app/android) · [설치 안내·QR](ops-companion/README.md#설치해서-써-보기-포트폴리오-방문자용) | 스토어 미배포(EAS preview 빌드). 로그인 화면 **"데모 계정으로 체험하기"** |
 | 운영 앱(아이폰·PC) | https://e-commerce-ops-companion.vercel.app | **웹 체험판** — 같은 RN 코드를 react-native-web 으로 내보낸 것. 설치 없이 데모 로그인, 푸시·생체 잠금만 없음 |
 | 저장소 | https://github.com/ansm0403/E-commerce_shopping_mall | 브랜치 → PR → main. main 푸시 = Vercel 자동 배포 |
 
@@ -206,7 +206,7 @@ AI 분석의 재료: 스택트레이스 + `read_source(path, start, end)` 도구
 
 ### 설치해서 써 보기
 
-1. 안드로이드 폰에서 [APK](https://github.com/ansm0403/E-commerce_shopping_mall/releases/download/ops-companion-v1.0.0-4/ops-companion-preview-4.apk)(GitHub Release 자산, versionCode 4, 약 108MB) 설치 → 로그인 화면 **"데모 계정으로 체험하기"**. 보이는 것은 **실제 운영 Sentry 데이터**(최근 14일). 조회·AI 분석(시간당 6건)·채점은 되고, 재분석·메모·푸시는 데모 계정에서 꺼져 있습니다(경계는 백엔드가 토큰 `isDemo` 로 판단 — [표](ops-companion/README.md#설치해서-써-보기-포트폴리오-방문자용)).
+1. 안드로이드 폰에서 [APK](https://e-commerce-ops-companion.vercel.app/android)(고정 주소 → GitHub Release 자산, versionCode 4, 약 108MB) 설치 → 로그인 화면 **"데모 계정으로 체험하기"**. 보이는 것은 **실제 운영 Sentry 데이터**(최근 14일). 조회·AI 분석(시간당 6건)·채점은 되고, 재분석·메모·푸시는 데모 계정에서 꺼져 있습니다(경계는 백엔드가 토큰 `isDemo` 로 판단 — [표](ops-companion/README.md#설치해서-써-보기-포트폴리오-방문자용)).
    아이폰·PC 는 [웹 체험판](https://e-commerce-ops-companion.vercel.app)(설치 없음, 같은 코드의 웹 빌드 — iOS 는 APK 를 설치할 수 없다)에서 같은 버튼으로 들어갑니다.
 2. **웹에서 에러를 내고 앱에서 확인하기**: 쇼핑몰 웹 로그인 → **관리자 페이지 체험하기** → 관리자 메뉴 **운영 앱**(`/admin/ops-app`) → **테스트 에러 보내기**. 페이지가 앱과 같은 API 를 20초마다 물어 "앱 목록에 노출 ✓" 를 보여주면, 앱(안드로이드는 "앱에서 열기" 딥링크, 그 밖은 "웹 체험판에서 열기")에서 `[방문자 테스트 XXXX]` 를 열어 AI 분석 → 채점 → 분석 화면의 "내 판정"까지 볼 수 있습니다. 광고 차단기가 Sentry 터널까지 막으므로 그 경우 페이지가 붉은 안내를 띄웁니다.
 3. 개발자로 실행하려면 `cd ops-companion && yarn start`(Expo Go) — 푸시는 개발 빌드부터, 자세한 건 [ops-companion/README.md](ops-companion/README.md).

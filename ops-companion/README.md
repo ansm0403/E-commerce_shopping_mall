@@ -8,12 +8,30 @@
 
 PC·Metro·Expo 계정 없이, 안드로이드 폰 하나면 된다.
 
-1. 폰에서 설치 링크를 연다 → **https://github.com/ansm0403/E-commerce_shopping_mall/releases/download/ops-companion-v1.0.0-4/ops-companion-preview-4.apk** (preview 빌드 versionCode 4, 2026-09-23, 약 108MB. 웹 관리자 "운영 앱" 페이지의 QR 도 같은 링크다)
-   - **GitHub Release 자산**(태그 `ops-companion-v1.0.0-4`, 2026-09-27)이다. expo.dev 빌드 페이지(`/accounts/…/builds/<id>`)는 로그인하지 않은 방문자에게 "Something went wrong" 을 보여줬고, `eas build:list --json` 의 `artifacts.buildUrl`(APK 직링크)은 **빌드 후 14일에 만료**된다(이 빌드는 2026-10-06). Release 자산은 만료가 없다. 새 빌드를 올릴 때는 APK 를 내려받아 새 태그의 Release 에 첨부하고 이 링크·웹 페이지 상수(`frontend/src/app/(admin)/admin/ops-app/page.tsx` `INSTALL_URL`)·QR(`npx qrcode -o frontend/public/images/ops-app-install-qr.png -w 220 -m 2 "<URL>"`)을 같이 바꾼다.
+1. 폰에서 설치 링크를 연다 → **https://e-commerce-ops-companion.vercel.app/android** (preview 빌드 versionCode 4, 2026-09-23, 약 108MB. 아래 "설치 QR" 과 웹 관리자 "운영 앱" 페이지의 QR 도 같은 주소다)
+   - 이 주소는 **고정 주소**다 — `vercel.json` 의 `redirects`(307 임시 이동)가 실제 APK 인 **GitHub Release 자산**(태그 `ops-companion-v1.0.0-4`)으로 보낸다. expo.dev 빌드 페이지(`/accounts/…/builds/<id>`)는 로그인하지 않은 방문자에게 "Something went wrong" 을 보여줬고, `eas build:list --json` 의 `artifacts.buildUrl`(APK 직링크)은 **빌드 후 14일에 만료**된다. Release 자산은 만료가 없다.
    - 스토어 밖 APK 라 "출처를 알 수 없는 앱 설치" 를 한 번 허용해야 한다. iOS 는 APK 를 설치할 수 없다 → 아래 **웹 체험판**.
 2. 앱을 열고 로그인 화면의 **"데모 계정으로 체험하기"** 를 누른다. 계정 정보는 앱에도 이 문서에도 없다 — 서버가 켜 둔 데모 로그인(`POST /v1/auth/demo-login`, 웹 로그인 화면의 "관리자 페이지 체험하기" 와 같은 경로)이다.
 3. 보이는 것은 **실제 운영 Sentry 데이터**다(쇼핑몰 프론트·백엔드의 최근 14일 이슈 — 관리자 계정은 24시간). 이메일·전화는 백엔드가 마스킹하고, 요청 헤더·쿠키·IP 는 애초에 내려오지 않는다(설계 §5.2 · §7).
 4. **웹에서 에러를 내고 앱에서 확인하기**(연동이 진짜인지 스스로 확인, 2026-09-23): 쇼핑몰 웹 로그인 화면 → **"관리자 페이지 체험하기"**(앱과 같은 데모 계정) → 관리자 메뉴 **"운영 앱"**(`/admin/ops-app`, 설치 링크·QR 도 여기 있다) → **"테스트 에러 보내기"**. 브라우저가 진짜 에러를 프론트 Sentry 프로젝트로 보내고, 페이지의 추적기가 앱과 같은 `GET /v1/ops/incidents` 를 20초마다 물어 **"앱 목록에 노출 ✓"** 와 첫 발생 시각을 보여준다(보통 1~2분 — Sentry 수집 + 백엔드 캐시 60초). 그 다음 앱(폰에서는 페이지의 "앱에서 열기" 딥링크 `opscompanion://incidents/<id>`)에서 `[방문자 테스트 XXXX]` 를 열어 첫 발생 시각을 비교하고 → AI 분석(이 에러를 만든 `frontend/src/app/(admin)/admin/ops-app/visitor-test.ts` 를 읽는지) → 평가 탭에서 채점 → 분석 화면에서 "내 판정" 을 본다. 이 이슈는 온콜 푸시·Slack 을 울리지 않는다(아래 표).
+
+### 설치 QR (최신)
+
+포트폴리오·관리자 페이지에 박힌 QR 과 같은 이미지다. **두 QR 모두 고정 주소라, 새 빌드를 내도 다시 만들지 않는다.**
+
+| Android 앱 (APK) | iPhone·PC 웹 체험판 |
+|---|---|
+| <img src="../frontend/public/images/ops-app-install-qr.png" width="160" alt="Android APK 설치 QR"> | <img src="../frontend/public/images/ops-app-web-qr.png" width="160" alt="웹 체험판 QR"> |
+| https://e-commerce-ops-companion.vercel.app/android | https://e-commerce-ops-companion.vercel.app |
+
+| 고정 주소 (QR 내용) | 지금 도착하는 곳 | 새 버전일 때 바꿀 것 |
+|---|---|---|
+| `…vercel.app/android` | GitHub Release `ops-companion-v1.0.0-4/ops-companion-preview-4.apk` | `vercel.json` 의 `redirects[0].destination` **한 줄** + 웹 페이지 라벨(`page.tsx` `INSTALL_BUILD_LABEL`) + 이 README 의 버전 표기. 새 APK 는 새 태그 Release 에 첨부 |
+| `…vercel.app` | 최신 웹 체험판(배포 = 덮어쓰기) | 없음 |
+
+- 307(임시)을 쓰는 이유: 308(영구)은 브라우저가 기억해 목적지를 바꿔도 옛 APK 로 보낼 수 있다.
+- **QR 이 의존하는 것** — Vercel 프로젝트 `e-commerce-ops-companion` 과 그 기본 도메인. 프로젝트 삭제·이름 변경·기본 도메인 제거를 하지 않는다(새 도메인을 붙이더라도 이 도메인은 남긴다). 옛 Release 는 지워도 되지만(redirect 가 새 것을 가리키면) 굳이 지우지 않는다.
+- QR 다시 만들 일이 생기면: `npx qrcode -o frontend/public/images/<파일>.png -w 220 -m 2 "<주소>"`(같은 명령이면 같은 이미지 — 바이트 비교로 확인 가능).
 
 ### 아이폰·PC — 웹 체험판
 
