@@ -150,6 +150,36 @@ idle ──send──▶ connecting ──meta──▶ streaming ◀──text�
 
 결과는 이 문서 §11 진행표와, 수치 원본은 `docs/roadmap/a11y/` 옆에 `ai-chat/` 폴더로 남긴다(JSON).
 
+### 5-1. 측정 도구
+
+| 스크립트 | 무엇을 |
+|---|---|
+| `scripts/a11y/axe-audit.mjs --admin [--ask "질문"]` | 데모 관리자로 로그인해 `/admin/assistant` 를 axe 로. `--ask` 를 주면 응답이 끝난 화면(말풍선 있음)도 한 번 더 |
+| `scripts/a11y/keyboard-walk.mjs --admin` | 같은 페이지의 Tab 정지·이름·포커스 표시 |
+| `scripts/ai-chat/chat-probe.mjs first-response` | Enter → SSE 프레임 종류별 첫 도착 시각(fetch 응답을 복제해 읽음) + 본문 글자가 처음 바뀐 시각. LLM 실패 회차는 중앙값에서 빼고 따로 기록 |
+| `scripts/ai-chat/chat-probe.mjs stop --backend-log <파일>` | 키보드만으로 전송 → Tab 으로 중지 도달 → **백엔드 로그에 첫 `tool 실행:` 이 찍힌 직후** 중지(수정 전/후 같은 시점) → 서버 로그·DB 저장 내용·새로고침 후 화면·포커스 위치 |
+| `scripts/ai-chat/chat-probe.mjs bad-token` | 저장된 access 토큰의 서명 끝을 바꾼 뒤 전송(G4) |
+| `scripts/ai-chat/route-table.mjs` | 빌드 로그의 라우트 표 → JSON, `--diff` 로 전/후 비교 |
+
+프로브는 화면 구조에 기대지 않는다(`textarea` + 키보드, "중지" 버튼, 본문 글자) — 구조를 분해한 뒤에도 같은 스크립트가 돈다.
+조건: 로컬 백엔드(`OPS_PUSH_ENABLED=false node --enable-source-maps dist/main.js`) + 프론트 운영 빌드(`next start`), 데모 관리자, `gemini-3.1-flash-lite`.
+
+### 5-2. 수정 전(before) 실측 — 2026-10-03
+
+| 항목 | 결과 | 원본 |
+|---|---|---|
+| axe (WCAG 2.1 A/AA) | 빈 화면 **대비 위반 3곳**(안내 문구 `#94a3b8` 2 · 페이지 부제 1), 응답 후 화면 1곳(부제). **`label` 위반은 잡히지 않았다** — axe 는 placeholder 를 이름으로 인정한다(§1-3 G6 의 예상과 다름, `ex-a11y-bundle.md` 주문서 입력칸과 같은 현상) | `axe-before.json` |
+| 키보드(정적) | Tab 정지 13(빈 화면에선 "새 대화"·"전송" 이 disabled 라 정지 아님). **입력창에 포커스 표시가 없다**(`outline: none`) 1건. 입력창 이름은 placeholder 뿐 | `keyboard-before.json` |
+| 키보드(전송 → 중지 → 재입력) | 전송 직후 포커스가 **`body` 로 빠진다**(입력창 `disabled`) → Tab 1회로 "중지" → 중지 후에도 포커스 `body` → **클릭 없이 다시 입력 불가** | `stop-before.json` `keyboard` |
+| 첫 반응까지 | "지난달 매출 알려줘" 성공 5회: 화면 첫 변화 **중앙값 4,187ms**(2,585~6,808). 그동안 화면은 `…` 뿐. `meta` 프레임은 64ms 에 오지만 화면에 쓰이지 않는다. (첫 시도 묶음은 5회 중 2회가 Gemini 503 — 재측정) | `first-response-before.json` |
+| 중지 → 서버 | 도구 2개 질문, 첫 도구 실행 직후 중지. 중지 때 화면의 답변 **0자**. 서버는 계속: 도구 2회 실행 · LLM **2라운드** · `[usage]` 로그까지 정상 종료 · **78자 저장** → 새로고침하면 **보지 않은 답변이 나타난다**(G3 확정). 모델이 두 도구를 한 라운드에 같이 요청해 라운드는 2회 | `stop-before.json` |
+| G4 (401) | **재현됨**. 토큰을 망가뜨리고 전송 → `POST /api/admin/assistant/stream` 401 → refresh 호출 없음 → "응답을 받지 못했습니다". 화면을 열어 둔 채 access 가 만료된 경우와 같은 조건(실제로 15분을 기다려 보지는 않았다) | `bad-token-before.json` |
+| G5 (IME) | **재현 안 됨**(사용자 수동, Chrome, 3회). "매출 알려줘" 의 마지막 글자 조합 중 Enter → 3회 모두 전송 1번 · 보낸 말풍선 "매출 알려줘" 그대로 · 입력창에 남은 글자 없음. → ③ 의 `isComposing` 검사는 **예방적 수정**으로 기록한다(다른 브라우저·IME 는 확인하지 않음) | 수동 |
+| 스크린리더(NVDA) | 사용자가 청취했으나 **읽은 내용은 기록되지 않았다**(2026-10-04 "확인 완료"만 전달). before 값이 필요하면 `main`(bd5dbbb)을 빌드해 다시 듣는다 — 코드상으로는 `aria-live`·`role=status` 가 없다 | 수동(미기록) |
+| 번들 | `/admin/assistant` 3.17 kB / First Load **226 kB**, 공용 223 kB, 라우트 42개 | `bundle-before.json` |
+
+참고: 로컬 DB 에는 2026년 6월·9월 주문이 없어 답변이 "0원"으로 나온다. 시간·중지 측정에는 영향이 없지만 표가 든 답변은 로컬에서 자연스럽게 나오지 않는다(⑥ 은 mock 응답으로 확인).
+
 ---
 
 ## 6. 작업 순서 (커밋 단위 — 각 단계가 그 자체로 동작)
@@ -222,7 +252,7 @@ idle ──send──▶ connecting ──meta──▶ streaming ◀──text�
 
 | 단계 | 상태 | 비고 |
 |---|---|---|
-| ① 수정 전 측정 | ⬜ | |
+| ① 수정 전 측정 | ✅ | §5-2(2026-10-03~04). G4 재현됨 · G5 재현 안 됨(예방적 수정) · NVDA before 는 청취만 하고 내용 미기록 |
 | ② 구조 분해 | ⬜ | |
 | ③ 입력·인증 결함 | ⬜ | |
 | ④ 백엔드 B-1·B-2 | ⬜ | |
