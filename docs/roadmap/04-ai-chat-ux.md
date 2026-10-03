@@ -118,6 +118,7 @@ idle ──send──▶ connecting ──meta──▶ streaming ◀──text�
 
 - Enter 전송 / Shift+Enter 줄바꿈 / **조합 중(`e.nativeEvent.isComposing`) Enter 는 무시**(G5, `SearchBar.tsx` 와 같은 방식).
 - 시각적으로 숨긴 `<label>` 로 이름 부여(G6). 스트리밍 중 `disabled` 대신 `readOnly` + `aria-disabled` 를 검토한다 — `disabled` 는 포커스를 잃게 만들어 중지 후 다시 입력하려면 클릭해야 한다(**실측 후 결정**).
+  - **결정(2026-10-04, 실측 후)**: `disabled` 는 실제로 포커스를 `body` 로 보냈다(§5-2). `readOnly` 도 쓰지 않고 **응답 중에도 입력창을 그대로 둔다** — 다음 질문을 미리 써 둘 수 있고, 스크린리더가 "읽기 전용"으로 읽지 않는다. 응답 중 Enter 는 전송되지 않고 입력이 그대로 남는다(훅이 거절).
 - 전송 직후 포커스는 입력창에 남고, 중지 버튼은 키보드로 도달 가능(Tab 순서: 입력창 → 중지).
 
 ---
@@ -254,7 +255,7 @@ idle ──send──▶ connecting ──meta──▶ streaming ◀──text�
 |---|---|---|
 | ① 수정 전 측정 | ✅ | §5-2(2026-10-03~04). G4 재현됨 · G5 재현 안 됨(예방적 수정) · NVDA before 는 청취만 하고 내용 미기록 |
 | ② 구조 분해 | ✅ | `parseSseChunk`(+단위 9건, 깨진 JSON 건너뛰기 포함 — G9) · `useAssistantStream` · `MessageList`/`MessageBubble`/`Composer`/`EmptyState` · 이 화면의 `style={{}}` 0곳. **화면 불변 확인**: 수정 전/후 스크린샷 4장(데스크톱·모바일 × 빈 화면·복원)이 바이트 단위로 동일(`scripts/ai-chat/screenshot.mjs`), 프로브 3종 결과도 before 와 같음(401 그대로 · 중지 후 서버 2라운드 그대로 · 포커스 `body`). 번들 3.17 → 3.27 kB / First Load 226 → 227 kB. tsc · eslint 통과 |
-| ③ 입력·인증 결함 | ⬜ | |
+| ③ 입력·인증 결함 | ✅ | **401(G4)**: `fetchWithAuth` — 401 → `refreshAccessToken()` → 1회 재시도, 복원 조회도 같은 래퍼. 실제 빌드에서 `401 → /auth/refresh 200 → 201` + 답변 수신 확인(before: 401 에서 끝). axios 모듈은 401 때만 동적 import(정적이면 First Load 227 → 249 kB, 동적이면 227 유지 — 측정). **포커스**: 입력창을 응답 중에도 잠그지 않기로 결정(§3-2) → 전송 후 포커스 `body` → **입력창 유지**, 중지 후 클릭 없이 재입력 **불가 → 가능**(프로브). 중지 버튼이 사라질 때 포커스를 입력창으로 복귀. **포커스 표시 없음 1 → 0**(키보드 측정). **label**: 숨김 `<label>` "질문 입력". **IME(G5)**: `isComposing` 검사 — before 에서 재현되지 않았으므로 **예방적 수정**. 수정 후 사용자 재확인(Chrome): 조합 중 Enter 를 여러 번 눌러도 보내려던 메시지 1건만 전송. 중지 버튼 `red-500`(대비 3.76) → `red-600`. 테스트: `admin-assistant.spec.ts` 11건(401 → 갱신 → 재시도 1회 · 두 번째 401 은 재시도 안 함 · 갱신 실패 시 재시도 안 함 · 복원 조회) — 훅이 아니라 로직이 있는 서비스 함수에서 고정. tsc · eslint 통과 |
 | ④ 백엔드 B-1·B-2 | ⬜ | |
 | ⑤ 도구 진행 표시 + 칩 | ⬜ | |
 | ⑥ 마크다운 + 배칭 | ⬜ | |
