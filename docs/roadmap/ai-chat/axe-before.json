@@ -1,0 +1,50 @@
+[
+  {
+    "name": "AI 어시스턴트",
+    "path": "/admin/assistant",
+    "finalPath": "/admin/assistant",
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "nodes": [
+          {
+            "target": "p",
+            "html": "<p style=\"margin: 4px 0px 0px; font-size: 13px; color: rgb(100, 116, 139);\">사내 운영 데이터를 자연어로 묻고 분석을 받습니다.</p>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.34 (foreground color: #64748b, background color: #f1f5f9, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".p-3 > div",
+            "html": "<div style=\"margin: auto; text-align: center; color: rgb(148, 163, 184); font-size: 14px; line-height: 1.7;\">관리자 어시스턴트입니다.<br>궁금한 운영 내용을 자연어로 물어보세요.<br><span st",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.56 (foreground color: #94a3b8, background color: #ffffff, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".p-3 > div > span",
+            "html": "<span style=\"font-size: 12px;\">매출·주문·감사로그·상품을 실데이터로 조회합니다. 대화는 저장되어 새로고침 후에도 이어집니다.</span>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.56 (foreground color: #94a3b8, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "AI 어시스턴트(응답 후)",
+    "path": "/admin/assistant",
+    "finalPath": "/admin/assistant",
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "nodes": [
+          {
+            "target": "p",
+            "html": "<p style=\"margin: 4px 0px 0px; font-size: 13px; color: rgb(100, 116, 139);\">사내 운영 데이터를 자연어로 묻고 분석을 받습니다.</p>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.34 (foreground color: #64748b, background color: #f1f5f9, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  }
+]

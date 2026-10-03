@@ -1,0 +1,21 @@
+{
+  "mode": "bad-token",
+  "measuredAt": "2026-10-03T14:39:32.049Z",
+  "base": "http://localhost:3000",
+  "question": "지난달 매출 알려줘",
+  "tokenStorage": "sessionStorage",
+  "requests": [
+    {
+      "method": "POST",
+      "path": "/api/admin/assistant/stream",
+      "status": 401
+    }
+  ],
+  "streamStatuses": [
+    401
+  ],
+  "refreshCalled": false,
+  "tokenReplaced": false,
+  "gotAnswer": false,
+  "shown": "사내 운영 데이터를 자연어로 묻고 분석을 받습니다.지난달 매출 알려줘응답을 받지 못했습니다. 잠시 후 다시 시도하세요."
+}

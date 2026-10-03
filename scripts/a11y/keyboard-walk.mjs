@@ -4,6 +4,7 @@
  * axe-audit.mjs 와 같은 흐름·같은 계정. 수정 전/후에 같은 스크립트로 비교한다.
  *
  * 실행(저장소 루트): node scripts/a11y/keyboard-walk.mjs [--base http://localhost:3000] [--max-tabs 80] [--json out.json] [--verbose]
+ *                   node scripts/a11y/keyboard-walk.mjs --admin  → 데모 관리자로 로그인해 /admin/assistant 만 잰다
  *
  * 페이지마다 세는 것
  *  - tabStops      : Tab 으로 도달한 요소 수(첫 요소로 돌아오거나 max-tabs 에서 멈춤)
@@ -14,7 +15,7 @@
  */
 import { chromium } from 'playwright-core';
 import { writeFileSync } from 'node:fs';
-import { apiAuth, ensureCartItem } from './lib.mjs';
+import { ADMIN_PAGES, apiAuth, ensureCartItem, loginAsDemoAdmin } from './lib.mjs';
 
 const args = parseArgs(process.argv.slice(2));
 const BASE = args.base.replace(/\/$/, '');
@@ -41,12 +42,17 @@ const AUTH_PAGES = [
   { name: '주문서', path: '/checkout', via: () => page.getByRole('button', { name: '구매하기' }).click() },
 ];
 
-// 장바구니는 브라우저가 캐시하기 전에 API 로 채워 둔다(로그인 후에 채우면 HomeCart 가 캐시한 빈 장바구니가 보인다)
-await ensureCartItem(API, await apiAuth(API, args.email, args.password), args.productId);
 const results = [];
-for (const p of PUBLIC_PAGES) results.push(await walk(p));
-await login();
-for (const p of AUTH_PAGES) results.push(await walk(p));
+if (args.admin) {
+  await loginAsDemoAdmin(page, BASE);
+  for (const p of ADMIN_PAGES) results.push(await walk(p));
+} else {
+  // 장바구니는 브라우저가 캐시하기 전에 API 로 채워 둔다(로그인 후에 채우면 HomeCart 가 캐시한 빈 장바구니가 보인다)
+  await ensureCartItem(API, await apiAuth(API, args.email, args.password), args.productId);
+  for (const p of PUBLIC_PAGES) results.push(await walk(p));
+  await login();
+  for (const p of AUTH_PAGES) results.push(await walk(p));
+}
 await browser.close();
 
 print(results);
@@ -208,11 +214,13 @@ function parseArgs(argv) {
     json: null,
     headed: false,
     verbose: false,
+    admin: false,
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--headed') out.headed = true;
     else if (a === '--verbose') out.verbose = true;
+    else if (a === '--admin') out.admin = true;
     else if (a.startsWith('--')) out[a.slice(2).replace(/-([a-z])/g, (_, c) => c.toUpperCase())] = argv[++i];
   }
   return out;

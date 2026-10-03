@@ -41,7 +41,8 @@ PC·Metro·Expo 계정 없이, 안드로이드 폰 하나면 된다.
 - 인시던트 주소(`/incidents/<id>`)를 로그인 전에 열어도 데모 로그인 뒤 그 인시던트로 간다(`usePushRouting.web.ts` — 앱에서 푸시가 하는 "로그인 후 목적지" 를 URL 로). 웹 "운영 앱" 페이지 추적기의 "웹 체험판에서 열기" 가 이 경로다.
 - 앱과 다른 점: 푸시·생체 잠금이 없다(프로필에 "불가" 로 표시). 토큰은 SecureStore 대신 **sessionStorage** — 탭을 닫으면 로그아웃된다. PC 에서는 폰 폭(최대 480px)으로 가운데 선다.
 - 웹 체험판은 "iOS 앱" 이 아니라 "같은 코드의 웹 빌드" 다. iOS **네이티브** 동작은 아래 "실기기에서 실행(Expo Go)" 방식으로 따로 확인한다.
-- 웹 전용 구현은 `*.web.ts` 파일(`src/lib/token-storage.web.ts` · `biometrics.web.ts` · `src/features/push/usePushRouting.web.ts`)이다. Metro 가 웹 번들에서만 이 파일을 고르므로 iOS·안드로이드 번들에는 들어가지 않는다.
+- 웹 전용 구현은 `*.web.ts` 파일(`src/lib/token-storage.web.ts` · `biometrics.web.ts` · `src/features/push/usePushRouting.web.ts`)이다. Metro 가 웹 번들에서만 이 파일을 고르므로 iOS·안드로이드 번들에는 들어가지 않는다. 파일을 나누지 않은 웹 분기는 `Platform.OS === 'web'` 세 곳: `src/lib/notifications.ts`(푸시 등록 `unsupported` 반환) · `app/(auth)/login.tsx`(`DEMO_ONLY`) · `app/_layout.tsx`(`WebFrame` — PC 480px 폭).
+- 관리자 "운영 앱" 페이지 추적기의 "앱에서 열기" 딥링크는 **안드로이드 UA 에서만** 보인다(`LinkCheckSection.tsx` `isAndroidUserAgent`). 그 밖의 기기는 "웹 체험판에서 열기" 만.
 
 데모 계정으로 되는 것과 꺼진 것(토큰의 `isDemo` 로 **백엔드가** 판단한다 — 앱 화면은 안내일 뿐):
 

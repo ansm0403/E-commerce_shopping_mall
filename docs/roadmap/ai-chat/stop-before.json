@@ -1,0 +1,55 @@
+{
+  "mode": "stop",
+  "measuredAt": "2026-10-03T14:41:18.152Z",
+  "base": "http://localhost:3000",
+  "question": "2026년 6월 매출이랑 주문 상태 분포를 같이 정리해줘",
+  "stopTrigger": "백엔드 로그의 첫 \"tool 실행:\" 직후",
+  "stillStreamingAtStop": true,
+  "keyboard": {
+    "focusAfterSend": {
+      "tag": "body",
+      "name": ""
+    },
+    "tabsToStop": 1,
+    "focusAfterStop": {
+      "tag": "body",
+      "name": ""
+    },
+    "typedWithoutClick": false
+  },
+  "shownAtStop": "사내 운영 데이터를 자연어로 묻고 분석을 받습니다.2026년 6월 매출이랑 주문 상태 분포를 같이 정리해줘",
+  "server": {
+    "toolRuns": 2,
+    "llmRounds": 2,
+    "finishedNormally": true,
+    "log": [
+      "DEBUG [GeminiClient] usage round=0 input=2388 cached=0 output=84",
+      "DEBUG [AssistantService] tool 실행: get_sales_summary args={\"startDate\":\"2026-06-01\",\"endDate\":\"2026-06-30\"}",
+      "DEBUG [AssistantService] tool 실행: get_order_stats args={\"startDate\":\"2026-06-01\",\"endDate\":\"2026-06-30\"}",
+      "DEBUG [GeminiClient] usage round=1 input=2599 cached=0 output=36",
+      "LOG [AssistantService] [usage] conv=16 input=4987 cached=0 output=120 cacheHitRatio=0.000"
+    ]
+  },
+  "saved": {
+    "conversationId": "16",
+    "status": 200,
+    "messages": [
+      {
+        "role": "user",
+        "content": "2026년 6월 매출이랑 주문 상태 분포를 같이 정리해줘"
+      },
+      {
+        "role": "assistant",
+        "content": "2026년 6월 기간 동안 발생한 매출 및 주문 내역이 없습니다. 해당 기간의 데이터가 존재하지 않아 상세 내용을 제공해 드릴 수 없습니다."
+      }
+    ]
+  },
+  "shownAfterReload": "사내 운영 데이터를 자연어로 묻고 분석을 받습니다.2026년 6월 매출이랑 주문 상태 분포를 같이 정리해줘2026년 6월 기간 동안 발생한 매출 및 주문 내역이 없습니다. 해당 기간의 데이터가 존재하지 않아 상세 내용을 제공해 드릴 수 없습니다.",
+  "wireBeforeStop": {
+    "meta": 71,
+    "tool": null,
+    "text": null,
+    "done": null,
+    "error": null
+  }
+}

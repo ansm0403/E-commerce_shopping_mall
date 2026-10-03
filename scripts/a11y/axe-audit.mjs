@@ -7,6 +7,9 @@
  *   node scripts/a11y/axe-audit.mjs [--base http://localhost:3000] [--api http://localhost:4000/v1]
  *                                   [--email a11y-buyer@test.local] [--password ...] [--product-id 349]
  *                                   [--json out.json] [--headed]
+ *   node scripts/a11y/axe-audit.mjs --admin [--ask "지난달 매출 알려줘"] [--json out.json]
+ *     관리자 모드 — 데모 관리자로 로그인해 /admin/assistant 만 잰다(장바구니 준비 없음).
+ *     --ask 를 주면 빈 화면을 잰 뒤 그 질문을 보내고, 응답이 끝난 화면(말풍선 있음)을 한 번 더 잰다(LLM 호출 발생).
  *
  * 흐름: 비로그인(홈·상품 목록·상품 상세·로그인) → 로그인 폼으로 실제 로그인 → API 로 장바구니에 1개 담기 → 장바구니·주문서.
  * 주의:
@@ -17,7 +20,7 @@
 import { chromium } from 'playwright-core';
 import { createRequire } from 'node:module';
 import { writeFileSync } from 'node:fs';
-import { apiAuth, ensureCartItem } from './lib.mjs';
+import { ADMIN_PAGES, apiAuth, ensureCartItem, loginAsDemoAdmin } from './lib.mjs';
 
 const require = createRequire(import.meta.url);
 const AXE_PATH = require.resolve('axe-core/axe.min.js');
@@ -53,13 +56,19 @@ const context = await browser.newContext({ viewport: { width: 1280, height: 900 
 await context.route(SENTRY_RE, (route) => route.abort());
 const page = await context.newPage();
 
-// 장바구니는 브라우저가 캐시하기 전에 API 로 채워 둔다(로그인 후에 채우면 HomeCart 가 캐시한 빈 장바구니가 보인다)
-await ensureCartItem(API, await apiAuth(API, args.email, args.password), args.productId);
 const results = [];
-for (const p of PUBLIC_PAGES) results.push(await audit(p));
+if (args.admin) {
+  await loginAsDemoAdmin(page, BASE);
+  for (const p of ADMIN_PAGES) results.push(await audit(p));
+  if (args.ask) results.push(await auditAfterAsk(args.ask));
+} else {
+  // 장바구니는 브라우저가 캐시하기 전에 API 로 채워 둔다(로그인 후에 채우면 HomeCart 가 캐시한 빈 장바구니가 보인다)
+  await ensureCartItem(API, await apiAuth(API, args.email, args.password), args.productId);
+  for (const p of PUBLIC_PAGES) results.push(await audit(p));
 
-await login();
-for (const p of AUTH_PAGES) results.push(await audit(p));
+  await login();
+  for (const p of AUTH_PAGES) results.push(await audit(p));
+}
 
 await browser.close();
 
@@ -81,6 +90,22 @@ async function audit({ name, path, via }) {
   }
   // 클라이언트 렌더·리다이렉트 안정화
   await page.waitForTimeout(1500);
+  return runAxe({ name, path });
+}
+
+/** 어시스턴트에 질문을 보내고 응답이 끝난 화면을 잰다 — 입력은 키보드로만(화면 구조가 바뀌어도 같은 스크립트가 돌게) */
+async function auditAfterAsk(question) {
+  const input = page.locator('textarea').first();
+  await input.fill(question);
+  await input.press('Enter');
+  const stop = page.getByRole('button', { name: '중지' });
+  await stop.waitFor({ state: 'visible', timeout: 10000 });
+  await stop.waitFor({ state: 'hidden', timeout: 90000 });
+  await page.waitForTimeout(500);
+  return runAxe({ name: 'AI 어시스턴트(응답 후)', path: new URL(page.url()).pathname });
+}
+
+async function runAxe({ name, path }) {
   const finalPath = new URL(page.url()).pathname;
   await page.addScriptTag({ path: AXE_PATH });
   const r = await page.evaluate(async (tags) => {
@@ -135,10 +160,13 @@ function parseArgs(argv) {
     productId: '349',
     json: null,
     headed: false,
+    admin: false,
+    ask: null,
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--headed') out.headed = true;
+    else if (a === '--admin') out.admin = true;
     else if (a.startsWith('--')) {
       const key = a.slice(2).replace(/-([a-z])/g, (_, c) => c.toUpperCase());
       out[key] = argv[++i];

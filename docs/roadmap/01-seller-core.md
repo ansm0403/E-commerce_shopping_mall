@@ -81,6 +81,7 @@
     `main.ts`에 `express.static('/uploads')` 추가(글로벌 prefix `v1` 미적용) + `next.config.js` rewrites에
     `/uploads/:path*` 프록시 추가(API 타깃에서 `/v1`만 뗀 주소로). ⚠ **diskStorage라 컨테이너 재배포 시
     파일 유실** — S3 등 외부 스토리지 전환 전까지의 한계로 기록해 둔다.
+    → **해소**: 운영 compose 호스트 볼륨 `./uploads:/app/uploads`(`docker-compose.prod.yaml`, 03-infra-nginx §7-3).
   - **등록은 2단계 API**: `POST /products` 성공 후 그 id로 `POST /products/:id/images`(장당 순차 업로드,
     첫 장이 대표). 이미지 단계 실패는 "등록 실패"가 아니라 "이미지만 추가 못 함"으로 안내(`ImageUploadError`).
   - **FormData 함정**: axios 인스턴스가 `Content-Type: application/json`을 고정하므로 업로드 요청에서만
