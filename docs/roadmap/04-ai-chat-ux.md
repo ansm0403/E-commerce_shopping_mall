@@ -253,7 +253,7 @@ idle ──send──▶ connecting ──meta──▶ streaming ◀──text�
 | 단계 | 상태 | 비고 |
 |---|---|---|
 | ① 수정 전 측정 | ✅ | §5-2(2026-10-03~04). G4 재현됨 · G5 재현 안 됨(예방적 수정) · NVDA before 는 청취만 하고 내용 미기록 |
-| ② 구조 분해 | ⬜ | |
+| ② 구조 분해 | ✅ | `parseSseChunk`(+단위 9건, 깨진 JSON 건너뛰기 포함 — G9) · `useAssistantStream` · `MessageList`/`MessageBubble`/`Composer`/`EmptyState` · 이 화면의 `style={{}}` 0곳. **화면 불변 확인**: 수정 전/후 스크린샷 4장(데스크톱·모바일 × 빈 화면·복원)이 바이트 단위로 동일(`scripts/ai-chat/screenshot.mjs`), 프로브 3종 결과도 before 와 같음(401 그대로 · 중지 후 서버 2라운드 그대로 · 포커스 `body`). 번들 3.17 → 3.27 kB / First Load 226 → 227 kB. tsc · eslint 통과 |
 | ③ 입력·인증 결함 | ⬜ | |
 | ④ 백엔드 B-1·B-2 | ⬜ | |
 | ⑤ 도구 진행 표시 + 칩 | ⬜ | |

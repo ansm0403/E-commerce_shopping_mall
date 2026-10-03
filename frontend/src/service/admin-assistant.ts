@@ -1,4 +1,5 @@
 import { authStorage } from './auth-storage';
+import { parseSseChunk } from './assistant-sse';
 
 /**
  * 관리자 AI 어시스턴트 — 스트리밍 클라이언트.
@@ -81,21 +82,11 @@ export async function* streamAssistantChat(
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-
-    // SSE 프레임은 빈 줄(\n\n)로 구분된다.
-    let sep: number;
-    while ((sep = buffer.indexOf('\n\n')) !== -1) {
-      const frame = buffer.slice(0, sep);
-      buffer = buffer.slice(sep + 2);
-
-      const dataLine = frame
-        .split('\n')
-        .find((line) => line.startsWith('data:'));
-      if (!dataLine) continue;
-
-      const json = dataLine.slice(5).trim();
-      if (json) yield JSON.parse(json) as AssistantEvent;
-    }
+    // 끝난 프레임만 꺼내고, 잘린 나머지는 다음 청크 앞에 붙인다.
+    const { events, rest } = parseSseChunk<AssistantEvent>(
+      buffer + decoder.decode(value, { stream: true }),
+    );
+    buffer = rest;
+    yield* events;
   }
 }
