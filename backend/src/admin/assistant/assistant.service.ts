@@ -24,16 +24,8 @@ import { AssistantConversationEntity } from './entity/conversation.entity';
 import { AssistantMessageEntity } from './entity/message.entity';
 import { ASSISTANT_TOOLS } from './assistant-tools';
 import { maskAuditLogs } from './assistant-masking';
-
-/**
- * 어시스턴트 → 프론트로 흘려보내는 SSE 와이어 이벤트.
- * LlmClient 의 중립 이벤트(text/done)에 어시스턴트 계층 전용(meta/error)을 더한 것.
- */
-export type AssistantStreamEvent =
-  | { type: 'meta'; conversationId: string } // 스트림 시작 시 1회 — 대화 식별자 통지
-  | { type: 'text'; delta: string }
-  | { type: 'done' }
-  | { type: 'error'; message: string };
+// 와이어 타입은 프론트와 공유한다. ⚠ 백엔드는 shared 를 값으로 import 하면 운영 이미지에서 깨진다 — type 만.
+import type { AssistantStreamEvent } from '@shopping-mall/shared';
 
 /**
  * (Phase 7) 도구 호출 1건의 관측 기록 — eval 채점의 원재료.
@@ -471,13 +463,20 @@ export class AssistantService {
    * (Phase 2.5) 멀티턴 스트리밍 처리. SSE 이벤트를 순서대로 yield 한다.
    * - conversationId 로 기존 대화를 로드(소유권 검증), 없으면 새 대화를 만든다.
    * - 시작 시 meta(conversationId) → text delta들 → done.
+   * - 도구를 실행하기 직전에 tool(name) 을 보낸다 — 이름만(인자에는 기간·필터가 있어 브라우저로 보낼 이유가 없다).
    * - user 메시지는 호출 전, assistant 응답은 완성 후 DB에 누적 저장한다.
+   * - signal 이 중단되면(클라이언트가 "중지"·연결 끊김) **그때까지 보낸 텍스트만** 저장하고 done 없이 끝낸다.
+   *   저장 = 사용자가 본 것이어야 새로고침 후 화면·다음 턴 history 가 일치한다. 빈 문자열이면 저장하지 않는다
+   *   (오류 경로와 같은 상태).
    */
-  async *streamChat(params: {
-    message: string;
-    conversationId?: string;
-    adminUserId: number;
-  }): AsyncGenerator<AssistantStreamEvent> {
+  async *streamChat(
+    params: {
+      message: string;
+      conversationId?: string;
+      adminUserId: number;
+    },
+    signal?: AbortSignal,
+  ): AsyncGenerator<AssistantStreamEvent> {
     if (!this.llm.isEnabled()) {
       yield {
         type: 'error',
@@ -514,10 +513,16 @@ export class AssistantService {
         messages: history,
         tools: ASSISTANT_TOOLS,
         executeTool: (call) => this.executeTool(call),
+        signal,
       })) {
+        // 중단 뒤에 도착한 조각은 사용자가 보지 못했다 — 저장에도 넣지 않는다.
+        if (signal?.aborted) break;
         if (ev.type === 'text') {
           full += ev.delta;
           yield { type: 'text', delta: ev.delta };
+        } else if (ev.type === 'tool_call') {
+          // tool_call 은 실행 직전에 온다 → "조회 시작" 신호로 이름만 전달.
+          yield { type: 'tool', name: ev.call.name };
         } else if (ev.type === 'usage') {
           // (Phase 6) usage 는 프론트로 흘리지 않고 서버 로그로만 — 캐시 적중/토큰 관측용.
           // cached>0 이면 implicit 캐싱 적중. cached 비율로 절감(입력 75% 할인분) 추정.
@@ -529,15 +534,19 @@ export class AssistantService {
               }`,
           );
         }
-        // tool_call/done은 클라이언트로 전달하지 않는다(서버 로그로만). done은 루프 후 별도 yield.
+        // LLM 의 done 은 전달하지 않는다 — 저장을 마친 뒤 아래에서 따로 yield.
       }
     } catch (err) {
-      this.logger.error(`스트리밍 실패: ${(err as Error).message}`, (err as Error).stack);
-      yield { type: 'error', message: 'AI 응답 생성에 실패했습니다.' };
-      return;
+      // 중단으로 SDK 가 던진 예외(AbortError)는 실패가 아니다 → 아래의 부분 저장으로 간다.
+      if (!signal?.aborted) {
+        this.logger.error(`스트리밍 실패: ${(err as Error).message}`, (err as Error).stack);
+        yield { type: 'error', message: 'AI 응답 생성에 실패했습니다.' };
+        return;
+      }
     }
 
-    // 3) 완성된 assistant 응답을 저장 → 다음 턴에 history로 재전송(멀티턴 "기억").
+    // 3) assistant 응답을 저장 → 다음 턴에 history로 재전송(멀티턴 "기억").
+    //    정상 종료면 완성본, 중단이면 그때까지 보낸 부분.
     if (full.length > 0) {
       await this.messageRepo.save(
         this.messageRepo.create({
@@ -546,6 +555,11 @@ export class AssistantService {
           content: full,
         }),
       );
+    }
+
+    if (signal?.aborted) {
+      this.logger.log(`[abort] conv=${conversationId} 클라이언트 중단 — 부분 저장 ${full.length}자`);
+      return;
     }
 
     yield { type: 'done' };

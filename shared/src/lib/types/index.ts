@@ -8,5 +8,6 @@ export * from './order/index.js';
 export * from './settlement/index.js';
 export * from './inquiry/index.js';
 export * from './seller/index.js';
+export * from './assistant/index.js';
 export * from './base.model.js';
 export * from './pagination.js';

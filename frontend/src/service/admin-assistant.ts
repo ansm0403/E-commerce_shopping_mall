@@ -1,3 +1,4 @@
+import type { AssistantStreamEvent } from '@shopping-mall/shared';
 import { authStorage } from './auth-storage';
 import { parseSseChunk } from './assistant-sse';
 
@@ -9,12 +10,8 @@ import { parseSseChunk } from './assistant-sse';
  * (업계 표준: "SSE 포맷 + fetch 스트림")
  */
 
-/** 백엔드 SSE 와이어 이벤트 (AssistantStreamEvent와 1:1). */
-export type AssistantEvent =
-  | { type: 'meta'; conversationId: string }
-  | { type: 'text'; delta: string }
-  | { type: 'done' }
-  | { type: 'error'; message: string };
+/** 백엔드 SSE 와이어 이벤트 — 백엔드와 같은 타입을 shared 에서 가져온다. */
+export type AssistantEvent = AssistantStreamEvent;
 
 // axios baseURL과 동일 규칙: 브라우저 `/api/*` → next.config rewrites → 백엔드 `/v1/*`
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? '/api';

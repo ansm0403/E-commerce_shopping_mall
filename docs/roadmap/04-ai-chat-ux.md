@@ -214,10 +214,12 @@ idle ──send──▶ connecting ──meta──▶ streaming ◀──text�
 
 - **`react-markdown` 은 ESM 전용**이다. 프론트 jest(`next/jest`)에서 import 하는 테스트를 쓰면 변환 오류가 날 수 있다 → 마크다운 컴포넌트 테스트가 필요하면 `transformIgnorePatterns` 조정, 아니면 훅·파서만 테스트하고 렌더링은 육안·Playwright 로.
 - **스트리밍 중 미완성 마크다운** — 표가 반쯤 왔거나 코드펜스가 안 닫힌 상태가 매 프레임 렌더링된다. 깨져 보이는 건 정상이지만 레이아웃이 크게 튀면 "마지막 줄이 표 행이면 그 줄은 텍스트로" 같은 완충을 검토(실측 후).
+- **(로컬 확인 2026-10-04)** 직결(`fetch` → 4000)과 `next start` 의 rewrites 프록시 경유 모두에서 끊김이 백엔드 `res` 의 `close` 로 전파된다. 운영(Vercel → nginx)은 아직 미확인 — 배포 후 백엔드 `[abort]` 로그로 실측한다.
 - **Vercel rewrites → nginx → 백엔드 경로에서 클라이언트 끊김이 전파되는지 확인 필요.** nginx 는 기본값(`proxy_ignore_client_abort off`)이라 끊으면 업스트림도 닫지만, Vercel 프록시 구간은 문서로 확인되지 않았다. 로컬(직결)에서 먼저 확인하고, 운영에서는 백엔드 로그로 실측한다. 전파되지 않으면 운영에서 D5 는 "UI 만 중지"로 남는다 — 그 경우 그대로 적는다.
 - **`res.on('close')` 는 정상 종료 때도 발생**한다 → `res.writableEnded` 가 false 일 때만 abort.
 - **재시도 버튼을 넣지 않는 이유**: 서버가 user 메시지를 LLM 호출 **전에** 저장한다(`assistant.service.ts` L498). 같은 문장을 다시 보내면 history 에 같은 user 턴이 두 번 쌓인다. 재시도를 제대로 하려면 "마지막 user 턴 재실행" API 가 필요하다 → 범위 밖, 후속 후보.
 - **연속 user 턴**: 중단·오류로 assistant 가 저장되지 않으면 다음 요청 history 에 user 턴이 연달아 들어간다. **오늘도 오류 경로에서 이미 생기는 상태**라 새 위험은 아니지만, Gemini 가 이를 어떻게 다루는지는 확인 필요(④에서 한 번 실험).
+  - **실험 결과(2026-10-04, `gemini-3.1-flash-lite`)**: 1턴 "2026년 6월 매출 알려줘" 를 도구 직후 중단 → 2턴 "승인 대기 중인 상품 목록 보여줘". 오류는 없다. 다만 모델이 **중단한 1턴 질문까지 함께 답했다**(도구 2개 실행: 매출 + 상품, 답변에 둘 다). 저장된 턴은 `user, user, assistant`. 중지한 질문이 다음 답변에 되살아나는 것이 거슬리면 "답 없는 user 턴을 history 에서 뺀다" 가 후속 후보(이번 범위에서는 바꾸지 않음).
 - **데모 관리자도 어시스턴트를 쓴다**(`DemoAccountGuard` 없음) — 추천 칩으로 사용량이 늘 수 있다. 무료 티어 분당 15회 + 전역 Throttler 100/분이 상한. 이번 범위에서는 바꾸지 않고, 시연 전 쿼터만 확인.
 - 문서 규칙: 운영 배포 뒤 CLAUDE.md §5 에 옮기기 전까지 루트 README 에는 적지 않는다(시연 가능 범위 원칙).
 
@@ -256,7 +258,7 @@ idle ──send──▶ connecting ──meta──▶ streaming ◀──text�
 | ① 수정 전 측정 | ✅ | §5-2(2026-10-03~04). G4 재현됨 · G5 재현 안 됨(예방적 수정) · NVDA before 는 청취만 하고 내용 미기록 |
 | ② 구조 분해 | ✅ | `parseSseChunk`(+단위 9건, 깨진 JSON 건너뛰기 포함 — G9) · `useAssistantStream` · `MessageList`/`MessageBubble`/`Composer`/`EmptyState` · 이 화면의 `style={{}}` 0곳. **화면 불변 확인**: 수정 전/후 스크린샷 4장(데스크톱·모바일 × 빈 화면·복원)이 바이트 단위로 동일(`scripts/ai-chat/screenshot.mjs`), 프로브 3종 결과도 before 와 같음(401 그대로 · 중지 후 서버 2라운드 그대로 · 포커스 `body`). 번들 3.17 → 3.27 kB / First Load 226 → 227 kB. tsc · eslint 통과 |
 | ③ 입력·인증 결함 | ✅ | **401(G4)**: `fetchWithAuth` — 401 → `refreshAccessToken()` → 1회 재시도, 복원 조회도 같은 래퍼. 실제 빌드에서 `401 → /auth/refresh 200 → 201` + 답변 수신 확인(before: 401 에서 끝). axios 모듈은 401 때만 동적 import(정적이면 First Load 227 → 249 kB, 동적이면 227 유지 — 측정). **포커스**: 입력창을 응답 중에도 잠그지 않기로 결정(§3-2) → 전송 후 포커스 `body` → **입력창 유지**, 중지 후 클릭 없이 재입력 **불가 → 가능**(프로브). 중지 버튼이 사라질 때 포커스를 입력창으로 복귀. **포커스 표시 없음 1 → 0**(키보드 측정). **label**: 숨김 `<label>` "질문 입력". **IME(G5)**: `isComposing` 검사 — before 에서 재현되지 않았으므로 **예방적 수정**. 수정 후 사용자 재확인(Chrome): 조합 중 Enter 를 여러 번 눌러도 보내려던 메시지 1건만 전송. 중지 버튼 `red-500`(대비 3.76) → `red-600`. 테스트: `admin-assistant.spec.ts` 11건(401 → 갱신 → 재시도 1회 · 두 번째 401 은 재시도 안 함 · 갱신 실패 시 재시도 안 함 · 복원 조회) — 훅이 아니라 로직이 있는 서비스 함수에서 고정. tsc · eslint 통과 |
-| ④ 백엔드 B-1·B-2 | ⬜ | |
+| ④ 백엔드 B-1·B-2 | ✅ | **shared**: `AssistantStreamEvent`(+`tool`) 를 `shared/src/lib/types/assistant/` 로, 백엔드는 `import type`(번들에 shared `require` 없음 확인), 프론트의 손 복제 타입 제거. **B-1**: `tool_call` → `{type:'tool',name}`(이름만). **B-2**: 컨트롤러 `res.on('close')`(끝나기 전 닫힘만) → `AbortController` → `streamChat(…, signal)` → `generateWithTools({signal})` → Gemini `config.abortSignal` + 라운드 시작 전·도구 실행 전 검사. 중단 시 보낸 텍스트만 저장·`done` 없음. **실측(로컬, Next 프록시 경유, 같은 프로브)**: 첫 도구 직후 중지 → LLM 라운드 **2 → 1**, 저장된 답변 **78자 → 없음**, 새로고침 화면 = 중지 시점 화면(before: 보지 않은 답변이 나타남). 한 라운드에 요청된 도구 2개는 둘 다 실행됐다(DB 조회가 중단 도착보다 빨랐다) — 줄어든 것은 **다음 LLM 라운드**다. 단위: `assistant.service.spec.ts` 9건(와이어 순서 · 이름만 · 중단 시 부분 저장 · `done` 없음 · AbortError 는 오류 아님) + `gemini.client.spec.ts` 6건(중단 시 다음 라운드의 `generateContentStream` 미호출 · 남은 도구 미실행) · ops 단위 무회귀(11 스위트 235건 중 기존분 전부 통과) · 양쪽 tsc(변경 파일) · 백엔드 webpack 빌드. 백엔드 eslint 는 로컬에서 시간 초과로 돌리지 못했다(CI 에서 확인) |
 | ⑤ 도구 진행 표시 + 칩 | ⬜ | |
 | ⑥ 마크다운 + 배칭 | ⬜ | |
 | ⑦ 스크롤·스크린리더 | ⬜ | |

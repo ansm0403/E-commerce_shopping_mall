@@ -103,11 +103,15 @@ export interface LlmClient {
    *   실제 실행한 뒤 결과를 모델에 되돌려 최종 답변을 잇는 루프를 내부에서 처리한다.
    * - 도구 실행 자체는 호출 측(executeTool)이 소유 → 클라이언트는 비즈니스 로직을 모른다.
    * - 텍스트는 { type:'text' } 델타로, 종료 시 { type:'done' }.
+   * - signal(선택): 호출 측이 중단을 알리는 표준 AbortSignal. 중단되면 구현체는 **다음 라운드를 열지 않고
+   *   남은 도구도 실행하지 않은 채** 끝낸다 — 이때 usage·done 은 오지 않는다(진행 중이던 요청은 예외로 끝날 수 있다).
+   *   이미 프로바이더로 나간 요청의 과금까지 되돌리지는 못한다.
    */
   generateWithTools(params: {
     system: LlmSystemPrompt;
     messages: LlmMessage[];
     tools: LlmToolDef[];
     executeTool: (call: LlmToolCall) => Promise<unknown>;
+    signal?: AbortSignal;
   }): AsyncIterable<LlmStreamEvent>;
 }

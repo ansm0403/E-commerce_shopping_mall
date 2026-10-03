@@ -135,7 +135,9 @@ export class GeminiClient implements LlmClient {
     messages: LlmMessage[];
     tools: LlmToolDef[];
     executeTool: (call: LlmToolCall) => Promise<unknown>;
+    signal?: AbortSignal;
   }): AsyncIterable<LlmStreamEvent> {
+    const { signal } = params;
     if (!this.ai) {
       throw new Error('GeminiClient 비활성: GEMINI_API_KEY 가 설정되지 않았습니다.');
     }
@@ -153,7 +155,12 @@ export class GeminiClient implements LlmClient {
 
     // 캐시는 1회만 시도. 성공 시 config 에 cachedContent 만 두고 system/tools 는 재전송하지 않는다.
     const cacheName = await this.ensureCachePrefix(params.system, toolsCfg);
-    const config = this.buildConfig(params.system, toolsCfg, cacheName);
+    // abortSignal 은 SDK 의 **클라이언트 쪽 취소**다 — 진행 중인 요청의 응답 읽기를 끊을 뿐, 이미 나간 요청은 과금된다.
+    // 그래서 절감은 아래의 "다음 라운드를 열지 않는다" 만큼이다.
+    const config: GenerateContentConfig = {
+      ...this.buildConfig(params.system, toolsCfg, cacheName),
+      ...(signal ? { abortSignal: signal } : {}),
+    };
     const contents: Content[] = this.toContentsWithDynamic(
       params.messages,
       params.system,
@@ -172,6 +179,8 @@ export class GeminiClient implements LlmClient {
     // 도구 호출 루프: 모델이 도구를 더 요청하지 않을 때까지(최대 MAX_ROUNDS) 왕복.
     const MAX_ROUNDS = 5;
     for (let round = 0; round < MAX_ROUNDS; round++) {
+      // 중단됐으면 새 라운드(= 새 LLM 요청)를 열지 않는다. usage·done 없이 끝낸다.
+      if (signal?.aborted) return;
       const stream = await this.ai.models.generateContentStream({
         model: this.model,
         contents,
@@ -214,6 +223,8 @@ export class GeminiClient implements LlmClient {
 
       // 2) 각 도구 실행 → functionResponse 를 대화에 추가 (다음 라운드에서 모델이 이걸 읽고 답함)
       for (const call of calls) {
+        // 중단됐으면 남은 도구(DB 조회)도 실행하지 않는다.
+        if (signal?.aborted) return;
         yield { type: 'tool_call', call };
         let result: unknown;
         try {

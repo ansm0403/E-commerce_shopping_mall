@@ -64,18 +64,30 @@ export class AssistantController {
     res.setHeader('X-Accel-Buffering', 'no'); // 프록시 버퍼링 방지
     res.flushHeaders?.();
 
+    // 클라이언트가 "중지"를 누르거나 탭을 닫으면 응답 소켓이 닫힌다 → 서비스·LLM 까지 중단을 전파한다.
+    // 'close' 는 정상 종료(res.end) 뒤에도 발생하므로, 응답을 끝내기 전에 닫힌 경우만 중단으로 본다.
+    const abort = new AbortController();
+    res.on('close', () => {
+      if (!res.writableEnded) abort.abort();
+    });
+
     try {
-      for await (const ev of this.assistantService.streamChat({
-        message: body.message,
-        conversationId: body.conversationId,
-        adminUserId,
-      })) {
-        res.write(`data: ${JSON.stringify(ev)}\n\n`);
+      for await (const ev of this.assistantService.streamChat(
+        {
+          message: body.message,
+          conversationId: body.conversationId,
+          adminUserId,
+        },
+        abort.signal,
+      )) {
+        if (!abort.signal.aborted) res.write(`data: ${JSON.stringify(ev)}\n\n`);
       }
     } catch {
-      res.write(
-        `data: ${JSON.stringify({ type: 'error', message: 'AI 응답 생성에 실패했습니다.' })}\n\n`,
-      );
+      if (!abort.signal.aborted) {
+        res.write(
+          `data: ${JSON.stringify({ type: 'error', message: 'AI 응답 생성에 실패했습니다.' })}\n\n`,
+        );
+      }
     } finally {
       res.end();
     }
