@@ -1,0 +1,59 @@
+{
+  "measuredAt": "2026-10-04T12:44:16.884Z",
+  "base": "http://localhost:3100",
+  "rendering": {
+    "tables": 1,
+    "headerCells": 3,
+    "bodyCells": 6,
+    "strong": [
+      "3,240,000원"
+    ],
+    "em": 1,
+    "listItems": 7,
+    "nestedLists": 1,
+    "orderedLists": 1,
+    "inputElements": 0,
+    "checklistMarks": [
+      "완료",
+      "미완료"
+    ],
+    "headings": [
+      "h3"
+    ],
+    "inlineCode": [
+      "get_sales_summary"
+    ],
+    "links": [
+      {
+        "text": "정상 링크",
+        "href": "https://example.com/report",
+        "rel": "noopener noreferrer",
+        "target": "_blank"
+      }
+    ],
+    "emptyHrefLinks": 0,
+    "dangerousTextKept": true,
+    "imgElements": 0,
+    "scriptElements": 0,
+    "xssFlag": null,
+    "imageAltShown": true,
+    "rawPipesLeft": false,
+    "rawStarsLeft": false,
+    "endReached": true,
+    "requestsToAttacker": [],
+    "imageRequestsDuringAnswer": [],
+    "dialogs": [],
+    "axeViolations": []
+  },
+  "batching": {
+    "commits": 60,
+    "frames": 214,
+    "longTasks": 0,
+    "maxLongTaskMs": 0,
+    "durationMs": 1774,
+    "deltas": 457,
+    "expectedChars": 5476,
+    "lastSentenceShown": 1,
+    "lastListItemShown": 1
+  }
+}

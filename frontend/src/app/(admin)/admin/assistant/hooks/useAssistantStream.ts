@@ -7,6 +7,7 @@ import {
   streamAssistantChat,
 } from '../../../../../service/admin-assistant';
 import { applyStreamEvent, closeInterrupted, type ChatMessage } from '../lib/chat-message';
+import { createDeltaBatcher, type DeltaBatcher } from '../lib/delta-batcher';
 
 export type { ChatMessage };
 
@@ -57,6 +58,8 @@ export function useAssistantStream() {
   const abortRef = useRef<AbortController | null>(null);
   // 진행 중인 스트림의 id — 중지할 때 서버에 이 값으로 알린다.
   const requestIdRef = useRef<string | null>(null);
+  // 진행 중인 스트림의 델타 버퍼 — 언마운트 때 예약된 프레임을 취소하려고 잡아 둔다.
+  const batcherRef = useRef<DeltaBatcher | null>(null);
   // 진행 중 여부의 동기 사본 — 같은 렌더 안에서 send 가 두 번 불려도 한 번만 보낸다.
   const streamingRef = useRef(false);
   // 사용자가 대화를 시작/초기화했는지. 뒤늦게 도착한 복원 결과가 진행 중 대화를 덮어쓰지 않게 가드.
@@ -80,6 +83,9 @@ export function useAssistantStream() {
       }
     });
   }, []);
+
+  // 언마운트: 예약된 프레임이 사라진 컴포넌트의 상태를 건드리지 않게 한다.
+  useEffect(() => () => batcherRef.current?.cancel(), []);
 
   /** 진행 중인 마지막(assistant) 메시지를 바꾼다. 바뀐 게 없으면 리렌더하지 않는다. */
   const updateLastAssistant = (update: (message: ChatMessage) => ChatMessage) => {
@@ -111,6 +117,11 @@ export function useAssistantStream() {
     abortRef.current = controller;
     const requestId = newRequestId();
     requestIdRef.current = requestId;
+    // 텍스트 델타는 프레임당 한 번만 화면에 넣는다(마크다운 재파싱을 "델타 수"가 아니라 "프레임 수"로).
+    const batcher = createDeltaBatcher((text) =>
+      updateLastAssistant((m) => applyStreamEvent(m, { type: 'text', delta: text })),
+    );
+    batcherRef.current = batcher;
 
     void (async () => {
       let finished = false; // done 을 받았는가 — 못 받고 끝나면(중지·오류·끊김) 진행 표시를 닫아 준다
@@ -123,10 +134,15 @@ export function useAssistantStream() {
             conversationIdRef.current = ev.conversationId;
             // 새로고침 후 복원할 수 있도록 대화 식별자를 저장.
             storage.set(CONVERSATION_ID_KEY, ev.conversationId);
-          } else if (ev.type === 'text' || ev.type === 'tool' || ev.type === 'done') {
+          } else if (ev.type === 'text') {
+            batcher.push(ev.delta);
+          } else if (ev.type === 'tool' || ev.type === 'done') {
+            // 순서를 지킨다: 앞서 온 글자를 먼저 넣고 나서 도구 표시·완료 처리
+            batcher.flush();
             if (ev.type === 'done') finished = true;
             updateLastAssistant((m) => applyStreamEvent(m, ev));
           } else if (ev.type === 'error') {
+            batcher.flush();
             setError(ev.message);
           }
         }
@@ -135,6 +151,9 @@ export function useAssistantStream() {
           setError('응답을 받지 못했습니다. 잠시 후 다시 시도하세요.');
         }
       } finally {
+        // 중지·오류·끊김으로 끝나도 받은 글자는 모두 화면에 넣는다(버퍼에 남기면 마지막 몇 글자가 빠진다)
+        batcher.flush();
+        batcherRef.current = null;
         if (!finished) {
           const byUser = controller.signal.aborted;
           updateLastAssistant((m) => closeInterrupted(m, byUser));
