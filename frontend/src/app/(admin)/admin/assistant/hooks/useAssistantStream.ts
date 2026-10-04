@@ -5,11 +5,9 @@ import {
   fetchConversationMessages,
   streamAssistantChat,
 } from '../../../../../service/admin-assistant';
+import { applyStreamEvent, closeInterrupted, type ChatMessage } from '../lib/chat-message';
 
-export interface ChatMessage {
-  role: 'user' | 'assistant';
-  content: string;
-}
+export type { ChatMessage };
 
 /** 새로고침 후 마지막 대화를 복원하기 위해 conversationId를 보관하는 키. */
 const CONVERSATION_ID_KEY = 'assistant_conversation_id';
@@ -73,15 +71,13 @@ export function useAssistantStream() {
     });
   }, []);
 
-  /** 마지막(assistant) 메시지에 델타를 이어붙인다. */
-  const appendToLastAssistant = (delta: string) => {
+  /** 진행 중인 마지막(assistant) 메시지를 바꾼다. 바뀐 게 없으면 리렌더하지 않는다. */
+  const updateLastAssistant = (update: (message: ChatMessage) => ChatMessage) => {
     setMessages((prev) => {
-      const next = [...prev];
-      const last = next[next.length - 1];
-      if (last && last.role === 'assistant') {
-        next[next.length - 1] = { ...last, content: last.content + delta };
-      }
-      return next;
+      const last = prev[prev.length - 1];
+      if (!last || last.role !== 'assistant') return prev;
+      const updated = update(last);
+      return updated === last ? prev : [...prev.slice(0, -1), updated];
     });
   };
 
@@ -105,6 +101,7 @@ export function useAssistantStream() {
     abortRef.current = controller;
 
     void (async () => {
+      let finished = false; // done 을 받았는가 — 못 받고 끝나면(중지·오류·끊김) 진행 표시를 닫아 준다
       try {
         for await (const ev of streamAssistantChat(
           { message, conversationId: conversationIdRef.current },
@@ -114,8 +111,9 @@ export function useAssistantStream() {
             conversationIdRef.current = ev.conversationId;
             // 새로고침 후 복원할 수 있도록 대화 식별자를 저장.
             storage.set(CONVERSATION_ID_KEY, ev.conversationId);
-          } else if (ev.type === 'text') {
-            appendToLastAssistant(ev.delta);
+          } else if (ev.type === 'text' || ev.type === 'tool' || ev.type === 'done') {
+            if (ev.type === 'done') finished = true;
+            updateLastAssistant((m) => applyStreamEvent(m, ev));
           } else if (ev.type === 'error') {
             setError(ev.message);
           }
@@ -125,6 +123,10 @@ export function useAssistantStream() {
           setError('응답을 받지 못했습니다. 잠시 후 다시 시도하세요.');
         }
       } finally {
+        if (!finished) {
+          const byUser = controller.signal.aborted;
+          updateLastAssistant((m) => closeInterrupted(m, byUser));
+        }
         streamingRef.current = false;
         setStreaming(false);
         abortRef.current = null;

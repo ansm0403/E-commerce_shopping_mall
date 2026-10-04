@@ -25,7 +25,7 @@ export default function AssistantChat() {
         </button>
       </div>
 
-      <MessageList messages={messages} streaming={streaming} />
+      <MessageList messages={messages} streaming={streaming} onPickSuggestion={send} />
 
       {error && (
         <div className="px-4 py-2 text-[13px] text-red-700 bg-red-50 border-t border-red-200">
