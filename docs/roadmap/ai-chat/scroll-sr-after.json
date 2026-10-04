@@ -1,0 +1,44 @@
+{
+  "measuredAt": "2026-10-04T14:07:04.036Z",
+  "base": "http://localhost:3100",
+  "follow": {
+    "ariaBusyWhileStreaming": "true",
+    "ariaBusyAfter": "false",
+    "fromBottomAtEnd": 0,
+    "newReplyButtonShown": 0,
+    "announcements": [
+      "응답 생성 중",
+      "매출 데이터 조회 중",
+      "응답 완료. 긴 답변 1번째 문단입니다. 긴 답변을 읽는 도중 화면이 끌려가지 않는지 확인합니다. 2번째 문단입니다. 긴 답변… (2650자)"
+    ],
+    "lastAnnouncementHasMarkdownSymbols": false,
+    "statusRegionVisibleSize": "1x1"
+  },
+  "scrollUp": {
+    "stillStreaming": true,
+    "scrollTopAfterWheelUp": 0,
+    "scrollTopOneSecondLater": 0,
+    "contentGrewMeanwhilePx": 304,
+    "dragged": false,
+    "newReplyButtonShown": 1,
+    "fromBottomAfterClick": 0,
+    "buttonHiddenAfterClick": true,
+    "fromBottomAtEnd": 0,
+    "fromBottomAfterNewQuestion": 0
+  },
+  "keyboardStop": {
+    "last": "응답을 중지했습니다.",
+    "activeElement": "textarea",
+    "focusReturnedAtMs": 2920,
+    "announcedAtMs": 3330,
+    "focusedBeforeStop": "중지",
+    "announcedAfterFocusByMs": 410
+  },
+  "mouseSend": {
+    "activeElementAtEnd": "body",
+    "textareaFocusEvents": 0,
+    "last": "응답 완료. 지난달 매출은 0원입니다."
+  },
+  "placeholder": "메시지를 입력하세요",
+  "axeViolations": []
+}
