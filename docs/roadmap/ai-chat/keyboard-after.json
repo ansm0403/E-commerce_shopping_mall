@@ -1,0 +1,156 @@
+[
+  {
+    "name": "AI 어시스턴트",
+    "path": "/admin/assistant",
+    "tabStops": 18,
+    "noFocusRing": [],
+    "noName": [],
+    "pointerOnly": [],
+    "stops": [
+      {
+        "key": "a|체험 종료|1203|10",
+        "tag": "a",
+        "role": null,
+        "name": "체험 종료",
+        "href": "/",
+        "ring": true
+      },
+      {
+        "key": "a|← 쇼핑몰 홈으로|20|101",
+        "tag": "a",
+        "role": null,
+        "name": "← 쇼핑몰 홈으로",
+        "href": "/",
+        "ring": true
+      },
+      {
+        "key": "a|대시보드|0|150",
+        "tag": "a",
+        "role": null,
+        "name": "대시보드",
+        "href": "/admin/dashboard",
+        "ring": true
+      },
+      {
+        "key": "a|AI 어시스턴트|0|191",
+        "tag": "a",
+        "role": null,
+        "name": "AI 어시스턴트",
+        "href": "/admin/assistant",
+        "ring": true
+      },
+      {
+        "key": "a|주문 관리|0|232",
+        "tag": "a",
+        "role": null,
+        "name": "주문 관리",
+        "href": "/admin/orders",
+        "ring": true
+      },
+      {
+        "key": "a|상품 관리|0|273",
+        "tag": "a",
+        "role": null,
+        "name": "상품 관리",
+        "href": "/admin/products",
+        "ring": true
+      },
+      {
+        "key": "a|셀러 관리|0|314",
+        "tag": "a",
+        "role": null,
+        "name": "셀러 관리",
+        "href": "/admin/sellers",
+        "ring": true
+      },
+      {
+        "key": "a|정산 관리|0|355",
+        "tag": "a",
+        "role": null,
+        "name": "정산 관리",
+        "href": "/admin/settlements",
+        "ring": true
+      },
+      {
+        "key": "a|카테고리|0|396",
+        "tag": "a",
+        "role": null,
+        "name": "카테고리",
+        "href": "/admin/categories",
+        "ring": true
+      },
+      {
+        "key": "a|감사 로그|0|437",
+        "tag": "a",
+        "role": null,
+        "name": "감사 로그",
+        "href": "/admin/audit-logs",
+        "ring": true
+      },
+      {
+        "key": "a|운영 앱|0|478",
+        "tag": "a",
+        "role": null,
+        "name": "운영 앱",
+        "href": "/admin/ops-app",
+        "ring": true
+      },
+      {
+        "key": "a|← 쇼핑몰 홈으로|20|884",
+        "tag": "a",
+        "role": null,
+        "name": "← 쇼핑몰 홈으로",
+        "href": "/",
+        "ring": true
+      },
+      {
+        "key": "div|대화 내용|253|208",
+        "tag": "div",
+        "role": "region",
+        "name": "대화 내용",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|지난달 매출 알려줘|566|460",
+        "tag": "button",
+        "role": null,
+        "name": "지난달 매출 알려줘",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|부정적인 리뷰들 핵심만 요약해줘|713|460",
+        "tag": "button",
+        "role": null,
+        "name": "부정적인 리뷰들 핵심만 요약해줘",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|아직 답변 안 한 고객 문의 요약해줘|632|502",
+        "tag": "button",
+        "role": null,
+        "name": "아직 답변 안 한 고객 문의 요약해줘",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "button|최근에 뭔가 수상한 로그인 움직임이 있었는지 봐줘|587|543",
+        "tag": "button",
+        "role": null,
+        "name": "최근에 뭔가 수상한 로그인 움직임이 있었는지 봐줘",
+        "href": null,
+        "ring": true
+      },
+      {
+        "key": "textarea|질문 입력|265|755",
+        "tag": "textarea",
+        "role": null,
+        "name": "질문 입력",
+        "href": null,
+        "ring": true
+      }
+    ]
+  }
+]

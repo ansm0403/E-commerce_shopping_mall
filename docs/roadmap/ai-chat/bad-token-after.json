@@ -1,0 +1,32 @@
+{
+  "mode": "bad-token",
+  "measuredAt": "2026-10-04T14:29:34.123Z",
+  "base": "http://localhost:3100",
+  "question": "지난달 매출 알려줘",
+  "tokenStorage": "sessionStorage",
+  "requests": [
+    {
+      "method": "POST",
+      "path": "/api/admin/assistant/stream",
+      "status": 401
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/refresh",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/assistant/stream",
+      "status": 201
+    }
+  ],
+  "streamStatuses": [
+    401,
+    201
+  ],
+  "refreshCalled": true,
+  "tokenReplaced": true,
+  "gotAnswer": true,
+  "shown": "사내 운영 데이터를 자연어로 묻고 분석을 받습니다.지난달 매출 알려줘✓매출 데이터 조회 완료지난달(2026년 9월) 매출은 0원이며, 주문 건수는 0건입니다.Enter 전송 · Shift+Enter 줄바꿈"
+}

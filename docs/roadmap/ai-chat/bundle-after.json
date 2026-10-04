@@ -1,0 +1,217 @@
+{
+  "measuredAt": "2026-10-04T14:33:34.837Z",
+  "unit": "gzip (next build 출력)",
+  "shared": "223 kB",
+  "routes": [
+    {
+      "route": "/",
+      "size": "4.73 kB",
+      "firstLoad": "268 kB"
+    },
+    {
+      "route": "/_not-found",
+      "size": "375 B",
+      "firstLoad": "224 kB"
+    },
+    {
+      "route": "/admin",
+      "size": "376 B",
+      "firstLoad": "224 kB"
+    },
+    {
+      "route": "/admin/assistant",
+      "size": "5.87 kB",
+      "firstLoad": "229 kB"
+    },
+    {
+      "route": "/admin/audit-logs",
+      "size": "8.4 kB",
+      "firstLoad": "263 kB"
+    },
+    {
+      "route": "/admin/categories",
+      "size": "376 B",
+      "firstLoad": "224 kB"
+    },
+    {
+      "route": "/admin/dashboard",
+      "size": "7.37 kB",
+      "firstLoad": "262 kB"
+    },
+    {
+      "route": "/admin/ops-app",
+      "size": "5.12 kB",
+      "firstLoad": "252 kB"
+    },
+    {
+      "route": "/admin/orders",
+      "size": "384 B",
+      "firstLoad": "264 kB"
+    },
+    {
+      "route": "/admin/orders/[orderNumber]",
+      "size": "2.44 kB",
+      "firstLoad": "266 kB"
+    },
+    {
+      "route": "/admin/products",
+      "size": "4.4 kB",
+      "firstLoad": "276 kB"
+    },
+    {
+      "route": "/admin/sellers",
+      "size": "3.81 kB",
+      "firstLoad": "275 kB"
+    },
+    {
+      "route": "/admin/settlements",
+      "size": "5.71 kB",
+      "firstLoad": "262 kB"
+    },
+    {
+      "route": "/api/auth/login",
+      "size": "373 B",
+      "firstLoad": "224 kB"
+    },
+    {
+      "route": "/api/auth/logout",
+      "size": "376 B",
+      "firstLoad": "224 kB"
+    },
+    {
+      "route": "/api/auth/refresh",
+      "size": "376 B",
+      "firstLoad": "224 kB"
+    },
+    {
+      "route": "/api/hello",
+      "size": "377 B",
+      "firstLoad": "224 kB"
+    },
+    {
+      "route": "/cart",
+      "size": "6.83 kB",
+      "firstLoad": "264 kB"
+    },
+    {
+      "route": "/check-email",
+      "size": "6.77 kB",
+      "firstLoad": "255 kB"
+    },
+    {
+      "route": "/checkout",
+      "size": "6.49 kB",
+      "firstLoad": "263 kB"
+    },
+    {
+      "route": "/checkout/complete",
+      "size": "2.41 kB",
+      "firstLoad": "259 kB"
+    },
+    {
+      "route": "/login",
+      "size": "6.26 kB",
+      "firstLoad": "305 kB"
+    },
+    {
+      "route": "/my",
+      "size": "376 B",
+      "firstLoad": "224 kB"
+    },
+    {
+      "route": "/my/cart",
+      "size": "377 B",
+      "firstLoad": "224 kB"
+    },
+    {
+      "route": "/my/inquiries",
+      "size": "376 B",
+      "firstLoad": "224 kB"
+    },
+    {
+      "route": "/my/orders",
+      "size": "2.86 kB",
+      "firstLoad": "260 kB"
+    },
+    {
+      "route": "/my/orders/[orderNumber]",
+      "size": "7.21 kB",
+      "firstLoad": "276 kB"
+    },
+    {
+      "route": "/my/password",
+      "size": "376 B",
+      "firstLoad": "224 kB"
+    },
+    {
+      "route": "/my/reviews",
+      "size": "5.96 kB",
+      "firstLoad": "275 kB"
+    },
+    {
+      "route": "/my/seller-apply",
+      "size": "6.68 kB",
+      "firstLoad": "314 kB"
+    },
+    {
+      "route": "/my/wishlist",
+      "size": "376 B",
+      "firstLoad": "224 kB"
+    },
+    {
+      "route": "/products",
+      "size": "2.75 kB",
+      "firstLoad": "266 kB"
+    },
+    {
+      "route": "/products/[id]",
+      "size": "7.82 kB",
+      "firstLoad": "271 kB"
+    },
+    {
+      "route": "/register",
+      "size": "4.98 kB",
+      "firstLoad": "304 kB"
+    },
+    {
+      "route": "/seller",
+      "size": "376 B",
+      "firstLoad": "224 kB"
+    },
+    {
+      "route": "/seller/inquiries",
+      "size": "376 B",
+      "firstLoad": "224 kB"
+    },
+    {
+      "route": "/seller/orders",
+      "size": "6.15 kB",
+      "firstLoad": "263 kB"
+    },
+    {
+      "route": "/seller/products",
+      "size": "7.9 kB",
+      "firstLoad": "264 kB"
+    },
+    {
+      "route": "/seller/products/[id]/edit",
+      "size": "2.07 kB",
+      "firstLoad": "314 kB"
+    },
+    {
+      "route": "/seller/products/new",
+      "size": "377 B",
+      "firstLoad": "312 kB"
+    },
+    {
+      "route": "/seller/settlements",
+      "size": "3.44 kB",
+      "firstLoad": "260 kB"
+    },
+    {
+      "route": "/verify-email",
+      "size": "6.35 kB",
+      "firstLoad": "254 kB"
+    }
+  ]
+}

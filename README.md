@@ -135,6 +135,7 @@ flowchart LR
 - **도구 6종**: `get_sales_summary` · `get_order_stats` · `query_audit_logs` · `get_product_info`(정형) + `summarize_reviews` · `summarize_inquiries`(비정형 — 상품/카테고리(하위 포함)·기간 필터로 좁혀 요약).
 - **PII**: 도구 결과는 직렬화 인터셉터를 거치지 않아 `@Exclude()` 가 무력 → 디스패처에서 마스킹/projection/`scrubText`.
 - **프롬프트 캐싱**: system 을 정적/동적으로 분리하고 usage 를 노출해 측정. Gemini 무료 티어는 explicit 캐싱이 불가(캐시 storage 쿼터 0)라 진짜 절감은 Claude `cache_control` 전환 몫 — [ex-ai-assistant.md §8-12](docs/roadmap/ex-ai-assistant.md).
+- **채팅 화면 UX**: 도구 실행 중 "매출 데이터 조회 중…" 표시 · 마크다운 표·목록 렌더링(이미지는 그리지 않음 — 리뷰 속 프롬프트 인젝션이 이미지 주소로 데이터를 빼내는 경로) · 중지가 서버까지 닿음(명시적 중지 요청 — 운영 프록시가 연결 끊김을 전달하지 않아서) · 토큰 만료 자동 갱신 · 키보드·스크린리더(axe 위반 0, NVDA 청취). 같은 스크립트로 수정 전/후를 측정 — [04-ai-chat-ux.md §5-3](docs/roadmap/04-ai-chat-ux.md).
 - **평가 루프**: 골든셋 20문항(easy 6 / medium 6 / hard 3 / trap 5) + 규칙 러너([backend/eval/run-eval.ts](backend/eval/run-eval.ts)) + LLM-judge([run-judge.ts](backend/eval/run-judge.ts)). 프롬프트 1줄 수정 후 재측정 — 아래 표([§8-15](docs/roadmap/ex-ai-assistant.md)).
 
 | 지표 | 수정 전 | 수정 후 |

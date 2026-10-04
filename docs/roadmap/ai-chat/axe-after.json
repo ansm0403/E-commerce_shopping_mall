@@ -1,0 +1,14 @@
+[
+  {
+    "name": "AI 어시스턴트",
+    "path": "/admin/assistant",
+    "finalPath": "/admin/assistant",
+    "violations": []
+  },
+  {
+    "name": "AI 어시스턴트(응답 후)",
+    "path": "/admin/assistant",
+    "finalPath": "/admin/assistant",
+    "violations": []
+  }
+]

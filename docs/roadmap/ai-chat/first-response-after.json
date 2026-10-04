@@ -1,0 +1,233 @@
+{
+  "mode": "first-response",
+  "measuredAt": "2026-10-04T14:32:12.694Z",
+  "base": "http://localhost:3100",
+  "question": "지난달 매출 알려줘",
+  "median": {
+    "wireMeta": 29,
+    "wireFirstTool": 1803,
+    "wireFirstText": 2943,
+    "wireDone": 3261,
+    "firstDomChange": 1805
+  },
+  "successes": 5,
+  "failures": 0,
+  "runs": [
+    {
+      "status": 201,
+      "wire": {
+        "meta": 24,
+        "tool": 14008,
+        "text": 19570,
+        "done": 19959,
+        "error": null
+      },
+      "frameCounts": {
+        "meta": 1,
+        "tool": 1,
+        "text": 3,
+        "done": 1
+      },
+      "toolNames": [
+        "get_sales_summary"
+      ],
+      "firstDomChange": 14010,
+      "firstDomChangeText": "매출 데이터 조회 중…Enter 전송 · Shift+Enter 줄바꿈",
+      "domTimeline": [
+        {
+          "t": 3,
+          "text": "사내 운영 데이터를 자연어로 묻고 분석을 받습니다.지난달 매출 알려줘…Enter 전송 · Shift+Enter 줄바꿈"
+        },
+        {
+          "t": 14010,
+          "text": "사내 운영 데이터를 자연어로 묻고 분석을 받습니다.지난달 매출 알려줘매출 데이터 조회 중…Enter 전송 · Shift+Enter 줄바꿈"
+        },
+        {
+          "t": 19582,
+          "text": "사내 운영 데이터를 자연어로 묻고 분석을 받습니다.지난달 매출 알려줘✓매출 데이터 조회 완료지난달Enter 전송 · Shift+Enter 줄바꿈"
+        },
+        {
+          "t": 19742,
+          "text": "사내 운영 데이터를 자연어로 묻고 분석을 받습니다.지난달 매출 알려줘✓매출 데이터 조회 완료지난달(2026년 9월 1일 ~ 9월 3Enter 전송 · Shift+Enter 줄바꿈"
+        },
+        {
+          "t": 19897,
+          "text": "사내 운영 데이터를 자연어로 묻고 분석을 받습니다.지난달 매출 알려줘✓매출 데이터 조회 완료지난달(2026년 9월 1일 ~ 9월 30일) 매출은 0원이며, 주문 건수는 0건입니다. 해당 기간의 데이터가 없습니다.En"
+        }
+      ]
+    },
+    {
+      "status": 201,
+      "wire": {
+        "meta": 29,
+        "tool": 1202,
+        "text": 2287,
+        "done": 2569,
+        "error": null
+      },
+      "frameCounts": {
+        "meta": 1,
+        "tool": 1,
+        "text": 3,
+        "done": 1
+      },
+      "toolNames": [
+        "get_sales_summary"
+      ],
+      "firstDomChange": 1203,
+      "firstDomChangeText": "매출 데이터 조회 중…Enter 전송 · Shift+Enter 줄바꿈",
+      "domTimeline": [
+        {
+          "t": 4,
+          "text": "사내 운영 데이터를 자연어로 묻고 분석을 받습니다.지난달 매출 알려줘…Enter 전송 · Shift+Enter 줄바꿈"
+        },
+        {
+          "t": 1203,
+          "text": "사내 운영 데이터를 자연어로 묻고 분석을 받습니다.지난달 매출 알려줘매출 데이터 조회 중…Enter 전송 · Shift+Enter 줄바꿈"
+        },
+        {
+          "t": 2291,
+          "text": "사내 운영 데이터를 자연어로 묻고 분석을 받습니다.지난달 매출 알려줘✓매출 데이터 조회 완료지난달Enter 전송 · Shift+Enter 줄바꿈"
+        },
+        {
+          "t": 2434,
+          "text": "사내 운영 데이터를 자연어로 묻고 분석을 받습니다.지난달 매출 알려줘✓매출 데이터 조회 완료지난달(2026년 9월) 매출은 0원이며Enter 전송 · Shift+Enter 줄바꿈"
+        },
+        {
+          "t": 2501,
+          "text": "사내 운영 데이터를 자연어로 묻고 분석을 받습니다.지난달 매출 알려줘✓매출 데이터 조회 완료지난달(2026년 9월) 매출은 0원이며, 주문 건수는 0건입니다.Enter 전송 · Shift+Enter 줄바꿈"
+        }
+      ]
+    },
+    {
+      "status": 201,
+      "wire": {
+        "meta": 28,
+        "tool": 3618,
+        "text": 6177,
+        "done": 6442,
+        "error": null
+      },
+      "frameCounts": {
+        "meta": 1,
+        "tool": 1,
+        "text": 3,
+        "done": 1
+      },
+      "toolNames": [
+        "get_sales_summary"
+      ],
+      "firstDomChange": 3619,
+      "firstDomChangeText": "매출 데이터 조회 중…Enter 전송 · Shift+Enter 줄바꿈",
+      "domTimeline": [
+        {
+          "t": 2,
+          "text": "사내 운영 데이터를 자연어로 묻고 분석을 받습니다.지난달 매출 알려줘…Enter 전송 · Shift+Enter 줄바꿈"
+        },
+        {
+          "t": 3619,
+          "text": "사내 운영 데이터를 자연어로 묻고 분석을 받습니다.지난달 매출 알려줘매출 데이터 조회 중…Enter 전송 · Shift+Enter 줄바꿈"
+        },
+        {
+          "t": 6181,
+          "text": "사내 운영 데이터를 자연어로 묻고 분석을 받습니다.지난달 매출 알려줘✓매출 데이터 조회 완료지난달Enter 전송 · Shift+Enter 줄바꿈"
+        },
+        {
+          "t": 6325,
+          "text": "사내 운영 데이터를 자연어로 묻고 분석을 받습니다.지난달 매출 알려줘✓매출 데이터 조회 완료지난달(2026년 9월 1일 ~ 9월 30Enter 전송 · Shift+Enter 줄바꿈"
+        },
+        {
+          "t": 6387,
+          "text": "사내 운영 데이터를 자연어로 묻고 분석을 받습니다.지난달 매출 알려줘✓매출 데이터 조회 완료지난달(2026년 9월 1일 ~ 9월 30일) 매출은 0원이며, 주문 건수는 0건입니다.Enter 전송 · Shift+Ent"
+        }
+      ]
+    },
+    {
+      "status": 201,
+      "wire": {
+        "meta": 41,
+        "tool": 1803,
+        "text": 2943,
+        "done": 3261,
+        "error": null
+      },
+      "frameCounts": {
+        "meta": 1,
+        "tool": 1,
+        "text": 3,
+        "done": 1
+      },
+      "toolNames": [
+        "get_sales_summary"
+      ],
+      "firstDomChange": 1805,
+      "firstDomChangeText": "매출 데이터 조회 중…Enter 전송 · Shift+Enter 줄바꿈",
+      "domTimeline": [
+        {
+          "t": 3,
+          "text": "사내 운영 데이터를 자연어로 묻고 분석을 받습니다.지난달 매출 알려줘…Enter 전송 · Shift+Enter 줄바꿈"
+        },
+        {
+          "t": 1805,
+          "text": "사내 운영 데이터를 자연어로 묻고 분석을 받습니다.지난달 매출 알려줘매출 데이터 조회 중…Enter 전송 · Shift+Enter 줄바꿈"
+        },
+        {
+          "t": 2948,
+          "text": "사내 운영 데이터를 자연어로 묻고 분석을 받습니다.지난달 매출 알려줘✓매출 데이터 조회 완료지난달Enter 전송 · Shift+Enter 줄바꿈"
+        },
+        {
+          "t": 3068,
+          "text": "사내 운영 데이터를 자연어로 묻고 분석을 받습니다.지난달 매출 알려줘✓매출 데이터 조회 완료지난달(2026년 9월 1일 ~ 9월 30Enter 전송 · Shift+Enter 줄바꿈"
+        },
+        {
+          "t": 3208,
+          "text": "사내 운영 데이터를 자연어로 묻고 분석을 받습니다.지난달 매출 알려줘✓매출 데이터 조회 완료지난달(2026년 9월 1일 ~ 9월 30일) 매출은 0원이며, 주문 건수는 없습니다.Enter 전송 · Shift+Ente"
+        }
+      ]
+    },
+    {
+      "status": 201,
+      "wire": {
+        "meta": 39,
+        "tool": 1124,
+        "text": 2015,
+        "done": 2262,
+        "error": null
+      },
+      "frameCounts": {
+        "meta": 1,
+        "tool": 1,
+        "text": 3,
+        "done": 1
+      },
+      "toolNames": [
+        "get_sales_summary"
+      ],
+      "firstDomChange": 1126,
+      "firstDomChangeText": "매출 데이터 조회 중…Enter 전송 · Shift+Enter 줄바꿈",
+      "domTimeline": [
+        {
+          "t": 2,
+          "text": "사내 운영 데이터를 자연어로 묻고 분석을 받습니다.지난달 매출 알려줘…Enter 전송 · Shift+Enter 줄바꿈"
+        },
+        {
+          "t": 1126,
+          "text": "사내 운영 데이터를 자연어로 묻고 분석을 받습니다.지난달 매출 알려줘매출 데이터 조회 중…Enter 전송 · Shift+Enter 줄바꿈"
+        },
+        {
+          "t": 2021,
+          "text": "사내 운영 데이터를 자연어로 묻고 분석을 받습니다.지난달 매출 알려줘✓매출 데이터 조회 완료지난달Enter 전송 · Shift+Enter 줄바꿈"
+        },
+        {
+          "t": 2128,
+          "text": "사내 운영 데이터를 자연어로 묻고 분석을 받습니다.지난달 매출 알려줘✓매출 데이터 조회 완료지난달(2026년 9월 1일 ~ 9월 3Enter 전송 · Shift+Enter 줄바꿈"
+        },
+        {
+          "t": 2194,
+          "text": "사내 운영 데이터를 자연어로 묻고 분석을 받습니다.지난달 매출 알려줘✓매출 데이터 조회 완료지난달(2026년 9월 1일 ~ 9월 30일) 매출은 0원이며, 주문 건수는 0건입니다.Enter 전송 · Shift+Ent"
+        }
+      ]
+    }
+  ],
+  "failed": []
+}

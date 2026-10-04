@@ -29,7 +29,7 @@ App Router 라우트 그룹 `(auth)` · `(main)`(상점·구매·`/my/*`·`/sell
 - 구매자 커머스: 회원/인증 → 카테고리/상품/검색 → 장바구니 → 주문 → PortOne 결제(+웹훅) → 주문조회/취소/구매확정 → 리뷰(+AI 리뷰 요약). 위시리스트는 상품 상세 토글만.
 - 셀러: 신청/상태 확인(`my/seller-apply`) · 상품 등록/수정/게시 토글 · 주문/배송 · 정산 → `docs/roadmap/01-seller-core.md`
 - 관리자: 대시보드 · 감사 로그 · 셀러 승인 · 상품 승인(=게시) · 주문 · 정산 확정/지급 · 운영 앱 소개(`ops-app`) → `02-admin-core.md`, `ex-audit-log-admin.md`
-- 관리자 AI 어시스턴트(tool use 6종·SSE·멀티턴·eval 루프, 다음 = Phase 6b) → `docs/roadmap/ex-ai-assistant.md`
+- 관리자 AI 어시스턴트(tool use 6종·SSE·멀티턴·eval 루프, 다음 = Phase 6b) → `docs/roadmap/ex-ai-assistant.md` · 채팅 화면 UX(도구 진행 표시·마크다운·명시적 중지·401 갱신·스크린리더, 전/후 측정) → `04-ai-chat-ux.md`
 - RN 운영 앱 Ops Companion: Phase 0~8 운영 배포 + 외부 공개(preview APK·데모 계정·EAS Update·웹 체험판) → `ops-companion/README.md`, `docs/learning/ops-companion/`, 설계 `docs/roadmap/ops-companion-design.md` §9
 
 **stub / 미완**
@@ -51,6 +51,7 @@ App Router 라우트 그룹 `(auth)` · `(main)`(상점·구매·`/my/*`·`/sell
 - 결제 후처리: `payment.service.ts` 가 `order.paid` emit → `order/listeners/order-event.listener.ts`(상태·Shipment·캐시). 웹훅 = `payment/webhook-signature.ts` + `portone-webhook-verifier.ts` + `nginx/default.conf` 발신 IP 제한.
 - 이벤트 → 리스너: `order.created|paid|cancelled` → `order/listeners` · `order.completed` → `settlement/listeners`(정산 생성) · `review.*` → `review/listeners`(평점·AI 요약 stale·캐시) · `product.*` → `product/listeners`. `order.shipped|delivered`·`shipment.shipped` 는 리스너 없음.
 - 상품 캐시(`products:detail:<id>`, `products:list:*`) 무효화는 4곳: `product.service.ts` + product/order/review 리스너.
+- 어시스턴트 채팅(프론트): `app/(admin)/admin/assistant/` — `hooks/useAssistantStream` + `lib/`(순수 함수: `chat-message`·`delta-batcher`·`announcement`) + `service/admin-assistant.ts`(fetch 스트림·401 재시도·`stream/cancel`) + `service/assistant-sse.ts`(파서). 와이어 타입은 `shared/src/lib/types/assistant/`. 측정·검증 스크립트 `scripts/ai-chat/`.
 - LLM(`intrastructure/ai/` 의 `LLM_CLIENT`) 사용처: `admin/assistant/`(도구 `assistant-tools.ts`, 디스패처 `assistant.service.ts executeTool`) · `ops/ops-analysis.service.ts` · `product/product-summary.service.ts`(리뷰 요약이 review 가 아니라 product 에).
 - 업로드: `product.controller.ts`(multer) → `main.ts` `express.static('/uploads')`(v1 밖) → `next.config.js` rewrites. Sentry 초기화: `backend/src/instrument.ts` · `frontend/src/instrumentation(-client).ts` + `sentry.*.config.ts` · `ops-companion/src/lib/sentry.ts`.
 
@@ -58,3 +59,5 @@ App Router 라우트 그룹 `(auth)` · `(main)`(상점·구매·`/my/*`·`/sell
 - 백엔드는 `@shopping-mall/shared` 를 **값으로 import 금지** — `import type` + `typeof` 만(Nx webpack 이 외부화하는데 운영 이미지에 링크가 없어 `Cannot find module`). 예 `backend/src/ops/visitor-test.ts`.
 - 옛 로컬 백엔드가 4000 을 쥐고 있으면 새 번들이 `EADDRINUSE`, e2e 는 옛 응답을 받는다 — `netstat -ano | grep :4000` 의 PID 시작 시각 확인.
 - 병렬 Bash 는 cwd 를 공유한다 — 한쪽의 `cd` 때문에 `yarn add` 가 엉뚱한 `package.json` 에 들어간다.
+- Vercel 프록시(rewrites)는 **브라우저의 연결 끊김을 백엔드로 전달하지 않는다**(nginx 에는 정상 완료로 찍힌다) — 스트림을 서버에서 멈추려면 `res.on('close')` 가 아니라 명시적 요청으로(`POST /admin/assistant/stream/cancel`). 로컬에서는 전파돼서 운영에서만 드러난다.
+- 머지 직후 2~3분은 Vercel 운영이 옛 버전이다 — 운영 확인은 배포 완료(GitHub Deployments `success`) 뒤 강력 새로고침으로.
