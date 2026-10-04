@@ -1,0 +1,52 @@
+{
+  "mode": "stop",
+  "measuredAt": "2026-10-04T14:33:34.642Z",
+  "base": "http://localhost:3100",
+  "question": "2026년 6월 매출이랑 주문 상태 분포를 같이 정리해줘",
+  "stopTrigger": "백엔드 로그의 첫 \"tool 실행:\" 직후",
+  "stillStreamingAtStop": true,
+  "keyboard": {
+    "focusAfterSend": {
+      "tag": "textarea",
+      "name": ""
+    },
+    "tabsToStop": 1,
+    "focusAfterStop": {
+      "tag": "textarea",
+      "name": ""
+    },
+    "typedWithoutClick": true
+  },
+  "shownAtStop": "사내 운영 데이터를 자연어로 묻고 분석을 받습니다.2026년 6월 매출이랑 주문 상태 분포를 같이 정리해줘✓매출 데이터 조회 완료–주문 통계 조회 중단중지됨Enter 전송 · Shift+Enter 줄바꿈",
+  "server": {
+    "toolRuns": 2,
+    "llmRounds": 1,
+    "finishedNormally": false,
+    "log": [
+      "DEBUG [GeminiClient] usage round=0 input=2388 cached=0 output=84",
+      "DEBUG [AssistantService] tool 실행: get_sales_summary args={\"endDate\":\"2026-06-30\",\"startDate\":\"2026-06-01\"}",
+      "DEBUG [AssistantService] tool 실행: get_order_stats args={\"startDate\":\"2026-06-01\",\"endDate\":\"2026-06-30\"}"
+    ]
+  },
+  "saved": {
+    "conversationId": "57",
+    "status": 200,
+    "messages": [
+      {
+        "role": "user",
+        "content": "2026년 6월 매출이랑 주문 상태 분포를 같이 정리해줘"
+      }
+    ]
+  },
+  "shownAfterReload": "사내 운영 데이터를 자연어로 묻고 분석을 받습니다.2026년 6월 매출이랑 주문 상태 분포를 같이 정리해줘Enter 전송 · Shift+Enter 줄바꿈",
+  "wireBeforeStop": {
+    "meta": 44,
+    "tool": 1388,
+    "text": null,
+    "done": null,
+    "error": null
+  },
+  "cancelRequests": [
+    204
+  ]
+}
