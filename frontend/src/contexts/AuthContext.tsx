@@ -79,6 +79,10 @@ export default function AuthContextProvider({ children }: { children: React.Reac
       authStorage.clearToken();
       queryClient.setQueryData(['auth', 'user'], null);
       queryClient.removeQueries({ queryKey: ['cart'] });
+      // 계정에 묶인 캐시 — 남겨 두면 다음에 로그인한 사용자에게 앞사람의 찜·문의·프로필이 잠깐 보인다
+      queryClient.removeQueries({ queryKey: ['wishlist'] });
+      queryClient.removeQueries({ queryKey: ['inquiries'] });
+      queryClient.removeQueries({ queryKey: ['user'] });
     }
   };
 
