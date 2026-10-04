@@ -217,8 +217,8 @@ export default function ProductInfo({
         {displayPrice >= 50000 ? (
           <p className="text-green-800 text-xs font-medium"><span aria-hidden="true">🚚 </span>무료배송</p>
         ) : (
-          <p className="text-secondary-500 text-xs">
-            🚚 배송비 3,000원 (50,000원 이상 무료)
+          <p className="text-secondary-600 text-xs">
+            <span aria-hidden="true">🚚 </span>배송비 3,000원 (50,000원 이상 무료)
           </p>
         )}
       </div>

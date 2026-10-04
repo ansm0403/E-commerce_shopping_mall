@@ -32,6 +32,12 @@ export class WishListController {
     return this.wishListService.toggle(userId, dto.productId);
   }
 
+  // 찜 여부 초기 상태용 — 상품 상세의 하트가 이 목록으로 채워진다(상품마다 단건 조회하지 않는다)
+  @Get('ids')
+  getMyProductIds(@User('sub') userId: number) {
+    return this.wishListService.getMyProductIds(userId);
+  }
+
   @Get()
   @Serialize(WishlistItemResponseDto)
   getMyList(

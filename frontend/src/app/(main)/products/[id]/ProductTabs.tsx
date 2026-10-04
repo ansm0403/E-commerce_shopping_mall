@@ -2,6 +2,7 @@
 
 import { Product } from '@/model/product';
 import ReviewSection from './ReviewSection';
+import InquirySection from './InquirySection';
 
 interface ProductTabsProps {
   product: Product;
@@ -18,6 +19,7 @@ export default function ProductTabs({
     { id: 'description', label: '상세 설명' },
     { id: 'specs', label: '상품 스펙' },
     { id: 'review', label: `리뷰 (${product.reviewCount ?? 0})` },
+    { id: 'inquiry', label: '문의' },
     { id: 'seller', label: '판매자 정보' },
     { id: 'shipping', label: '배송 정보' },
   ];
@@ -86,6 +88,9 @@ export default function ProductTabs({
 
         {/* 리뷰 */}
         {activeTab === 'review' && <ReviewSection product={product} />}
+
+        {/* 문의 */}
+        {activeTab === 'inquiry' && <InquirySection product={product} />}
 
         {/* 판매자 정보 */}
         {activeTab === 'seller' && (

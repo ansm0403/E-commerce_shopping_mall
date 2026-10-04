@@ -12,12 +12,14 @@ import {
 } from '@nestjs/common';
 import { InquiryService } from './inquiry.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '../user/entity/role.entity';
 import { User } from '../auth/decorators/user.decorator';
 import { CreateInquiryDto } from './dto/create-inquiry.dto';
 import { AnswerInquiryDto } from './dto/answer-inquiry.dto';
+import { SellerInquiryQueryDto } from './dto/seller-inquiry-query.dto';
 import { Serialize } from '../common/interceptors/serialize.interceptor';
 import { InquiryResponseDto } from './dto/inquiry-response.dto';
 import { BasePaginateDto } from '../common/dto/paginate.dto';
@@ -41,8 +43,9 @@ export class InquiryController {
     return this.inquiryService.create(userId, dto);
   }
 
-  // 공개: 상품별 문의 목록 (비밀 문의는 마스킹)
+  // 공개: 상품별 문의 목록 (비밀 문의는 마스킹 — 로그인한 작성자 본인에게만 풀린다)
   @Get('product/:productId')
+  @UseGuards(OptionalJwtAuthGuard)
   @Serialize(InquiryResponseDto)
   getByProduct(
     @Param('productId', ParseIntPipe) productId: number,
@@ -86,7 +89,7 @@ export class SellerInquiryController {
   @Serialize(InquiryResponseDto)
   getMyProductInquiries(
     @User('sub') userId: number,
-    @Query() query: BasePaginateDto,
+    @Query() query: SellerInquiryQueryDto,
   ) {
     return this.inquiryService.getSellerInquiries(userId, query);
   }

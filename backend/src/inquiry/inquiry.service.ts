@@ -19,6 +19,7 @@ import { ProductEntity } from '../product/entity/product.entity';
 import { SellerEntity } from '../seller/entity/seller.entity';
 import { CreateInquiryDto } from './dto/create-inquiry.dto';
 import { AnswerInquiryDto } from './dto/answer-inquiry.dto';
+import { SellerInquiryQueryDto } from './dto/seller-inquiry-query.dto';
 import { BasePaginateDto } from '../common/dto/paginate.dto';
 import { CommonService } from '../common/common.service';
 
@@ -89,7 +90,7 @@ export class InquiryService {
   async getMyInquiries(userId: number, query: BasePaginateDto) {
     return this.commonService.paginate(query, this.inquiryRepository, 'inquiries/my', {
       where: { userId },
-      relations: ['user'],
+      relations: ['user', 'product'],
     });
   }
 
@@ -116,15 +117,15 @@ export class InquiryService {
 
   // ── Seller ──
 
-  async getSellerInquiries(userId: number, query: BasePaginateDto) {
+  async getSellerInquiries(userId: number, query: SellerInquiryQueryDto) {
     const seller = await this.sellerRepository.findOne({ where: { userId } });
     if (!seller) {
       throw new NotFoundException('셀러 정보를 찾을 수 없습니다.');
     }
 
     return this.commonService.paginate(query, this.inquiryRepository, 'seller/inquiries', {
-      where: { sellerId: seller.id },
-      relations: ['user'],
+      where: { sellerId: seller.id, ...(query.status ? { status: query.status } : {}) },
+      relations: ['user', 'product'],
     });
   }
 

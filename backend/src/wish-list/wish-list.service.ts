@@ -73,6 +73,16 @@ export class WishListService {
     };
   }
 
+  async getMyProductIds(userId: number) {
+    const items = await this.wishListItemRepository.find({
+      where: { userId },
+      select: ['productId'],
+      order: { createdAt: 'DESC' },
+    });
+
+    return { productIds: items.map((item) => item.productId) };
+  }
+
   async clearAll(userId: number) {
     const items = await this.wishListItemRepository.find({
       where: { userId },
