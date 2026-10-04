@@ -159,10 +159,13 @@ async function stopProbe() {
     saved,
     shownAfterReload,
     wireBeforeStop: probe.wire,
+    // 명시적 중지 요청(stream/cancel)이 나갔는가 — 없으면 [](연결 끊김에만 기대는 옛 화면)
+    cancelRequests: apiResponses.filter((r) => r.path.endsWith('/stream/cancel')).map((r) => r.status),
   };
   const assistant = saved.messages?.filter((m) => m.role === 'assistant') ?? [];
   console.log(`중지 시점: ${result.stopTrigger}`);
   console.log(`키보드: 전송 후 포커스=${focusAfterSend.tag}"${focusAfterSend.name}" · 중지까지 Tab ${tabsToStop} · 중지 후 포커스=${focusAfterStop.tag}"${focusAfterStop.name}" · 클릭 없이 입력=${typedWithoutClick}`);
+  console.log(`중지 요청(stream/cancel) 응답: ${result.cancelRequests.join(', ') || '보내지 않음'}`);
   console.log(`중지 때 화면: "${shownAtStop.slice(0, 120)}"`);
   console.log(`서버: 도구 실행 ${result.server.toolRuns}회 · LLM 라운드 ${result.server.llmRounds}회 · 끝까지 돎=${result.server.finishedNormally}`);
   console.log(`DB 저장: assistant ${assistant.length}건, 길이 ${assistant.map((m) => m.content.length).join(',') || '-'}자`);

@@ -1,5 +1,10 @@
 import { TextDecoder, TextEncoder } from 'util';
-import { fetchConversationMessages, streamAssistantChat, type AssistantEvent } from './admin-assistant';
+import {
+  cancelAssistantStream,
+  fetchConversationMessages,
+  streamAssistantChat,
+  type AssistantEvent,
+} from './admin-assistant';
 import { refreshAccessToken } from '../lib/axios/axios-http-client';
 
 /**
@@ -160,5 +165,36 @@ describe('fetchConversationMessages — 복원 조회', () => {
     fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'));
 
     await expect(fetchConversationMessages('9')).resolves.toBeNull();
+  });
+});
+
+describe('cancelAssistantStream — 명시적 중지 요청', () => {
+  it('requestId 를 담아 stream/cancel 로 POST 한다(토큰 포함, keepalive)', async () => {
+    fetchMock.mockResolvedValueOnce(status(204));
+
+    await cancelAssistantStream('req-1');
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toMatch(/\/admin\/assistant\/stream\/cancel$/);
+    expect(init?.method).toBe('POST');
+    expect(init?.body).toBe(JSON.stringify({ requestId: 'req-1' }));
+    expect(init?.keepalive).toBe(true);
+    expect(authOf(0)).toBe('Bearer old-token');
+  });
+
+  it('네트워크 오류·서버 오류에도 던지지 않는다(화면 중지는 이미 끝났다)', async () => {
+    fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    await expect(cancelAssistantStream('req-1')).resolves.toBeUndefined();
+
+    fetchMock.mockResolvedValueOnce(status(404)); // 아직 이 엔드포인트가 없는 옛 백엔드
+    await expect(cancelAssistantStream('req-1')).resolves.toBeUndefined();
+  });
+
+  it('스트림 요청 본문에 requestId 가 실린다', async () => {
+    fetchMock.mockResolvedValueOnce(sseResponse([frame({ type: 'done' })]));
+
+    await collect(streamAssistantChat({ message: 'hi', requestId: 'req-9' }));
+
+    expect(fetchMock.mock.calls[0][1]?.body).toBe(JSON.stringify({ message: 'hi', requestId: 'req-9' }));
   });
 });

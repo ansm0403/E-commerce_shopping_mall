@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   Param,
   ParseIntPipe,
   Post,
@@ -10,7 +11,8 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { AssistantService } from './assistant.service';
-import { ChatRequestDto } from './dto/chat-request.dto';
+import { AssistantStreamRegistry } from './assistant-stream-registry';
+import { CancelStreamDto, ChatRequestDto } from './dto/chat-request.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
@@ -28,7 +30,10 @@ import { Role } from '../../user/entity/role.entity';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.ADMIN)
 export class AssistantController {
-  constructor(private readonly assistantService: AssistantService) {}
+  constructor(
+    private readonly assistantService: AssistantService,
+    private readonly streams: AssistantStreamRegistry,
+  ) {}
 
   @Post('chat')
   chat(@Body() body: ChatRequestDto) {
@@ -64,12 +69,16 @@ export class AssistantController {
     res.setHeader('X-Accel-Buffering', 'no'); // 프록시 버퍼링 방지
     res.flushHeaders?.();
 
-    // 클라이언트가 "중지"를 누르거나 탭을 닫으면 응답 소켓이 닫힌다 → 서비스·LLM 까지 중단을 전파한다.
-    // 'close' 는 정상 종료(res.end) 뒤에도 발생하므로, 응답을 끝내기 전에 닫힌 경우만 중단으로 본다.
+    // 중단 신호 하나를 서비스·LLM 까지 전파한다. 끊는 길은 둘이다.
+    //  ① 명시적 중지: 클라이언트가 stream/cancel 로 requestId 를 보낸다 — 프록시와 무관하게 동작(운영의 주 경로).
+    //  ② 연결 끊김: 응답 소켓이 닫힘(탭 닫기 등). 'close' 는 정상 종료 뒤에도 발생하므로 끝나기 전에 닫힌 경우만.
+    //     ⚠ 운영(Vercel 프록시 → nginx)에서는 브라우저가 끊어도 이 이벤트가 오지 않았다(실측) → ① 이 필요한 이유.
     const abort = new AbortController();
     res.on('close', () => {
       if (!res.writableEnded) abort.abort();
     });
+    const { requestId } = body;
+    if (requestId) this.streams.register(adminUserId, requestId, abort);
 
     try {
       for await (const ev of this.assistantService.streamChat(
@@ -89,7 +98,18 @@ export class AssistantController {
         );
       }
     } finally {
+      if (requestId) this.streams.release(adminUserId, requestId, abort);
       res.end();
     }
+  }
+
+  /**
+   * 진행 중인 스트림 중지 — "중지" 버튼이 부른다. 본인(@User('sub'))의 스트림만 끊을 수 있다.
+   * 이미 끝났거나 모르는 id 여도 204(중지는 "더 이상 진행되지 않게"가 목적이라 결과가 같다).
+   */
+  @Post('stream/cancel')
+  @HttpCode(204)
+  cancelStream(@Body() body: CancelStreamDto, @User('sub') adminUserId: number): void {
+    this.streams.cancel(adminUserId, body.requestId);
   }
 }
