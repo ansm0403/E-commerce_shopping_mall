@@ -6,6 +6,7 @@ import * as PortOne from '@portone/browser-sdk/v2';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { cartQueryOptions } from '@/lib/react-query/cart-query-options';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { useVerifyPayment } from '@/hooks/useOrder';
 import { createOrder } from '@/service/order';
 import { Cart } from '@/model/cart';
@@ -33,9 +34,8 @@ export default function CheckoutPage() {
   // 결제 처리 중 여부 — true이면 장바구니가 비어도 /cart로 이동하지 않음 (race condition 방지)
   const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
 
-  useEffect(() => {
-    if (isHydrated && !isLoggedIn) router.push('/login');
-  }, [isHydrated, isLoggedIn, router]);
+  // 비로그인이면 로그인으로(돌아올 경로 포함) — /auth/me 응답을 기다린 뒤에만 판정한다
+  useRequireAuth();
 
   const cart = data?.data as Cart | undefined;
   const items = cart?.items ?? [];

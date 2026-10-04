@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { orderQueryOptions } from '@/lib/react-query/order-query-options';
 import { OrderResponse } from '@/model/order';
 
@@ -14,8 +15,10 @@ export default function CheckoutCompleteContent() {
   const { user, isHydrated } = useAuth();
   const isLoggedIn = !!user;
 
+  // 비로그인이면 로그인으로(돌아올 경로 포함) — /auth/me 응답을 기다린 뒤에만 판정한다
+  useRequireAuth();
+
   useEffect(() => {
-    if (isHydrated && !isLoggedIn) router.push('/login');
     if (isHydrated && isLoggedIn && !orderNumber) router.push('/');
   }, [isHydrated, isLoggedIn, orderNumber, router]);
 
