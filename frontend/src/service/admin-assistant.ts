@@ -73,11 +73,11 @@ export async function fetchConversationMessages(
 
 /**
  * 어시스턴트 스트리밍 호출. SSE 이벤트를 순서대로 yield 하는 async generator.
- * @param body message + (선택) conversationId
+ * @param body message + (선택) conversationId + (선택) requestId(중지 요청에 쓸 이 스트림의 id)
  * @param signal 중단용 AbortSignal
  */
 export async function* streamAssistantChat(
-  body: { message: string; conversationId?: string },
+  body: { message: string; conversationId?: string; requestId?: string },
   signal?: AbortSignal,
 ): AsyncGenerator<AssistantEvent> {
   const res = await fetchWithAuth(`${API_BASE}/admin/assistant/stream`, {
@@ -104,5 +104,25 @@ export async function* streamAssistantChat(
     );
     buffer = rest;
     yield* events;
+  }
+}
+
+/**
+ * 진행 중인 스트림을 서버에서 멈춘다("중지" 버튼).
+ *
+ * fetch 를 abort 하는 것만으로는 부족하다 — 운영 경로(Vercel 프록시 → nginx)에서는 브라우저가 연결을 끊어도
+ * 백엔드가 그 사실을 모르고 끝까지 돌아, 보지 않은 답변이 저장됐다(실측). 그래서 서버에 명시적으로 알린다.
+ * 실패해도 화면의 중지는 이미 끝났으므로 조용히 넘어간다(keepalive: 페이지를 떠나는 중에도 전송).
+ */
+export async function cancelAssistantStream(requestId: string): Promise<void> {
+  try {
+    await fetchWithAuth(`${API_BASE}/admin/assistant/stream/cancel`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ requestId }),
+      keepalive: true,
+    });
+  } catch {
+    /* 네트워크 실패 — 서버는 끝까지 돌 수 있지만 화면 중지에는 영향 없음 */
   }
 }

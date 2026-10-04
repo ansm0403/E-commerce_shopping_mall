@@ -9,6 +9,7 @@ import { InquiryModule } from '../../inquiry/inquiry.module';
 import { AdminModule } from '../admin.module';
 import { AssistantController } from './assistant.controller';
 import { AssistantService } from './assistant.service';
+import { AssistantStreamRegistry } from './assistant-stream-registry';
 import { AssistantConversationEntity } from './entity/conversation.entity';
 import { AssistantMessageEntity } from './entity/message.entity';
 
@@ -38,6 +39,6 @@ import { AssistantMessageEntity } from './entity/message.entity';
     InquiryModule,
   ],
   controllers: [AssistantController],
-  providers: [AssistantService],
+  providers: [AssistantService, AssistantStreamRegistry],
 })
 export class AssistantModule {}

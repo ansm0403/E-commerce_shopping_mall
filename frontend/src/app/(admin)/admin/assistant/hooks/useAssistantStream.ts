@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  cancelAssistantStream,
   fetchConversationMessages,
   streamAssistantChat,
 } from '../../../../../service/admin-assistant';
@@ -37,6 +38,13 @@ const storage = {
   },
 };
 
+/** 스트림 식별자. randomUUID 는 보안 컨텍스트(https·localhost)에서만 있다 → 없으면 시각+난수로. */
+function newRequestId(): string {
+  return typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+}
+
 /**
  * 어시스턴트 대화 상태 — 메시지·전송·중지·복원. UI 를 모른다(스크롤·입력창은 컴포넌트 몫).
  */
@@ -47,6 +55,8 @@ export function useAssistantStream() {
 
   const conversationIdRef = useRef<string | undefined>(undefined);
   const abortRef = useRef<AbortController | null>(null);
+  // 진행 중인 스트림의 id — 중지할 때 서버에 이 값으로 알린다.
+  const requestIdRef = useRef<string | null>(null);
   // 진행 중 여부의 동기 사본 — 같은 렌더 안에서 send 가 두 번 불려도 한 번만 보낸다.
   const streamingRef = useRef(false);
   // 사용자가 대화를 시작/초기화했는지. 뒤늦게 도착한 복원 결과가 진행 중 대화를 덮어쓰지 않게 가드.
@@ -99,12 +109,14 @@ export function useAssistantStream() {
     setStreaming(true);
     const controller = new AbortController();
     abortRef.current = controller;
+    const requestId = newRequestId();
+    requestIdRef.current = requestId;
 
     void (async () => {
       let finished = false; // done 을 받았는가 — 못 받고 끝나면(중지·오류·끊김) 진행 표시를 닫아 준다
       try {
         for await (const ev of streamAssistantChat(
-          { message, conversationId: conversationIdRef.current },
+          { message, conversationId: conversationIdRef.current, requestId },
           controller.signal,
         )) {
           if (ev.type === 'meta') {
@@ -130,6 +142,7 @@ export function useAssistantStream() {
         streamingRef.current = false;
         setStreaming(false);
         abortRef.current = null;
+        requestIdRef.current = null;
       }
     })();
 
@@ -137,6 +150,8 @@ export function useAssistantStream() {
   }, []);
 
   const stop = useCallback(() => {
+    // 서버에 먼저 알리고(프록시가 연결 끊김을 전달하지 않는 운영 경로 대비) 화면 쪽 읽기를 끊는다.
+    if (requestIdRef.current) void cancelAssistantStream(requestIdRef.current);
     abortRef.current?.abort();
   }, []);
 
