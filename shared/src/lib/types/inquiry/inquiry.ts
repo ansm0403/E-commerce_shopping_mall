@@ -33,4 +33,9 @@ export interface InquiryResponse extends Inquiry {
     id: number;
     nickName: string;
   };
+  /** 내 문의(`/inquiries/my`)·셀러 문의(`/seller/inquiries`) 목록에만 실린다. 공개 상품별 목록에는 없다. */
+  product?: {
+    id: number;
+    name: string;
+  };
 }

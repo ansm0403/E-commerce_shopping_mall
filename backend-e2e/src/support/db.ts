@@ -200,6 +200,22 @@ export async function createOwnerlessPublishedProduct(
   return product.id;
 }
 
+/**
+ * e2e 계정이 쓴 문의·찜, 그리고 e2e 상품에 달린 문의·찜을 지운다.
+ * 두 테이블 모두 users·products FK 가 NO ACTION 이라, 상품·계정 삭제 **전에** 불러야 한다.
+ */
+export async function cleanupE2eInquiriesAndWishlist(ds: DataSource, suite: string): Promise<void> {
+  const like = `${e2ePrefix(suite)}%`;
+  for (const table of ['inquiries', 'wish_list_items']) {
+    await ds.query(
+      `DELETE FROM ${table}
+       WHERE user_id IN (SELECT id FROM users WHERE email LIKE $1)
+          OR product_id IN (SELECT id FROM products WHERE name LIKE $1)`,
+      [like],
+    );
+  }
+}
+
 /** 이름 접두로 e2e 상품을 지운다(계정과 무관하게 남을 수 있어 별도 정리). */
 export async function cleanupE2eProducts(ds: DataSource, suite: string): Promise<void> {
   await ds.query(`DELETE FROM products WHERE name LIKE $1`, [`${e2ePrefix(suite)}%`]);
