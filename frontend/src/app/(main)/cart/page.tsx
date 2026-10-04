@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { FaShoppingCart } from 'react-icons/fa';
 import { cartQueryOptions } from '@/lib/react-query/cart-query-options';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { useClearCart } from '@/hooks/useCart';
 import { Cart } from '@/model/cart';
 import CartItemRow from './CartItemRow';
@@ -16,14 +16,13 @@ const FREE_SHIPPING_THRESHOLD = 50000;
 export default function CartPage() {
   const router = useRouter();
   const clearCart = useClearCart();
-  const { user, isHydrated } = useAuth();
+  const { user } = useAuth();
 
   const isLoggedIn = !!user;
   const { data, isLoading } = useQuery(cartQueryOptions.myCart(isLoggedIn));
 
-  useEffect(() => {
-    if (isHydrated && !isLoggedIn) router.push('/login');
-  }, [isHydrated, isLoggedIn, router]);
+  // 비로그인이면 로그인으로(돌아올 경로 포함) — /auth/me 응답을 기다린 뒤에만 판정한다
+  useRequireAuth();
 
   const cart = data?.data as Cart | undefined;
   const items = cart?.items ?? [];

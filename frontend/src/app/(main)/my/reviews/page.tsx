@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { reviewQueryOptions } from '@/lib/react-query/review-query-options';
 import { useUpdateReview, useDeleteReview } from '@/hooks/useReview';
 import { Modal } from '@/components/common/Modal';
@@ -16,17 +16,15 @@ const PAGE_SIZE = 10;
 const REVIEW_EDIT_WINDOW_DAYS = 30;
 
 export default function MyReviewsPage() {
-  const router = useRouter();
-  const { user, isHydrated } = useAuth();
+  const { user } = useAuth();
   const isLoggedIn = !!user;
 
   // 페이지 기반 네비게이션: 리뷰가 많은 사용자(100건 초과)도 안전하게 조회.
   // (take 를 늘리는 "더보기"는 백엔드 take 상한 100 에 걸린다)
   const [page, setPage] = useState(1);
 
-  useEffect(() => {
-    if (isHydrated && !isLoggedIn) router.push('/login');
-  }, [isHydrated, isLoggedIn, router]);
+  // 비로그인이면 로그인으로(돌아올 경로 포함) — /auth/me 응답을 기다린 뒤에만 판정한다
+  useRequireAuth();
 
   const { data, isLoading, isFetching } = useQuery({
     ...reviewQueryOptions.myReviews({ page, take: PAGE_SIZE }),
