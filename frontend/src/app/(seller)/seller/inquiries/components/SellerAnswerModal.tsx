@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { InquiryStatus, type InquiryResponse } from '@shopping-mall/shared';
 import { useAnswerInquiry } from '../../../../../hooks/useInquiry';
 import { inquiryErrorMessage } from '../../../../../service/inquiry';
-import { formatDateShort } from '../../../../(admin)/admin/components/table-ui';
+import { formatDateShort } from '../../../../../components/console/table-ui';
 
 /**
  * 문의 답변 모달 — PATCH /seller/inquiries/:id/answer.

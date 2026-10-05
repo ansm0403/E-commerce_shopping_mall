@@ -20,7 +20,7 @@ import {
   tableStyle,
   tdStyle,
   thStyle,
-} from '../../components/table-ui';
+} from '../../../../../components/console/table-ui';
 import ProductActionModal, { type ProductAction } from './ProductActionModal';
 import { DEFAULT_APPROVAL_STATUS } from './ProductFilters';
 

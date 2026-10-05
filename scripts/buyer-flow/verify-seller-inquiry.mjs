@@ -6,7 +6,7 @@
  *        [--json out.json] [--shot dir] [--headed]
  *
  * 보는 것:
- *   1. 헤더 "셀러 센터" → /seller 가 빈 화면이 아니라 상품 관리로 간다 · 상단 네비에 "문의"
+ *   1. 헤더 "셀러 센터" → /seller 가 빈 화면이 아니라 상품 관리로 간다 · 사이드바에 "문의"
  *   2. 미답변 탭에 방금 구매자가 쓴 문의(상품명 포함) → "답변하기" → 모달(공백만이면 등록 버튼 비활성)
  *   3. 답변 등록 → 미답변 탭에서 사라지고 답변 완료 탭에 나타난다 · "답변 보기" 는 읽기 전용
  *   4. 관리자 감사 로그에 INQUIRY_ANSWERED · 구매자의 상품 문의 탭에 "판매자 답변"
@@ -65,7 +65,7 @@ try {
   check('헤더 "셀러 센터" → /seller 가 상품 관리로 간다', true);
 
   const nav = page.getByRole('link', { name: '문의', exact: true });
-  check('셀러 상단 네비에 "문의" 가 있다', await nav.isVisible());
+  check('셀러 사이드바에 "문의" 가 있다', await nav.isVisible());
   await nav.click();
   await page.waitForURL((u) => new URL(u).pathname === '/seller/inquiries', { timeout: 20000 });
 

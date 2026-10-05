@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { filterBarStyle, tabStyle } from '../../components/table-ui';
+import { filterBarStyle, tabStyle } from '../../../../../components/console/table-ui';
 
 /**
  * 정산 상태 탭 — 진실 원천은 URL.

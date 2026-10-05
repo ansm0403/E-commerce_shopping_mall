@@ -22,7 +22,7 @@ import {
   tableStyle,
   tdStyle,
   thStyle,
-} from '../../components/table-ui';
+} from '../../../../../components/console/table-ui';
 import { orderBadge } from '../components/OrderTable';
 
 /**

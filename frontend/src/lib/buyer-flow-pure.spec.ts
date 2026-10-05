@@ -1,7 +1,8 @@
 import { hasRole } from './roles';
 import { applyWishToggle } from './react-query/wishlist-query-options';
 import { wishlistImageUrl, type WishlistItem } from '../service/wishlist';
-import { activeSellerNavHref } from '../app/(main)/seller/components/SellerNav';
+import { activeNavHref } from '../components/console/nav';
+import { SELLER_NAV_ITEMS } from '../app/(seller)/seller/nav-items';
 import { loginPathWithRedirect } from '../hooks/useRequireAuth';
 import { isMyNavActive, myNavItems } from '../app/(main)/my/nav-items';
 
@@ -81,7 +82,7 @@ describe('wishlistImageUrl — 위시리스트 카드의 대표 사진', () => {
   });
 });
 
-describe('activeSellerNavHref — 셀러 센터의 현재 메뉴 하나', () => {
+describe('activeNavHref — 콘솔 사이드바의 현재 메뉴 하나(셀러 센터 메뉴로 확인)', () => {
   it.each([
     ['/seller/products', '/seller/products'],
     ['/seller/products/12/edit', '/seller/products'],
@@ -91,12 +92,12 @@ describe('activeSellerNavHref — 셀러 센터의 현재 메뉴 하나', () => 
     ['/seller/settlements', '/seller/settlements'],
     ['/seller/inquiries', '/seller/inquiries'],
   ])('%s → %s', (pathname, expected) => {
-    expect(activeSellerNavHref(pathname)).toBe(expected);
+    expect(activeNavHref(SELLER_NAV_ITEMS, pathname)).toBe(expected);
   });
 
   it('메뉴에 없는 주소면 아무것도 켜지 않는다', () => {
-    expect(activeSellerNavHref('/seller')).toBeNull();
-    expect(activeSellerNavHref('/seller/productsX')).toBeNull();
+    expect(activeNavHref(SELLER_NAV_ITEMS, '/seller')).toBeNull();
+    expect(activeNavHref(SELLER_NAV_ITEMS, '/seller/productsX')).toBeNull();
   });
 });
 

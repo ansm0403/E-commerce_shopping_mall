@@ -15,7 +15,7 @@ interface MeResponse {
 }
 
 /**
- * (main)/seller/* 의 클라이언트 사이드 인가 가드 — AdminGuard 를 본떴다.
+ * (seller)/seller/* 의 클라이언트 사이드 인가 가드 — AdminGuard 를 본떴다.
  *
  * AdminGuard 와 다른 점 두 가지:
  *   1. 비-셀러는 홈이 아니라 /my/seller-apply 로 안내한다 — "셀러가 되는 길"이 있는 화면이라서.

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useAuth } from '../../../../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function DemoModeBanner() {
   const { user } = useAuth();

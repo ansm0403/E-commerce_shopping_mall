@@ -21,7 +21,7 @@ import {
   tableStyle,
   tdStyle,
   thStyle,
-} from '../../components/table-ui';
+} from '../../../../../components/console/table-ui';
 import { DEFAULT_SETTLEMENT_STATUS } from './SettlementFilters';
 
 /**

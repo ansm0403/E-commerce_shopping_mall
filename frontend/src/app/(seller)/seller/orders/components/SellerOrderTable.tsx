@@ -20,7 +20,7 @@ import {
   tableStyle,
   tdStyle,
   thStyle,
-} from '../../../../(admin)/admin/components/table-ui';
+} from '../../../../../components/console/table-ui';
 import SellerShipModal from './SellerShipModal';
 import { DEFAULT_ORDER_STATUS } from './SellerOrderFilters';
 

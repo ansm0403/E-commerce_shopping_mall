@@ -21,7 +21,7 @@ import {
   tabStyle,
   tdStyle,
   thStyle,
-} from '../../../../(admin)/admin/components/table-ui';
+} from '../../../../../components/console/table-ui';
 
 /**
  * 셀러 정산 화면 — 요약 카드 + 상태 탭 + 내역 표.

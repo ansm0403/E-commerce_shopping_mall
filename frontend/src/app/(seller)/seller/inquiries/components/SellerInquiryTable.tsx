@@ -15,7 +15,7 @@ import {
   tableStyle,
   tdStyle,
   thStyle,
-} from '../../../../(admin)/admin/components/table-ui';
+} from '../../../../../components/console/table-ui';
 import SellerAnswerModal from './SellerAnswerModal';
 import { parseInquiryTab } from './SellerInquiryFilters';
 

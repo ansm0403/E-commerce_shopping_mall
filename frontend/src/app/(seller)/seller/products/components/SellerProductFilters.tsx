@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { filterBarStyle, tabStyle } from '../../../../(admin)/admin/components/table-ui';
+import { filterBarStyle, tabStyle } from '../../../../../components/console/table-ui';
 
 /**
  * 승인 상태 탭 — 진실 원천은 URL (Step 1·4에서 확립한 규칙).
