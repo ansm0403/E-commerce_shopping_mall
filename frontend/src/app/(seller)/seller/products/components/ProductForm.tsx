@@ -179,109 +179,121 @@ export default function ProductForm({ initial }: Props) {
         defaultValues={defaultValues}
         resolver={zodResolver(productSchema)}
         onSubmit={handleSubmit}
+        // 콘솔 본문은 넓다 — 520px 한 줄 폼이면 오른쪽이 텅 빈다. 넓은 화면에서는 2단으로 펼쳐 가운데 둔다(폰은 한 줄).
+        className="mx-auto max-w-[960px]"
+        bodyClassName="grid items-start gap-x-8 gap-y-5 md:grid-cols-2"
       >
         {errorMessage && (
-          <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-[13px] whitespace-pre-line text-red-600">
+          <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-[13px] whitespace-pre-line text-red-600 md:col-span-2">
             {errorMessage}
           </p>
         )}
 
         {isEdit && initial?.approvalStatus === 'rejected' && initial.rejectionReason && (
-          <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-[13px] text-red-600">
+          <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-[13px] text-red-600 md:col-span-2">
             반려 사유: {initial.rejectionReason}
             <br />
             수정해 저장하면 자동으로 재심사가 요청됩니다.
           </p>
         )}
 
-        <TextField<ProductFormValues> name="name" label="상품명" placeholder="예: 프리미엄 원두 1kg" />
-        <TextareaField<ProductFormValues>
-          name="description"
-          label="상품 설명"
-          placeholder="상품의 특징, 구성, 사용법 등을 적어주세요."
-          rows={6}
-        />
-        <TextField<ProductFormValues> name="brand" label="브랜드" placeholder="예: 쇼핑상회" />
-        <TextField<ProductFormValues>
-          name="price"
-          label="가격 (원)"
-          type="number"
-          placeholder="19900"
-        />
-        <TextField<ProductFormValues>
-          name="stockQuantity"
-          label="재고 수량"
-          type="number"
-          placeholder="0"
-          helperText="비워두면 0으로 등록됩니다. 재고가 0이면 구매자가 주문할 수 없습니다."
-        />
-        <TextField<ProductFormValues>
-          name="discountRate"
-          label="할인율 % (선택)"
-          type="number"
-          placeholder="0~100"
-        />
-        <SelectField<ProductFormValues>
-          name="categoryId"
-          label="카테고리 (선택)"
-          options={categoryOptions}
-          placeholder="카테고리 미지정"
-        />
-        <SelectField<ProductFormValues>
-          name="salesType"
-          label="판매 방식"
-          options={SALES_TYPE_OPTIONS}
-        />
-        <CheckboxField<ProductFormValues> name="isEvent">이벤트 상품</CheckboxField>
-
-        {/* 이미지 — react-hook-form 밖에서 관리(파일은 등록 성공 후 별도 API 로 올라간다) */}
-        <div className="flex flex-col gap-3">
-          <label className="text-[13px] font-medium">
-            상품 이미지 (선택, 최대 {MAX_IMAGES}장 · 장당 5MB)
-          </label>
-          <p className="text-xs text-gray-500">
-            첫 번째 이미지가 대표 이미지가 됩니다.{' '}
-            {isEdit
-              ? `이미 등록된 이미지 ${existingImageCount}장 뒤에 추가됩니다.`
-              : '이미지는 상품 등록이 완료된 뒤 순서대로 업로드됩니다.'}
-          </p>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={(e) => addFiles(e.target.files)}
-            className="text-[13px]"
+        {/* 왼쪽 단 — 무엇을 파는가 */}
+        <fieldset className="flex min-w-0 flex-col gap-5">
+          <legend className="mb-4 text-sm font-bold text-slate-900">기본 정보</legend>
+          <TextField<ProductFormValues> name="name" label="상품명" placeholder="예: 프리미엄 원두 1kg" />
+          <TextareaField<ProductFormValues>
+            name="description"
+            label="상품 설명"
+            placeholder="상품의 특징, 구성, 사용법 등을 적어주세요."
+            rows={8}
           />
-          {fileError && <span className="text-xs text-red-500">{fileError}</span>}
-          {files.length > 0 && (
-            <ul className="flex flex-wrap gap-2">
-              {files.map((file, index) => (
-                <li key={`${file.name}-${index}`} className="relative">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={URL.createObjectURL(file)}
-                    alt={file.name}
-                    className="h-20 w-20 rounded-md border border-gray-200 object-cover"
-                  />
-                  {index === 0 && !isEdit && (
-                    <span className="absolute left-1 top-1 rounded bg-blue-600 px-1 text-[10px] text-white">
-                      대표
-                    </span>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => removeFile(index)}
-                    className="absolute -right-2 -top-2 h-5 w-5 rounded-full bg-gray-800 text-[11px] leading-5 text-white"
-                    aria-label={`${file.name} 제거`}
-                  >
-                    ×
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+          <TextField<ProductFormValues> name="brand" label="브랜드" placeholder="예: 쇼핑상회" />
+          <SelectField<ProductFormValues>
+            name="categoryId"
+            label="카테고리 (선택)"
+            options={categoryOptions}
+            placeholder="카테고리 미지정"
+          />
+        </fieldset>
+
+        {/* 오른쪽 단 — 얼마에, 어떻게 파는가 + 사진 */}
+        <fieldset className="flex min-w-0 flex-col gap-5">
+          <legend className="mb-4 text-sm font-bold text-slate-900">판매 정보 · 이미지</legend>
+          <TextField<ProductFormValues>
+            name="price"
+            label="가격 (원)"
+            type="number"
+            placeholder="19900"
+          />
+          <TextField<ProductFormValues>
+            name="stockQuantity"
+            label="재고 수량"
+            type="number"
+            placeholder="0"
+            helperText="비워두면 0으로 등록됩니다. 재고가 0이면 구매자가 주문할 수 없습니다."
+          />
+          <TextField<ProductFormValues>
+            name="discountRate"
+            label="할인율 % (선택)"
+            type="number"
+            placeholder="0~100"
+          />
+          <SelectField<ProductFormValues>
+            name="salesType"
+            label="판매 방식"
+            options={SALES_TYPE_OPTIONS}
+          />
+          <CheckboxField<ProductFormValues> name="isEvent">이벤트 상품</CheckboxField>
+
+          {/* 이미지 — react-hook-form 밖에서 관리(파일은 등록 성공 후 별도 API 로 올라간다) */}
+          <div className="flex flex-col gap-3">
+            <label className="text-[13px] font-medium">
+              상품 이미지 (선택, 최대 {MAX_IMAGES}장 · 장당 5MB)
+            </label>
+            <p className="text-xs text-gray-500">
+              첫 번째 이미지가 대표 이미지가 됩니다.{' '}
+              {isEdit
+                ? `이미 등록된 이미지 ${existingImageCount}장 뒤에 추가됩니다.`
+                : '이미지는 상품 등록이 완료된 뒤 순서대로 업로드됩니다.'}
+            </p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => addFiles(e.target.files)}
+              className="text-[13px]"
+            />
+            {fileError && <span className="text-xs text-red-500">{fileError}</span>}
+            {files.length > 0 && (
+              <ul className="flex flex-wrap gap-2">
+                {files.map((file, index) => (
+                  <li key={`${file.name}-${index}`} className="relative">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt={file.name}
+                      className="h-20 w-20 rounded-md border border-gray-200 object-cover"
+                    />
+                    {index === 0 && !isEdit && (
+                      <span className="absolute left-1 top-1 rounded bg-blue-600 px-1 text-[10px] text-white">
+                        대표
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removeFile(index)}
+                      className="absolute -right-2 -top-2 h-5 w-5 rounded-full bg-gray-800 text-[11px] leading-5 text-white"
+                      aria-label={`${file.name} 제거`}
+                    >
+                      ×
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </fieldset>
       </Form>
     </div>
   );
