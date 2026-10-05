@@ -6,7 +6,8 @@ import Link from "next/link";
 import { useLoginMutation, useDemoLoginMutation } from "../../hook/useAuthMutation";
 import { Form, TextField, CheckboxField } from "./BaseForm";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
 import { AxiosError } from "axios";
 
 /**
@@ -40,6 +41,14 @@ export function LoginForm() {
   const demoLoginMutation = useDemoLoginMutation();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // 이미 로그인된 사람에게 로그인 폼을 보여 주지 않는다 — 다른 탭에서 로그인했거나, 로그인한 채 /login 을 직접 연 경우.
+  // 이 화면에서 직접 로그인한 경우는 아래 핸들러가 목적지를 정하므로(데모는 /admin/dashboard) 여기서는 손대지 않는다.
+  const { user } = useAuth();
+  const loggedInHereRef = useRef(false);
+  useEffect(() => {
+    if (user && !loggedInHereRef.current) router.replace(redirectTo);
+  }, [user, redirectTo, router]);
+
   const defaultValues: LoginFormValues = {
     email: "",
     password: "",
@@ -48,6 +57,7 @@ export function LoginForm() {
 
   const handleSubmit = async (values: LoginFormValues) => {
     setErrorMessage(null);
+    loggedInHereRef.current = true;
 
     try {
       await loginMutation.mutateAsync({
@@ -58,6 +68,7 @@ export function LoginForm() {
 
       router.push(redirectTo);
     } catch (error) {
+      loggedInHereRef.current = false;
       if (error instanceof AxiosError && error.response?.status === 403) {
         // 이메일 미인증 → 인증 안내 페이지로 이동
         router.push(`/check-email?email=${encodeURIComponent(values.email)}`);
@@ -130,6 +141,7 @@ export function LoginForm() {
           disabled={demoLoginMutation.isPending}
           onClick={async () => {
             setErrorMessage(null);
+            loggedInHereRef.current = true;
             try {
               await demoLoginMutation.mutateAsync();
               router.push("/admin/dashboard");

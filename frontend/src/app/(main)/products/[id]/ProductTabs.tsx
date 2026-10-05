@@ -1,8 +1,14 @@
 'use client';
 
 import { Product } from '@/model/product';
+import dynamic from 'next/dynamic';
 import ReviewSection from './ReviewSection';
-import InquirySection from './InquirySection';
+
+// 문의 탭은 폼 라이브러리(react-hook-form + zod)를 끌고 온다 — 상품 상세의 첫 화면에는 필요 없으므로
+// 탭을 열 때 따로 받는다(정적 import 면 상품 상세 First Load 가 그만큼 커진다).
+const InquirySection = dynamic(() => import('./InquirySection'), {
+  loading: () => <div className="text-center py-12 text-secondary-500">문의를 불러오는 중...</div>,
+});
 
 interface ProductTabsProps {
   product: Product;

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Product } from '@/model/product';
 import { useAddToCart } from '@/hooks/useCart';
-import { useWishlistToggle } from '@/hooks/useWishlist';
+import { useWishlistIds, useWishlistToggle } from '@/hooks/useWishlist';
 import { authStorage } from '@/service/auth-storage';
 
 interface ProductInfoProps {
@@ -55,7 +55,10 @@ export default function ProductInfo({
   onQuantityChange,
 }: ProductInfoProps) {
   const router = useRouter();
-  const [isWished, setIsWished] = useState(false);
+  // 찜 여부는 서버에서 받은 내 찜 id 목록으로 판정한다(['wishlist','ids']).
+  // 예전엔 useState(false) 라 항상 빈 하트로 시작했고, 이미 찜한 상품에서 "찜하기"를 누르면 토글 API 가 찜을 풀어 버렸다.
+  const wishlist = useWishlistIds();
+  const isWished = wishlist.isWished(product.id);
   // ③ wishCount를 로컬 state로 관리 — 토글 성공 시 직접 +1/-1해서 정확하게 반영
   const [wishCount, setWishCount] = useState(product.wishCount ?? 0);
 
@@ -109,7 +112,7 @@ export default function ProductInfo({
     wishlistToggle.mutate(product.id, {
       onSuccess: (res) => {
         const added = res.data.action === 'added';
-        setIsWished(added);
+        // 하트는 훅이 ids 캐시로 갱신한다(낙관적 → 서버 action 으로 확정).
         // ③ 토글 결과에 따라 wishCount를 직접 +1/-1
         setWishCount((prev) => prev + (added ? 1 : -1));
       },
@@ -148,8 +151,10 @@ export default function ProductInfo({
         {/* 하트(위시리스트) 버튼 */}
         <button
           onClick={handleWishToggle}
-          disabled={wishlistToggle.isPending}
+          // 내 찜 목록을 받는 중에는 누르지 못하게 — 모르는 상태에서 누르면 의도와 반대로 토글될 수 있다
+          disabled={wishlistToggle.isPending || wishlist.isLoading}
           aria-label={isWished ? '찜 해제' : '찜하기'}
+          aria-pressed={isWished}
           className={`flex flex-col items-center gap-0.5 p-2 rounded-lg transition-all
             ${wishlistToggle.isPending ? 'opacity-50 cursor-wait' : 'hover:bg-red-50'}`}
         >

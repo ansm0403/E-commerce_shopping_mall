@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Patch, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { DemoAccountGuard } from '../auth/guards/demo-account.guard';
@@ -40,7 +40,9 @@ export class UserController {
   changePassword(
     @User('sub') userId: number,
     @Body() dto: ChangePasswordDto,
+    @Headers('authorization') authorization?: string,
   ) {
-    return this.userService.changePassword(userId, dto);
+    // 변경에 성공하면 이 요청의 access 토큰도 함께 폐기한다(JwtAuthGuard 를 통과했으므로 Bearer 형식은 보장됨)
+    return this.userService.changePassword(userId, dto, authorization?.substring(7));
   }
 }

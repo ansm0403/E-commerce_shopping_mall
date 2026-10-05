@@ -51,6 +51,19 @@ export class RedisService {
     return result === '1';
   }
 
+  // ===== 사용자 단위 access 토큰 일괄 무효화 =====
+  // 블랙리스트는 토큰 문자열이 있어야 하는데, 다른 기기의 access 토큰은 서버가 갖고 있지 않다.
+  // 그래서 "이 시각(초) 이전에 발급된 토큰은 거절"이라는 기준 시각을 사용자별로 둔다.
+  // TTL 은 access 토큰 수명만큼이면 된다 — 그 뒤에는 그 이전 발급분이 어차피 전부 만료돼 있다.
+  async setSessionsRevokedAt(userId: number, epochSeconds: number, ttlSeconds: number): Promise<void> {
+    await this.redis.setex(`sessions-revoked-at:${userId}`, ttlSeconds, String(epochSeconds));
+  }
+
+  async getSessionsRevokedAt(userId: number): Promise<number | null> {
+    const value = await this.redis.get(`sessions-revoked-at:${userId}`);
+    return value ? Number(value) : null;
+  }
+
   // ===== Refresh Token 저장 (빠른 검증용) =====
   async storeRefreshToken(
     userId: number,

@@ -76,6 +76,9 @@ try {
   check('행에 상품명이 보인다', (await row.getByRole('link').count()) === 1, await row.getByRole('link').innerText());
   check('행 상태가 "미답변"', await row.getByText('미답변', { exact: true }).isVisible());
 
+  // 페이지 이동 표시(NProgress)가 사라진 뒤에 잰다 — 그 라이브러리의 role="bar" 는 유효하지 않은 ARIA 역할이라 이동 직후엔 이 화면과 무관한 위반이 잡힌다
+  const progressGone = await page.locator('#nprogress').waitFor({ state: 'detached', timeout: 10000 }).then(() => true).catch(() => false);
+  check('페이지 이동 표시가 사라진다(멈춰 있지 않다)', progressGone);
   axe.list = await runAxe(page);
   check('axe: 목록 화면 위반 0', axe.list.length === 0, `${axe.list.length}건`);
 
