@@ -146,7 +146,7 @@
 ---
 
 ## 1-B. 후순위 → 설계 확정 (2026-09-28)
-- **셀러 대시보드** `(main)/seller/page.tsx`: ②~④ 데이터를 요약(판매량·미배송·정산 요약). 위 화면 완료 후 집계 뷰로.
+- **셀러 대시보드** ✅(2026-10-05) `(seller)/seller/page.tsx`: KPI 4장·정산 요약·판매 중 상품·최근 주문 — 기존 목록 API 조합. 셀러 화면 전체가 관리자와 같은 콘솔 셸로 옮겨졌다 → [01-2](./01-2-seller-dashboard-inquiry.md) §10.
 - **셀러 문의 답변** `(main)/seller/inquiries/page.tsx`: ✅ 확인 완료 — `inquiry.controller.ts` 의 `SellerInquiryController`(`GET /seller/inquiries`, `PATCH /seller/inquiries/:id/answer`, SELLER 가드, 감사 로그 `INQUIRY_ANSWERED`)가 있다. 프론트는 셀러뿐 아니라 **구매자 쪽(상품 상세 탭·내 문의)도 전무**하다.
 - 두 항목의 설계·작업 순서·DoD 는 **[01-2-seller-dashboard-inquiry.md](./01-2-seller-dashboard-inquiry.md)** — 셀러 라우트를 `(seller)` 그룹으로 옮겨 관리자 콘솔 셸을 공유하고, 대시보드는 기존 API 조합, 문의는 구매자 → 셀러 → 관리자(어시스턴트·감사 로그) 흐름으로 닫는다.
 

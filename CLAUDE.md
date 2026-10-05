@@ -20,7 +20,7 @@
 모듈러 모놀리식(기능 폴더 = Nest 모듈), 글로벌 prefix `/v1`, 포트 4000. 역할 `buyer | seller | admin`. DB 스키마는 **TypeORM 마이그레이션으로만**(synchronize off).
 
 ## 4. 프론트 → 상세 `frontend/CLAUDE.md`
-App Router 라우트 그룹 `(auth)` · `(main)`(상점·구매·`/my/*`·`/seller/*`) · `(admin)`(`/admin/*`). HTTP 는 `publicClient`/`authClient`, 데이터는 TanStack Query.
+App Router 라우트 그룹 `(auth)` · `(main)`(상점·구매·`/my/*`) · `(seller)`(`/seller/*`) · `(admin)`(`/admin/*`) — 뒤의 둘은 쇼핑몰 헤더 없이 공용 콘솔 셸(`components/console/`). HTTP 는 `publicClient`/`authClient`, 데이터는 TanStack Query.
 
 ## 5. 현재 구현 상태
 > 한 줄 + 상세 문서 링크 형식만. 새 완료 항목도 이 형식으로 추가하고 경위는 링크된 문서에 쓴다.
@@ -28,13 +28,13 @@ App Router 라우트 그룹 `(auth)` · `(main)`(상점·구매·`/my/*`·`/sell
 **실구현**
 - 구매자 커머스: 회원/인증 → 카테고리/상품/검색 → 장바구니 → 주문 → PortOne 결제(+웹훅) → 주문조회/취소/구매확정 → 리뷰(+AI 리뷰 요약).
 - 구매자 마이페이지·찜·문의: `/my` 셸(프로필·주문·리뷰·위시리스트·내 문의·비밀번호) · 찜(하트 초기 상태 + 낙관적 갱신) · 상품 문의 왕복(구매자 작성 → 셀러 답변) · 비밀번호 변경 시 전 세션 폐기 → `docs/roadmap/05-buyer-flow-complete.md`
-- 셀러: 신청/상태 확인(`my/seller-apply`) · 상품 등록/수정/게시 토글 · 주문/배송 · 정산 · 문의 답변(`seller/inquiries`) → `docs/roadmap/01-seller-core.md`, 문의는 `05-buyer-flow-complete.md`
+- 셀러: 신청/상태 확인(`my/seller-apply`) · 콘솔 셸 + 대시보드(`/seller`) · 상품 등록/수정/게시 토글 · 주문/배송 · 정산 · 문의 답변(`seller/inquiries`) → `docs/roadmap/01-seller-core.md`, 셸·대시보드는 `01-2-seller-dashboard-inquiry.md`, 문의는 `05-buyer-flow-complete.md`
 - 관리자: 대시보드 · 감사 로그 · 셀러 승인 · 상품 승인(=게시) · 주문 · 정산 확정/지급 · 운영 앱 소개(`ops-app`) → `02-admin-core.md`, `ex-audit-log-admin.md`
 - 관리자 AI 어시스턴트(tool use 6종·SSE·멀티턴·eval 루프, 다음 = Phase 6b) → `docs/roadmap/ex-ai-assistant.md` · 채팅 화면 UX(도구 진행 표시·마크다운·명시적 중지·401 갱신·스크린리더, 전/후 측정) → `04-ai-chat-ux.md`
 - RN 운영 앱 Ops Companion: Phase 0~8 운영 배포 + 외부 공개(preview APK·데모 계정·EAS Update·웹 체험판) → `ops-companion/README.md`, `docs/learning/ops-companion/`, 설계 `docs/roadmap/ops-companion-design.md` §9
 
 **stub / 미완**
-- 셀러 대시보드·콘솔 셸(`seller/page.tsx` 는 상품 관리로 redirect) → `01-2-seller-dashboard-inquiry.md` · 관리자 `categories`
+- 관리자 `categories`
 - 자기 상품 구매·리뷰 차단 없음(자전거래) → `docs/roadmap/README.md` "이력서 뒤 후보" 12
 - 인프라 잔여: `03-infra-nginx.md` §10(손님 IP 복원 4b · `next.config.js` 낡은 주석 정정)
 
@@ -46,7 +46,8 @@ App Router 라우트 그룹 `(auth)` · `(main)`(상점·구매·`/my/*`·`/sell
 
 ## 8. 기능별 진입점 (이름만으론 못 찾는 곳)
 - 웹 인증: `service/auth.ts` 의 `/auth/login` → baseURL `/api` → `app/api/auth/{login,refresh,logout}/route.ts`(Next BFF — refresh 쿠키를 Vercel 도메인으로 재발급). 나머지 `/api/*`(demo-login·me 포함)는 `next.config.js` rewrites 로 직행. 로그인/회원가입 훅은 레거시 `frontend/src/hook/`(단수).
-- 토큰 상태: `service/auth-storage.ts`·`service/auth-channel.ts`(탭 간 동기화) + `contexts/AuthContext.tsx` + `lib/axios/axios-http-client.ts`(401 갱신). `middleware.ts` 는 `/admin` 만 보호. RSC 패칭은 axios 가 아니라 `lib/server-api.ts`.
+- 토큰 상태: `service/auth-storage.ts`·`service/auth-channel.ts`(탭 간 동기화) + `contexts/AuthContext.tsx` + `lib/axios/axios-http-client.ts`(401 갱신). `middleware.ts` 는 `/admin`·`/seller` 만 보호. RSC 패칭은 axios 가 아니라 `lib/server-api.ts`.
+- 콘솔 셸(관리자·셀러 공용): `components/console/` — `ConsoleShell`(틀) · `ConsoleSidebar`(메뉴, 현재 항목은 `nav.ts activeNavHref`) · `table-ui`(표 스타일·페이지네이션). 그룹별로는 항목만 정한다: `(admin)/admin/components/AdminSidebar` · `(seller)/seller/components/SellerSidebar` + `nav-items.ts`. 셀러 대시보드 = `hooks/seller-dashboard-query-options.ts`(목록 API 의 `meta.total` 조합) + `(seller)/seller/components/dashboard/` + 그래프 `lib/charts/seller-sales.ts`(일별 매출·상품별 TOP 5 — 최근 주문 100건을 화면에서 묶는다, 집계 API 없음)·`seller-order-status.ts`(상태 분포 — 상태별 `meta.total`). 확인 스크립트 `scripts/seller-console/`(관리자 화면 바이트 비교 포함).
 - 로그인 필요 화면: `hooks/useRequireAuth.ts`(`/auth/me` 응답 뒤에만 `/login?redirect=`) — `/my/*` 는 `my/layout.tsx` 가, `cart`·`checkout` 은 각 화면이 부른다. 세션 일괄 폐기: `auth.service.ts revokeAllSessions`(refresh 전부 + Redis `sessions-revoked-at:<userId>` 이전 발급 access 거절) ← `user.service.ts changePassword`.
 - 문의·찜(프론트): `service/{inquiry,wishlist,user}.ts` + `lib/react-query/{inquiry,wishlist,user}-query-options.ts` + `hooks/{useInquiry,useWishlist,useUser}.ts` · 폼 검증 `lib/validation/`(백엔드 DTO 와 같은 경계값) · 역할 판정 `lib/roles.ts` · 화면 확인 스크립트 `scripts/buyer-flow/`.
 - 모바일 토큰: `backend/src/auth/auth.controller.ts` `X-Client: mobile` 분기 ↔ 앱 `ops-companion/src/lib/{config,api,token-storage}.ts`.
