@@ -14,7 +14,7 @@ import {
   tableStyle,
   tdStyle,
   thStyle,
-} from '../../components/table-ui';
+} from '../../../../../components/console/table-ui';
 import { DEFAULT_ORDER_STATUS } from './OrderFilters';
 
 /**

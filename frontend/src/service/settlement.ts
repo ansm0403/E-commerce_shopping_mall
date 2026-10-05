@@ -6,7 +6,7 @@ import type {
   SettlementSummary,
 } from '@shopping-mall/shared';
 import { authClient } from '../lib/axios/axios-http-client';
-import type { AdminPageMeta } from '../app/(admin)/admin/components/table-ui';
+import type { AdminPageMeta } from '../components/console/table-ui';
 
 /**
  * 셀러 정산 조회 (01-seller-core §1-A④).

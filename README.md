@@ -111,11 +111,13 @@ flowchart LR
 
 ### 판매자 (`/seller/*`, SELLER 역할 — `SellerGuard`)
 
+관리자 콘솔과 같은 셸(사이드바 · 폰에서는 상단 칩 줄)을 쓴다 — `components/console/`.
+
 - **상품 등록/관리** — `/seller/products`(승인 상태 탭 · 게시/숨김 토글 · 수정/삭제) `/seller/products/new` `/seller/products/[id]/edit`(반려 재제출) → `POST /products`(생성) → `POST /products/:id/images`(이미지 FormData), `PATCH /products/:id/status`, `GET /products/my/:id`. e2e [seller-product-lifecycle.e2e.spec.ts](backend-e2e/src/backend/seller-product-lifecycle.e2e.spec.ts)(등록 → 승인=게시 → 노출 → 주문 → 토글 → 반려 → 재제출).
 - **주문/배송** — `/seller/orders`(출고 대기 탭 + 운송장 입력) → `GET /seller/orders`, `PATCH /seller/orders/:orderNumber/ship`.
 - **정산** — `/seller/settlements`(요약 카드 + 내역) → `GET /seller/settlements`, `GET /seller/settlements/summary`. 정산은 구매확정 이벤트(`order.completed`)로 셀러별 PENDING 자동 생성(수수료 10%, 멱등).
 - **문의 답변** — `/seller/inquiries`(미답변 · 답변 완료 · 전체 탭 + 답변 모달, 답변은 한 번만) → `GET /seller/inquiries?status=`, `PATCH /seller/inquiries/:id/answer`(감사 로그 `INQUIRY_ANSWERED`).
-- 미구현: 판매자 대시보드 — `/seller` 는 상품 관리로 이동합니다.
+- **대시보드** — `/seller`(판매 중 상품 · 승인 대기 · 출고 대기 주문 · 미답변 문의 건수 카드 → 각 목록, 그래프 3개(일별 매출 · 주문 상태 분포 · 상품별 매출 TOP 5), 정산 요약, 판매 중 상품, 최근 주문). 전용 집계 API 없이 위 목록 API 를 조합(건수·상태 분포 = `meta.total`, 매출 그래프 = 최근 주문 100건을 화면에서 묶음).
 
 ### 관리자 (`/admin/*`, ADMIN 역할 — `middleware.ts` 쿠키 검사 + `AdminGuard` 가 `/auth/me` 로 역할 확인)
 

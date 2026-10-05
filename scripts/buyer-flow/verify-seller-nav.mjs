@@ -4,7 +4,7 @@
  *   node scripts/buyer-flow/verify-seller-nav.mjs [--base http://localhost:3100] [--email seller1@seed.com] [--password …]
  *
  * 보는 것:
- *   1. 상단 메뉴 5개를 차례로 눌렀을 때 **그 메뉴 하나만** 현재 표시(aria-current)가 되고 글자색이 다른 메뉴와 다르다
+ *   1. 사이드바 메뉴 6개를 차례로 눌렀을 때 **그 메뉴 하나만** 현재 표시(aria-current)가 되고 글자색이 다른 메뉴와 다르다
  *      ("상품 등록"에서는 "상품 관리"가 같이 켜지지 않는다 · 상품 수정 화면에서는 "상품 관리"가 켜진다)
  *   2. 상품 관리 표의 상품 이름이 링크다 — 상점에 보이는 상품은 상세로, 아직 안 보이는 상품은 수정 화면으로
  *   3. 구매자 역할이 없는 계정(시드 셀러)이 하트를 누르면 서버 403 문구가 아니라 이유를 알려 준다(요청도 보내지 않는다)
@@ -26,6 +26,7 @@ const check = (name, pass, detail = '') => {
 };
 
 const MENU = [
+  ['대시보드', '/seller'],
   ['상품 관리', '/seller/products'],
   ['상품 등록', '/seller/products/new'],
   ['주문/배송', '/seller/orders'],
@@ -45,6 +46,13 @@ try {
     await d.accept();
   });
   let toggleRequests = 0;
+  // 로그인 응답의 역할 — 이 계정에 구매자 역할이 있으면 3번(구매자가 아닌 계정의 찜 안내)은 전제가 맞지 않는다
+  let loginRoles = null;
+  page.on('response', async (res) => {
+    if (res.url().endsWith('/api/auth/login') && res.ok()) {
+      loginRoles = (await res.json().catch(() => null))?.user?.roles ?? null;
+    }
+  });
   page.on('request', (req) => {
     if (/\/wishlist\/toggle$/.test(req.url())) toggleRequests += 1;
   });
@@ -95,12 +103,18 @@ try {
     check('게시된 상품의 이름을 누르면 상점의 상품 화면이 열린다', true, live.href);
 
     // ── 3. 구매자 역할이 없는 계정의 찜 ─────────────────────────────────────
-    const heart = page.locator('button[aria-pressed]');
-    await page.locator('button[aria-pressed]:not([disabled])').waitFor({ timeout: 15000 });
-    await heart.click();
-    await page.waitForTimeout(800);
-    check('구매자가 아닌 계정: 이유를 알려 주는 안내가 뜬다', alerts.some((m) => m.includes('구매자 계정')), alerts.join(' | '));
-    check('… 서버로 찜 요청을 보내지 않는다(403 을 받지 않는다)', toggleRequests === 0, `요청 ${toggleRequests}건`);
+    const isBuyer = (loginRoles ?? []).some((r) => (typeof r === 'string' ? r : r?.name) === 'buyer');
+    if (isBuyer) {
+      // 누르면 이 계정의 찜이 실제로 바뀐다 — 전제가 안 맞으면 누르지 않는다
+      console.log(`- 건너뜀: 찜 안내 확인 — ${EMAIL} 에 구매자 역할이 있다(구매자 역할이 없는 계정을 --email 로 줄 것)`);
+    } else {
+      const heart = page.locator('button[aria-pressed]');
+      await page.locator('button[aria-pressed]:not([disabled])').waitFor({ timeout: 15000 });
+      await heart.click();
+      await page.waitForTimeout(800);
+      check('구매자가 아닌 계정: 이유를 알려 주는 안내가 뜬다', alerts.some((m) => m.includes('구매자 계정')), alerts.join(' | '));
+      check('… 서버로 찜 요청을 보내지 않는다(403 을 받지 않는다)', toggleRequests === 0, `요청 ${toggleRequests}건`);
+    }
   } else {
     check('게시된 상품이 있어야 상세 이동·찜 안내를 확인할 수 있다', false, '이 셀러에게 게시된 상품이 없음');
   }

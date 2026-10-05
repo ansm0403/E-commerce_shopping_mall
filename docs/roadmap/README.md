@@ -42,7 +42,7 @@
 | Phase | 문서 | 목표 | 비중 |
 |---|---|---|---|
 | **1** | [01-seller-core.md](./01-seller-core.md) | 셀러 핵심: 상품 등록·관리, 주문/배송, 정산 조회 | ✅ 2026-07-28 |
-| **1-2** | [01-2-seller-dashboard-inquiry.md](./01-2-seller-dashboard-inquiry.md) | 셀러 센터 완성: 관리자 셸 공유 `(seller)` 그룹 · 대시보드(기존 API 조합) · 상품 문의(구매자 → 셀러 → 관리자) | 📋 설계 2026-09-28 · 문의 3면은 [05](./05-buyer-flow-complete.md) 에서 ✅(2026-10-05), 셸·대시보드는 남음 |
+| **1-2** | [01-2-seller-dashboard-inquiry.md](./01-2-seller-dashboard-inquiry.md) | 셀러 센터 완성: 관리자 셸 공유 `(seller)` 그룹 · 대시보드(기존 API 조합) · 상품 문의(구매자 → 셀러 → 관리자) | ✅ 2026-10-05 — 문의 3면은 [05](./05-buyer-flow-complete.md), 콘솔 셸·대시보드는 이 문서 §10 (남은 것: 프론트 테스트 1개) |
 | **2** | [02-admin-core.md](./02-admin-core.md) | 관리자 핵심: 셀러 승인, 상품 승인, 주문 관리, 정산 지급 | 높음 |
 | **2-2** | [02-2-buyer-mypage.md](./02-2-buyer-mypage.md) | 구매자 마이페이지: 프로필·위시리스트·내 문의·비밀번호 | ✅ [05](./05-buyer-flow-complete.md) 에서 완료(2026-10-05) |
 | **3** | [03-infra-nginx.md](./03-infra-nginx.md) **(v2 · 완주)** + [런북](./03-infra-nginx-runbook.md) | nginx 리버스 프록시 + HTTPS(`api.ansmoon.dev`) + AWS 계정 이관 | ✅ 2026-09-15 |
@@ -104,7 +104,7 @@
 | 3 | **방문자 테스트 세션 저장** — 보낸 코드·시각을 localStorage 에 두어 PC 에서 보내고 폰에서 같은 페이지를 열어도 "앱에서 열기"가 보이게 | 지금은 보낸 브라우저에서만 버튼이 뜬다(2026-09-27 실기기에서 발견, 임시로 "폰에서 다시 보내기" 안내) | 반나절 | 설계 §9 실측 |
 | 4 | **범용화 3단계** — ① 설정 테이블(Sentry 프로젝트·저장소·폴더·서비스 지도) ② 독립 서비스 분리 ③ 다른 사람이 가입하는 SaaS | 서비스 지도·저장소·폴더가 코드에 박혀 있어 회사가 바뀌면 ①은 필요. ②③은 수주~수개월 | ① 3~5일 / ② 4~7일 / ③ 수개월 | 설계 §9 확장 메모 |
 | 5 | **AI 어시스턴트 Phase 6b(compaction)** | 멀티턴 대화가 길어지면 컨텍스트 상한. Claude 전환(`cache_control`)과 같이 하면 비용 절감까지 | 2~3일 | `ex-ai-assistant.md`, 메모리 `ai_assistant_track` |
-| 6 | **스켈레톤 채우기** — 셀러 대시보드·문의, 관리자 카테고리 (→ 구매자 쪽과 셀러 문의는 [05](./05-buyer-flow-complete.md) 에서 완료. 남은 것 = 셀러 대시보드·셸, 관리자 카테고리) | CLAUDE.md §5 "비어 있음". 이력서엔 stub 으로 명시돼 있으면 됨 | 각 1~2일 | CLAUDE.md §5 |
+| 6 | **스켈레톤 채우기** — 셀러 대시보드·문의, 관리자 카테고리 (→ 구매자 쪽과 셀러 문의는 [05](./05-buyer-flow-complete.md) 에서 완료. 셀러 대시보드·셸은 [01-2](./01-2-seller-dashboard-inquiry.md) 에서 완료. 남은 것 = 관리자 카테고리) | CLAUDE.md §5 "비어 있음". 이력서엔 stub 으로 명시돼 있으면 됨 | 각 1~2일 | CLAUDE.md §5 |
 | 7 | **nginx 도입** — Vercel rewrites 프록시 대체 | CLAUDE.md §6 3순위. 현재 `api.ansmoon.dev` HTTPS 는 되어 있어 급하지 않음 | 1~2일 | 메모리 `nginx_track` |
 | 8 | **BFF refresh·logout 손님 IP 전달** — `frontend/src/app/api/auth/{refresh,logout}/route.ts` 도 login 처럼 `X-Forwarded-For` 를 넘긴다 | 지금은 login 만 넘겨서, refresh·logout 때 백엔드 `@Ip()` 가 손님이 아니라 Vercel 서버 IP 를 기록한다(refresh 토큰 기록·감사 로그 부정확). 03-infra-nginx §10 12-1(4b, 손님 IP 복원)과 같은 주제라 함께 처리 | 헤더 2줄(반나절, 4b 와 묶으면 4b 크기) | CLAUDE.md 슬림화 회귀 테스트(2026-10-03) |
 | 9 | **정산 생성 유실 보강** — 구매확정 후 정산이 없는 주문을 찾아 다시 만드는 재처리 | `order.completed` 리스너(`settlement/listeners`)는 `withRetry` 3회가 모두 실패하면 에러 로그만 남기고 끝난다 → 주문은 COMPLETED 인데 정산이 없는 상태가 가능하고 재처리 장치가 없다(`with-retry.ts` 주석 "추후 Bull Queue, Outbox"). 자동 구매확정 Cron(`autoCompleteOrders`)은 트랜잭션 없이 `update` → `emit`(리스너가 멱등이라 이중 생성은 없음) | 재처리 배치 반나절~1일 / Outbox 2~3일 | 같은 회귀 테스트 |

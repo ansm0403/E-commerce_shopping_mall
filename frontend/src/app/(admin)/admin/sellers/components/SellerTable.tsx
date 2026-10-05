@@ -15,7 +15,7 @@ import {
   tableStyle,
   tdStyle,
   thStyle,
-} from '../../components/table-ui';
+} from '../../../../../components/console/table-ui';
 import SellerActionModal, { type SellerAction } from './SellerActionModal';
 import { DEFAULT_SELLER_STATUS } from './SellerFilters';
 

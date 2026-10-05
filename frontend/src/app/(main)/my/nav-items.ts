@@ -25,7 +25,7 @@ const BASE_NAV_ITEMS: MyNavItem[] = [
  */
 export function myNavItems(isSeller: boolean): MyNavItem[] {
   return isSeller
-    ? [...BASE_NAV_ITEMS, { href: '/seller/products', label: '셀러 센터', external: true }]
+    ? [...BASE_NAV_ITEMS, { href: '/seller', label: '셀러 센터', external: true }]
     : BASE_NAV_ITEMS;
 }
 
