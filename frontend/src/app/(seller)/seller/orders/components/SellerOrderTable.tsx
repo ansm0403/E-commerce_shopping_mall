@@ -150,7 +150,8 @@ export default function SellerOrderTable() {
   );
 }
 
-function orderBadge(status: string): React.CSSProperties {
+/** 주문 상태 배지 색 — 대시보드의 최근 주문도 같이 쓴다 */
+export function orderBadge(status: string): React.CSSProperties {
   if (status === OrderStatus.PREPARING || status === OrderStatus.PAID) return BADGE_TONE.pending;
   if (status === OrderStatus.SHIPPED) return BADGE_TONE.neutral;
   if (status === OrderStatus.DELIVERED || status === OrderStatus.COMPLETED) return BADGE_TONE.approved;

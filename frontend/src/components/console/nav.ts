@@ -2,6 +2,8 @@
 export interface ConsoleNavItem {
   href: string;
   label: string;
+  /** 하위 주소에서는 켜지 않는다 — 구역의 첫 화면(`/seller`)은 모든 하위 주소의 앞부분이다 */
+  exact?: boolean;
 }
 
 /** 메뉴 아래쪽(모바일은 상단 바 오른쪽)에 두는 바깥 링크 — 쇼핑몰·마이페이지·다른 콘솔 */
@@ -17,7 +19,7 @@ export interface ConsoleLink {
  */
 export function activeNavHref(items: readonly ConsoleNavItem[], pathname: string): string | null {
   const matches = items.filter(
-    (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
+    (item) => pathname === item.href || (!item.exact && pathname.startsWith(`${item.href}/`)),
   );
   if (matches.length === 0) return null;
   return matches.reduce((best, item) => (item.href.length > best.href.length ? item : best)).href;

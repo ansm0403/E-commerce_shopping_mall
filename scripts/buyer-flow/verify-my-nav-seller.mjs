@@ -4,7 +4,7 @@
  *   node scripts/buyer-flow/verify-my-nav-seller.mjs [--base http://localhost:3100]
  *
  * 보는 것:
- *   1. 셀러 계정: 마이페이지 네비 맨 끝에 "셀러 센터" · 누르면 셀러 센터(상품 관리)로 · "셀러 신청"도 남아 있다
+ *   1. 셀러 계정: 마이페이지 네비 맨 끝에 "셀러 센터" · 누르면 셀러 센터(대시보드)로 · "셀러 신청"도 남아 있다
  *   2. 구매자 계정: "셀러 센터"가 없다(네비 7개 그대로)
  *   3. 모바일 390px: 페이지 가로 넘침 없음(네비는 자체 가로 스크롤)
  */
@@ -55,9 +55,9 @@ try {
   await seller.page.setViewportSize({ width: 1280, height: 900 });
 
   await seller.nav.getByRole('link', { name: /셀러 센터/ }).click();
-  await seller.page.waitForURL((u) => new URL(u).pathname === '/seller/products', { timeout: 60000 });
+  await seller.page.waitForURL((u) => new URL(u).pathname === '/seller', { timeout: 60000 });
   await seller.page.getByRole('navigation', { name: '셀러 센터' }).waitFor({ timeout: 30000 });
-  check('셀러: 누르면 셀러 센터(상품 관리)로 이동', true);
+  check('셀러: 누르면 셀러 센터(대시보드)로 이동', true);
   await seller.context.close();
 
   // ── 2. 구매자 ────────────────────────────────────────────────────────────

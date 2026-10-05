@@ -84,6 +84,7 @@ describe('wishlistImageUrl — 위시리스트 카드의 대표 사진', () => {
 
 describe('activeNavHref — 콘솔 사이드바의 현재 메뉴 하나(셀러 센터 메뉴로 확인)', () => {
   it.each([
+    ['/seller', '/seller'],
     ['/seller/products', '/seller/products'],
     ['/seller/products/12/edit', '/seller/products'],
     // "상품 관리"와 앞부분이 겹치지만 더 길게 맞는 "상품 등록" 하나만 고른다
@@ -95,8 +96,8 @@ describe('activeNavHref — 콘솔 사이드바의 현재 메뉴 하나(셀러 �
     expect(activeNavHref(SELLER_NAV_ITEMS, pathname)).toBe(expected);
   });
 
-  it('메뉴에 없는 주소면 아무것도 켜지 않는다', () => {
-    expect(activeNavHref(SELLER_NAV_ITEMS, '/seller')).toBeNull();
+  it('메뉴에 없는 주소면 아무것도 켜지 않는다 — 대시보드(/seller)는 정확히 그 주소에서만 켜진다', () => {
+    expect(activeNavHref(SELLER_NAV_ITEMS, '/seller/unknown')).toBeNull();
     expect(activeNavHref(SELLER_NAV_ITEMS, '/seller/productsX')).toBeNull();
   });
 });
@@ -117,10 +118,10 @@ describe('myNavItems — 마이페이지 네비', () => {
     expect(labels).not.toContain('셀러 센터');
   });
 
-  it('셀러: 맨 끝에 "셀러 센터"(상품 관리로) — "셀러 신청"도 남는다(신청 내역 확인용)', () => {
+  it('셀러: 맨 끝에 "셀러 센터"(대시보드로) — "셀러 신청"도 남는다(신청 내역 확인용)', () => {
     const items = myNavItems(true);
     expect(items).toHaveLength(8);
-    expect(items[7]).toMatchObject({ href: '/seller/products', label: '셀러 센터', external: true });
+    expect(items[7]).toMatchObject({ href: '/seller', label: '셀러 센터', external: true });
     expect(items.map((i) => i.label)).toContain('셀러 신청');
   });
 
