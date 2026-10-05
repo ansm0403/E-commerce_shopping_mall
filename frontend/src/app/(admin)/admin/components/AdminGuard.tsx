@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { getMe } from '../../../../service/auth';
+import { ROLE_CHECK_QUERY_KEY } from '../../../../contexts/AuthContext';
 
 /**
  * /auth/me의 실제 백엔드 응답 형태.
@@ -35,7 +36,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
   const pathname = usePathname();
 
   const { data, isLoading, isError } = useQuery<MeResponse>({
-    queryKey: ['auth', 'me'],
+    queryKey: ROLE_CHECK_QUERY_KEY,
     queryFn: async () => (await getMe()).data as unknown as MeResponse,
     staleTime: 60 * 1000,           // 1분 동안은 재조회 안 함
     refetchOnWindowFocus: false,    // admin 화면에서 탭 포커스마다 me 호출은 과함
