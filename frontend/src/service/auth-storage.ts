@@ -55,6 +55,12 @@ export const authStorage = {
     broadcast('LOGOUT');
   },
 
+  /** 다른 탭의 로그아웃을 전해 들었을 때 — 이 탭의 토큰만 조용히 버린다(다시 알리지 않는다: 알리면 탭끼리 메아리친다) */
+  dropTabToken() {
+    if (typeof window === 'undefined') return;
+    sessionStorage.removeItem(ACCESS);
+  },
+
   getAccessToken() {
     if (typeof window === 'undefined') return null;
     return sessionStorage.getItem(ACCESS) || localStorage.getItem(ACCESS);
