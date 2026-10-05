@@ -3,30 +3,19 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
+import { hasRole } from '@/lib/roles';
+import { isMyNavActive, myNavItems } from './nav-items';
 
 /**
  * 마이페이지 공통 셸 — 좌측 네비(모바일은 상단 가로 스크롤 탭) + 내용.
  * `/my/*` 전체의 로그인 가드도 여기서 한다(useRequireAuth — `/auth/me` 응답을 기다린 뒤에만 로그인으로 보낸다).
  */
 
-const NAV_ITEMS = [
-  { href: '/my', label: '내 정보', exact: true },
-  { href: '/my/orders', label: '주문 내역' },
-  { href: '/my/reviews', label: '내 리뷰' },
-  { href: '/my/wishlist', label: '위시리스트' },
-  { href: '/my/inquiries', label: '내 문의' },
-  { href: '/my/password', label: '비밀번호 변경' },
-  { href: '/my/seller-apply', label: '셀러 신청' },
-] as const;
-
-function isActive(pathname: string, item: (typeof NAV_ITEMS)[number]) {
-  if ('exact' in item && item.exact) return pathname === item.href;
-  return pathname === item.href || pathname.startsWith(`${item.href}/`);
-}
-
 export default function MyLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { isLoggedIn, isChecking } = useRequireAuth();
+  const { user, isLoggedIn, isChecking } = useRequireAuth();
+  // /auth/me 는 DB 기준이라 승인 직후에도 seller 가 보인다(UserMenu 의 "셀러 센터"와 같은 판정)
+  const navItems = myNavItems(hasRole(user, 'seller'));
 
   return (
     <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 md:px-8 py-6 md:flex md:gap-8">
@@ -34,10 +23,13 @@ export default function MyLayout({ children }: { children: React.ReactNode }) {
         <p className="hidden md:block mb-3 text-lg font-bold text-secondary-900">마이페이지</p>
         {/* 모바일: 가로 스크롤 탭 · 데스크톱: 세로 목록 */}
         <ul className="flex gap-1 overflow-x-auto border-b border-secondary-200 pb-2 md:flex-col md:overflow-visible md:border-b-0 md:pb-0">
-          {NAV_ITEMS.map((item) => {
-            const active = isActive(pathname, item);
+          {navItems.map((item) => {
+            const active = isMyNavActive(pathname, item);
             return (
-              <li key={item.href} className="shrink-0">
+              <li
+                key={item.href}
+                className={`shrink-0 ${item.external ? 'md:mt-2 md:border-t md:border-secondary-200 md:pt-2' : ''}`}
+              >
                 <Link
                   href={item.href}
                   aria-current={active ? 'page' : undefined}
@@ -48,6 +40,7 @@ export default function MyLayout({ children }: { children: React.ReactNode }) {
                   }`}
                 >
                   {item.label}
+                  {item.external && <span aria-hidden="true"> →</span>}
                 </Link>
               </li>
             );
