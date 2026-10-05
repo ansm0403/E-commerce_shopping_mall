@@ -95,7 +95,7 @@ const nextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.portone.io https://*.iamport.co", // Next.js 개발 서버 + 포트원 SDK
               "style-src 'self' 'unsafe-inline'", // emotion/styled-components용
-              "img-src 'self' data: https:",
+              "img-src 'self' data: blob: https:", // blob: = 업로드 전 미리보기(URL.createObjectURL — 상품 등록 화면). 없으면 미리보기가 엑스박스가 된다
               "font-src 'self' data:",
               "worker-src 'self' blob:", // Sentry Session Replay 압축 워커(blob URL). 없으면 default-src 'self' 가 적용돼 차단된다(ops-companion 학습 노트 7편 6-7)
               `connect-src ${connectSrc}`, // API + HMR + 포트원
