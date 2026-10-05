@@ -222,7 +222,9 @@ export class DashboardSeedService implements OnApplicationBootstrap {
             phoneNumber: `010-900${i}-0000`,
             address: `서울시 마포구 셀러로 ${i}길`,
             isEmailVerified: true,
-            roles: [sellerRole],
+            // 실제 흐름(구매자가 신청 → 승인)의 셀러는 buyer 를 잃지 않고 seller 를 더 받는다(seller.service 승인 트랜잭션).
+            // 시드 셀러만 seller 하나였던 탓에 찜·장바구니 같은 구매자 기능이 403 이었다 — 같은 구성으로 맞춘다.
+            roles: [buyerRole, sellerRole],
           }),
         );
       }

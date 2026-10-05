@@ -9,7 +9,7 @@ import { wishlistQueryOptions } from '@/lib/react-query/wishlist-query-options';
 import { useClearWishlist, useWishlistToggle } from '@/hooks/useWishlist';
 import { useAddToCart } from '@/hooks/useCart';
 import { userErrorMessage } from '@/service/user';
-import type { WishlistItem } from '@/service/wishlist';
+import { wishlistImageUrl, type WishlistItem } from '@/service/wishlist';
 import { Modal } from '@/components/common/Modal';
 
 const PAGE_SIZE = 12;
@@ -184,9 +184,31 @@ function WishlistCard({ item }: { item: WishlistItem }) {
   // 찜한 뒤 판매가 중단된 상품 — 장바구니에 담을 수 없다(서버도 400). 빼기는 가능해야 한다.
   const purchasable = product?.status === 'published';
   const name = product?.name ?? `상품 #${item.productId}`;
+  // 사진이 없거나(옛 응답·미등록) 깨진 링크면 빈 회색 칸으로 둔다 — 깨진 이미지 아이콘을 보여 주지 않는다
+  const imageUrl = wishlistImageUrl(product);
+  const [imageFailed, setImageFailed] = useState(false);
 
   return (
     <li className="flex flex-col gap-3 rounded-xl border border-secondary-200 bg-white p-4">
+      <div className="flex gap-3">
+        {/* 사진은 상품 링크의 장식이다 — 상품 이름이 바로 옆 링크에 있으므로 대체 텍스트는 비운다(이름을 두 번 읽지 않게) */}
+        <Link
+          href={`/products/${item.productId}`}
+          tabIndex={-1}
+          aria-hidden="true"
+          className="block h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-secondary-100"
+        >
+          {imageUrl && !imageFailed && (
+            // eslint-disable-next-line @next/next/no-img-element -- 외부 링크·/uploads 가 섞여 있어 상품 카드(ProductCard)와 같이 img 로 그린다
+            <img
+              src={imageUrl}
+              alt=""
+              loading="lazy"
+              className="h-full w-full object-cover"
+              onError={() => setImageFailed(true)}
+            />
+          )}
+        </Link>
       <div className="min-w-0">
         {product?.brand && <p className="text-xs text-secondary-600">{product.brand}</p>}
         <Link
@@ -206,6 +228,7 @@ function WishlistCard({ item }: { item: WishlistItem }) {
         {!purchasable && (
           <p className="mt-1 text-xs font-semibold text-red-700">지금은 판매하지 않는 상품입니다.</p>
         )}
+      </div>
       </div>
 
       <div className="mt-auto flex gap-2">

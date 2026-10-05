@@ -1,6 +1,9 @@
 import { authClient } from '../lib/axios/axios-http-client';
 
-/** 찜 목록 항목 — 백엔드 WishlistItemResponseDto 와 1:1 (상품은 요약 필드만 온다, 이미지는 없다) */
+/**
+ * 찜 목록 항목 — 백엔드 WishlistItemResponseDto 와 1:1 (상품은 요약 필드만 온다).
+ * 이미지 주소는 두 종류다: 외부 링크(`https://…`, 시드 상품) · 셀러가 올린 사진(`/uploads/…`, next.config rewrites 로 서빙).
+ */
 export interface WishlistItem {
   id: number;
   createdAt: string;
@@ -13,7 +16,17 @@ export interface WishlistItem {
     status: string;
     brand: string;
     rating: number;
+    /** 옛 백엔드 응답에는 없을 수 있다(배포 순서) — 쓰는 쪽에서 배열인지 확인한다 */
+    images?: Array<{ url: string; isPrimary: boolean; sortOrder: number }>;
   } | null;
+}
+
+/** 대표 사진 주소 — 대표로 지정된 것, 없으면 순서가 가장 앞선 것. 사진이 없으면 null */
+export function wishlistImageUrl(product: WishlistItem['product']): string | null {
+  const images = Array.isArray(product?.images) ? product.images : [];
+  if (images.length === 0) return null;
+  const primary = images.find((img) => img.isPrimary);
+  return (primary ?? [...images].sort((a, b) => a.sortOrder - b.sortOrder)[0]).url || null;
 }
 
 /** 백엔드 WishListService.getMyList 의 meta (공용 PageMeta 와 모양이 다르다 — totalPages) */

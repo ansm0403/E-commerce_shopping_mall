@@ -1,5 +1,16 @@
 import { Expose, Type } from 'class-transformer';
 
+class WishlistProductImageDto {
+  @Expose()
+  url: string;
+
+  @Expose()
+  isPrimary: boolean;
+
+  @Expose()
+  sortOrder: number;
+}
+
 class WishlistProductDto {
   @Expose()
   id: number;
@@ -18,6 +29,10 @@ class WishlistProductDto {
 
   @Expose()
   rating: number;
+
+  @Expose()
+  @Type(() => WishlistProductImageDto)
+  images: WishlistProductImageDto[];
 }
 
 export class WishlistItemResponseDto {

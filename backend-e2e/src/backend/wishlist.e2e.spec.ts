@@ -68,6 +68,13 @@ describe('찜 목록·id 목록, 프로필 응답, 데모 계정 변경 차단 (
 
     productA = await createOwnerlessPublishedProduct(ds, { name: `${e2ePrefix(SUITE)}찜A` });
     productB = await createOwnerlessPublishedProduct(ds, { name: `${e2ePrefix(SUITE)}찜B` });
+    // A 에는 사진 두 장 — 셀러가 올린 것(/uploads)과 외부 링크. 대표는 올린 사진. B 는 사진 없음.
+    // (product_images 는 상품 삭제 시 CASCADE 로 함께 지워진다)
+    await ds.query(
+      `INSERT INTO product_images (url, "isPrimary", "sortOrder", "productId")
+       VALUES ($1, false, 1, $3), ($2, true, 0, $3)`,
+      ['https://example.com/e2e-external.jpg', '/uploads/e2e-uploaded.png', productA],
+    );
   }, 60_000);
 
   afterAll(async () => {
@@ -97,6 +104,17 @@ describe('찜 목록·id 목록, 프로필 응답, 데모 계정 변경 차단 (
     expect(typeof itemA.createdAt).toBe('string');
     expect(itemA.product.id).toBe(productA);
     expect(itemA.product.name).toBe(`${e2ePrefix(SUITE)}찜A`);
+
+    // 카드 사진용 이미지 — 올린 사진(/uploads)과 외부 링크가 같은 목록으로 온다
+    const images = itemA.product.images as Array<{ url: string; isPrimary: boolean; sortOrder: number }>;
+    expect(images).toHaveLength(2);
+    expect(images.find((i) => i.isPrimary)?.url).toBe('/uploads/e2e-uploaded.png');
+    expect(images.map((i) => i.url)).toContain('https://example.com/e2e-external.jpg');
+    // 응답에는 화면에 필요한 필드만(이미지의 내부 id·시각은 내보내지 않는다)
+    expect(Object.keys(images[0]).sort()).toEqual(['isPrimary', 'sortOrder', 'url']);
+    // 사진이 없는 상품은 빈 배열
+    const itemB = list.data.data.find((i: any) => i.productId === productB);
+    expect(itemB.product.images).toEqual([]);
   }, 60_000);
 
   it('토글 해제 → ids 에서 빠지고, 전체 비우기 후에는 빈 배열', async () => {

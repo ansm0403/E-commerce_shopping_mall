@@ -56,7 +56,8 @@ export class WishListService {
 
     const [items, total] = await this.wishListItemRepository.findAndCount({
       where: { userId },
-      relations: ['product'],
+      // 카드에 대표 사진을 보여 주려면 이미지가 필요하다 — 외부 링크(시드)든 셀러가 올린 /uploads 든 같은 테이블에 있다
+      relations: ['product', 'product.images'],
       order: { createdAt: 'DESC' },
       skip: (page - 1) * take,
       take,
