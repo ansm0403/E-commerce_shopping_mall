@@ -3,6 +3,7 @@ import { applyWishToggle } from './react-query/wishlist-query-options';
 import { wishlistImageUrl, type WishlistItem } from '../service/wishlist';
 import { activeSellerNavHref } from '../app/(main)/seller/components/SellerNav';
 import { loginPathWithRedirect } from '../hooks/useRequireAuth';
+import { isMyNavActive, myNavItems } from '../app/(main)/my/nav-items';
 
 /** 05(구매자 흐름)에서 화면 분기를 정하는 순수 함수들 — 화면 없이 규칙만 고정한다. */
 
@@ -105,5 +106,32 @@ describe('loginPathWithRedirect', () => {
     expect(loginPathWithRedirect('/checkout/complete?orderNumber=A-1')).toBe(
       '/login?redirect=%2Fcheckout%2Fcomplete%3ForderNumber%3DA-1',
     );
+  });
+});
+
+describe('myNavItems — 마이페이지 네비', () => {
+  it('구매자: 7개, 셀러 센터는 없다', () => {
+    const labels = myNavItems(false).map((i) => i.label);
+    expect(labels).toHaveLength(7);
+    expect(labels).not.toContain('셀러 센터');
+  });
+
+  it('셀러: 맨 끝에 "셀러 센터"(상품 관리로) — "셀러 신청"도 남는다(신청 내역 확인용)', () => {
+    const items = myNavItems(true);
+    expect(items).toHaveLength(8);
+    expect(items[7]).toMatchObject({ href: '/seller/products', label: '셀러 센터', external: true });
+    expect(items.map((i) => i.label)).toContain('셀러 신청');
+  });
+
+  it('셀러용 목록을 만들어도 기본 목록은 변하지 않는다', () => {
+    myNavItems(true);
+    expect(myNavItems(false)).toHaveLength(7);
+  });
+
+  it('"내 정보"는 /my 에서만, 나머지는 하위 주소에서도 켜진다', () => {
+    const [info, orders] = myNavItems(false);
+    expect(isMyNavActive('/my', info)).toBe(true);
+    expect(isMyNavActive('/my/orders', info)).toBe(false);
+    expect(isMyNavActive('/my/orders/A-1', orders)).toBe(true);
   });
 });
