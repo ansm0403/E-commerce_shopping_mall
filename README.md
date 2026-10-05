@@ -105,14 +105,17 @@ flowchart LR
 - **회원/인증** — `/login` `/register` `/verify-email` → `POST /auth/register|login|refresh|logout`, `GET /auth/me`, 이메일 인증(SMTP + Redis TTL), 로그인 IP 당 10회/5분 제한, 세션 목록·개별 해제. 로그인 화면의 데모 관리자 버튼은 `POST /auth/demo-login`.
 - **상품 탐색** — `/`(홈) `/products` `/products/[id]` → `GET /products`(카테고리·키워드·정렬·커서 페이지네이션), `GET /categories`(계층 + 카테고리별 스펙 JSONB 6종). 상품 상세에 **AI 리뷰 요약** 카드 — `GET /products/:id/review-summary`(public, `product_summaries` 캐시 + 리뷰 변경 시 stale → 다음 열람에 백그라운드 재생성, LLM 키 없으면 no-op).
 - **장바구니 → 주문 → 결제** — `/cart` `/checkout` `/checkout/complete` → `POST /orders`, `POST /payments/verify`, `POST /payments/webhook`. 주문 상태 `PENDING_PAYMENT → PAID → PREPARING → SHIPPED → DELIVERED → COMPLETED`, 판매자 단위로 **Shipment 분리**. 결제 완료 확정은 **브라우저의 verify 와 PortOne 서버의 웹훅 두 경로**가 같은 검증(PortOne 재조회 + 금액 대조)과 같은 `SELECT … FOR UPDATE` 가드를 공유합니다. 웹훅은 운영 콘솔에 등록돼 있고(2026-09-28), 테스트 결제 7건을 nginx 밀리초 로그로 재니 **7건 모두 웹훅이 verify 보다 44~69ms 먼저 도착**했고(브라우저 경로는 Vercel 프록시를 한 홉 더 거침) verify 는 매번 락에서 대기한 뒤 재검증으로 종료, 전 건 주문이 한 상태로 정착했습니다. 두 경로의 동시 호출은 통합 테스트로 고정했습니다 — 30라운드에서 단일 전이·`order.paid` 1회, 먼저 전이시킨 쪽은 verify 27 · 웹훅 3([payment.concurrency.integration.spec.ts](backend/src/payment/payment.concurrency.integration.spec.ts), [ex-payment-concurrency.md](docs/roadmap/ex-payment-concurrency.md)).
-- **마이페이지** — `/my/orders`(취소·구매확정) `/my/reviews` `/my/seller-apply`(판매자 신청·상태·반려 사유·재신청). stub: `/my`(인덱스) · `/my/inquiries` · `/my/wishlist` · `/my/password`. 문의는 백엔드(`/inquiries` 작성·조회·삭제, `/seller/inquiries` 답변)만 있고 **프론트 화면이 없다**(상품 상세 탭에도 작성 폼 없음). 위시리스트는 상품 상세의 토글만 있고 목록 화면은 stub.
+- **찜** — 상품 상세의 하트 + `/my/wishlist`(사진 카드 · 빼기 · 장바구니 담기 · 전체 비우기) → `POST /wishlist/toggle`, `GET /wishlist`, `GET /wishlist/ids`. 하트는 서버의 내 찜 목록으로 그려지고(새로고침해도 유지), 토글은 **낙관적 갱신 → 실패 시 롤백 → 서버 응답으로 확정**. e2e [wishlist.e2e.spec.ts](backend-e2e/src/backend/wishlist.e2e.spec.ts).
+- **상품 문의** — 상품 상세 "문의" 탭(작성 · 비밀글) + `/my/inquiries`(판매자 답변 확인 · 답변 전에만 삭제) → `POST /inquiries`, `GET /inquiries/product/:productId`(공개, 비밀글은 작성자 본인에게만 풀림), `GET /inquiries/my`, `DELETE /inquiries/:id`. 판매자가 등록한 상품에서만 문의할 수 있습니다(시드 상품은 판매자가 없어 안내 문구가 나옵니다). e2e [seller-inquiry.e2e.spec.ts](backend-e2e/src/backend/seller-inquiry.e2e.spec.ts)(작성 → 마스킹/본인 해제 → 판매자 답변 → 삭제 규칙).
+- **마이페이지** — `/my`(프로필 조회·수정) `/my/orders`(취소·구매확정) `/my/reviews` `/my/wishlist` `/my/inquiries` `/my/password` `/my/seller-apply`(판매자 신청·상태·반려 사유·재신청) → `GET|PATCH /users/me`, `PATCH /users/me/password`. 비밀번호를 바꾸면 **그 계정의 모든 세션이 즉시 끊깁니다**(refresh 토큰 폐기 + 변경 이전에 발급된 access 토큰 거절 — e2e [password-change.e2e.spec.ts](backend-e2e/src/backend/password-change.e2e.spec.ts)). 로그인이 필요한 화면은 공용 가드(`useRequireAuth`)가 `/auth/me` 응답을 기다린 뒤에만 로그인으로 보내고, 로그인하면 원래 화면으로 돌아옵니다. 데모 계정은 프로필·비밀번호를 바꿀 수 없습니다.
 
 ### 판매자 (`/seller/*`, SELLER 역할 — `SellerGuard`)
 
 - **상품 등록/관리** — `/seller/products`(승인 상태 탭 · 게시/숨김 토글 · 수정/삭제) `/seller/products/new` `/seller/products/[id]/edit`(반려 재제출) → `POST /products`(생성) → `POST /products/:id/images`(이미지 FormData), `PATCH /products/:id/status`, `GET /products/my/:id`. e2e [seller-product-lifecycle.e2e.spec.ts](backend-e2e/src/backend/seller-product-lifecycle.e2e.spec.ts)(등록 → 승인=게시 → 노출 → 주문 → 토글 → 반려 → 재제출).
 - **주문/배송** — `/seller/orders`(출고 대기 탭 + 운송장 입력) → `GET /seller/orders`, `PATCH /seller/orders/:orderNumber/ship`.
 - **정산** — `/seller/settlements`(요약 카드 + 내역) → `GET /seller/settlements`, `GET /seller/settlements/summary`. 정산은 구매확정 이벤트(`order.completed`)로 셀러별 PENDING 자동 생성(수수료 10%, 멱등).
-- stub: `/seller`(대시보드) · `/seller/inquiries`(문의 답변 — API 는 `seller/inquiries` 에 있음).
+- **문의 답변** — `/seller/inquiries`(미답변 · 답변 완료 · 전체 탭 + 답변 모달, 답변은 한 번만) → `GET /seller/inquiries?status=`, `PATCH /seller/inquiries/:id/answer`(감사 로그 `INQUIRY_ANSWERED`).
+- 미구현: 판매자 대시보드 — `/seller` 는 상품 관리로 이동합니다.
 
 ### 관리자 (`/admin/*`, ADMIN 역할 — `middleware.ts` 쿠키 검사 + `AdminGuard` 가 `/auth/me` 로 역할 확인)
 
@@ -372,7 +375,7 @@ AI 어시스턴트: AssistantConversation ─1:M─ AssistantMessage
 | 인증 | `POST /auth/register|login|demo-login|refresh|logout|logout-all` · `GET /auth/me|sessions|verify-email` · `DELETE /auth/sessions/:tokenId` | Public / User |
 | 상품·카테고리 | `GET /products` `GET /products/:id` `GET /products/:id/review-summary` `GET /categories` · `POST /products` `PATCH /products/:id` `PATCH /products/:id/status` `POST /products/:id/images` `GET /products/my/:id` `DELETE /products/:id` | Public / Seller |
 | 장바구니·주문·결제 | `/cart` CRUD · `POST /orders` `GET /orders` `GET /orders/:orderNumber` `PATCH /orders/:orderNumber/cancel|confirm` · `POST /payments/verify` `POST /payments/:id/cancel` `POST /payments/webhook` | Buyer / webhook 은 서명 검증 + nginx IP 제한 |
-| 리뷰·문의·찜 | `/reviews` · `/inquiries`(API 만 — 프론트 화면 없음) · `/wishlist`(토글만 화면 있음) | User |
+| 리뷰·문의·찜 | `/reviews` · `/inquiries` `/seller/inquiries` · `/wishlist` `/wishlist/ids` | User / Seller |
 | 판매자 | `POST /seller/apply` `GET /seller/me` · `GET /seller/orders` `PATCH /seller/orders/:orderNumber/ship` · `GET /seller/settlements` `GET /seller/settlements/summary` · `/seller/inquiries` | Buyer / Seller |
 | 관리자 | `GET /seller/applications` `PATCH /seller/applications/:id/approve|reject` · `GET /admin/products` `PATCH /admin/products/:id/approve|reject` · `GET /admin/orders` `GET /admin/orders/:orderNumber` `PATCH /admin/orders/:orderNumber/deliver` · `GET /admin/settlements` `PATCH /admin/settlements/:id/confirm|pay` · `GET /admin/audit-logs` · `GET /admin/dashboard/kpi|order-trend|security|funnel` · `/admin/categories` `/admin/payments` | Admin |
 | AI 어시스턴트 | `POST /admin/assistant/chat` `POST /admin/assistant/stream`(SSE) `GET /admin/assistant/conversations/:id/messages` | Admin |
