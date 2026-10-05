@@ -50,6 +50,8 @@ interface LoginContext {
 @Injectable()
 export class AuthService {
   private readonly ACCESS_TOKEN_EXPIRATION = 900; // 15분
+  /** access 토큰 수명(초) — auth.module 의 JwtModule signOptions.expiresIn('15m')과 같아야 한다 */
+  private static readonly ACCESS_TOKEN_TTL_SECONDS = 900;
   private readonly REFRESH_TOKEN_EXPIRATION = 604800; // 7일
   private readonly MAX_LOGIN_ATTEMPTS = 5;
   private readonly LOGIN_LOCKOUT_DURATION = 900; // 15분
@@ -546,6 +548,30 @@ export class AuthService {
     return { message: '모든 디바이스에서 로그아웃되었습니다.' };
   }
 
+  /**
+   * 비밀번호 변경 등 "자격 증명이 바뀐" 뒤에 부른다 — 이 사용자의 세션을 전부 끊는다.
+   *   · refresh 토큰: 전부 폐기(DB + Redis) → 더 이상 갱신되지 않는다
+   *   · access 토큰: 기준 시각을 남겨 **그 이전에 발급된 것은 verifyAccessToken 이 거절**한다(다른 기기 포함, 즉시)
+   *   · 요청에 쓰인 access 토큰: 블랙리스트에도 올린다 — 기준 시각은 초 단위라 같은 초에 발급된 토큰은 못 거른다
+   * 기준 시각의 TTL 은 access 토큰 수명(15분, auth.module signOptions)이면 충분하다.
+   */
+  async revokeAllSessions(userId: number, currentAccessToken?: string) {
+    await this.revokeAllUserTokens(userId);
+    await this.redisService.setSessionsRevokedAt(
+      userId,
+      Math.floor(Date.now() / 1000),
+      AuthService.ACCESS_TOKEN_TTL_SECONDS,
+    );
+
+    if (currentAccessToken) {
+      const payload = this.jwtService.decode(currentAccessToken) as { exp?: number } | null;
+      const expiresIn = (payload?.exp ?? 0) - Math.floor(Date.now() / 1000);
+      if (expiresIn > 0) {
+        await this.redisService.addToBlacklist(currentAccessToken, expiresIn);
+      }
+    }
+  }
+
   // ===== 토큰 검증 =====
   async verifyAccessToken(token: string): Promise<JwtPayload> {
     // 블랙리스트 확인
@@ -554,13 +580,23 @@ export class AuthService {
       throw new UnauthorizedException('로그아웃된 토큰입니다.');
     }
 
+    let payload: JwtPayload & { iat?: number };
     try {
-      return this.jwtService.verify(token, {
+      payload = this.jwtService.verify(token, {
         secret: this.configService.get('JWT_SECRET'),
       });
     } catch (error) {
       throw new UnauthorizedException('유효하지 않거나 만료된 토큰입니다.');
     }
+
+    // 세션 일괄 무효화(비밀번호 변경 등) 이전에 발급된 토큰은 거절한다.
+    // `<` 인 이유: iat 는 초 단위라, 무효화와 같은 초에 **새로 로그인해 받은** 토큰까지 막으면 안 된다.
+    const revokedAt = await this.redisService.getSessionsRevokedAt(payload.sub);
+    if (revokedAt !== null && typeof payload.iat === 'number' && payload.iat < revokedAt) {
+      throw new UnauthorizedException('다시 로그인해주세요.');
+    }
+
+    return payload;
   }
 
   // ===== Private 헬퍼 메서드 =====

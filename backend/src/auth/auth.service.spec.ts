@@ -49,6 +49,8 @@ const createMockRedisService = () => ({
   revokeAllUserRefreshTokens: jest.fn(),
   addToBlacklist: jest.fn(),
   isBlacklisted: jest.fn(),
+  setSessionsRevokedAt: jest.fn(),
+  getSessionsRevokedAt: jest.fn(),
 });
 
 // ─── 공통 픽스처 ───────────────────────────────────────────
@@ -421,6 +423,55 @@ describe('AuthService', () => {
 
       expect(result.message).toContain('로그아웃');
       expect(redisService.addToBlacklist).toHaveBeenCalledWith('access-token', expect.any(Number));
+    });
+  });
+
+  // ─── 세션 일괄 무효화 (비밀번호 변경 등) ────────────────────
+  describe('revokeAllSessions / verifyAccessToken', () => {
+    const now = () => Math.floor(Date.now() / 1000);
+
+    it('revokeAllSessions: refresh 전부 폐기 + 기준 시각 기록 + 요청 토큰 블랙리스트', async () => {
+      refreshTokenRepository.update.mockResolvedValue({});
+      (jwtService.decode as jest.Mock).mockReturnValue({ exp: now() + 600 });
+
+      await service.revokeAllSessions(1, 'access-token');
+
+      expect(refreshTokenRepository.update).toHaveBeenCalledWith(
+        { userId: 1, isRevoked: false },
+        expect.objectContaining({ isRevoked: true }),
+      );
+      expect(redisService.revokeAllUserRefreshTokens).toHaveBeenCalledWith(1);
+      // TTL 은 access 토큰 수명(15분) — 그 뒤에는 이전 발급분이 전부 만료돼 있다
+      expect(redisService.setSessionsRevokedAt).toHaveBeenCalledWith(1, expect.any(Number), 900);
+      expect(redisService.addToBlacklist).toHaveBeenCalledWith('access-token', expect.any(Number));
+    });
+
+    it('verifyAccessToken: 기준 시각 이전에 발급된 토큰은 거절(다른 기기의 토큰)', async () => {
+      redisService.isBlacklisted.mockResolvedValue(false);
+      (jwtService.verify as jest.Mock).mockReturnValue({ sub: 1, iat: now() - 60 });
+      redisService.getSessionsRevokedAt.mockResolvedValue(now());
+
+      await expect(service.verifyAccessToken('old-token')).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('verifyAccessToken: 기준 시각과 같은 초·이후에 발급된 토큰은 통과(변경 직후 새로 로그인한 토큰)', async () => {
+      const revokedAt = now();
+      redisService.isBlacklisted.mockResolvedValue(false);
+      redisService.getSessionsRevokedAt.mockResolvedValue(revokedAt);
+
+      (jwtService.verify as jest.Mock).mockReturnValue({ sub: 1, iat: revokedAt });
+      await expect(service.verifyAccessToken('same-second')).resolves.toMatchObject({ sub: 1 });
+
+      (jwtService.verify as jest.Mock).mockReturnValue({ sub: 1, iat: revokedAt + 5 });
+      await expect(service.verifyAccessToken('new-token')).resolves.toMatchObject({ sub: 1 });
+    });
+
+    it('verifyAccessToken: 기준 시각이 없으면(무효화한 적 없음) 통과', async () => {
+      redisService.isBlacklisted.mockResolvedValue(false);
+      (jwtService.verify as jest.Mock).mockReturnValue({ sub: 1, iat: now() - 60 });
+      redisService.getSessionsRevokedAt.mockResolvedValue(null);
+
+      await expect(service.verifyAccessToken('token')).resolves.toMatchObject({ sub: 1 });
     });
   });
 
