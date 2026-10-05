@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { getMe } from '../../../../service/auth';
+import { ROLE_CHECK_QUERY_KEY } from '../../../../contexts/AuthContext';
 import { useSellerRoleSync } from '../../../../hooks/seller-query-options';
 
 /**
@@ -26,7 +27,7 @@ export default function SellerGuard({ children }: { children: React.ReactNode })
   const pathname = usePathname();
 
   const { data, isLoading, isError } = useQuery<MeResponse>({
-    queryKey: ['auth', 'me'],
+    queryKey: ROLE_CHECK_QUERY_KEY,
     queryFn: async () => (await getMe()).data as unknown as MeResponse,
     staleTime: 60 * 1000,
     refetchOnWindowFocus: false,

@@ -56,6 +56,10 @@ export type FormProps<T extends FieldValues> = {
   onSubmit: SubmitHandler<T>;
   resolver?: Resolver<T>;
   variant?: "login" | "signup" | "default";
+  /** 폼 카드에 덧씌울 클래스 — 기본 폭(520px)을 넓힐 때(`max-w-[960px] mx-auto`) */
+  className?: string;
+  /** 필드 묶음에 덧씌울 클래스 — 기본은 세로 한 줄, 여러 단으로 펼칠 때 grid 를 준다 */
+  bodyClassName?: string;
   children: React.ReactNode;
 };
 
@@ -67,6 +71,8 @@ export function Form<T extends FieldValues>({
   onSubmit,
   resolver,
   variant = "default",
+  className,
+  bodyClassName,
   children,
 }: FormProps<T>) {
   const methods = useForm<T>({
@@ -83,7 +89,7 @@ export function Form<T extends FieldValues>({
   return (
     <FormProvider {...methods}>
       <form
-        className={twMerge(clsx(formVariants({ variant })))}
+        className={twMerge(clsx(formVariants({ variant }), className))}
         onSubmit={handleSubmit(onSubmit)}
         noValidate
       >
@@ -94,7 +100,7 @@ export function Form<T extends FieldValues>({
           </div>
         )}
 
-        <div className="flex flex-col gap-5">{children}</div>
+        <div className={twMerge(clsx("flex flex-col gap-5", bodyClassName))}>{children}</div>
 
         <button
           type="submit"

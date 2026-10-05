@@ -4,6 +4,7 @@ import { login, logout, register, verifyEmail, resendVerificationEmail, demoLogi
 import type { LoginRequest, RegisterRequest } from "@shopping-mall/shared";
 import { authStorage } from "../service/auth-storage";
 import { resetLoggingOutFlag } from "../lib/axios/axios-http-client";
+import { ROLE_CHECK_QUERY_KEY } from "../contexts/AuthContext";
 
 /**
  * 로그인 mutation hook
@@ -22,6 +23,8 @@ export function useLoginMutation() {
 
             // user 정보를 React Query 캐시에 저장
             queryClient.setQueryData(['auth', 'user'], response.data.user);
+            // 앞 계정의 역할 캐시를 이동 전에 비운다(콘솔 가드가 그것으로 판정한다 — AuthContext 참고)
+            queryClient.removeQueries({ queryKey: ROLE_CHECK_QUERY_KEY });
         }
     });
 }
@@ -52,6 +55,8 @@ export function useVerifyEmailMutation() {
             authStorage.setAccessToken(response.data.accessToken, false);
 
             queryClient.setQueryData(['auth', 'user'], response.data.user);
+            // 앞 계정의 역할 캐시를 이동 전에 비운다(콘솔 가드가 그것으로 판정한다 — AuthContext 참고)
+            queryClient.removeQueries({ queryKey: ROLE_CHECK_QUERY_KEY });
         },
     });
 }
@@ -76,6 +81,8 @@ export function useDemoLoginMutation() {
             resetLoggingOutFlag();
             authStorage.setAccessToken(response.data.accessToken, false);
             queryClient.setQueryData(['auth', 'user'], response.data.user);
+            // 앞 계정의 역할 캐시를 이동 전에 비운다(콘솔 가드가 그것으로 판정한다 — AuthContext 참고)
+            queryClient.removeQueries({ queryKey: ROLE_CHECK_QUERY_KEY });
         },
     });
 }

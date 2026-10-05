@@ -2,7 +2,7 @@
 
 import { isAxiosError } from 'axios';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { authStorage } from '../service/auth-storage';
 import { getMe, logout as logoutApi, UserResponse } from '../service/auth';
 import { getAuthChannel } from '../service/auth-channel';
@@ -16,6 +16,13 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+/**
+ * 콘솔 가드(AdminGuard·SellerGuard)가 역할을 확인하려고 따로 들고 있는 `/auth/me` 캐시의 키.
+ * 로그인한 계정이 바뀌면 반드시 비운다 — 남아 있으면 가드가 **앞 계정의 역할**로 판정해서,
+ * 셀러로 쓰다가 관리자로 다시 로그인한 사람이 관리자 화면에서 홈으로 튕긴다(새로고침해야 풀렸다).
+ */
+export const ROLE_CHECK_QUERY_KEY = ['auth', 'me'] as const;
 
 /** 새 탭이 다른 탭의 토큰 응답을 기다리는 시간. 같은 브라우저 안의 메시지라 보통 수 ms 면 온다. */
 const TAB_TOKEN_WAIT_MS = 300;
@@ -103,6 +110,7 @@ export default function AuthContextProvider({ children }: { children: React.Reac
     } finally {
       authStorage.clearToken();
       queryClient.setQueryData(['auth', 'user'], null);
+      queryClient.removeQueries({ queryKey: ROLE_CHECK_QUERY_KEY });
       queryClient.removeQueries({ queryKey: ['cart'] });
       // 계정에 묶인 캐시 — 남겨 두면 다음에 로그인한 사용자에게 앞사람의 찜·문의·프로필이 잠깐 보인다
       queryClient.removeQueries({ queryKey: ['wishlist'] });
@@ -137,6 +145,20 @@ export default function AuthContextProvider({ children }: { children: React.Reac
     // 다른 탭의 토큰을 기다리는 동안은 조회하지 않는다(토큰 없이 조회하면 "비로그인"이 캐시에 들어간다)
     enabled: isHydrated && !isAwaitingTabToken,
   });
+
+  // 이 탭에서 하는 로그인·로그아웃은 그 자리에서 역할 캐시를 지운다(useAuthMutation·위의 logout).
+  // 여기는 나머지 길 — 다른 탭의 로그아웃/계정 전환, 세션 만료 — 을 한 곳에서 받는다:
+  // "있던 사용자"가 사라지거나 다른 사람으로 바뀌면 비운다. 가드가 화면에 떠 있으면 reset 이 곧바로 다시 조회시킨다.
+  // (처음 로딩의 "없음 → 있음"은 건너뛴다 — 가드가 막 받아 온 응답을 지우면 화면이 한 번 더 깜빡인다)
+  const userId = user?.id ?? null;
+  const previousUserId = useRef<number | string | null>(null);
+  useEffect(() => {
+    const previous = previousUserId.current;
+    previousUserId.current = userId;
+    if (previous !== null && previous !== userId) {
+      queryClient.resetQueries({ queryKey: ROLE_CHECK_QUERY_KEY });
+    }
+  }, [userId, queryClient]);
 
   return (
     <AuthContext.Provider
