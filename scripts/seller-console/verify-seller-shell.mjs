@@ -135,6 +135,20 @@ try {
       await page.waitForTimeout(800);
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
       check(`모바일 ${path}: 페이지 가로 넘침 없음`, overflow <= 0, `${overflow}px`);
+      // 넓은 표는 잘리지 않고 카드 안에서 좌우로 밀려야 한다(래퍼 없이 cardStyle 의 overflow:hidden 에 잘리던 적이 있다)
+      const table = page.locator('table').first();
+      if ((await table.count()) > 0) {
+        const scroll = await table.evaluate((el) => {
+          const wrap = el.parentElement;
+          wrap.scrollLeft = 9999;
+          return { moved: wrap.scrollLeft, hidden: el.offsetWidth - wrap.clientWidth, overflowX: getComputedStyle(wrap).overflowX };
+        });
+        check(
+          `모바일 ${path}: 표가 좌우로 밀린다`,
+          scroll.hidden <= 0 || (scroll.overflowX === 'auto' && scroll.moved > 0),
+          `가려진 폭 ${scroll.hidden}px · overflow-x ${scroll.overflowX} · 밀린 거리 ${scroll.moved}px`,
+        );
+      }
       if (SHOT) await page.screenshot({ path: join(SHOT, `seller-mobile${path.replace(/\//g, '-')}.png`), fullPage: true });
     }
     await context.close();

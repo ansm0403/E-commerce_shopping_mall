@@ -17,6 +17,7 @@ import {
   cardStyle,
   filterBarStyle,
   formatDateShort,
+  tableScrollStyle,
   tableStyle,
   tabStyle,
   tdStyle,
@@ -93,65 +94,67 @@ export default function SellerSettlementView() {
       </div>
 
       <div style={cardStyle}>
-        <table style={tableStyle}>
-          <thead>
-            <tr>
-              <th style={thStyle}>생성일 (KST)</th>
-              <th style={thStyle}>주문번호</th>
-              <th style={thStyle}>매출액</th>
-              <th style={thStyle}>수수료</th>
-              <th style={thStyle}>정산액</th>
-              <th style={thStyle}>상태</th>
-              <th style={thStyle}>확정 / 지급일</th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading && (
+        <div style={tableScrollStyle}>
+          <table style={tableStyle}>
+            <thead>
               <tr>
-                <td style={tdStyle} colSpan={7}>불러오는 중…</td>
+                <th style={thStyle}>생성일 (KST)</th>
+                <th style={thStyle}>주문번호</th>
+                <th style={thStyle}>매출액</th>
+                <th style={thStyle}>수수료</th>
+                <th style={thStyle}>정산액</th>
+                <th style={thStyle}>상태</th>
+                <th style={thStyle}>확정 / 지급일</th>
               </tr>
-            )}
-            {isError && (
-              <tr>
-                <td style={{ ...tdStyle, color: '#dc2626' }} colSpan={7}>
-                  정산 내역을 불러오지 못했습니다.
-                </td>
-              </tr>
-            )}
-            {!isLoading && !isError && rows.length === 0 && (
-              <tr>
-                <td style={{ ...tdStyle, color: '#64748b' }} colSpan={7}>
-                  정산 내역이 없습니다. 구매자가 구매 확정하면 자동으로 생성됩니다.
-                </td>
-              </tr>
-            )}
-            {rows.map((s) => (
-              <tr key={s.id}>
-                <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: '#475569' }}>
-                  {formatDateShort(s.createdAt)}
-                </td>
-                <td style={{ ...tdStyle, whiteSpace: 'nowrap', fontFamily: 'monospace' }}>
-                  {s.orderNumber}
-                </td>
-                <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>{formatAmount(s.amount)}</td>
-                <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: '#94a3b8' }}>
-                  −{formatAmount(s.commissionAmount)}
-                </td>
-                <td style={{ ...tdStyle, whiteSpace: 'nowrap', fontWeight: 600 }}>
-                  {formatAmount(s.settlementAmount)}
-                </td>
-                <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
-                  <span style={settlementBadge(s.status)}>{settlementStatusLabel(s.status)}</span>
-                </td>
-                <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: '#475569' }}>
-                  {s.confirmedAt ? formatDateShort(s.confirmedAt) : '—'}
-                  {' / '}
-                  {s.paidAt ? formatDateShort(s.paidAt) : '—'}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {isLoading && (
+                <tr>
+                  <td style={tdStyle} colSpan={7}>불러오는 중…</td>
+                </tr>
+              )}
+              {isError && (
+                <tr>
+                  <td style={{ ...tdStyle, color: '#dc2626' }} colSpan={7}>
+                    정산 내역을 불러오지 못했습니다.
+                  </td>
+                </tr>
+              )}
+              {!isLoading && !isError && rows.length === 0 && (
+                <tr>
+                  <td style={{ ...tdStyle, color: '#64748b' }} colSpan={7}>
+                    정산 내역이 없습니다. 구매자가 구매 확정하면 자동으로 생성됩니다.
+                  </td>
+                </tr>
+              )}
+              {rows.map((s) => (
+                <tr key={s.id}>
+                  <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: '#475569' }}>
+                    {formatDateShort(s.createdAt)}
+                  </td>
+                  <td style={{ ...tdStyle, whiteSpace: 'nowrap', fontFamily: 'monospace' }}>
+                    {s.orderNumber}
+                  </td>
+                  <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>{formatAmount(s.amount)}</td>
+                  <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: '#94a3b8' }}>
+                    −{formatAmount(s.commissionAmount)}
+                  </td>
+                  <td style={{ ...tdStyle, whiteSpace: 'nowrap', fontWeight: 600 }}>
+                    {formatAmount(s.settlementAmount)}
+                  </td>
+                  <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
+                    <span style={settlementBadge(s.status)}>{settlementStatusLabel(s.status)}</span>
+                  </td>
+                  <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: '#475569' }}>
+                    {s.confirmedAt ? formatDateShort(s.confirmedAt) : '—'}
+                    {' / '}
+                    {s.paidAt ? formatDateShort(s.paidAt) : '—'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         <AdminPagination meta={toAdminPageMeta(data?.meta)} onPageChange={goPage} />
       </div>

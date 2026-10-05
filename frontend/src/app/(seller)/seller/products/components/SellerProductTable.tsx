@@ -21,6 +21,7 @@ import {
   BADGE_TONE,
   cardStyle,
   formatDateShort,
+  tableScrollStyle,
   tableStyle,
   tdStyle,
   thStyle,
@@ -103,126 +104,128 @@ export default function SellerProductTable() {
           {errorMessage}
         </p>
       )}
-      <table style={tableStyle}>
-        <thead>
-          <tr>
-            <th style={thStyle}>등록일 (KST)</th>
-            <th style={thStyle}>상품</th>
-            <th style={thStyle}>가격 / 재고</th>
-            <th style={thStyle}>판매 상태</th>
-            <th style={thStyle}>승인 상태</th>
-            <th style={thStyle}>액션</th>
-          </tr>
-        </thead>
-        <tbody>
-          {isLoading && (
+      <div style={tableScrollStyle}>
+        <table style={tableStyle}>
+          <thead>
             <tr>
-              <td style={tdStyle} colSpan={6}>
-                불러오는 중…
-              </td>
+              <th style={thStyle}>등록일 (KST)</th>
+              <th style={thStyle}>상품</th>
+              <th style={thStyle}>가격 / 재고</th>
+              <th style={thStyle}>판매 상태</th>
+              <th style={thStyle}>승인 상태</th>
+              <th style={thStyle}>액션</th>
             </tr>
-          )}
-          {isError && (
-            <tr>
-              <td style={{ ...tdStyle, color: '#dc2626' }} colSpan={6}>
-                상품 목록을 불러오지 못했습니다.
-              </td>
-            </tr>
-          )}
-          {!isLoading && !isError && rows.length === 0 && (
-            <tr>
-              <td style={{ ...tdStyle, color: '#64748b' }} colSpan={6}>
-                등록한 상품이 없습니다.{' '}
-                <Link href="/seller/products/new" style={{ color: '#2563eb', textDecoration: 'underline' }}>
-                  첫 상품을 등록해보세요.
-                </Link>
-              </td>
-            </tr>
-          )}
-          {rows.map((product) => {
-            const thumbnail =
-              product.images?.find((img) => img.isPrimary)?.url ?? product.images?.[0]?.url ?? null;
-            const canToggle = product.approvalStatus === ApprovalStatus.APPROVED;
-            const isPublished = product.status === ProductStatus.PUBLISHED;
-            // 상품 이름을 누르면 그 상품으로 간다. 손님에게 보이는 상품(승인 + 게시)은 상점의 상세 화면으로,
-            // 아직 안 보이는 상품(승인 대기·반려·숨김)은 상세가 404 라 수정 화면으로 보낸다.
-            const isLive = canToggle && isPublished;
-            const productHref = isLive ? `/products/${product.id}` : `/seller/products/${product.id}/edit`;
-            return (
-              <tr key={product.id}>
-                <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: '#475569' }}>
-                  {formatDateShort(product.createdAt)}
-                </td>
-                <td style={{ ...tdStyle, maxWidth: '280px' }}>
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    {thumbnail && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={thumbnail} alt="" style={thumbStyle} />
-                    )}
-                    <div style={{ minWidth: 0 }}>
-                      <Link
-                        href={productHref}
-                        title={isLive ? '상점의 상품 화면 보기' : '아직 상점에 보이지 않는 상품입니다 — 수정 화면으로 이동'}
-                        className="font-semibold text-slate-900 hover:text-blue-700 hover:underline"
-                      >
-                        {product.name}
-                      </Link>
-                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>{product.brand}</div>
-                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>
-                        {product.category?.name ?? '카테고리 미지정'}
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
-                  <div>{formatPrice(product.price)}</div>
-                  <div style={{ fontSize: '11px', color: '#94a3b8' }}>
-                    재고 {product.stockQuantity.toLocaleString('ko-KR')}
-                  </div>
-                </td>
-                <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
-                  <span style={isPublished ? BADGE_TONE.approved : BADGE_TONE.neutral}>
-                    {productStatusLabel(product.status)}
-                  </span>
-                </td>
-                <td style={{ ...tdStyle, maxWidth: '220px' }}>
-                  <span style={approvalBadge(product.approvalStatus)}>
-                    {approvalStatusLabel(product.approvalStatus)}
-                  </span>
-                  {product.approvalStatus === ApprovalStatus.REJECTED && product.rejectionReason && (
-                    <div style={{ marginTop: '4px', fontSize: '12px', color: '#dc2626' }}>
-                      {product.rejectionReason}
-                    </div>
-                  )}
-                </td>
-                <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
-                  <div style={{ display: 'flex', gap: '6px' }}>
-                    <Link href={`/seller/products/${product.id}/edit`} style={actionButton('#475569')}>
-                      수정
-                    </Link>
-                    {canToggle && (
-                      <button
-                        style={actionButton(isPublished ? '#b45309' : '#16a34a')}
-                        disabled={statusMutation.isPending}
-                        onClick={() => toggleStatus(product)}
-                      >
-                        {isPublished ? '숨김' : '게시'}
-                      </button>
-                    )}
-                    <button
-                      style={actionButton('#dc2626')}
-                      disabled={deleteMutation.isPending}
-                      onClick={() => removeProduct(product)}
-                    >
-                      삭제
-                    </button>
-                  </div>
+          </thead>
+          <tbody>
+            {isLoading && (
+              <tr>
+                <td style={tdStyle} colSpan={6}>
+                  불러오는 중…
                 </td>
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
+            )}
+            {isError && (
+              <tr>
+                <td style={{ ...tdStyle, color: '#dc2626' }} colSpan={6}>
+                  상품 목록을 불러오지 못했습니다.
+                </td>
+              </tr>
+            )}
+            {!isLoading && !isError && rows.length === 0 && (
+              <tr>
+                <td style={{ ...tdStyle, color: '#64748b' }} colSpan={6}>
+                  등록한 상품이 없습니다.{' '}
+                  <Link href="/seller/products/new" style={{ color: '#2563eb', textDecoration: 'underline' }}>
+                    첫 상품을 등록해보세요.
+                  </Link>
+                </td>
+              </tr>
+            )}
+            {rows.map((product) => {
+              const thumbnail =
+                product.images?.find((img) => img.isPrimary)?.url ?? product.images?.[0]?.url ?? null;
+              const canToggle = product.approvalStatus === ApprovalStatus.APPROVED;
+              const isPublished = product.status === ProductStatus.PUBLISHED;
+              // 상품 이름을 누르면 그 상품으로 간다. 손님에게 보이는 상품(승인 + 게시)은 상점의 상세 화면으로,
+              // 아직 안 보이는 상품(승인 대기·반려·숨김)은 상세가 404 라 수정 화면으로 보낸다.
+              const isLive = canToggle && isPublished;
+              const productHref = isLive ? `/products/${product.id}` : `/seller/products/${product.id}/edit`;
+              return (
+                <tr key={product.id}>
+                  <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: '#475569' }}>
+                    {formatDateShort(product.createdAt)}
+                  </td>
+                  <td style={{ ...tdStyle, maxWidth: '280px' }}>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      {thumbnail && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={thumbnail} alt="" style={thumbStyle} />
+                      )}
+                      <div style={{ minWidth: 0 }}>
+                        <Link
+                          href={productHref}
+                          title={isLive ? '상점의 상품 화면 보기' : '아직 상점에 보이지 않는 상품입니다 — 수정 화면으로 이동'}
+                          className="font-semibold text-slate-900 hover:text-blue-700 hover:underline"
+                        >
+                          {product.name}
+                        </Link>
+                        <div style={{ fontSize: '11px', color: '#94a3b8' }}>{product.brand}</div>
+                        <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+                          {product.category?.name ?? '카테고리 미지정'}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
+                    <div>{formatPrice(product.price)}</div>
+                    <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+                      재고 {product.stockQuantity.toLocaleString('ko-KR')}
+                    </div>
+                  </td>
+                  <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
+                    <span style={isPublished ? BADGE_TONE.approved : BADGE_TONE.neutral}>
+                      {productStatusLabel(product.status)}
+                    </span>
+                  </td>
+                  <td style={{ ...tdStyle, maxWidth: '220px' }}>
+                    <span style={approvalBadge(product.approvalStatus)}>
+                      {approvalStatusLabel(product.approvalStatus)}
+                    </span>
+                    {product.approvalStatus === ApprovalStatus.REJECTED && product.rejectionReason && (
+                      <div style={{ marginTop: '4px', fontSize: '12px', color: '#dc2626' }}>
+                        {product.rejectionReason}
+                      </div>
+                    )}
+                  </td>
+                  <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <Link href={`/seller/products/${product.id}/edit`} style={actionButton('#475569')}>
+                        수정
+                      </Link>
+                      {canToggle && (
+                        <button
+                          style={actionButton(isPublished ? '#b45309' : '#16a34a')}
+                          disabled={statusMutation.isPending}
+                          onClick={() => toggleStatus(product)}
+                        >
+                          {isPublished ? '숨김' : '게시'}
+                        </button>
+                      )}
+                      <button
+                        style={actionButton('#dc2626')}
+                        disabled={deleteMutation.isPending}
+                        onClick={() => removeProduct(product)}
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
 
       <AdminPagination meta={data?.meta} onPageChange={goPage} />
     </div>
