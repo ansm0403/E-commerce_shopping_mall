@@ -10,7 +10,8 @@
  *   3. 롤백: 토글이 500 으로 실패하면 하트가 원래대로 돌아온다
  *   4. 위시리스트 화면: 찜한 상품이 보인다 · 장바구니 담기 · 빼기 → 사라짐 → 상품 상세 하트가 빈 상태
  *   5. 전체 비우기: 확인 모달 → 빈 화면
- *   6. axe(WCAG 2.1 A/AA) · 모바일 390px 가로 넘침
+ *   6. 카드 사진: 셀러가 올린 사진(/uploads)과 시드 상품의 외부 링크가 둘 다 실제로 그려진다
+ *   7. axe(WCAG 2.1 A/AA) · 모바일 390px 가로 넘침
  *
  * 전제: 로컬 백엔드·프론트, 측정 계정(로컬 DB). 시작·끝에 그 계정의 찜과 장바구니를 비운다.
  */
@@ -18,6 +19,7 @@ import { chromium } from 'playwright-core';
 import { createRequire } from 'node:module';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { apiAuth } from '../a11y/lib.mjs';
+import { makePng } from './lib.mjs';
 
 const require = createRequire(import.meta.url);
 const AXE_PATH = require.resolve('axe-core/axe.min.js');
@@ -51,6 +53,36 @@ const serverIds = async () => (await (await fetch(`${API}/wishlist/ids`, { heade
 try {
   auth = await apiAuth(API, args.email, args.password);
   await resetAccount();
+
+  // 셀러가 **실제로 올린 사진**이 위시리스트에 뜨는지 보려면 /uploads 사진이 있는 상품이 필요하다 — 없으면 셀러 계정으로 한 장 올린다
+  const detail = await (await fetch(`${API}/products/${args.productId}`)).json();
+  if (!(detail.images ?? []).some((img) => String(img.url).startsWith('/uploads/'))) {
+    const sellerAuth = await apiAuth(API, args.sellerEmail, args.sellerPassword);
+    const form = new FormData();
+    form.append('file', new Blob([makePng()], { type: 'image/png' }), 'verify-wishlist.png');
+    const upload = await fetch(`${API}/products/${args.productId}/images`, {
+      method: 'POST',
+      headers: { Authorization: sellerAuth.Authorization },
+      body: form,
+    });
+    if (!upload.ok) throw new Error(`사진 업로드 실패 ${upload.status} ${await upload.text()}`);
+    console.log('준비: 확인용 상품에 사진 1장 업로드');
+  }
+  /** 카드 안의 사진이 실제로 그려졌는지 — 주소와 디코딩된 가로 크기 */
+  const cardImage = (card) =>
+    card
+      .locator('img')
+      .first()
+      .evaluate(async (img) => {
+        if (!img.complete) {
+          await new Promise((resolve) => {
+            img.onload = resolve;
+            img.onerror = resolve;
+          });
+        }
+        return { src: img.getAttribute('src'), width: img.naturalWidth };
+      })
+      .catch(() => ({ src: null, width: 0 }));
 
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, locale: 'ko-KR' });
   await context.route(SENTRY_RE, (route) => route.abort());
@@ -121,6 +153,12 @@ try {
   const card = page.getByRole('listitem').filter({ hasText: '문의 테스트 상품' });
   await card.waitFor({ timeout: 15000 });
   check('위시리스트에 찜한 상품이 보인다', true);
+  const uploaded = await cardImage(card);
+  check(
+    '셀러가 올린 사진(/uploads)이 카드에 그려진다',
+    String(uploaded.src).startsWith('/uploads/') && uploaded.width > 0,
+    `${uploaded.src} · ${uploaded.width}px`,
+  );
 
   await page.locator('#nprogress').waitFor({ state: 'detached', timeout: 10000 }).catch(() => undefined);
   axeViolations = await runAxe(page);
@@ -147,6 +185,17 @@ try {
   }
   await page.goto(`${BASE}/my/wishlist`, { waitUntil: 'networkidle' });
   await page.getByRole('button', { name: '전체 비우기' }).waitFor({ timeout: 15000 });
+  // 시드 상품의 사진은 외부 링크다
+  const otherCard = page
+    .getByRole('listitem')
+    .filter({ has: page.getByRole('button', { name: /빼기/ }) })
+    .filter({ hasNotText: '문의 테스트 상품' });
+  const external = await cardImage(otherCard);
+  check(
+    '외부 링크 사진(시드 상품)도 카드에 그려진다',
+    /^https?:/.test(String(external.src)) && external.width > 0,
+    `${String(external.src).slice(0, 60)} · ${external.width}px`,
+  );
   check('두 건 찜 → 목록 2건', (await page.getByRole('main').getByRole('listitem').filter({ has: page.getByRole('button', { name: /빼기/ }) }).count()) === 2);
   await page.getByRole('button', { name: '전체 비우기' }).click();
   const dialog = page.getByRole('dialog');
@@ -201,6 +250,8 @@ function parseArgs(argv) {
     otherProductId: '127',
     email: 'a11y-buyer@test.local',
     password: 'A11yTest123!',
+    sellerEmail: 'seller1@seed.com',
+    sellerPassword: 'Seed1234!',
     json: null,
     shot: null,
     headed: false,
@@ -212,6 +263,8 @@ function parseArgs(argv) {
     '--other-product-id': 'otherProductId',
     '--email': 'email',
     '--password': 'password',
+    '--seller-email': 'sellerEmail',
+    '--seller-password': 'sellerPassword',
     '--json': 'json',
     '--shot': 'shot',
   };
