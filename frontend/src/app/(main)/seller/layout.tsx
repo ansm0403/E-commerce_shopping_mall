@@ -1,5 +1,5 @@
-import Link from 'next/link';
 import SellerGuard from './components/SellerGuard';
+import SellerNav from './components/SellerNav';
 
 /**
  * (main)/seller/* 공통 레이아웃 — SellerGuard 로 전 구간을 보호한다.
@@ -10,24 +10,7 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
   return (
     <SellerGuard>
       <div className="mx-auto w-full max-w-5xl px-4 py-6">
-        <nav className="mb-6 flex items-center gap-4 border-b border-gray-200 pb-3 text-sm">
-          <span className="font-bold text-gray-900">셀러 센터</span>
-          <Link href="/seller/products" className="text-gray-600 hover:text-blue-600">
-            상품 관리
-          </Link>
-          <Link href="/seller/products/new" className="text-gray-600 hover:text-blue-600">
-            상품 등록
-          </Link>
-          <Link href="/seller/orders" className="text-gray-600 hover:text-blue-600">
-            주문/배송
-          </Link>
-          <Link href="/seller/settlements" className="text-gray-600 hover:text-blue-600">
-            정산
-          </Link>
-          <Link href="/seller/inquiries" className="text-gray-600 hover:text-blue-600">
-            문의
-          </Link>
-        </nav>
+        <SellerNav />
         {children}
       </div>
     </SellerGuard>

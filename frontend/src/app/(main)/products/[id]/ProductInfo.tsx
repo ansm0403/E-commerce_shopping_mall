@@ -6,6 +6,8 @@ import { Product } from '@/model/product';
 import { useAddToCart } from '@/hooks/useCart';
 import { useWishlistIds, useWishlistToggle } from '@/hooks/useWishlist';
 import { authStorage } from '@/service/auth-storage';
+import { useAuth } from '@/contexts/AuthContext';
+import { hasRole } from '@/lib/roles';
 
 interface ProductInfoProps {
   product: Product;
@@ -57,6 +59,7 @@ export default function ProductInfo({
   const router = useRouter();
   // 찜 여부는 서버에서 받은 내 찜 id 목록으로 판정한다(['wishlist','ids']).
   // 예전엔 useState(false) 라 항상 빈 하트로 시작했고, 이미 찜한 상품에서 "찜하기"를 누르면 토글 API 가 찜을 풀어 버렸다.
+  const { user } = useAuth();
   const wishlist = useWishlistIds();
   const isWished = wishlist.isWished(product.id);
   // ③ wishCount를 로컬 state로 관리 — 토글 성공 시 직접 +1/-1해서 정확하게 반영
@@ -107,6 +110,12 @@ export default function ProductInfo({
   const handleWishToggle = () => {
     if (!authStorage.getAccessToken()) {
       router.push('/login');
+      return;
+    }
+    // 찜은 구매자 역할 전용이다(서버가 403). 구매자 역할이 없는 계정(관리자 전용·시드 셀러)이
+    // "접근 권한이 없습니다"라는 서버 문구만 보고 영문을 모르지 않게, 누르기 전에 이유를 알려 준다.
+    if (user && !hasRole(user, 'buyer')) {
+      alert('찜하기는 구매자 계정에서 사용할 수 있습니다.');
       return;
     }
     wishlistToggle.mutate(product.id, {

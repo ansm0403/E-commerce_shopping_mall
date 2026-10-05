@@ -144,6 +144,10 @@ export default function SellerProductTable() {
               product.images?.find((img) => img.isPrimary)?.url ?? product.images?.[0]?.url ?? null;
             const canToggle = product.approvalStatus === ApprovalStatus.APPROVED;
             const isPublished = product.status === ProductStatus.PUBLISHED;
+            // 상품 이름을 누르면 그 상품으로 간다. 손님에게 보이는 상품(승인 + 게시)은 상점의 상세 화면으로,
+            // 아직 안 보이는 상품(승인 대기·반려·숨김)은 상세가 404 라 수정 화면으로 보낸다.
+            const isLive = canToggle && isPublished;
+            const productHref = isLive ? `/products/${product.id}` : `/seller/products/${product.id}/edit`;
             return (
               <tr key={product.id}>
                 <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: '#475569' }}>
@@ -156,7 +160,13 @@ export default function SellerProductTable() {
                       <img src={thumbnail} alt="" style={thumbStyle} />
                     )}
                     <div style={{ minWidth: 0 }}>
-                      <div style={{ fontWeight: 600 }}>{product.name}</div>
+                      <Link
+                        href={productHref}
+                        title={isLive ? '상점의 상품 화면 보기' : '아직 상점에 보이지 않는 상품입니다 — 수정 화면으로 이동'}
+                        className="font-semibold text-slate-900 hover:text-blue-700 hover:underline"
+                      >
+                        {product.name}
+                      </Link>
                       <div style={{ fontSize: '11px', color: '#94a3b8' }}>{product.brand}</div>
                       <div style={{ fontSize: '11px', color: '#94a3b8' }}>
                         {product.category?.name ?? '카테고리 미지정'}
