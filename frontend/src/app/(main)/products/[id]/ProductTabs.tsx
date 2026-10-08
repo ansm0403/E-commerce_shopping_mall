@@ -3,6 +3,8 @@
 import { Product } from '@/model/product';
 import dynamic from 'next/dynamic';
 import ReviewSection from './ReviewSection';
+import Link from 'next/link';
+import { specLabel, specValue } from '@/lib/product-specs';
 
 // 문의 탭은 폼 라이브러리(react-hook-form + zod)를 끌고 온다 — 상품 상세의 첫 화면에는 필요 없으므로
 // 탭을 열 때 따로 받는다(정적 import 면 상품 상세 First Load 가 그만큼 커진다).
@@ -24,21 +26,22 @@ export default function ProductTabs({
   const tabs = [
     { id: 'description', label: '상세 설명' },
     { id: 'specs', label: '상품 스펙' },
-    { id: 'review', label: `리뷰 (${product.reviewCount ?? 0})` },
+    { id: 'review', label: product.reviewCount != null ? `리뷰 (${product.reviewCount})` : '리뷰' },
     { id: 'inquiry', label: '문의' },
     { id: 'seller', label: '판매자 정보' },
     { id: 'shipping', label: '배송 정보' },
   ];
 
   return (
-    <div className="border-t pt-8">
+    <div className="rounded-3xl border border-primary-100 bg-white p-5 sm:p-8">
       {/* 탭 헤더 */}
-      <div className="flex border-b border-secondary-200 mb-8 overflow-x-auto">
+      <div className="no-scrollbar flex border-b border-secondary-200 mb-8 overflow-x-auto">
         {tabs.map((tab) => (
           <button
             key={tab.id}
+            aria-pressed={activeTab === tab.id}
             onClick={() => onTabChange(tab.id)}
-            className={`px-6 py-4 font-semibold whitespace-nowrap border-b-2 transition-colors ${
+            className={`px-4 py-4 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors ${
               activeTab === tab.id
                 ? 'border-primary-600 text-primary-600'
                 : 'border-transparent text-secondary-600 hover:text-secondary-900'
@@ -71,21 +74,17 @@ export default function ProductTabs({
         {activeTab === 'specs' && (
           <div className="space-y-4">
             {product.specs && Object.keys(product.specs).length > 0 ? (
-              <div className="space-y-3">
+              <dl className="space-y-3">
                 {Object.entries(product.specs).map(([key, value]) => (
                   <div
                     key={key}
-                    className="flex justify-between items-start border-b border-secondary-100 pb-3"
+                    className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-4 border-b border-secondary-100 pb-3"
                   >
-                    <span className="font-semibold text-secondary-700 min-w-[150px]">
-                      {key}
-                    </span>
-                    <span className="text-secondary-600 text-right flex-1">
-                      {typeof value === 'object' ? JSON.stringify(value) : String(value)}
-                    </span>
+                    <dt className="font-semibold text-secondary-700">{specLabel(key)}</dt>
+                    <dd className="min-w-0 break-words text-secondary-600 text-right">{specValue(key, value)}</dd>
                   </div>
                 ))}
-              </div>
+              </dl>
             ) : (
               <p className="text-secondary-500 italic">스펙 정보가 없습니다.</p>
             )}
@@ -116,12 +115,10 @@ export default function ProductTabs({
                 <div>
                   <p className="text-sm text-secondary-500 mb-1">상태</p>
                   <span className="inline-block px-3 py-1 bg-green-100 text-green-700 text-sm font-semibold rounded-full">
-                    {product.seller.status}
+                    {product.seller.status === 'approved' ? '승인된 판매자' : '판매자'}
                   </span>
                 </div>
-                <p className="text-sm text-secondary-500 pt-4 border-t">
-                  해당 판매자의 상품을 확인할 수 있습니다.
-                </p>
+                <Link href={`/products?sellerId=${product.seller.id}`} className="inline-flex text-sm font-semibold text-primary-600 underline underline-offset-4">판매자의 다른 상품 보기 →</Link>
               </div>
             ) : (
               <p className="text-secondary-500 italic">판매자 정보가 없습니다.</p>

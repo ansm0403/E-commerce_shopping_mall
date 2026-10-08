@@ -2,20 +2,21 @@
 
 import { useState } from 'react';
 import { ProductImage } from '@/model/product';
+import ProductPhoto from '@/components/home/ProductPhoto';
 
 interface ProductGalleryProps {
   images: ProductImage[];
 }
 
 export default function ProductGallery({ images }: ProductGalleryProps) {
-  const sortedImages = [...images].sort((a, b) => {
+  const sortedImages = (Array.isArray(images) ? [...images] : []).sort((a, b) => {
     if (a.isPrimary) return -1;
     if (b.isPrimary) return 1;
     return a.sortOrder - b.sortOrder;
   });
 
   const displayImages = sortedImages.length > 0 ? sortedImages : [
-    { id: 0, url: '/images/placeholder.png', isPrimary: true, sortOrder: 0 }
+    { id: 0, url: '/images/placeholder.svg', isPrimary: true, sortOrder: 0 }
   ];
 
   const [mainImageIndex, setMainImageIndex] = useState(0);
@@ -36,15 +37,16 @@ export default function ProductGallery({ images }: ProductGalleryProps) {
     <div className="space-y-3 md:space-y-4">
       {/* 메인 이미지 */}
       <div
-        className="relative w-full aspect-square bg-secondary-50 rounded-lg overflow-hidden group cursor-zoom-in transition-all"
+        className="relative w-full aspect-square bg-[#f3f3ef] rounded-3xl overflow-hidden group cursor-zoom-in transition-all"
         onMouseMove={handleMouseMove}
         onMouseEnter={() => setIsZoomed(true)}
         onMouseLeave={() => setIsZoomed(false)}
       >
-        <img
+        <ProductPhoto
           src={mainImage.url}
           alt="상품 이미지"
-          className={`absolute inset-0 w-full h-full object-cover transition-transform duration-300 ${
+          eager
+          className={`absolute inset-0 w-full h-full object-contain p-6 sm:p-10 mix-blend-multiply transition-transform duration-300 ${
             isZoomed ? 'scale-150' : 'scale-100'
           }`}
           style={
@@ -52,9 +54,6 @@ export default function ProductGallery({ images }: ProductGalleryProps) {
               ? { transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%` }
               : undefined
           }
-          onError={(e) => {
-            (e.currentTarget as HTMLImageElement).style.visibility = 'hidden';
-          }}
         />
 
         {/* 줌 인디케이터 */}
@@ -83,13 +82,10 @@ export default function ProductGallery({ images }: ProductGalleryProps) {
                   : 'border-secondary-200 hover:border-secondary-300'
               }`}
             >
-              <img
+              <ProductPhoto
                 src={img.url}
                 alt={`상품 이미지 ${idx + 1}`}
-                className="absolute inset-0 w-full h-full object-cover"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).style.visibility = 'hidden';
-                }}
+                className="absolute inset-0 w-full h-full object-contain p-2"
               />
             </button>
           ))}

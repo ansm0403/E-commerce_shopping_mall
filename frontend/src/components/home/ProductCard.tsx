@@ -2,16 +2,17 @@
 
 import Link from 'next/link';
 import { Product } from '@/model/product';
+import ProductPhoto from './ProductPhoto';
 
 interface ProductCardProps {
   product: Product;
 }
 
-function getProductImageUrl(product: Product): string {
+export function getProductImageUrl(product: Product): string {
   // images 가 배열이 아닌 응답(문자열) — Sentry 7747419820 "a.find is not a function". `?? []` 는 null/undefined 만 막았다(Ops Companion 분석 #59)
   const images = Array.isArray(product.images) ? product.images : [];
   const primary = images.find((img) => img.isPrimary);
-  return primary?.url ?? images[0]?.url ?? '/images/placeholder.png';
+  return primary?.url ?? images[0]?.url ?? '/images/placeholder.svg';
 }
 
 function getOriginalPrice(price: number, discountRate: number): number | null {
@@ -28,58 +29,49 @@ export default function ProductCard({ product }: ProductCardProps) {
     : null;
 
   return (
-    <Link
-      href={`/products/${product.id}`}
-      className="group relative block overflow-hidden aspect-[3/4] bg-secondary-200"
-    >
-      <img
-        src={imageUrl}
-        alt={product.name}
-        className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-        onError={(e) => {
-          (e.currentTarget as HTMLImageElement).style.visibility = 'hidden';
-        }}
-      />
+    <Link href={`/products/${product.id}`} className="group block">
+      {/* 사진 — 비율을 고정하고 연회색 면을 깔아 사진마다 배경이 달라도 그리드가 정돈돼 보이게 */}
+      <div className="relative overflow-hidden aspect-[4/5] rounded-2xl bg-[#f3f3ef] p-4 sm:p-6">
+        <ProductPhoto
+          src={imageUrl}
+          alt={product.name}
+          className="h-full w-full object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
+        />
+      </div>
 
-      {/* 상단 할인 뱃지 */}
-      {hasDiscount && (
-        <span className="absolute top-2.5 left-2.5 bg-primary-600 text-white text-xs font-bold px-2 py-1 rounded-sm leading-none tracking-wide z-10">
-          -{product.discountRate}%
-        </span>
-      )}
-
-      {/* 하단 그라데이션 오버레이 */}
-      <div className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-black/85 via-black/30 to-transparent transition-opacity duration-300 group-hover:opacity-100 opacity-90" />
-
-      {/* 텍스트 정보 */}
-      <div className="absolute inset-x-0 bottom-0 p-3 translate-y-1 group-hover:translate-y-0 transition-transform duration-300">
-        <p className="text-white/80 text-xs mb-0.5 line-clamp-1 tracking-wide">
-          {product.category?.name ?? ''}
+      {/* 정보 — 사진 위에 겹치지 않고 아래에 둔다(사진을 가리지 않고, 어떤 사진에서도 읽힌다) */}
+      <div className="pt-3 sm:pt-4">
+        <p className="text-xs text-primary-400 line-clamp-1">
+          {product.brand || product.category?.name || ' '}
         </p>
-        <p className="text-white text-sm font-semibold line-clamp-2 leading-snug mb-2">
+        <p className="mt-1.5 min-h-[2.75rem] text-sm text-primary-600 line-clamp-2 leading-snug group-hover:underline underline-offset-2">
           {product.name}
         </p>
 
-        {/* 가격 행 */}
-        <div className="flex items-baseline gap-2 flex-wrap">
-          <span className="text-white font-bold text-base leading-none">
+        {/* 가격 행 — 할인율만 accent, 나머지는 흑백 */}
+        <div className="mt-2 flex items-baseline gap-1.5 flex-wrap">
+          {hasDiscount && (
+            <span className="text-accent-600 font-bold text-[15px] leading-none">{product.discountRate}%</span>
+          )}
+          <span className="text-primary-600 font-bold text-[15px] leading-none">
             {displayPrice.toLocaleString()}원
           </span>
           {originalPrice !== null && (
-            <span className="text-white/45 text-xs line-through leading-none">
+            <span className="text-primary-400 text-xs line-through leading-none">
               {originalPrice.toLocaleString()}원
             </span>
           )}
         </div>
 
-        {/* 별점 */}
-        {product.rating != null && (
-          <div className="flex items-center gap-1 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <span className="text-yellow-400 text-xs leading-none">★</span>
-            <span className="text-white/70 text-xs leading-none">
-              {Number(product.rating).toFixed(1)}
-            </span>
-          </div>
+        {product.rating != null && Number(product.rating) > 0 && (
+          <p className="mt-1.5 flex items-center gap-0.5 text-xs text-primary-400 leading-none">
+            <span aria-hidden="true" className="text-primary-600">★</span>
+            <span className="sr-only">평점</span>
+            {Number(product.rating).toFixed(1)}
+            {product.reviewCount != null && (
+              <span className="ml-1">({product.reviewCount.toLocaleString()})</span>
+            )}
+          </p>
         )}
       </div>
     </Link>
@@ -89,6 +81,11 @@ export default function ProductCard({ product }: ProductCardProps) {
 /** 로딩 스켈레톤 */
 export function ProductCardSkeleton() {
   return (
-    <div className="aspect-[3/4] bg-secondary-200 animate-pulse" />
+    <div>
+      <div className="aspect-[4/5] rounded-2xl bg-primary-50 animate-pulse" />
+      <div className="mt-3 h-3 w-1/3 rounded bg-primary-50 animate-pulse" />
+      <div className="mt-2 h-4 w-4/5 rounded bg-primary-50 animate-pulse" />
+      <div className="mt-2 h-4 w-1/2 rounded bg-primary-50 animate-pulse" />
+    </div>
   );
 }

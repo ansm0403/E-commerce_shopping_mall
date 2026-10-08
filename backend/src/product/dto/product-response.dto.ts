@@ -43,6 +43,9 @@ export class ProductResponseDto {
   @Expose() isEvent: boolean;
   @Expose() discountRate: number | null;
   @Expose() rating: number | null;
+  @Expose() reviewCount: number;
+  @Expose() wishCount: number;
+  @Expose() specs: Record<string, unknown> | null;
   @Expose() categoryId: number | null;
   @Expose() sellerId: number | null;
   @Expose() createdAt: Date;

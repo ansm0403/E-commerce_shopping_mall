@@ -55,7 +55,7 @@ function CategoryProducts({ categoryId }: { categoryId: number }) {
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-px bg-secondary-200 mt-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 gap-y-8 mt-4">
       {isLoading
         ? Array.from({ length: TAB_PRODUCT_COUNT }).map((_, i) => (
             <ProductCardSkeleton key={i} />
@@ -76,7 +76,7 @@ export default function CategoryTabSection() {
 
   if (isLoading) {
     return (
-      <section className="py-10">
+      <section className="pt-14">
         <div className="h-7 w-40 bg-secondary-100 rounded animate-pulse mb-5" />
         <div className="flex gap-2">
           {Array.from({ length: 5 }).map((_, i) => (
@@ -90,15 +90,15 @@ export default function CategoryTabSection() {
   if (!roots.length) return null;
 
   return (
-    <section className="py-10">
+    <section className="pt-14 sm:pt-20">
       <SectionHeader
-        title="카테고리별 인기 상품"
-        description="카테고리를 선택해 인기 상품을 확인해보세요"
+        title="취향별로 골라 보기"
+        description="관심 있는 카테고리에서 발견하는 인기 상품"
         href={selectedCategory ? `/products?categoryId=${selectedId}` : '/products'}
       />
 
       {/* 탭 목록 */}
-      <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+      <div className="no-scrollbar flex gap-2 overflow-x-auto pb-2">
         {roots.map((category) => (
           <TabButton
             key={category.id}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useProducts } from '@/hook/useProduct';
-import { PaginateParam, SortBy, SortOrder } from '@/model/paginate-param';
+import { Filter, PaginateParam, SortBy, SortOrder } from '@/model/paginate-param';
 import { PaginatedProducts } from '@/model/product';
 import SectionHeader from './SectionHeader';
 import ProductCard, { ProductCardSkeleton } from './ProductCard';
@@ -13,6 +13,7 @@ interface ProductSectionProps {
   sortBy: SortBy;
   sortOrder?: SortOrder;
   count?: number;
+  filter?: Filter;
 }
 
 const SKELETON_COUNT = 8;
@@ -24,8 +25,9 @@ export default function ProductSection({
   sortBy,
   sortOrder = 'DESC',
   count = 8,
+  filter,
 }: ProductSectionProps) {
-  const param: PaginateParam = { page: 1, limit: count, sortBy, sortOrder };
+  const param: PaginateParam = { page: 1, limit: count, sortBy, sortOrder, filter };
   const { data, isLoading, isError } = useProducts.Paginate(param);
 
   // axios 응답: data.data = { data: Product[], meta: {...} }
@@ -35,7 +37,7 @@ export default function ProductSection({
   const products = Array.isArray(result?.data) ? result.data.filter((p) => p != null) : [];
 
   return (
-    <section className="py-10">
+    <section className="pt-14 sm:pt-20">
       <SectionHeader title={title} description={description} href={href} />
 
       {isError ? (
@@ -43,7 +45,7 @@ export default function ProductSection({
           상품을 불러오지 못했습니다.
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-px bg-secondary-200">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-10">
           {isLoading
             ? Array.from({ length: SKELETON_COUNT }).map((_, i) => (
                 <ProductCardSkeleton key={i} />

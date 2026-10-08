@@ -162,7 +162,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="py-8">
-      <h1 className="text-2xl font-bold text-secondary-900 mb-6">주문서 작성</h1>
+      <h1 className="text-3xl font-semibold tracking-tight text-primary-600 mb-8">주문서 작성</h1>
 
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -171,12 +171,12 @@ export default function CheckoutPage() {
           <div className="lg:col-span-2 space-y-6">
 
             {/* 주문 상품 목록 */}
-            <section className="bg-white rounded-xl border border-secondary-200 p-5">
+            <section className="bg-white rounded-3xl border border-primary-100 p-5 sm:p-6">
               <h2 className="text-base font-bold text-secondary-900 mb-4">주문 상품</h2>
               <div className="divide-y divide-secondary-100">
                 {items.map((item) => (
                   <div key={item.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
-                    <div className="w-12 h-12 rounded-lg bg-primary-100 flex items-center justify-center shrink-0">
+                    <div className="w-12 h-12 rounded-xl bg-[#e9eee4] flex items-center justify-center shrink-0">
                       <span className="text-primary-600 font-bold text-base">
                         {item.product.brand.charAt(0).toUpperCase()}
                       </span>
@@ -195,7 +195,7 @@ export default function CheckoutPage() {
             </section>
 
             {/* 배송지 입력 */}
-            <section className="bg-white rounded-xl border border-secondary-200 p-5">
+            <section className="bg-white rounded-3xl border border-primary-100 p-5 sm:p-6">
               <h2 className="text-base font-bold text-secondary-900 mb-4">배송 정보</h2>
               <div className="space-y-4">
                 <div>
@@ -266,7 +266,7 @@ export default function CheckoutPage() {
 
           {/* 오른쪽: 결제 요약 */}
           <div className="lg:col-span-1">
-            <div className="sticky top-28 bg-white rounded-xl border border-secondary-200 p-5 space-y-4">
+            <div className="lg:sticky lg:top-48 bg-white rounded-3xl border border-primary-100 p-6 space-y-5">
               <h2 className="text-base font-bold text-secondary-900">결제 금액</h2>
 
               <div className="space-y-2 text-sm">

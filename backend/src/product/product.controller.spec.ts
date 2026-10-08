@@ -1,4 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
+import { ProductResponseDto } from './dto/product-response.dto';
 import { NotFoundException } from '@nestjs/common';
 
 // circular dependency 방지: OrderEntity → ShipmentEntity → OrderEntity 순환 차단
@@ -14,6 +16,25 @@ import { ProductSummaryService } from './product-summary.service';
 import { ProductEntity, ProductStatus, ApprovalStatus, SalesType } from './entity/product.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+
+describe('ProductResponseDto 직렬화 계약', () => {
+  it('중첩 스펙과 집계 수를 보존하며 판매자의 비공개 필드는 제외한다', () => {
+    const source = {
+      id: 46,
+      specs: { volume: 50, skinType: 'DRY', nutrition: { protein: '3g' } },
+      reviewCount: 4,
+      wishCount: 0,
+      seller: { id: 1, businessName: '상점', representativeName: '대표', status: 'approved', bankAccount: 'private' },
+      ratingSum: 11,
+    };
+    const response = instanceToPlain(plainToInstance(ProductResponseDto, source, { excludeExtraneousValues: true }));
+    expect(response.specs).toEqual(source.specs);
+    expect(response.reviewCount).toBe(4);
+    expect(response.wishCount).toBe(0);
+    expect(response.seller.bankAccount).toBeUndefined();
+    expect(response.ratingSum).toBeUndefined();
+  });
+});
 
 const mockProduct = (overrides: Partial<ProductEntity> = {}): ProductEntity =>
   ({

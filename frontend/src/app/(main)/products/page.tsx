@@ -54,6 +54,9 @@ export default async function ProductsPage({
 
   // ProductsClient의 URL 파라미터 파싱 로직과 동일하게 맞춤 (캐시 키 일치 필수)
   const rawCategoryId = Number(sp['categoryId']);
+  const rawSellerId = Number(sp['sellerId']);
+  const ratedOnly = sp['rated'] === 'true';
+  const sellerId = Number.isInteger(rawSellerId) && rawSellerId > 0 ? rawSellerId : undefined;
   const categoryId =
     sp['categoryId'] && Number.isInteger(rawCategoryId) && rawCategoryId > 0
       ? rawCategoryId
@@ -76,6 +79,8 @@ export default async function ProductsPage({
     sortBy,
     sortOrder,
     categoryId,
+    sellerId,
+    filter: ratedOnly ? { rating: { gt: 0 } } : undefined,
     keyword,
   };
 
@@ -91,6 +96,8 @@ export default async function ProductsPage({
         if (sortBy) params.append('sortBy', sortBy);
         if (sortOrder) params.append('sortOrder', sortOrder);
         if (categoryId) params.append('categoryId', String(categoryId));
+        if (sellerId) params.append('sellerId', String(sellerId));
+        if (ratedOnly) params.append('filter[rating][gt]', '0');
         if (keyword) params.append('keyword', keyword);
         return serverGet(`/products?${params.toString()}`, { revalidate: 60 });
       },

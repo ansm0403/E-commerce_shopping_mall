@@ -25,7 +25,7 @@ export default function HomeCart() {
   return (
     <Link
       href="/cart"
-      className="flex items-center gap-3 px-4 py-2 rounded-xl border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 active:bg-indigo-100 transition-all group shrink-0"
+      className="flex items-center gap-3 px-4 py-2 rounded-xl border border-gray-200 hover:border-primary-300 hover:bg-primary-50 active:bg-primary-100 transition-all group shrink-0"
       aria-label={label}
     >
       {/* 아이콘 + 배지 */}
@@ -35,13 +35,13 @@ export default function HomeCart() {
           xmlns="http://www.w3.org/2000/svg" width="22" height="22"
           viewBox="0 0 24 24" fill="none" stroke="currentColor"
           strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-          className="text-gray-600 group-hover:text-indigo-600 transition-colors"
+          className="text-gray-600 group-hover:text-primary-600 transition-colors"
         >
           <circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>
           <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
         </svg>
         {totalCount > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 bg-indigo-600 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 leading-none">
+          <span className="absolute -top-1.5 -right-1.5 bg-primary-600 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 leading-none">
             {totalCount > 99 ? '99+' : totalCount}
           </span>
         )}
@@ -49,10 +49,10 @@ export default function HomeCart() {
 
       {/* 텍스트 정보 */}
       <div className="hidden sm:flex flex-col items-start leading-tight">
-        <span className="text-[11px] text-gray-500 group-hover:text-indigo-700 transition-colors">
+        <span className="text-[11px] text-gray-500 group-hover:text-primary-700 transition-colors">
           {totalCount > 0 ? `${totalCount}개 담음` : '장바구니'}
         </span>
-        <span className="text-sm font-semibold text-gray-800 group-hover:text-indigo-700 transition-colors">
+        <span className="text-sm font-semibold text-gray-800 group-hover:text-primary-700 transition-colors">
           {totalCount > 0 ? `${totalPrice.toLocaleString()}원` : '비어있음'}
         </span>
       </div>

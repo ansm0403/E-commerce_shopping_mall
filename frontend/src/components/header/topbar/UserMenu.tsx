@@ -67,7 +67,7 @@ export default function UserMenu() {
       <div ref={ref} className="relative">
         <button
           onClick={() => setOpen(!open)}
-          className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-indigo-400 transition-colors select-none cursor-pointer"
+          className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-primary-400 transition-colors select-none cursor-pointer"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
@@ -92,8 +92,8 @@ export default function UserMenu() {
                   item.danger
                     ? 'text-red-500 hover:bg-red-50'
                     : item.admin
-                      ? 'text-indigo-600 font-semibold hover:bg-indigo-50'
-                      : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-700'
+                      ? 'text-primary-600 font-semibold hover:bg-primary-50'
+                      : 'text-gray-700 hover:bg-primary-50 hover:text-primary-700'
                 }`}
               >
                 {item.label}
@@ -110,7 +110,7 @@ export default function UserMenu() {
             <div className="flex gap-3">
               <button
                 onClick={handleLogout}
-                className="px-5 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition-colors font-medium"
+                className="px-5 py-2 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700 active:bg-primary-800 transition-colors font-medium"
               >
                 로그아웃
               </button>

@@ -20,7 +20,7 @@ export default function MainLayout({
       </a>
       <Header />
       {/* tabIndex=-1: 건너뛰기 링크로 이동했을 때 포커스가 실제로 본문에 놓여 다음 Tab 이 본문 첫 요소로 간다 */}
-      <main id="main-content" tabIndex={-1} className="outline-none scroll-mt-40">
+      <main id="main-content" tabIndex={-1} className="outline-none scroll-mt-48">
         <MaxWidthContainer>
           {children}
         </MaxWidthContainer>

@@ -10,6 +10,7 @@ export interface PaginateParam {
     cursor?: string;
     filter?: Filter;
     categoryId?: number;
+    sellerId?: number;
     keyword?: string;
 }
 

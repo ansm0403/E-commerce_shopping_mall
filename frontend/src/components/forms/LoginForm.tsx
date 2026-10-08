@@ -25,7 +25,7 @@ function safeRedirectPath(raw: string | null): string {
 const loginSchema = z.object({
   email: z
     .string()
-    .min(1, "이메일을 입��해주세요.")
+    .min(1, "이메일을 입력해주세요.")
     .email("이메일 형식이 올바르지 않습니다."),
   password: z.string().min(8, "비밀번호는 8자 이상 입력해주세요."),
   rememberMe: z.boolean(),
@@ -85,7 +85,7 @@ export function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 w-full max-w-[600px] min-w-[400px]">
+    <div className="flex flex-col items-center w-full max-w-[600px] mx-auto pt-6">
       <Form<LoginFormValues>
         title="로그인"
         description="계정에 로그인 해주세요."
@@ -118,17 +118,11 @@ export function LoginForm() {
         <p role="alert" className="text-sm text-red-600 text-center">{errorMessage}</p>
       )}
 
+      {/* "비밀번호 찾기"(/find-pwd)는 화면이 없어 404 로 가던 링크라 뺐다 — 재설정 기능을 만들면 다시 단다 */}
       <div className="flex items-center gap-3 text-sm">
         <Link
-          href="/find-pwd"
-          className="text-gray-500 no-underline transition-colors duration-200 hover:text-blue-600 hover:font-bold"
-        >
-          비밀번호 찾기
-        </Link>
-        <span className="text-gray-300">|</span>
-        <Link
           href="/register"
-          className="text-gray-500 no-underline transition-colors duration-200 hover:text-blue-600 hover:font-bold"
+          className="text-gray-500 no-underline transition-colors duration-200 hover:text-primary-600 hover:font-bold"
         >
           회원가입
         </Link>
@@ -149,7 +143,7 @@ export function LoginForm() {
               setErrorMessage("데모 로그인에 실패했습니다. 잠시 후 다시 시도해주세요.");
             }
           }}
-          className="w-full py-2.5 px-4 rounded-lg border border-dashed border-indigo-400 bg-indigo-50 text-indigo-700 text-sm font-semibold hover:bg-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-full py-2.5 px-4 rounded-lg border border-dashed border-primary-400 bg-primary-50 text-primary-700 text-sm font-semibold hover:bg-primary-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {demoLoginMutation.isPending ? "로그인 중..." : "관리자 페이지 체험하기 (데모 계정)"}
         </button>

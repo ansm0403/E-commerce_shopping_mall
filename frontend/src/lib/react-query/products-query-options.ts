@@ -44,6 +44,7 @@ export const productsQueryOptions = {
       additionalKey.filter,
       additionalKey.categoryId,
       additionalKey.keyword,
+      ...(additionalKey.sellerId ? [additionalKey.sellerId] : []),
     ],
     queryFn: () => getPaginateProducts(additionalKey),
     // 상품 목록: 60초 — 신상품/가격 변경 반영 vs 과도한 재요청 방지 균형

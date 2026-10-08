@@ -33,12 +33,12 @@ export default function RelatedProducts({
 
   if (isLoading) {
     return (
-      <div className="bg-secondary-50 border-t">
+      <div className="border-t border-primary-100">
         <div className="max-w-[1200px] mx-auto px-8 py-12">
           <h2 className="text-2xl font-bold text-secondary-900 mb-8">
             관련 상품
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-8">
             {Array.from({ length: 5 }).map((_, i) => (
               <ProductCardSkeleton key={i} />
             ))}
@@ -53,12 +53,12 @@ export default function RelatedProducts({
   }
 
   return (
-    <div className="bg-secondary-50 border-t">
+    <div className="border-t border-primary-100">
       <div className="max-w-[1200px] mx-auto px-8 py-12">
         <h2 className="text-2xl font-bold text-secondary-900 mb-8">
           관련 상품
         </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-8">
           {products.map((product: any) => (
             <ProductCard key={product.id} product={product} />
           ))}

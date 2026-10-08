@@ -18,7 +18,7 @@ export default function MyLayout({ children }: { children: React.ReactNode }) {
   const navItems = myNavItems(hasRole(user, 'seller'));
 
   return (
-    <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 md:px-8 py-6 md:flex md:gap-8">
+    <div className="w-full py-8 md:flex md:gap-10">
       <nav aria-label="마이페이지" className="md:w-44 md:shrink-0">
         <p className="hidden md:block mb-3 text-lg font-bold text-secondary-900">마이페이지</p>
         {/* 모바일: 가로 스크롤 탭 · 데스크톱: 세로 목록 */}
@@ -35,7 +35,7 @@ export default function MyLayout({ children }: { children: React.ReactNode }) {
                   aria-current={active ? 'page' : undefined}
                   className={`block whitespace-nowrap rounded-lg px-3 py-2 text-sm transition-colors ${
                     active
-                      ? 'bg-primary-50 font-semibold text-primary-700'
+                      ? 'bg-[#e9eee4] font-semibold text-[#47583d]'
                       : 'text-secondary-700 hover:bg-secondary-50'
                   }`}
                 >

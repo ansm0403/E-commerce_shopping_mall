@@ -8,7 +8,7 @@ interface MaxWidthContainerProps {
 
 export default function MaxWidthContainer({ children }: MaxWidthContainerProps) {
     return (
-        <div className="max-w-[1200px] mx-auto px-4 w-full">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 w-full">
             {children}
         </div>
     );

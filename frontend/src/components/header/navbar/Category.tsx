@@ -136,7 +136,7 @@ export default function Category() {
 
   return (
     <div
-      className="relative  w-[200px] "
+      className="relative w-[120px] shrink-0 sm:w-[160px]"
       onMouseEnter={() => setIsDropdownVisible(true)}
       onMouseLeave={() => setIsDropdownVisible(false)}
       onKeyDown={handleKeyDown}
@@ -151,7 +151,7 @@ export default function Category() {
         // 마우스는 hover 로 이미 열려 있으니 클릭은 "열기"만(토글하면 hover 중에 닫혀 버린다).
         // 키보드 Enter/Space 는 detail === 0 → 여닫기 토글
         onClick={(e) => setIsDropdownVisible((v) => (e.detail === 0 ? !v : true))}
-        className='bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white w-full flex justify-between items-center rounded-sm transition-colors font-medium text-sm'
+        className='my-1 bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white w-full flex justify-between items-center rounded-lg transition-colors font-medium text-xs sm:text-sm'
       >
         카테고리
         <CategoryIcon size='md'/>

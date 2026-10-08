@@ -25,6 +25,9 @@ export function getPaginateProducts(param: PaginateParam){
     if (param.categoryId) {
         queryParams.append('categoryId', param.categoryId.toString());
     }
+    if (param.sellerId) {
+        queryParams.append('sellerId', param.sellerId.toString());
+    }
     if (param.keyword && param.keyword.trim() !== '') {
         queryParams.append('keyword', param.keyword.trim());
     }

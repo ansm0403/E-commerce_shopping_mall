@@ -1,201 +1,33 @@
 'use client';
-
-import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import BannerSection from './BannerSection';
+import Link from 'next/link';
+import BannerCarousel from './BannerCarousel';
+import { shoppingEvents } from '@/lib/events';
 
-interface BannerContentProps {
-  bannerImg: string;
-  children?: React.ReactNode;
-  className?: string;
-  priority?: boolean;
-  sizes?: string;
-}
-
-function BannerContent({ bannerImg, children, className = '', priority = false, sizes }: BannerContentProps) {
-  return (
-    <div className="relative flex-shrink-0 w-full h-full flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
-      {bannerImg && (
-        <Image
-          src={bannerImg}
-          alt=""
-          aria-hidden
-          fill
-          priority={priority}
-          sizes={sizes ?? '100vw'}
-          className={`object-cover ${className}`}
-        />
-      )}
-      {children}
-    </div>
-  );
-}
+const sideBanners = shoppingEvents.slice(3);
 
 export default function Banner() {
-  const mainBanners = [
-    "/images/banner/main_banner1.webp",
-    "/images/banner/main_banner2.webp",
-    "/images/banner/main_banner3.webp",
-  ];
-
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
-  // 자동 넘김은 마우스를 올릴 때만 멈췄다 → 키보드 포커스가 들어와도 멈추고(isFocused),
-  // 누구나 끌 수 있는 멈춤 버튼(isPaused)을 둔다 — WCAG 2.2.2 "5초 넘게 자동으로 움직이는 것은 멈출 수 있어야"
-  const [isFocused, setIsFocused] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-
-  // 움직임 줄이기 설정을 켠 사용자는 처음부터 멈춘 상태로
-  useEffect(() => {
-    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) setIsPaused(true);
-  }, []);
-
-  const moveTo = useCallback((index: number) => {
-    if (isTransitioning) return;
-    setIsTransitioning(true);
-    setCurrentIndex(index);
-    setTimeout(() => setIsTransitioning(false), 500); // transition duration과 동일
-  }, [isTransitioning]);
-
-  const goToNext = useCallback(() => {
-    moveTo((currentIndex + 1) % mainBanners.length);
-  }, [currentIndex, mainBanners.length, moveTo]);
-
-  const goToPrev = useCallback(() => {
-    moveTo((currentIndex - 1 + mainBanners.length) % mainBanners.length);
-  }, [currentIndex, mainBanners.length, moveTo]);
-
-  const goToIndex = (index: number) => {
-    moveTo(index);
-  };
-
-  // 자동재생: hover·키보드 포커스·멈춤 버튼·탭 비활성화 시 일시정지
-  useEffect(() => {
-    if (isHovered || isFocused || isPaused) return;
-
-    const handleVisibilityChange = () => {
-      // visibilitychange는 상태만 추적, interval은 아래에서 관리
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    const interval = setInterval(() => {
-      if (document.visibilityState === 'hidden') return;
-      goToNext();
-    }, 3000);
-
-    return () => {
-      clearInterval(interval);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [isHovered, isFocused, isPaused, goToNext]);
-
   return (
-    <BannerSection
-      backgroundColor="#f8f9fa"
-      backgroundImage="/images/banner/bannerbackground.webp"
-    >
-      <div className="grid grid-cols-[2fr_1fr] grid-rows-[1fr_1.5fr] gap-4 py-8 min-h-[500px]">
-        {/* 메인 배너 캐러셀 */}
-        {/* fallback gradient: 이미지 로드 실패 시 표시 */}
-        <section
-          aria-roledescription="carousel"
-          aria-label="메인 배너"
-          className="col-start-1 row-span-2 rounded-lg overflow-hidden relative bg-[linear-gradient(135deg,#d2f9a0_0%,#dffd5b_100%)] group"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-          onFocus={() => setIsFocused(true)}
-          onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setIsFocused(false); }}
-        >
-          {/* 슬라이드 트랙: hover 시 이미지 전체가 서서히 zoom-in */}
-          <div
-            className="flex h-full transition-transform duration-500 ease-in-out"
-            style={{ transform: `translateX(-${currentIndex * 100}%)` }}
-          >
-            {mainBanners.map((mainBanner, index) => (
-              // hover 시 scale-105로 zoom-in, duration-700으로 느리고 부드럽게
-              <BannerContent
-                bannerImg={mainBanner}
-                key={mainBanner}
-                priority={index === 0}
-                sizes="(max-width: 768px) 100vw, 800px"
-                className="transition-transform duration-700 ease-in-out group-hover:scale-105"
-              />
-            ))}
-          </div>
-
-          {/*
-            오버레이: hover 시 배경이 서서히 어두워짐
-            - opacity-0 → group-hover:opacity-40 (500ms 페이드인)
-            - pointer-events-none: 오버레이가 버튼 클릭을 막지 않도록
-          */}
-          <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-40 transition-opacity duration-500 pointer-events-none z-10" />
-
-          {/*
-            CTA 텍스트: hover 시 아래에서 위로 슬라이드업 + 페이드인
-            - translate-y-4 → group-hover:translate-y-0: 아래에서 올라오는 효과
-            - opacity-0 → group-hover:opacity-100: 동시에 나타남
-            - delay-75: 오버레이보다 살짝 늦게 시작해 순서감 부여
-          */}
-          <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 delay-75 pointer-events-none">
-            <span className="text-white text-lg font-semibold tracking-wide drop-shadow-lg">지금 쇼핑하기</span>
-            <span className="text-white/80 text-sm">→</span>
-          </div>
-
-          {/* 이전 버튼 */}
-          <button
-            onClick={goToPrev}
-            disabled={isTransitioning}
-            className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 disabled:opacity-0 text-white w-9 h-9 rounded-full flex items-center justify-center transition-colors z-30"
-            aria-label="이전 슬라이드"
-          >
-            ‹
-          </button>
-
-          {/* 다음 버튼 */}
-          <button
-            onClick={goToNext}
-            disabled={isTransitioning}
-            className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 disabled:opacity-0 text-white w-9 h-9 rounded-full flex items-center justify-center transition-colors z-30"
-            aria-label="다음 슬라이드"
-          >
-            ›
-          </button>
-
-          {/* Dot indicator */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-30">
-            {mainBanners.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => goToIndex(index)}
-                className={`w-2.5 h-2.5 rounded-full transition-colors ${
-                  index === currentIndex ? 'bg-white' : 'bg-white/40'
-                }`}
-                aria-label={`슬라이드 ${index + 1}`}
-                aria-current={index === currentIndex ? 'true' : undefined}
-              />
-            ))}
-          </div>
-
-          {/* 자동 넘김 멈춤/재생 */}
-          <button
-            type="button"
-            onClick={() => setIsPaused((p) => !p)}
-            aria-label={isPaused ? '배너 자동 넘김 재생' : '배너 자동 넘김 멈추기'}
-            className="absolute bottom-2.5 left-3 bg-black/40 hover:bg-black/60 text-white w-7 h-7 rounded-full flex items-center justify-center text-xs z-30"
-          >
-            <span aria-hidden="true">{isPaused ? '▶' : '❚❚'}</span>
-          </button>
-        </section>
-
-        <div className="col-start-2 row-start-1 bg-[linear-gradient(135deg,#f093fb_0%,#f5576c_100%)] rounded-lg overflow-hidden group">
-          <BannerContent bannerImg="/images/banner/sub_banner1.webp" sizes="(max-width: 768px) 100vw, 400px" className="transition-transform duration-500 ease-in-out group-hover:scale-110" />
+    <section aria-label="새로운 취향을 발견하는 쇼핑" className="mt-6 lg:mt-9">
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-4 sm:mb-7">
+        <div>
+          <p className="text-[10px] font-semibold tracking-[0.18em] text-[#47583d]">EVERYDAY, A LITTLE BETTER</p>
+          <h1 className="mt-2 text-2xl font-semibold tracking-[-0.045em] text-primary-600 sm:text-3xl lg:text-4xl">일상에 더하는 새로운 취향.</h1>
+          <p className="mt-2 text-xs text-primary-400 sm:text-sm">입고, 읽고, 즐기는 순간. 지금 눈길을 끄는 상품을 만나보세요.</p>
         </div>
-
-        <div className="col-start-2 row-start-2 bg-[linear-gradient(135deg,#4facfe_0%,#00f2fe_100%)] rounded-lg overflow-hidden group">
-          <BannerContent bannerImg="/images/banner/sub_banner2.webp" sizes="(max-width: 768px) 100vw, 400px" className="transition-transform duration-500 ease-in-out group-hover:scale-110" />
+        <Link href="/products" className="inline-flex items-center gap-4 rounded-full border border-primary-100 bg-white px-5 py-2.5 text-xs font-semibold text-primary-600 transition-colors hover:bg-primary-50 sm:text-sm">상품 둘러보기 <span aria-hidden="true">↗</span></Link>
+      </div>
+      <div className="grid gap-3 lg:grid-cols-[1.85fr_1fr] lg:gap-5">
+        <BannerCarousel />
+        <div aria-label="추천 쇼핑 배너" className="grid min-w-0 grid-cols-2 gap-3 lg:grid-cols-1 lg:grid-rows-[0.8fr_1.2fr] lg:gap-5">
+          {sideBanners.map((banner) => (
+            <Link key={banner.slug} href={`/events/${banner.slug}`} aria-label={banner.title + ' · 기획전 보기'} data-side-banner className="group relative aspect-[3/2] min-w-0 overflow-hidden rounded-2xl border border-black/5 transition-shadow duration-500 hover:shadow-lg lg:aspect-auto" style={{ backgroundColor: banner.slug === 'gift-edit' ? '#f3423b' : '#ffcbe5' }}>
+              <Image src={banner.image} alt={banner.imageAlt} fill sizes="(min-width: 1024px) 420px, 45vw" className="object-contain transition-transform duration-700 ease-out group-hover:scale-[1.035] motion-reduce:transform-none" />
+              <span aria-hidden="true" className="absolute bottom-3 right-3 flex h-8 w-8 translate-y-1 items-center justify-center rounded-full bg-white/90 text-primary-600 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100 motion-reduce:transform-none">↗</span>
+            </Link>
+          ))}
         </div>
       </div>
-    </BannerSection>
+    </section>
   );
 }

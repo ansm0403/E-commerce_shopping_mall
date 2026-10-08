@@ -148,7 +148,7 @@ export default function ProductInfo({
   })();
 
   return (
-    <div className="sticky top-24 md:top-28 space-y-6">
+    <div className="space-y-6 md:sticky md:top-48">
 
       {/* ── 브랜드 + 위시리스트 버튼 ── */}
       <div className="flex items-start justify-between gap-2">
@@ -167,10 +167,9 @@ export default function ProductInfo({
           className={`flex flex-col items-center gap-0.5 p-2 rounded-lg transition-all
             ${wishlistToggle.isPending ? 'opacity-50 cursor-wait' : 'hover:bg-red-50'}`}
         >
-          <span className={`text-2xl leading-none transition-transform duration-200
-            ${isWished ? 'scale-110' : 'scale-100'}`}>
-            {isWished ? '❤️' : '🤍'}
-          </span>
+          <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill={isWished ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" className={isWished ? 'text-accent-600' : 'text-primary-500'}>
+            <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" />
+          </svg>
           {product.wishCount != null && (
             <span className="text-xs text-secondary-500 leading-none">
               {wishCount.toLocaleString()}
@@ -180,37 +179,35 @@ export default function ProductInfo({
       </div>
 
       {/* ── 상품명 ── */}
-      <h1 className="text-2xl font-bold text-secondary-900 leading-tight">
+      <h1 className="text-2xl font-semibold tracking-[-0.035em] text-primary-600 leading-snug lg:text-3xl">
         {product.name}
       </h1>
 
       {/* ── 평점 + 통계 ── */}
       {product.rating != null && (
-        <div className="flex items-center justify-between py-3 border-y border-secondary-200">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-3 py-3 border-y border-secondary-200">
+          <div className="flex flex-wrap items-center gap-2">
             <StarRating rating={Number(product.rating)} />
             <span className="text-secondary-700 text-sm font-medium">
               <span className="sr-only">평점 5점 만점에 </span>
               {Number(product.rating).toFixed(1)}
               <span className="sr-only">점</span>
             </span>
-            <span className="text-secondary-500 text-sm">
-              ({(product.reviewCount ?? 0).toLocaleString()}개 리뷰)
-            </span>
+            {product.reviewCount != null && <span className="text-secondary-500 text-sm">({product.reviewCount.toLocaleString()}개 리뷰)</span>}
           </div>
           <div className="text-right space-y-0.5">
             <p className="text-xs text-secondary-500">
-              👀 {product.viewCount.toLocaleString()} 조회
+              {product.viewCount.toLocaleString()} 조회
             </p>
             <p className="text-xs text-secondary-500">
-              🛒 {product.salesCount.toLocaleString()} 판매
+              {product.salesCount.toLocaleString()} 판매
             </p>
           </div>
         </div>
       )}
 
       {/* ── 가격 섹션 ── */}
-      <div className="bg-primary-50 rounded-xl p-4 space-y-1.5">
+      <div className="bg-[#e9eee4] rounded-2xl p-5 space-y-2">
         {originalPrice && (
           <p className="text-secondary-500 text-sm line-through">
             <span className="sr-only">정가 </span>
@@ -219,7 +216,7 @@ export default function ProductInfo({
         )}
         <div className="flex items-baseline gap-2">
           {hasDiscount && (
-            <span className="text-primary-600 font-bold text-lg">
+            <span className="text-accent-600 font-bold text-lg">
               {product.discountRate}%↓
             </span>
           )}

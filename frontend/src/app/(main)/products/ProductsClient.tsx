@@ -60,7 +60,7 @@ export function ProductGridSkeleton() {
           <div key={i} className="h-9 w-16 bg-secondary-200 animate-pulse rounded-full flex-shrink-0" />
         ))}
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8 sm:gap-x-6">
         {Array.from({ length: SKELETON_COUNT }).map((_, i) => (
           <ProductCardSkeleton key={i} />
         ))}
@@ -128,6 +128,9 @@ export default function ProductsClient() {
 
   // URL에서 파라미터 읽기 — 비정상값(NaN, 유효하지 않은 enum) 방어
   const rawCategoryId = Number(searchParams.get('categoryId'));
+  const rawSellerId = Number(searchParams.get('sellerId'));
+  const ratedOnly = searchParams.get('rated') === 'true';
+  const sellerId = Number.isInteger(rawSellerId) && rawSellerId > 0 ? rawSellerId : undefined;
   const categoryId =
     searchParams.get('categoryId') && Number.isInteger(rawCategoryId) && rawCategoryId > 0
       ? rawCategoryId
@@ -150,6 +153,8 @@ export default function ProductsClient() {
   // React가 더 긴급한 상태 업데이트(탭 UI 반응)를 먼저 처리하고, 이 값은 그 다음에 업데이트
   // 결과: 카테고리 탭 버튼은 클릭 즉시 활성화 스타일로 바뀌고, 상품 그리드 fetch는 그 다음
   const deferredCategoryId = useDeferredValue(categoryId);
+  const deferredSellerId = useDeferredValue(sellerId);
+  const deferredRatedOnly = useDeferredValue(ratedOnly);
   const deferredSortBy = useDeferredValue(sortByParam);
   const deferredSortOrder = useDeferredValue(sortOrderParam);
   const deferredPage = useDeferredValue(pageParam);
@@ -168,11 +173,13 @@ export default function ProductsClient() {
     sortBy: deferredSortBy,
     sortOrder: deferredSortOrder,
     categoryId: deferredCategoryId,
+    sellerId: deferredSellerId,
+    filter: deferredRatedOnly ? { rating: { gt: 0 } } : undefined,
     keyword: deferredKeyword,
   });
 
   const result = data?.data as PaginatedProducts | undefined;
-  const products = result?.data ?? [];
+  const products = Array.isArray(result?.data) ? result.data.filter(Boolean) : [];
   const meta = result?.meta;
 
   const updateParams = useCallback(
@@ -211,17 +218,20 @@ export default function ProductsClient() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const selectedCategory = roots.find((c) => c.id === categoryId);
+  const selectedRoot = roots.find((c) => c.id === categoryId || c.children.some((child) => child.id === categoryId));
+  const selectedCategory = selectedRoot?.id === categoryId ? selectedRoot : selectedRoot?.children.find((c) => c.id === categoryId);
 
   return (
-    <div className="py-8">
+    <div className="py-8 sm:py-12">
       {/* 페이지 제목 */}
-      <h1 className="text-2xl font-bold text-secondary-900 mb-6">
-        {selectedCategory ? selectedCategory.name : '전체 상품'}
+      <p className="mb-3 text-[10px] font-semibold tracking-[0.2em] text-primary-400">EXPLORE YOUR EVERYDAY</p>
+      <h1 className="mb-3 text-3xl font-semibold tracking-[-0.04em] text-primary-600 sm:text-4xl">
+        {keyword ? `“${keyword}” 검색 결과` : selectedCategory ? selectedCategory.name : sellerId ? '판매자의 상품' : '취향을 발견하는 시간'}
       </h1>
+      <p className="mb-8 text-sm text-primary-400">{selectedCategory ? `${selectedCategory.name}에서 마음에 드는 상품을 찾아보세요.` : '일상에 어울리는 다음 아이템을 만나보세요.'}</p>
 
       {/* 카테고리 필터 탭 */}
-      <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 mb-6">
+      <div className="no-scrollbar flex gap-2 overflow-x-auto pb-2 mb-4">
         <button
           onClick={() => handleCategoryClick(undefined)}
           className={`px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-colors
@@ -237,7 +247,7 @@ export default function ProductsClient() {
             key={cat.id}
             onClick={() => handleCategoryClick(cat.id)}
             className={`px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-colors
-              ${categoryId === cat.id
+              ${selectedRoot?.id === cat.id
                 ? 'bg-primary-600 text-white'
                 : 'text-secondary-600 hover:text-primary-600 hover:bg-primary-50 border border-secondary-200'
               }`}
@@ -247,12 +257,25 @@ export default function ProductsClient() {
         ))}
       </div>
 
+      {selectedRoot && selectedRoot.children.length > 0 && (
+        <div className="no-scrollbar mb-5 flex gap-2 overflow-x-auto" aria-label={`${selectedRoot.name} 세부 카테고리`}>
+          {[selectedRoot, ...selectedRoot.children].map((category) => (
+            <button key={category.id} type="button" aria-pressed={categoryId === category.id} onClick={() => handleCategoryClick(category.id)} className={`shrink-0 rounded-lg px-3 py-2 text-xs transition-colors ${categoryId === category.id ? 'bg-[#e9eee4] font-semibold text-[#47583d]' : 'text-primary-400 hover:bg-primary-50'}`}>
+              {category.id === selectedRoot.id ? '전체' : category.name}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* 정렬 + 결과 수 */}
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-secondary-500">
+      <div className="flex items-center justify-between gap-3 border-t border-primary-100 py-4 mb-2">
+        <p aria-live="polite" className="text-xs text-primary-400 sm:text-sm">
           {meta ? `총 ${meta.total.toLocaleString()}개` : ''}
         </p>
-        <div className="flex gap-2">
+        <select aria-label="상품 정렬" value={activeSortIdx === -1 ? 0 : activeSortIdx} onChange={(e) => handleSortChange(Number(e.target.value))} className="h-10 max-w-[150px] rounded-xl border border-primary-100 bg-white px-3 text-xs text-primary-600 sm:hidden">
+          {SORT_OPTIONS.map((option, index) => <option key={option.label} value={index}>{option.label}</option>)}
+        </select>
+        <div className="hidden gap-1 sm:flex">
           {SORT_OPTIONS.map((opt, idx) => (
             <button
               key={idx}
@@ -278,7 +301,7 @@ export default function ProductsClient() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-10">
               {isLoading
                 ? Array.from({ length: SKELETON_COUNT }).map((_, i) => (
                     <ProductCardSkeleton key={i} />

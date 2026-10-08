@@ -3,6 +3,20 @@
   "$schema": "../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "build": {
+      "inputs": [
+        "production",
+        "^production",
+        { "env": "API_PROXY_TARGET" },
+        { "env": "NEXT_PUBLIC_API_URL" },
+        { "env": "NEXT_PUBLIC_PORTONE_STORE_ID" },
+        { "env": "NEXT_PUBLIC_PORTONE_CHANNEL_KEY" },
+        { "env": "ANALYZE" },
+        { "env": "NEXT_PUBLIC_SENTRY_DSN" },
+        { "env": "SENTRY_DSN" },
+        { "env": "SENTRY_AUTH_TOKEN" },
+        { "env": "SENTRY_ORG" },
+        { "env": "SENTRY_PROJECT" }
+      ],
       "options": {
         "env": {
           "NODE_OPTIONS": "--max-old-space-size=4096"

@@ -42,7 +42,7 @@ export default function CartPage() {
   return (
     <div className="py-8">
       {/* 페이지 타이틀 */}
-      <h1 className="text-2xl font-bold text-secondary-900 mb-6">
+      <h1 className="text-3xl font-semibold tracking-tight text-primary-600 mb-8">
         장바구니
         {items.length > 0 && (
           <span className="ml-2 text-lg font-normal text-secondary-500">
@@ -86,7 +86,7 @@ export default function CartPage() {
 
           {/* 오른쪽: 주문 요약 */}
           <div className="lg:col-span-1">
-            <div className="sticky top-28 bg-white rounded-xl border border-secondary-200 p-5 space-y-4">
+            <div className="lg:sticky lg:top-48 bg-white rounded-3xl border border-primary-100 p-6 space-y-5">
               <h2 className="text-base font-bold text-secondary-900">주문 요약</h2>
 
               <div className="space-y-2 text-sm">

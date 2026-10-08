@@ -22,20 +22,20 @@ import {
 const INPUT_BASE =
   "px-2.5 py-2 rounded-md border border-gray-300 text-sm outline-none bg-white" +
   " transition-[border-color,box-shadow] duration-150" +
-  " focus:border-blue-600 focus:ring-1 focus:ring-blue-600/20";
+  " focus:border-primary-600 focus:ring-1 focus:ring-primary-600/20";
 
 /* =========================
  *  Form Root variants (cva)
  * ========================= */
 
 const formVariants = cva(
-  "max-w-[520px] w-full flex flex-col gap-6 p-6 rounded-xl border border-gray-200 bg-white",
+  "max-w-[520px] w-full flex flex-col gap-6 p-6 sm:p-8 rounded-3xl border border-primary-100 bg-white",
   {
     variants: {
       variant: {
         default: "",
-        login:   "shadow-[0_12px_30px_rgba(15,23,42,0.15)] mt-[100px] mx-auto mb-[10px]",
-        signup:  "border-blue-600 shadow-[0_20px_45px_rgba(37,99,235,0.25)] mt-5 mx-auto mb-10",
+        login:   "max-w-[440px] mt-6 mx-auto mb-[10px]",
+        signup:  "mt-6 mx-auto mb-10",
       },
     },
     defaultVariants: {
@@ -107,8 +107,8 @@ export function Form<T extends FieldValues>({
           disabled={isSubmitting}
           className={twMerge(clsx(
             "mt-1 px-3 py-2.5 rounded-[10px] border-0 text-sm font-semibold text-white cursor-pointer",
-            "bg-sky-700 transition-[background-color,transform,box-shadow] duration-150",
-            "hover:bg-blue-700 hover:-translate-y-px hover:shadow-[0_10px_20px_rgba(37,99,235,0.3)]",
+            "bg-primary-600 transition-[background-color,transform,box-shadow] duration-150",
+            "hover:bg-primary-700 hover:-translate-y-px hover:shadow-[0_10px_20px_rgba(0,0,0,0.12)]",
             "active:translate-y-0 active:shadow-none",
             "disabled:bg-gray-400 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-y-0"
           ))}

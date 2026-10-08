@@ -10,20 +10,20 @@ interface SectionHeaderProps {
 
 export default function SectionHeader({ title, href, description }: SectionHeaderProps) {
   return (
-    <div className="flex items-end justify-between mb-5">
+    <div className="mb-6 flex items-end justify-between gap-4 sm:mb-8">
       <div>
-        <h2 className="text-xl font-bold text-secondary-900">{title}</h2>
+        <h2 className="text-xl font-semibold tracking-[-0.035em] text-primary-600 sm:text-[28px]">{title}</h2>
         {description && (
-          <p className="text-sm text-secondary-500 mt-0.5">{description}</p>
+          <p className="mt-2 text-xs leading-relaxed text-primary-400 sm:text-sm">{description}</p>
         )}
       </div>
       {href && (
         <Link
           href={href}
-          className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1 transition-colors"
+          className="flex shrink-0 items-center gap-2 rounded-full border border-primary-100 px-3 py-2 text-xs font-medium text-primary-600 transition-colors hover:bg-primary-50 sm:px-4 sm:text-sm"
         >
-          더보기
-          <span aria-hidden>›</span>
+          전체 보기
+          <span aria-hidden="true">↗</span>
         </Link>
       )}
     </div>

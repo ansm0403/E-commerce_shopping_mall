@@ -1,71 +1,60 @@
-'use client';
-
 import Link from 'next/link';
 import MaxWidthContainer from '@/components/layout/MaxWidthContainer';
 
+/**
+ * 쇼핑몰 푸터 — 흰 바탕에 회색 글자로 가볍게.
+ *
+ * 예전 푸터는 진한 남색 그라데이션 + 가짜 고객센터·SNS 와 `#` 링크(눌러도 아무 데도 안 감)였다.
+ * 지금은 **실제로 열리는 화면만** 잇는다 — 판매자 신청·관리자 체험처럼 로그인 뒤에 숨은 기능의 입구도 여기 둔다.
+ */
+const SECTIONS = [
+  {
+    title: '쇼핑',
+    links: [
+      { label: '전체 상품', href: '/products' },
+      { label: '인기 상품', href: '/products?sortBy=viewCount&sortOrder=DESC' },
+      { label: '신상품', href: '/products?sortBy=createdAt&sortOrder=DESC' },
+    ],
+  },
+  {
+    title: '내 계정',
+    links: [
+      { label: '마이페이지', href: '/my' },
+      { label: '주문 내역', href: '/my/orders' },
+      { label: '장바구니', href: '/cart' },
+    ],
+  },
+  {
+    title: '판매·운영',
+    links: [
+      { label: '판매자 신청', href: '/my/seller-apply' },
+      { label: '관리자 화면 체험', href: '/login' },
+    ],
+  },
+];
+
 export default function Footer() {
-  const currentYear = new Date().getFullYear();
-
-  const footerSections = [
-    {
-      title: '고객 서비스',
-      links: [
-        { label: '공지사항', href: '#' },
-        { label: '자주 묻는 질문', href: '#' },
-        { label: '1:1 문의', href: '#' },
-        { label: '반품/교환', href: '#' },
-      ],
-    },
-    {
-      title: '회사 정보',
-      links: [
-        { label: '회사 소개', href: '#' },
-        { label: '채용 정보', href: '#' },
-        { label: '제휴 문의', href: '#' },
-        { label: '사업자 정보', href: '#' },
-      ],
-    },
-    {
-      title: '정책',
-      links: [
-        { label: '이용약관', href: '#' },
-        { label: '개인정보처리방침', href: '#' },
-        { label: '쿠키 정책', href: '#' },
-        { label: '이용 조건', href: '#' },
-      ],
-    },
-  ];
-
   return (
-    <footer className="bg-gradient-to-b from-secondary-600 to-secondary-900 text-white mt-20">
-      {/* 메인 콘텐츠 */}
+    <footer className="mt-20 border-t border-primary-100 bg-[#efefe8] sm:mt-28">
       <MaxWidthContainer>
-        <div className="py-16">
-          {/* 상단 섹션 - 회사명 및 소개 */}
-          <div className="mb-12 pb-12 border-b border-secondary-700">
-            {/* <h3 className="text-2xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-primary-300 to-primary-500">
-              ShoppingMall
-            </h3> */}
-            <p className="text-secondary-300 text-sm max-w-md leading-relaxed">
-              최고의 상품과 서비스로 여러분의 쇼핑 경험을 향상시키고 있습니다.
-              언제든지 편리하게 쇼핑하세요.
+        <div className="py-12 flex flex-col md:flex-row gap-10 md:gap-20">
+          <div className="md:w-64 shrink-0">
+            <p className="font-black text-2xl tracking-tighter text-primary-600">SHOPMALL<span aria-hidden="true" className="text-[#526747]">.</span></p>
+            <p className="mt-3 text-sm text-primary-400 leading-relaxed">
+              포트폴리오용으로 만든 쇼핑몰입니다.
+              <br />
+              구매자·판매자·관리자 화면을 모두 둘러볼 수 있어요.
             </p>
           </div>
 
-          {/* 링크 섹션 */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-            {footerSections.map((section) => (
+          <nav aria-label="사이트 링크" className="grid grid-cols-2 sm:grid-cols-3 gap-8 flex-1">
+            {SECTIONS.map((section) => (
               <div key={section.title}>
-                <h4 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">
-                  {section.title}
-                </h4>
-                <ul className="space-y-3">
+                <h2 className="text-sm font-semibold text-primary-600">{section.title}</h2>
+                <ul className="mt-3 space-y-2">
                   {section.links.map((link) => (
                     <li key={link.label}>
-                      <Link
-                        href={link.href}
-                        className="text-secondary-300 hover:text-primary-400 text-sm transition-colors duration-200"
-                      >
+                      <Link href={link.href} className="text-sm text-primary-400 hover:text-primary-600 transition-colors">
                         {link.label}
                       </Link>
                     </li>
@@ -73,77 +62,11 @@ export default function Footer() {
                 </ul>
               </div>
             ))}
-          </div>
-
-          {/* SNS 섹션 */}
-          <div className="mb-12 pb-12 border-b border-secondary-700">
-            <h4 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">
-              팔로우하기
-            </h4>
-            <div className="flex gap-4">
-              {['Facebook', 'Instagram', 'Twitter', 'YouTube'].map((social) => (
-                <Link
-                  key={social}
-                  href="#"
-                  className="w-10 h-10 rounded-full bg-primary-600 hover:bg-primary-500 flex items-center justify-center transition-all duration-200 hover:scale-110"
-                  aria-label={social}
-                >
-                  <span className="text-white text-lg">
-                    {social === 'Facebook' && '𝕱'}
-                    {social === 'Instagram' && '📷'}
-                    {social === 'Twitter' && '𝕿'}
-                    {social === 'YouTube' && '▶'}
-                  </span>
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* 하단 정보 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            <div>
-              <h4 className="text-sm font-semibold text-white mb-3 uppercase tracking-wider">
-                연락처
-              </h4>
-              <div className="space-y-2 text-secondary-300 text-sm">
-                <p> 고객센터: 1234-5678</p>
-                <p> 이메일: support@shoppingmall.com</p>
-                <p> 주소: 서울시 멋있는구 맛있는리 123-4</p>
-              </div>
-            </div>
-            <div>
-              <h4 className="text-sm font-semibold text-white mb-3 uppercase tracking-wider">
-                운영시간
-              </h4>
-              <div className="space-y-2 text-secondary-300 text-sm">
-                <p>평일: AM 10:00 ~ PM 05:00</p>
-                <p>토요일: AM 10:00 ~ PM 02:00</p>
-                <p>일요일 및 공휴일 휴무</p>
-              </div>
-            </div>
-          </div>
+          </nav>
         </div>
-      </MaxWidthContainer>
 
-      {/* 하단 바 */}
-      <div className="border-t border-secondary-700 bg-secondary-950/50">
-        <MaxWidthContainer>
-          <div className="py-6 flex flex-col md:flex-row items-center justify-between gap-4 text-secondary-400 text-xs md:text-sm">
-            <p>© {currentYear} ShoppingMall. All rights reserved.</p>
-            <div className="flex gap-6">
-              <Link href="#" className="hover:text-primary-400 transition-colors">
-                개인정보처리방침
-              </Link>
-              <Link href="#" className="hover:text-primary-400 transition-colors">
-                이용약관
-              </Link>
-              <Link href="#" className="hover:text-primary-400 transition-colors">
-                사이트맵
-              </Link>
-            </div>
-          </div>
-        </MaxWidthContainer>
-      </div>
+        <p className="py-6 border-t border-primary-100 text-xs text-primary-400">© {new Date().getFullYear()} ShoppingMall</p>
+      </MaxWidthContainer>
     </footer>
   );
 }
