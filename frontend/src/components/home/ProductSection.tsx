@@ -37,7 +37,7 @@ export default function ProductSection({
   const products = Array.isArray(result?.data) ? result.data.filter((p) => p != null) : [];
 
   return (
-    <section className="pt-14 sm:pt-20">
+    <section className={`mystic-product-section ${sortBy === 'rating' ? 'mystic-object-room' : 'mystic-new-arrivals'} pt-14 sm:pt-20`}>
       <SectionHeader title={title} description={description} href={href} />
 
       {isError ? (

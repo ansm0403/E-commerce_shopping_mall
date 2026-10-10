@@ -1,5 +1,6 @@
 
 import './global.css';
+import './mystic.css';
 import NextTopLoader from 'nextjs-toploader';
 import ReactQueryProvider from '../providers/reactQuery-provider';
 import AuthContextProvider from '../contexts/AuthContext';

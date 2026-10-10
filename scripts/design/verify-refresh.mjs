@@ -55,6 +55,7 @@ async function capture(page, filename) {
     window.scrollTo(0, 0);
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
   });
+  await page.waitForFunction(() => [...document.images].filter((img) => !img.closest('[aria-hidden="true"]')).every((img) => img.complete && img.naturalWidth > 0), null, { timeout: 15000 });
   await page.screenshot({
     path: join(args.out, filename),
     fullPage: true,
@@ -84,6 +85,13 @@ try {
     await context.route(/\/monitoring(\?|$)|sentry\.io/, (route) =>
       route.abort()
     );
+    // Bound unavailable external photo hosts; exercise the real image-error fallback.
+    // Hidden carousel slides remain lazy and are checked by verify-banner separately.
+    await context.route('https://**/*', async (route) => {
+      if (route.request().resourceType() !== 'image') return route.fallback();
+      try { await route.fulfill({ response: await route.fetch({ timeout: 8000 }) }); }
+      catch { await route.abort(); }
+    });
     await context.route('**/api/**', async (route) => {
       const request = route.request();
       if (request.method() !== 'GET') return route.abort();
@@ -196,7 +204,7 @@ try {
     await page.getByRole('button', { name: '구매하기', exact: true }).waitFor();
     await checkOverflow(page, 'product-detail', label);
     await capture(page, `${label}-product-detail.png`);
-    await page.getByRole('button', { name: '리뷰', exact: true }).click();
+    await page.getByRole('button', { name: /^리뷰(?: \(\d+\))?$/ }).click();
     await page.getByRole('heading', { name: /리뷰/ }).first().waitFor();
     await checkOverflow(page, 'reviews', label);
 

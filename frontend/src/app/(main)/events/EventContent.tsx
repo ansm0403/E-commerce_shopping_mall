@@ -35,7 +35,7 @@ export default function EventContent({ event }: { event: ShoppingEvent }) {
   return (
     <div className="py-6 sm:py-10">
       <nav aria-label="기획전 위치" className="mb-6 flex flex-wrap gap-2 text-xs text-primary-400"><Link href="/">홈</Link><span aria-hidden="true">/</span><Link href="/events">기획전</Link><span aria-hidden="true">/</span><span>{event.eyebrow}</span></nav>
-      <section className="grid overflow-hidden rounded-3xl lg:grid-cols-[1fr_1.1fr]" style={{ backgroundColor: event.color }}>
+      <section className="magazine-event-cover grid overflow-hidden lg:grid-cols-[0.8fr_1.2fr]">
         <div className="flex flex-col justify-center p-7 sm:p-10 lg:p-12">
           <p className="text-xs font-semibold tracking-[0.2em]" style={{ color: event.accent }}>{event.eyebrow}</p>
           <h1 className="mt-5 max-w-sm break-keep text-3xl font-semibold leading-tight tracking-[-0.045em] sm:text-5xl">{event.title}</h1>

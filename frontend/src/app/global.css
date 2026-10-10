@@ -7,6 +7,83 @@ body {
   color: #111111;
 }
 
+/* Buyer-only editorial system. Console routes keep their existing visual system. */
+.magazine-store { background: #fff; --editorial-blue: #2448e8; }
+.magazine-store ::selection { background: #e2ff55; color: #111; }
+.magazine-store :where(a, button, input, select, textarea):focus-visible { outline-color: var(--editorial-blue); }
+.magazine-store :where([class*="rounded-"]) { border-radius: 0; }
+.magazine-store header { background: #fff; border-bottom: 2px solid #111; backdrop-filter: none; }
+.magazine-store header > div:first-child { background: #2448e8; }
+.magazine-store header > div:first-child a { color: #fff; }
+.magazine-store header input { border-bottom: 2px solid #111; background: #f5f6fa; }
+.magazine-store footer { background: #f2f3f7; border-top: 3px solid #111; }
+.magazine-store footer p.font-black { font-size: 36px; }
+.magazine-store :where(header, footer) span.text-\[\#526747\] { color: #2448e8; }
+.magazine-store main h1 { font-weight: 800; letter-spacing: -.055em; }
+.magazine-store main :where(h2, h3) { letter-spacing: -.035em; }
+.magazine-store main :where(input, select, textarea) { border-color: #c8cbd3; }
+.magazine-kicker { color: #2448e8; font-size: 11px; font-weight: 800; letter-spacing: .16em; }
+.magazine-title { margin-top: 12px; font-size: clamp(34px, 5.1vw, 72px); line-height: 1.1; font-weight: 900; letter-spacing: -.065em; }
+.magazine-cover > div:first-child { padding-bottom: 24px; border-bottom: 2px solid #111; }
+.magazine-cover > div:first-child > a { background: #2448e8; color: white; border-color: #2448e8; }
+.magazine-banner-grid { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); gap: 20px; }
+.magazine-banner-grid > [role="region"] { border: 1px solid #111; }
+.magazine-side-banners { display: grid; min-width: 0; grid-template-rows: .85fr 1.15fr; gap: 20px; }
+.magazine-side-banners > a { aspect-ratio: auto; border: 1px solid #111; }
+.magazine-side-banners > a:last-child { width: 86%; justify-self: end; }
+.magazine-section-heading { padding-top: 16px; border-top: 2px solid #111; }
+.magazine-section-heading h2 { font-weight: 800; font-size: clamp(23px, 2.5vw, 36px); line-height: 1.2; }
+.magazine-section-heading > a { border: 0; padding-left: 0; padding-right: 0; border-bottom: 1px solid #111; }
+.magazine-product > div:first-child { background: #f3f4f8; aspect-ratio: 1 / 1.12; border-bottom: 2px solid #111; }
+.magazine-product > div:last-child { padding-bottom: 12px; }
+.magazine-product p.line-clamp-2 { font-weight: 600; }
+.magazine-product span.font-bold { font-size: 17px; }
+.magazine-collection-grid { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 28px 20px; }
+.magazine-collection-grid > a { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 16px; align-content: start; border-top: 1px solid #c8cbd3; padding-top: 12px; }
+.magazine-collection-grid > a > div { grid-row: span 2; aspect-ratio: 1; padding: 12px; }
+.magazine-collection-grid > a h3 { align-self: end; font-size: 18px; font-weight: 800; }
+.magazine-collection-grid > a p { margin-top: 6px; }
+.magazine-collection-grid > a:nth-child(3n + 1) > div { aspect-ratio: 4 / 5; }
+.magazine-manifesto { background: #2448e8; border-top: 5px solid #111; }
+.magazine-manifesto h2 { font-weight: 800; font-size: clamp(26px, 3vw, 42px); }
+.magazine-manifesto a { background: #e2ff55; color: #111; }
+.magazine-auth > div:first-child { padding-bottom: 24px; border-bottom: 2px solid #111; max-width: 448px; margin: auto; }
+.magazine-auth > div:first-child a { font-size: 36px; }
+.magazine-auth h1 { font-weight: 800; }
+.magazine-events-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 24px; }
+.magazine-events-grid > a { border: 0; border-top: 2px solid #111; }
+.magazine-events-grid > a:first-child { grid-row: span 2; }
+.magazine-events-grid > a:first-child > div:first-child { aspect-ratio: 1; }
+.magazine-events-grid > a > div:last-child { padding-left: 0; padding-right: 0; }
+.magazine-event-cover { border-top: 2px solid #111; border-bottom: 1px solid #111; background: #f3f4f8; }
+.magazine-event-cover > div:first-child { padding-left: 0; background: #fff; }
+.magazine-event-cover h1 { font-size: clamp(32px, 4vw, 56px); }
+.magazine-event-cover a { background: #2448e8; }
+.magazine-detail-grid > div:last-child { border-top: 2px solid #111; padding-top: 20px; }
+.magazine-store [class*="bg-[#e9eee4]"] { background: #eef1ff; }
+.magazine-store [class*="text-[#47583d]"] { color: #2448e8; }
+.magazine-store [class*="bg-[#f3f3ef]"] { background: #f3f4f8; }
+.magazine-store button[aria-pressed="true"] { box-shadow: inset 0 -2px #2448e8; }
+@media (max-width: 1023px) {
+  .magazine-banner-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .magazine-side-banners { grid-template-columns: 1.2fr 1fr; grid-template-rows: auto; gap: 12px; align-items: start; }
+  .magazine-side-banners > a { aspect-ratio: 3 / 2; }
+  .magazine-side-banners > a:last-child { width: 100%; margin-top: 18px; }
+}
+@media (max-width: 639px) {
+  .magazine-cover > div:first-child { gap: 16px; }
+  .magazine-collection-grid { grid-template-columns: 1fr 1fr; gap: 20px 12px; }
+  .magazine-collection-grid > a { display: block; }
+  .magazine-collection-grid > a > div { aspect-ratio: 1; }
+  .magazine-collection-grid > a:nth-child(3n + 1) > div { aspect-ratio: 1; }
+  .magazine-collection-grid > a:nth-child(even) { margin-top: 24px; }
+  .magazine-collection-grid > a h3 { font-size: 16px; }
+  .magazine-section-heading { gap: 10px; }
+  .magazine-section-heading > a { font-size: 11px; }
+  .magazine-events-grid { grid-template-columns: minmax(0, 1fr); }
+  .magazine-events-grid > a:first-child { grid-row: auto; }
+}
+
 ::selection {
   background: #dce6d2;
   color: #20291f;

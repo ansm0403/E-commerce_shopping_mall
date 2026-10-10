@@ -23,14 +23,11 @@ try {
     const mainBounds = await carousel.boundingBox();
     const firstSide = await sideBanners.nth(0).boundingBox();
     const secondSide = await sideBanners.nth(1).boundingBox();
-    if (width >= 1024) {
-      assert.ok(firstSide.x > mainBounds.x + mainBounds.width);
-      assert.ok(secondSide.y > firstSide.y);
-      assert.ok(mainBounds.width > firstSide.width * 1.7);
-    } else {
-      assert.ok(firstSide.y >= mainBounds.y + mainBounds.height);
-      assert.ok(secondSide.x > firstSide.x);
-    }
+    assert.ok(firstSide.y > mainBounds.y + mainBounds.height * 0.7, 'auxiliary images float near the foot of the main portal');
+    assert.ok(secondSide.x > firstSide.x, 'auxiliary images remain separately visible');
+    assert.ok(secondSide.y > firstSide.y, 'auxiliary images use staggered positions');
+    assert.ok(mainBounds.width > firstSide.width * 1.3, 'main portal remains the largest image');
+    assert.ok(firstSide.width > secondSide.width, 'auxiliary images use different sizes');
     const active = () => carousel.getAttribute('data-current-banner');
     const outside = async () => {
       await page.evaluate(() => document.activeElement?.blur());
@@ -52,6 +49,9 @@ try {
     assert.equal(await active(), '3', 'first slide wraps to last');
     await page.keyboard.press('ArrowLeft');
     assert.equal(await active(), '2');
+    await page.mouse.move(1, 1);
+    await page.waitForTimeout(4700);
+    assert.equal(await active(), '2', 'keyboard focus pauses autoplay');
     await carousel.getByRole('button', { name: '배너 자동 전환 멈추기' }).click();
     await outside();
     await page.waitForTimeout(4700);
@@ -65,6 +65,7 @@ try {
     await page.waitForTimeout(850);
     const visible = carousel.locator('[data-banner-slide][aria-hidden="false"]');
     await visible.locator('img').evaluate((node) => node.decode());
+    await sideBanners.locator('img').evaluateAll((nodes) => Promise.all(nodes.map((node) => node.decode())));
     assert.equal(await visible.count(), 1);
     assert.equal(await carousel.locator('[data-banner-slide][tabindex="0"]').count(), 1);
     assert.ok(await visible.evaluate((node) => Number(getComputedStyle(node).opacity) > 0.99));

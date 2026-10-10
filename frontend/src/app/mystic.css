@@ -1,0 +1,133 @@
+/* Buyer-only spatial gallery. Transaction screens retain a light reading surface. */
+/* Change only --store-background to compare white (#ffffff) and lavender (#f6f3fa). */
+.magazine-store { --store-background: #ffffff; --editorial-blue: #66518f; background: var(--store-background); color: #211e2c; }
+.magazine-store :where([class*="rounded-"]) { border-radius: 8px; }
+.magazine-store ::selection { background: #d8c8f1; color: #211e2c; }
+.magazine-store header { background: var(--store-background); border-bottom: 1px solid #ded8e8; backdrop-filter: blur(20px); }
+.magazine-store header > div:first-child { background: #211e2c; }
+.magazine-store header > div:first-child > div { gap: 16px; }
+.magazine-store header > div:first-child > div > :last-child { flex-shrink: 0; white-space: nowrap; }
+.magazine-store header input { background: transparent; border: 0; }
+.magazine-store header [role="search"] { border-radius: 30px; background: #eee9f4; }
+.magazine-store header > div:last-child > div:last-child { border: 0; }
+.magazine-store footer { border-top: 1px solid #4b455b; background: #191622; color: #eee8f8; }
+.magazine-store footer :where(p, a, h2) { color: #c5bdcf; }
+.magazine-store footer p.font-black { color: #eee8f8; font-size: clamp(32px, 5vw, 70px); font-weight: 400; line-height: 1.1; white-space: nowrap; }
+.magazine-footer-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 40px; }
+.magazine-footer-brand { width: auto; min-width: 0; }
+.magazine-footer-brand > p:last-child { max-width: 28rem; margin-top: 24px; }
+.magazine-footer-layout > nav { min-width: 0; }
+.magazine-store footer [class*="border-primary"] { border-color: #4b455b; }
+.magazine-store main h1 { font-weight: 600; }
+.magazine-store main :where(input, textarea, select) { border-color: #d4cbdc; }
+.magazine-store [class*="bg-[#e9eee4]"] { background: #e9e2f3; }
+.magazine-store [class*="text-[#47583d]"] { color: #66518f; }
+.magazine-store [class*="bg-[#f3f3ef]"] { background: #eeebf3; }
+.magazine-product > div:first-child { border: 0; border-radius: 50% 50% 8px 8px; background: #eeebf3; aspect-ratio: 4 / 5; }
+.magazine-product p.line-clamp-2 { font-weight: 500; }
+.magazine-product span.font-bold { font-size: 17px; }
+.magazine-section-heading { border: 0; padding: 0; }
+.magazine-section-heading h2 { font-size: clamp(24px, 3vw, 38px); font-weight: 500; }
+.magazine-section-heading > a { border-bottom: 1px solid #82758e; border-radius: 0; }
+.mystic-home { padding-bottom: 60px; }
+.magazine-cover { isolation: isolate; position: relative; display: grid; grid-template-columns: .85fr 1.15fr; margin: 20px -40px 0; padding: 45px 55px 30px; background: #191622; color: #f3edf9; overflow: hidden; border-radius: 12px 12px 140px 12px; }
+.magazine-cover::before { content: ''; position: absolute; z-index: -1; width: 620px; height: 620px; top: 10px; right: -100px; border: 1px solid #88719c66; border-radius: 50%; box-shadow: 0 0 150px #9469ce22, inset 0 0 100px #9469ce18; }
+.magazine-cover::after { content: ''; position: absolute; z-index: -1; width: 480px; height: 480px; top: 150px; right: -30px; border: 1px solid #88719c44; border-radius: 50%; }
+.magazine-cover > div:first-child { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 32px; border: 0; padding: 0 24px 70px 0; margin: 0; }
+.magazine-kicker { color: #c5b1df; font-size: 10px; letter-spacing: .18em; font-weight: 500; }
+.magazine-title { font-size: clamp(40px, 4.4vw, 64px); line-height: 1.2; font-weight: 400 !important; letter-spacing: -.055em; margin-top: 28px; }
+.magazine-cover .text-primary-400 { color: #c4bacf; line-height: 1.9; margin-top: 24px; max-width: 300px; word-break: keep-all; }
+.magazine-cover > div:first-child > a { border-radius: 50%; border: 1px solid #bda4d0; color: #e6d8f4; background: transparent; min-height: 94px; padding: 24px; }
+.magazine-cover > div:first-child > a:hover { background: #30273d; }
+.magazine-banner-grid { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 30px; padding-top: 15px; }
+.magazine-banner-grid > [role="region"] { width: 88%; justify-self: end; border-radius: 160px 160px 12px 12px; border: 1px solid #71607d; padding: 80px 12px 0; background: #302b39; transform: rotate(2deg); }
+/* Match the tallest source banner; the arch's shallow cap keeps image corners intact. */
+.magazine-banner-grid > [role="region"] > div:first-child { aspect-ratio: 1200 / 752; flex: none; margin-inline: 12px; border-radius: 0; background: #302b39; }
+.magazine-banner-grid > [role="region"] > div:last-child { border-color: #71607d; background: #f3eef8; color: #211e2c; margin: 0 -12px; }
+.magazine-side-banners { display: grid; grid-template-columns: 1fr .75fr; grid-template-rows: auto; gap: 24px; align-items: start; margin-top: -45px; padding-right: 35px; z-index: 2; }
+.magazine-side-banners > a { aspect-ratio: 3 / 2; width: 100%; border-radius: 8px; border: 5px solid #f0e7f6; box-shadow: 0 12px 30px #0004; transform: rotate(-6deg); }
+.magazine-side-banners > a:last-child { width: 100%; margin-top: 55px; transform: rotate(8deg); }
+.mystic-cover-index { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 20px; align-self: end; padding-top: 30px; color: #b5a5c5; font-size: 9px; letter-spacing: .14em; }
+.mystic-chapter { display: grid; grid-template-columns: 1fr 2fr; gap: 24px; padding: 100px 0 0; }
+.mystic-chapter > span { font-size: 10px; letter-spacing: .16em; color: #756582; padding-top: 12px; }
+.mystic-chapter > p { font-size: clamp(30px, 4vw, 54px); line-height: 1.35; letter-spacing: -.05em; }
+.mystic-object-room { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 35px; padding-top: 60px; }
+.mystic-object-room > .magazine-section-heading { flex-direction: column; align-items: flex-start; justify-content: flex-start; padding-top: 30px; gap: 28px; }
+.mystic-object-room > .magazine-section-heading h2 { font-size: 24px; line-height: 1.4; max-width: 170px; }
+.mystic-object-room > div:last-child { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; gap: 50px 25px; }
+.mystic-object-room .magazine-product:nth-child(3n + 2) { padding-top: 90px; }
+.mystic-object-room .magazine-product:nth-child(3n) > div:first-child { aspect-ratio: 1; border-radius: 50%; }
+.mystic-worlds { margin: 100px -40px 0; padding: 0 40px 70px; background: #e9e2f0; border-radius: 46% 46% 0 0 / 80px 80px 0 0; }
+.mystic-worlds .mystic-chapter { padding-top: 80px; }
+.magazine-collections > .magazine-section-heading { justify-content: flex-end; }
+.magazine-collections > .magazine-section-heading > div { display: none; }
+.magazine-collection-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 20px; align-items: start; }
+.magazine-collection-grid > a { display: block; border: 0; padding: 0; text-align: center; }
+.magazine-collection-grid > a:nth-child(even) { padding-top: 65px; }
+.magazine-collection-grid > a > div, .magazine-collection-grid > a:nth-child(3n + 1) > div { aspect-ratio: 3 / 4; border-radius: 50% 50% 45% 45%; border: 1px solid #b8a9c7; padding: 18px; }
+.magazine-collection-grid > a h3 { font-size: 15px; font-weight: 500; margin-top: 20px; }
+.magazine-collection-grid > a p { margin-top: 8px; }
+.magazine-manifesto { position: relative; border: 0; background: radial-gradient(ellipse at 75% 50%, #574265, #211c2c 65%); min-height: 370px; margin: 100px 0 0; padding: 60px; border-radius: 180px 12px 180px 12px; }
+.magazine-manifesto h2 { font-size: clamp(30px, 4vw, 50px); line-height: 1.3; font-weight: 400; }
+.magazine-store .magazine-manifesto a { border: 1px solid #b8a4c9; background: transparent; color: #f0e6fa; border-radius: 50%; min-height: 90px; }
+.magazine-store .magazine-manifesto a:hover { background: #574265; }
+.mystic-new-arrivals { border-top: 1px solid #d2c7db; margin-top: 70px; }
+.mystic-new-arrivals > div:last-child { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 35px; }
+.mystic-new-arrivals .magazine-product:nth-child(even) { padding-top: 65px; }
+.magazine-events-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 60px; align-items: start; }
+.magazine-events-grid > a { border: 0; background: transparent; overflow: visible; }
+.magazine-events-grid > a:first-child { grid-row: auto; }
+.magazine-events-grid > a:nth-child(even) { margin-top: 150px; }
+.magazine-events-grid > a > div:first-child, .magazine-events-grid > a:first-child > div:first-child { aspect-ratio: 4 / 5; border-radius: 50% 50% 12px 12px; }
+.magazine-event-cover { border: 0; background: #e9e2f0; border-radius: 120px 12px 12px 12px; }
+.magazine-event-cover > div:first-child { background: transparent; padding-left: 40px; }
+.magazine-event-cover a { background: #55426e; border-radius: 30px; }
+.magazine-detail-grid > div:last-child { border-color: #b4a3c3; }
+.magazine-auth { background: var(--store-background); }
+.magazine-auth > div:first-child { border: 0; }
+@media (min-width: 768px) {
+  .magazine-footer-layout { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: clamp(48px, 6vw, 96px); }
+}
+@media (max-width: 1023px) {
+  .magazine-cover { margin-left: -24px; margin-right: -24px; padding: 35px 30px 30px; }
+  .magazine-banner-grid > [role="region"] { width: 95%; }
+  .magazine-side-banners { padding-right: 0; gap: 16px; }
+  .mystic-object-room { grid-template-columns: 170px minmax(0, 1fr); gap: 20px; }
+  .mystic-object-room > div:last-child { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mystic-object-room .magazine-product:nth-child(3n + 2) { padding-top: 0; }
+  .mystic-object-room .magazine-product:nth-child(even) { padding-top: 65px; }
+  .mystic-worlds { margin-left: -24px; margin-right: -24px; padding-left: 24px; padding-right: 24px; }
+  .magazine-collection-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 30px 20px; }
+}
+@media (max-width: 639px) {
+  .magazine-cover { grid-template-columns: minmax(0, 1fr); margin: 12px -16px 0; padding: 35px 22px 30px; min-height: 0; border-radius: 0 0 80px 0; }
+  .magazine-cover > div:first-child { padding: 0; flex-direction: row; align-items: end; flex-wrap: wrap; gap: 18px; }
+  .magazine-title { font-size: 42px; margin-top: 20px; }
+  .magazine-cover .text-primary-400 { margin-top: 16px; max-width: 250px; }
+  .magazine-cover > div:first-child > a { min-height: 45px; padding: 12px 18px; border-radius: 30px; font-size: 11px; }
+  .magazine-banner-grid { padding-top: 28px; gap: 24px; }
+  .magazine-banner-grid > [role="region"] { width: 88%; justify-self: center; transform: rotate(2deg); padding-top: 60px; }
+  .magazine-banner-grid > [role="region"] > div:first-child { margin-inline: 20px; }
+  .magazine-side-banners { margin-top: -14px; grid-template-columns: 1.2fr 1fr; padding: 0 5px; }
+  .magazine-side-banners > a:last-child { margin-top: 25px; }
+  .mystic-cover-index { padding-top: 35px; font-size: 8px; letter-spacing: .07em; }
+  .mystic-chapter { display: block; padding-top: 65px; }
+  .mystic-chapter > p { margin-top: 20px; font-size: 34px; }
+  .mystic-object-room { display: block; padding-top: 35px; }
+  .mystic-object-room > .magazine-section-heading { flex-direction: row; align-items: end; justify-content: space-between; padding: 0; }
+  .mystic-object-room > .magazine-section-heading h2 { font-size: 22px; max-width: none; }
+  .mystic-object-room > div:last-child { gap: 30px 16px; }
+  .mystic-object-room .magazine-product:nth-child(even) { padding-top: 50px; }
+  .mystic-worlds { margin: 60px -16px 0; padding: 0 16px 50px; border-radius: 46% 46% 0 0 / 40px 40px 0 0; }
+  .mystic-worlds .mystic-chapter { padding-top: 60px; }
+  .magazine-collection-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 25px 20px; }
+  .magazine-collection-grid > a:nth-child(even) { margin: 0; padding-top: 45px; }
+  .magazine-manifesto { margin-top: 65px; padding: 45px 28px; min-height: 420px; border-radius: 90px 10px 90px 10px; }
+  .magazine-manifesto a { min-height: 60px; padding: 18px; }
+  .mystic-new-arrivals > div:last-child { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px 16px; }
+  .mystic-new-arrivals .magazine-product:nth-child(even) { padding-top: 40px; }
+  .magazine-events-grid { grid-template-columns: minmax(0, 1fr); gap: 30px; }
+  .magazine-events-grid > a:nth-child(even) { margin-top: 0; margin-left: 30px; }
+  .magazine-event-cover { border-radius: 65px 10px 10px 10px; }
+  .magazine-event-cover > div:first-child { padding-left: 28px; }
+}

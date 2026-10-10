@@ -67,7 +67,7 @@ export default function ProductDetailClient({ productId }: ProductDetailClientPr
           {product.category && <><span aria-hidden="true">/</span><Link href={`/products?categoryId=${product.categoryId}`} className="hover:text-primary-600">{product.category.name}</Link></>}
         </nav>
         {/* 갤러리 + 정보 2단 레이아웃 */}
-        <div className="grid grid-cols-1 md:grid-cols-[1.15fr_1fr] gap-8 lg:gap-14 mb-10 md:mb-16">
+        <div className="magazine-detail-grid grid grid-cols-1 md:grid-cols-[1.35fr_1fr] gap-8 lg:gap-14 mb-10 md:mb-16">
           {/* 좌측: 갤러리 (2/3) — LCP 이미지 포함, priority 적용됨 */}
           <div className="min-w-0">
             <ProductGallery images={product.images} />

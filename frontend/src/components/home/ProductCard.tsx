@@ -29,7 +29,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     : null;
 
   return (
-    <Link href={`/products/${product.id}`} className="group block">
+    <Link href={`/products/${product.id}`} className="magazine-product group block">
       {/* 사진 — 비율을 고정하고 연회색 면을 깔아 사진마다 배경이 달라도 그리드가 정돈돼 보이게 */}
       <div className="relative overflow-hidden aspect-[4/5] rounded-2xl bg-[#f3f3ef] p-4 sm:p-6">
         <ProductPhoto

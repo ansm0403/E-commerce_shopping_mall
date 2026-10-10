@@ -10,7 +10,7 @@ interface SectionHeaderProps {
 
 export default function SectionHeader({ title, href, description }: SectionHeaderProps) {
   return (
-    <div className="mb-6 flex items-end justify-between gap-4 sm:mb-8">
+    <div className="magazine-section-heading mb-6 flex items-end justify-between gap-4 sm:mb-8">
       <div>
         <h2 className="text-xl font-semibold tracking-[-0.035em] text-primary-600 sm:text-[28px]">{title}</h2>
         {description && (

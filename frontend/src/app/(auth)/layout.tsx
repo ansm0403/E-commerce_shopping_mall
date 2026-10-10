@@ -7,7 +7,7 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[#fafaf7] px-4 pt-12 pb-16 sm:pt-20">
+    <div className="magazine-store magazine-auth min-h-screen bg-white px-4 pt-12 pb-16 sm:pt-20">
       <div className="text-center">
         <Link href="/" className="inline-block font-black text-2xl tracking-tighter text-primary-600" aria-label="SHOPMALL 홈으로">
           SHOPMALL<span aria-hidden="true" className="text-[#526747]">.</span>

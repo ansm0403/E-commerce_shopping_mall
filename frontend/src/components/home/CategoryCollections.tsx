@@ -89,13 +89,13 @@ export default function CategoryCollections() {
   const { roots, isLoading, isError } = useCategories();
   if (!isLoading && (isError || !roots.length)) return null;
   return (
-    <section className="pt-12 sm:pt-16">
+    <section className="magazine-collections pt-12 sm:pt-16">
       <SectionHeader
         title="어떤 취향을 찾고 있나요?"
         description="일상을 채우는 새로운 발견"
         href="/products"
       />
-      <div className="grid grid-cols-3 gap-x-3 gap-y-6 sm:grid-cols-6 sm:gap-4">
+      <div className="magazine-collection-grid">
         {isLoading
           ? Array.from({ length: 6 }, (_, i) => (
               <div

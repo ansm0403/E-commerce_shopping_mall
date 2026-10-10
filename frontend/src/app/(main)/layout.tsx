@@ -9,7 +9,7 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   return (
-    <>
+    <div className="magazine-store">
       <Script src="https://cdn.portone.io/v2/browser-sdk.js" strategy="afterInteractive" />
       {/* 키보드 사용자가 헤더(Tab 15회)를 건너뛰고 본문으로 — 포커스를 받을 때만 보인다 */}
       <a
@@ -26,6 +26,6 @@ export default function MainLayout({
         </MaxWidthContainer>
       </main>
       <Footer />
-    </>
+    </div>
   );
 }

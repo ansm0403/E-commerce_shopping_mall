@@ -37,8 +37,8 @@ export default function Footer() {
   return (
     <footer className="mt-20 border-t border-primary-100 bg-[#efefe8] sm:mt-28">
       <MaxWidthContainer>
-        <div className="py-12 flex flex-col md:flex-row gap-10 md:gap-20">
-          <div className="md:w-64 shrink-0">
+        <div className="magazine-footer-layout py-12 flex flex-col md:flex-row gap-10 md:gap-20">
+          <div className="magazine-footer-brand md:w-64 shrink-0">
             <p className="font-black text-2xl tracking-tighter text-primary-600">SHOPMALL<span aria-hidden="true" className="text-[#526747]">.</span></p>
             <p className="mt-3 text-sm text-primary-400 leading-relaxed">
               포트폴리오용으로 만든 쇼핑몰입니다.

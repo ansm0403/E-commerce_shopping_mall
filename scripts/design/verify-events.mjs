@@ -87,10 +87,25 @@ try {
     await page.getByRole('heading', { name: '취향을 만나는 기획전.', exact: true }).waitFor();
     assert.equal(await page.locator('a[href^="/events/"]').count(), 5);
     await noOverflow();
+    let failProducts = true;
+    const failure = (route) => failProducts
+      ? route.fulfill({ status: 503, contentType: 'application/json', body: '{"message":"Preview failure"}' })
+      : route.fulfill(cache.get(route.request().url()));
+    await context.route('**/api/products?**', failure);
+    await page.goto(`${base}/events/special-finds`, { waitUntil: 'networkidle' });
+    await page.getByRole('alert').getByText('상품을 불러오지 못했습니다.').waitFor({ timeout: 20000 });
+    failProducts = false;
+    await page.getByRole('button', { name: '다시 시도', exact: true }).click();
+    await page.getByRole('region', { name: '기획전 상품', exact: true }).locator('a[href^="/products/"]').first().waitFor();
+    await context.unroute('**/api/products?**', failure);
+    await context.route('**/api/products?**', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: '{"data":[],"meta":{"lastPage":1}}' }));
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.getByText('현재 이 기획전에 해당하는 상품이 없습니다.', { exact: true }).waitFor();
+    await noOverflow();
     const missing = await page.goto(`${base}/events/not-an-event`);
     assert.equal(missing.status(), 404);
     assert.deepEqual(errors, []);
-    results.push({ width, checks: ['banner-order-and-links', 'rating-order-and-all-view', 'five-events', 'real-product-conditions', 'sort', 'load-more', 'events-index', '404', 'no-overflow', 'no-runtime-errors'] });
+    results.push({ width, checks: ['banner-order-and-links', 'rating-order-and-all-view', 'five-events', 'real-product-conditions', 'sort', 'load-more', 'events-index', 'error-retry', 'empty-state', '404', 'no-overflow', 'no-runtime-errors'] });
     await context.close();
   }
   writeFileSync(`${out}/verification.json`, JSON.stringify(results, null, 2));

@@ -10,7 +10,7 @@ export default function EventsPage() {
       <p className="text-xs font-semibold tracking-[0.18em] text-primary-400">CURATED FOR YOU</p>
       <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-5xl">취향을 만나는 기획전.</h1>
       <p className="mt-4 text-sm text-primary-400">다섯 가지 테마에서 다음 일상의 작은 발견을 찾아보세요.</p>
-      <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="magazine-events-grid mt-8">
         {shoppingEvents.map((event) => (
           <Link key={event.slug} href={`/events/${event.slug}`} className="group overflow-hidden rounded-3xl border border-primary-100 bg-white">
             <div className="relative aspect-[16/10] overflow-hidden" style={{ backgroundColor: event.color }}><Image src={event.image} alt={event.imageAlt} fill sizes="(min-width: 1024px) 400px, (min-width: 640px) 50vw, 100vw" className="object-contain transition-transform duration-500 group-hover:scale-[1.035] motion-reduce:transform-none" /></div>
