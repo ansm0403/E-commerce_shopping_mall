@@ -8,7 +8,7 @@ interface ProductCardProps {
   product: Product;
 }
 
-export function getProductImageUrl(product: Product): string {
+export function getProductImageUrl(product: Pick<Product, 'images'>): string {
   // images 가 배열이 아닌 응답(문자열) — Sentry 7747419820 "a.find is not a function". `?? []` 는 null/undefined 만 막았다(Ops Companion 분석 #59)
   const images = Array.isArray(product.images) ? product.images : [];
   const primary = images.find((img) => img.isPrimary);

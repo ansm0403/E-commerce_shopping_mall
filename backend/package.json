@@ -190,6 +190,64 @@
           "command": "node dist/main.js",
           "cwd": "backend"
         }
+      },
+      "demo-data:check": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "node -r ts-node/register src/seed/repair-demo-data.ts",
+          "cwd": "backend",
+          "env": {
+            "TS_NODE_PROJECT": "tsconfig.typeorm.json"
+          }
+        }
+      },
+      "demo-data:repair": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "node -r ts-node/register src/seed/repair-demo-data.ts --apply",
+          "cwd": "backend",
+          "env": {
+            "TS_NODE_PROJECT": "tsconfig.typeorm.json"
+          }
+        }
+      },
+      "demo-flow:verify": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "node ../scripts/buyer-flow/verify-demo-delivery.mjs",
+          "cwd": "backend"
+        }
+      },
+      "watch-server:verify": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "node ../scripts/buyer-flow/verify-watch-server.mjs",
+          "cwd": "backend"
+        }
+      },
+      "demo:prepare": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "node -r ts-node/register src/seed/prepare-role-demo.cli.ts",
+          "cwd": "backend",
+          "env": {
+            "TS_NODE_PROJECT": "tsconfig.typeorm.json"
+          }
+        }
+      },
+      "typecheck": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "tsc --noEmit -p tsconfig.app.json",
+          "cwd": "backend"
+        }
+      },
+      "role-demo:verify": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "node ../scripts/buyer-flow/verify-role-demos.mjs",
+          "cwd": "backend"
+        }
       }
     }
   },

@@ -1,7 +1,7 @@
 import { authClient } from '../lib/axios/axios-http-client';
 
-export function getMyCart() {
-  return authClient.get('/cart');
+export function getMyCart(signal?: AbortSignal) {
+  return authClient.get('/cart',{signal});
 }
 
 /**

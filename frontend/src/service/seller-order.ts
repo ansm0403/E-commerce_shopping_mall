@@ -33,6 +33,10 @@ export async function shipOrder(orderNumber: string, dto: ShipOrderRequest) {
   return authClient.patch<Order>(`/seller/orders/${orderNumber}/ship`, dto);
 }
 
+export async function deliverSellerOrder(orderNumber: string) {
+  return authClient.patch<Order>(`/seller/orders/${orderNumber}/deliver`);
+}
+
 // ──────────────────────────────────────────────
 // 표시용 메타 (관리자 주문 화면도 같은 라벨을 쓴다)
 // ──────────────────────────────────────────────

@@ -8337,6 +8337,7 @@ __metadata:
     "@types/bcrypt": "npm:^6"
     "@types/cookie-parser": "npm:^1.4.10"
     "@types/jest": "npm:^30.0.0"
+    "@types/multer": "npm:^2.3.0"
     "@types/node": "npm:20.19.9"
     "@types/nodemailer": "npm:^7.0.4"
     "@types/passport": "npm:^0"
@@ -9417,6 +9418,15 @@ __metadata:
   version: 2.1.0
   resolution: "@types/ms@npm:2.1.0"
   checksum: 10c0/5ce692ffe1549e1b827d99ef8ff71187457e0eb44adbae38fdf7b9a74bae8d20642ee963c14516db1d35fa2652e65f47680fdf679dcbde52bbfadd021f497225
+  languageName: node
+  linkType: hard
+
+"@types/multer@npm:^2.3.0":
+  version: 2.3.0
+  resolution: "@types/multer@npm:2.3.0"
+  dependencies:
+    "@types/express": "npm:*"
+  checksum: 10c0/a66cfeede9efc71b75054a4c550c76f2886c862595dc3492dd759d02598baf3f0f3541177a64388f3a78c36b3a954c917ded5e182bbc6d4f6d04f7f9c75e26da
   languageName: node
   linkType: hard
 

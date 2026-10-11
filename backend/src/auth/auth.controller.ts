@@ -15,6 +15,8 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
+import { parseDemoRole } from './dto/demo-login';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -134,6 +136,14 @@ export class AuthController {
    * RN 운영 앱의 "데모 계정으로 체험하기" 버튼이 같은 경로를 탄다 — 앱은 `X-Client: mobile` 을 붙여 login 과 똑같이
    * body 로 refreshToken 을 받는다(안 주면 15분 뒤 갱신이 실패해 로그아웃된다). 헤더가 없으면 종전과 100% 같다.
    */
+  @Get('demo-options')
+  @Throttle({default: {ttl: 60000, limit: 30}})
+  demoOptions() { return this.authService.demoOptions(); }
+
+  @Get('demo-status')
+  @UseGuards(JwtAuthGuard)
+  demoStatus(@User('sub') userId: number) { return this.authService.demoStatus(userId); }
+
   @Post('demo-login')
   @HttpCode(200)
   async demoLogin(
@@ -142,8 +152,9 @@ export class AuthController {
     @Headers('user-agent') userAgent?: string,
     @Headers('x-device-id') deviceId?: string,
     @Headers('x-client') client?: string,
+    @Body() body?: object,
   ) {
-    const result = await this.authService.demoLogin({ ipAddress, userAgent, deviceId });
+    const result = await this.authService.demoLogin({ ipAddress, userAgent, deviceId }, parseDemoRole(body));
     this.setRefreshCookie(res, result.refreshToken, false);
     return this.buildTokenResponse(result, client);
   }

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, Not, IsNull, Repository } from 'typeorm';
 import {
   InquiryEntity,
   InquiryStatus,
@@ -12,7 +12,7 @@ import { rand } from './seed-helpers';
  * 소규모 문의(Q&A) 시드 — 관리자 AI 어시스턴트 `summarize_inquiries`(Phase 5a) 시연용.
  *
  * - 실 published 상품에 FK 연결(productId) + 시드 buyer(userId) + 시드 seller(sellerId).
- *   (현재 published 상품은 seller_id=NULL 이라 상품 소유 셀러를 못 쓴다 → 시드 셀러로 FK 충족.)
+ *   상품에 연결된 판매자를 그대로 사용하여 셀러 문의함과 소유권을 일치시킨다.
  * - 상태 혼합: 미답변(waiting) 다수 + 답변완료(answered) 일부 + 비밀문의(isSecret) 소수.
  * - 일부 비-비밀 문의 본문에 전화/이메일을 의도적으로 심어 `scrubText` 마스킹을 시연 가능하게 한다.
  * - NODE_SEED 게이트는 호출부(DashboardSeedService)가 담당. 멱등성은 "시드 buyer 문의 있으면 skip".
@@ -139,28 +139,27 @@ export class InquirySeedService {
     }
 
     const products = await this.productRepo.find({
-      where: { status: ProductStatus.PUBLISHED },
-      select: ['id'],
+      where: { status: ProductStatus.PUBLISHED, sellerId: Not(IsNull()) },
+      select: ['id', 'sellerId'],
     });
     if (products.length === 0) {
       console.log('  ⚠️  published 상품이 없어 문의 시드를 건너뜁니다.');
       return;
     }
-    const productIds = products.map((p) => p.id);
 
     const inquiries: InquiryEntity[] = [];
 
-    const pickProduct = () => productIds[rand(0, productIds.length - 1)];
+    const pickProduct = () => products[rand(0, products.length - 1)];
     const pickBuyer = () => buyerUserIds[rand(0, buyerUserIds.length - 1)];
-    const pickSeller = () => sellerIds[rand(0, sellerIds.length - 1)];
 
     // 미답변(waiting) — 풀 전체 1회 + 약간 더(가중치: 미답변이 다수).
     for (const t of InquirySeedService.WAITING) {
+      const product = pickProduct();
       inquiries.push(
         this.inquiryRepo.create({
           userId: pickBuyer(),
-          productId: pickProduct(),
-          sellerId: pickSeller(),
+          productId: product.id,
+          sellerId: product.sellerId!,
           title: t.title,
           content: t.content,
           answer: null,
@@ -173,11 +172,12 @@ export class InquirySeedService {
 
     // 답변완료(answered).
     for (const t of InquirySeedService.ANSWERED) {
+      const product = pickProduct();
       inquiries.push(
         this.inquiryRepo.create({
           userId: pickBuyer(),
-          productId: pickProduct(),
-          sellerId: pickSeller(),
+          productId: product.id,
+          sellerId: product.sellerId!,
           title: t.title,
           content: t.content,
           answer: t.answer,
@@ -190,12 +190,13 @@ export class InquirySeedService {
 
     // 비밀문의(isSecret) — 미답변/답변완료 섞어서.
     for (const t of InquirySeedService.SECRET) {
+      const product = pickProduct();
       const answered = t.answer !== null;
       inquiries.push(
         this.inquiryRepo.create({
           userId: pickBuyer(),
-          productId: pickProduct(),
-          sellerId: pickSeller(),
+          productId: product.id,
+          sellerId: product.sellerId!,
           title: t.title,
           content: t.content,
           answer: t.answer,

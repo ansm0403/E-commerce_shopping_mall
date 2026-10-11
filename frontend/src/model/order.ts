@@ -59,6 +59,10 @@ export interface PaymentSummary {
 // ─── 주문 응답 ───────────────────────────────────────────────────────────────
 
 export interface OrderResponse {
+  isDemoCheckout?: boolean;
+  testPayment?: { storeId: string; channelKey: string };
+  canDemoChange?: boolean;
+  canTestDeliver?: boolean;
   id: number;
   orderNumber: string;
   userId: number;

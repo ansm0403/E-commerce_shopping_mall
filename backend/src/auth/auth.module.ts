@@ -1,3 +1,4 @@
+import { DemoModule } from '../demo/demo.module';
 import { forwardRef, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -16,6 +17,7 @@ import { RedisModule } from '../intrastructure/redis/redis.module';
 @Module({
   imports: [
     ConfigModule,
+    DemoModule,
     RedisModule.forRoot(),
     EmailModule,
     forwardRef(() => AuditModule),

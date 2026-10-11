@@ -11,6 +11,7 @@ export interface SeedProductRef {
   name: string;
   price: number;
   imageUrl: string | null;
+  sellerId: number | null;
 }
 
 // 합성 orderId 시작값 — 실제 orders.id(작은 serial)와 충돌하지 않도록 큰 값에서 시작.
@@ -102,6 +103,7 @@ export class ReviewSeedService {
         name: p.name,
         price: Number(p.price),
         imageUrl: primary?.url ?? null,
+        sellerId: p.sellerId,
       };
     });
   }

@@ -1,10 +1,11 @@
+import { DemoPolicyService } from '../demo/demo-policy.service';
 import {
   Injectable,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between, FindOptionsWhere } from 'typeorm';
+import { Repository, Between, FindOptionsWhere, In } from 'typeorm';
 import { SettlementEntity, SettlementStatus } from './entity/settlement.entity';
 import { SellerEntity } from '../seller/entity/seller.entity';
 import { SettlementQueryDto } from './dto/settlement-query.dto';
@@ -16,6 +17,7 @@ export class SettlementService {
     private readonly settlementRepository: Repository<SettlementEntity>,
     @InjectRepository(SellerEntity)
     private readonly sellerRepository: Repository<SellerEntity>,
+    private readonly demoPolicy: DemoPolicyService,
   ) {}
 
   // ── 셀러 전용 ──
@@ -26,6 +28,7 @@ export class SettlementService {
     const take = query.take ?? 20;
 
     const where: FindOptionsWhere<SettlementEntity> = { sellerId: seller.id };
+    if ((await this.demoPolicy.user(userId))?.isDemo) where.orderId = In(await this.demoPolicy.fixtureOrderIds());
     if (query.status) where.status = query.status;
     if (query.startDate && query.endDate) {
       where.createdAt = Between(new Date(query.startDate), new Date(query.endDate));
@@ -48,7 +51,7 @@ export class SettlementService {
     const seller = await this.findSellerByUserId(userId);
 
     const all = await this.settlementRepository.find({
-      where: { sellerId: seller.id },
+      where: { sellerId: seller.id, ...((await this.demoPolicy.user(userId))?.isDemo ? { orderId: In(await this.demoPolicy.fixtureOrderIds()) } : {}) },
     });
 
     const pending = all.filter((s) => s.status === SettlementStatus.PENDING);
@@ -102,6 +105,7 @@ export class SettlementService {
       throw new NotFoundException('정산 내역을 찾을 수 없습니다.');
     }
 
+    await this.demoPolicy.forbidFixtureOrder(settlement.orderId);
     if (settlement.status !== SettlementStatus.PENDING) {
       throw new BadRequestException(
         `PENDING 상태의 정산만 확정할 수 있습니다. (현재: ${settlement.status})`,
@@ -124,6 +128,7 @@ export class SettlementService {
       throw new NotFoundException('정산 내역을 찾을 수 없습니다.');
     }
 
+    await this.demoPolicy.forbidFixtureOrder(settlement.orderId);
     if (settlement.status !== SettlementStatus.CONFIRMED) {
       throw new BadRequestException(
         `CONFIRMED 상태의 정산만 송금 완료 처리할 수 있습니다. (현재: ${settlement.status})`,

@@ -1,3 +1,5 @@
+import type { ProductImage } from './product';
+
 export interface CartProduct {
   id: number;
   name: string;
@@ -8,6 +10,7 @@ export interface CartProduct {
   approvalStatus: string;
   isEvent: boolean;
   discountRate: number | null;
+  images: ProductImage[];
 }
 
 export interface CartItem {

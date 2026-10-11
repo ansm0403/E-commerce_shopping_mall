@@ -1,3 +1,4 @@
+import { RoleDemoFixtures1791763200000 } from './1791763200000-RoleDemoFixtures';
 import { MigrationInterface } from 'typeorm';
 import { Init1786978325132 } from './1786978325132-Init';
 import { OpsPushTables1789877464959 } from './1789877464959-OpsPushTables';
@@ -5,6 +6,8 @@ import { OpsAnalyses1789968335669 } from './1789968335669-OpsAnalyses';
 import { OpsReviews1790001959888 } from './1790001959888-OpsReviews';
 import { OpsToolCalls1790026688606 } from './1790026688606-OpsToolCalls';
 import { OpsGuidedReview1790079789208 } from './1790079789208-OpsGuidedReview';
+import { MockProductSeedKey1791676800000 } from './1791676800000-MockProductSeedKey';
+import { DemoCheckout1791849600000 } from './1791849600000-DemoCheckout';
 
 /**
  * 마이그레이션 명시적 등록 배열.
@@ -24,4 +27,7 @@ export const migrations: Array<new () => MigrationInterface> = [
   OpsReviews1790001959888,
   OpsToolCalls1790026688606,
   OpsGuidedReview1790079789208,
+  MockProductSeedKey1791676800000,
+  RoleDemoFixtures1791763200000,
+  DemoCheckout1791849600000,
 ];

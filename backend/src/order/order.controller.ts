@@ -31,6 +31,7 @@ export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
   @Post()
+  @UseGuards(DemoAccountGuard)
   @Serialize(OrderResponseDto)
   @Auditable(AuditAction.ORDER_CREATED)
   createOrder(@Body() dto: CreateOrderDto, @Req() req: any) {
@@ -50,6 +51,7 @@ export class OrderController {
   }
 
   @Patch(':orderNumber/cancel')
+  @UseGuards(DemoAccountGuard)
   @Serialize(OrderResponseDto)
   @Auditable(AuditAction.ORDER_CANCELLED)
   cancelOrder(@Param('orderNumber') orderNumber: string, @Req() req: any) {
@@ -61,6 +63,13 @@ export class OrderController {
   @Auditable(AuditAction.ORDER_CONFIRMED)
   confirmOrder(@Param('orderNumber') orderNumber: string, @Req() req: any) {
     return this.orderService.confirmOrder(req.user.sub, orderNumber);
+  }
+
+  @Patch(':orderNumber/test-deliver')
+  @Serialize(OrderResponseDto)
+  @Auditable(AuditAction.SHIPMENT_TEST_DELIVERED)
+  testDeliver(@Param('orderNumber') orderNumber: string, @Req() req: any) {
+    return this.orderService.markTestDelivered(req.user.sub, orderNumber);
   }
 }
 
@@ -75,6 +84,13 @@ export class SellerOrderController {
   @Serialize(OrderResponseDto)
   getSellerOrders(@Query() query: OrderQueryDto, @Req() req: any) {
     return this.orderService.getSellerOrders(req.user.sub, query);
+  }
+
+  @Patch(':orderNumber/deliver')
+  @Serialize(OrderResponseDto)
+  @Auditable(AuditAction.SHIPMENT_DELIVERED)
+  deliver(@Param('orderNumber') orderNumber: string, @Req() req: any) {
+    return this.orderService.markSellerDelivered(req.user.sub, orderNumber);
   }
 
   @Patch(':orderNumber/ship')

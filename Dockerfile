@@ -1,8 +1,12 @@
 # 멀티스테이지 빌드를 위한 NX 모노레포 Dockerfile
 
 # Stage 1: Base image with Node.js and Yarn
-FROM node:20-slim AS base
+FROM node:24-bookworm-slim AS base
 WORKDIR /app
+
+# CPU 수가 많은 빌드 호스트에서도 의존성 압축 해제 작업이 메모리를 과도하게 쓰지 않게 한다.
+ENV YARN_TASK_POOL_CONCURRENCY=2 \
+    YARN_NETWORK_CONCURRENCY=8
 
 # 빌드 도구 설치 (네이티브 모듈 빌드용)
 RUN apt-get update && apt-get install -y \
@@ -18,16 +22,15 @@ RUN corepack enable && corepack prepare yarn@4.10.3 --activate
 FROM base AS deps
 COPY package.json yarn.lock .yarnrc.yml ./
 COPY .yarn ./.yarn
-RUN yarn install
+RUN --mount=type=cache,target=/app/.yarn/cache yarn install
 
 # Stage 3: Build stage (backend only)
 # frontend는 Vercel에서 자체 빌드하므로 제외
-FROM base AS builder
-COPY --from=deps /app/node_modules ./node_modules
+FROM deps AS builder
 COPY . .
 
-# workspace symlink이 deps 스테이지의 절대경로를 가리키므로 재생성 필요
-RUN yarn install
+# 소스가 복사된 워크스페이스의 의존성과 링크를 반영한다.
+RUN --mount=type=cache,target=/app/.yarn/cache yarn install
 
 # NX 캐시 클리어 및 빌드
 RUN npx nx reset
@@ -35,13 +38,12 @@ RUN NX_DAEMON=false npx nx sync
 RUN NX_DAEMON=false npx nx build backend --prod
 
 # Stage 4: Production dependencies
-FROM base AS prod-deps
-COPY package.json yarn.lock .yarnrc.yml ./
-COPY .yarn ./.yarn
-RUN yarn workspaces focus --production
+# 빌드가 끝난 뒤 설치된 의존성을 정리하여 대용량 설치 작업의 동시 실행을 피한다.
+FROM builder AS prod-deps
+RUN --mount=type=cache,target=/app/.yarn/cache yarn workspaces focus @shopping-mall/source @shopping-mall/backend --production
 
 # Stage 5: Backend production image
-FROM node:20-slim AS backend-prod
+FROM node:24-bookworm-slim AS backend-prod
 WORKDIR /app
 
 # 보안을 위한 non-root 사용자 생성

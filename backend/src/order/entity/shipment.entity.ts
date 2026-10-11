@@ -1,6 +1,6 @@
 import { Entity, Column, ManyToOne, JoinColumn, Unique } from 'typeorm';
 import { BaseModel } from '../../common/entity/base.entity';
-import { OrderEntity } from './order.entity';
+import type { OrderEntity } from './order.entity';
 import type { SellerEntity } from '../../seller/entity/seller.entity';
 
 export enum ShipmentStatus {
@@ -15,7 +15,7 @@ export class ShipmentEntity extends BaseModel {
   @Column({ name: 'order_id' })
   orderId: number;
 
-  @ManyToOne(() => OrderEntity, (order) => order.shipments, {
+  @ManyToOne('OrderEntity', (order: OrderEntity) => order.shipments, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'order_id' })

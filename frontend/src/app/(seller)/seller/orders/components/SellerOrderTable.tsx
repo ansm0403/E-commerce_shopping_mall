@@ -5,6 +5,8 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { OrderStatus, ShipmentStatus, type Order } from '@shopping-mall/shared';
 import {
   useSellerOrdersQuery,
+  useDeliverSellerOrderMutation,
+  sellerOrderErrorMessage,
 } from '../../../../../hooks/seller-order-query-options';
 import {
   formatAmount,
@@ -39,6 +41,18 @@ export default function SellerOrderTable() {
   const pathname = usePathname();
   const sp = useSearchParams();
   const [target, setTarget] = useState<Order | null>(null);
+  const deliverMutation = useDeliverSellerOrderMutation();
+  const [deliveryError, setDeliveryError] = useState<string | null>(null);
+
+  const deliver = async (orderNumber: string) => {
+    if (!confirm('이 배송건을 배송 완료로 처리하시겠습니까?')) return;
+    setDeliveryError(null);
+    try {
+      await deliverMutation.mutateAsync(orderNumber);
+    } catch (error) {
+      setDeliveryError(sellerOrderErrorMessage(error));
+    }
+  };
 
   const pageParam = Number(sp.get('page'));
   const statusParam = sp.get('status') ?? DEFAULT_ORDER_STATUS;
@@ -94,7 +108,9 @@ export default function SellerOrderTable() {
             )}
             {rows.map((order) => {
               const myShipment = order.shipments?.[0] ?? null;
-              const canShip = myShipment?.status === ShipmentStatus.PREPARING;
+              const activeOrder = order.status === OrderStatus.PREPARING || order.status === OrderStatus.SHIPPED;
+              const canShip = order.canDemoChange!==false && activeOrder && myShipment?.status === ShipmentStatus.PREPARING;
+              const canDeliver = order.canDemoChange!==false && activeOrder && myShipment?.status === ShipmentStatus.SHIPPED;
               const myAmount = order.items.reduce((sum, item) => sum + Number(item.subtotal), 0);
               return (
                 <tr key={order.id}>
@@ -132,6 +148,15 @@ export default function SellerOrderTable() {
                       <button style={actionButton('#2563eb')} onClick={() => setTarget(order)}>
                         배송 처리
                       </button>
+                    ) : canDeliver ? (
+                      <button
+                        style={actionButton('#15803d')}
+                        disabled={deliverMutation.isPending}
+                        onClick={() => deliver(order.orderNumber)}
+                      >
+                        {deliverMutation.isPending && deliverMutation.variables === order.orderNumber
+                          ? '처리 중…' : '배송 완료 처리하기'}
+                      </button>
                     ) : (
                       <span style={{ fontSize: '12px', color: '#94a3b8' }}>—</span>
                     )}
@@ -144,6 +169,7 @@ export default function SellerOrderTable() {
       </div>
 
       <AdminPagination meta={data?.meta} onPageChange={goPage} />
+      {deliveryError && <p role="alert" style={{ color: '#dc2626', marginTop: '12px' }}>{deliveryError}</p>}
 
       {target && <SellerShipModal order={target} onClose={() => setTarget(null)} />}
     </div>

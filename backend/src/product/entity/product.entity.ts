@@ -37,6 +37,10 @@ export enum SalesType {
 
 @Entity('products')
 export class ProductEntity extends BaseModel {
+  /** Stable identity for catalog fixtures; seller-created products leave this null. */
+  @Column({ name: 'seed_key', type: 'varchar', nullable: true, unique: true })
+  seedKey: string | null;
+
   @Column()
   name: string;
 

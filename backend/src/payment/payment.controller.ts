@@ -1,3 +1,4 @@
+import { DemoAccountGuard } from '../auth/guards/demo-account.guard';
 import {
   Body,
   Controller,
@@ -5,10 +6,10 @@ import {
   HttpCode,
   Param,
   Post,
-  RawBodyRequest,
   Req,
   UseGuards,
 } from '@nestjs/common';
+import type { RawBodyRequest } from '@nestjs/common';
 import type { Request } from 'express';
 import { SkipThrottle } from '@nestjs/throttler';
 import { PortOneWebhookVerifier } from './portone-webhook-verifier';
@@ -32,6 +33,7 @@ export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
   @Post('verify')
+  @UseGuards(DemoAccountGuard)
   @Serialize(PaymentResponseDto)
   @Auditable(AuditAction.PAYMENT_VERIFIED)
   verifyPayment(@Body() dto: VerifyPaymentDto, @Req() req: any) {
@@ -39,6 +41,7 @@ export class PaymentController {
   }
 
   @Post(':orderNumber/cancel')
+  @UseGuards(DemoAccountGuard)
   @Serialize(PaymentResponseDto)
   @Auditable(AuditAction.PAYMENT_CANCELLED, { captureBody: ['reason'] })
   cancelPayment(
@@ -89,6 +92,7 @@ export class AdminPaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
   @Post(':orderNumber/cancel')
+  @UseGuards(DemoAccountGuard)
   @Serialize(PaymentResponseDto)
   @Auditable(AuditAction.PAYMENT_CANCELLED_ADMIN, { captureBody: ['reason'] })
   cancelPayment(

@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { FaShoppingCart } from 'react-icons/fa';
 import { cartQueryOptions } from '@/lib/react-query/cart-query-options';
 import { useAuth } from '@/contexts/AuthContext';
+import { hasRole } from '@/lib/roles';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { useClearCart } from '@/hooks/useCart';
 import { Cart } from '@/model/cart';
@@ -19,6 +20,11 @@ export default function CartPage() {
   const { user } = useAuth();
 
   const isLoggedIn = !!user;
+  const isDemoBuyer =
+    !!user?.isDemo &&
+    hasRole(user, 'buyer') &&
+    !hasRole(user, 'seller') &&
+    !hasRole(user, 'admin');
   const { data, isLoading } = useQuery(cartQueryOptions.myCart(isLoggedIn));
 
   // 비로그인이면 로그인으로(돌아올 경로 포함) — /auth/me 응답을 기다린 뒤에만 판정한다
@@ -27,15 +33,17 @@ export default function CartPage() {
   const cart = data?.data as Cart | undefined;
   const items = cart?.items ?? [];
 
-  const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-  const shippingFee = subtotal === 0 ? 0 : subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
+  const subtotal = items.reduce(
+    (sum, item) => sum + item.product.price * item.quantity,
+    0
+  );
+  const shippingFee =
+    subtotal === 0 ? 0 : subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
   const total = subtotal + shippingFee;
 
   if (isLoading) {
     return (
-      <div className="py-20 text-center text-secondary-500">
-        불러오는 중...
-      </div>
+      <div className="py-20 text-center text-secondary-500">불러오는 중...</div>
     );
   }
 
@@ -50,6 +58,13 @@ export default function CartPage() {
           </span>
         )}
       </h1>
+
+      {isDemoBuyer && (
+        <p className="mb-6 text-sm text-secondary-500">
+          이번 로그인에서만 사용하는 체험 장바구니입니다. 샘플 상품 10종, 상품별
+          5개까지 담고 테스트 결제할 수 있습니다.
+        </p>
+      )}
 
       {/* 빈 장바구니 */}
       {items.length === 0 && (
@@ -68,7 +83,6 @@ export default function CartPage() {
       {/* 장바구니 목록 + 주문 요약 */}
       {items.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
           {/* 왼쪽: 상품 목록 */}
           <div className="lg:col-span-2 flex flex-col gap-3">
             {items.map((item) => (
@@ -87,7 +101,9 @@ export default function CartPage() {
           {/* 오른쪽: 주문 요약 */}
           <div className="lg:col-span-1">
             <div className="lg:sticky lg:top-48 bg-white rounded-3xl border border-primary-100 p-6 space-y-5">
-              <h2 className="text-base font-bold text-secondary-900">주문 요약</h2>
+              <h2 className="text-base font-bold text-secondary-900">
+                주문 요약
+              </h2>
 
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between text-secondary-600">
@@ -97,21 +113,25 @@ export default function CartPage() {
                 <div className="flex justify-between text-secondary-600">
                   <span>배송비</span>
                   <span>
-                    {shippingFee === 0
-                      ? <span className="text-green-700 font-medium">무료</span>
-                      : `${shippingFee.toLocaleString()}원`
-                    }
+                    {shippingFee === 0 ? (
+                      <span className="text-green-700 font-medium">무료</span>
+                    ) : (
+                      `${shippingFee.toLocaleString()}원`
+                    )}
                   </span>
                 </div>
                 {subtotal > 0 && subtotal < FREE_SHIPPING_THRESHOLD && (
                   <p className="text-xs text-secondary-500">
-                    {(FREE_SHIPPING_THRESHOLD - subtotal).toLocaleString()}원 더 담으면 무료배송
+                    {(FREE_SHIPPING_THRESHOLD - subtotal).toLocaleString()}원 더
+                    담으면 무료배송
                   </p>
                 )}
               </div>
 
               <div className="border-t border-secondary-200 pt-4 flex justify-between items-center">
-                <span className="font-bold text-secondary-900">총 결제금액</span>
+                <span className="font-bold text-secondary-900">
+                  총 결제금액
+                </span>
                 <span className="text-lg font-bold text-primary-600">
                   {total.toLocaleString()}원
                 </span>
@@ -121,7 +141,7 @@ export default function CartPage() {
                 onClick={() => router.push('/checkout')}
                 className="w-full py-3 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 active:scale-95 transition-all"
               >
-                구매하기
+                {isDemoBuyer ? '테스트 결제하기' : '구매하기'}
               </button>
 
               <button
@@ -132,7 +152,6 @@ export default function CartPage() {
               </button>
             </div>
           </div>
-
         </div>
       )}
     </div>

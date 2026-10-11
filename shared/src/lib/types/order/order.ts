@@ -24,6 +24,8 @@ export const PaymentStatus = {
 export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus];
 
 export interface Order extends BaseModel {
+  canDemoChange?: boolean;
+  canTestDeliver?: boolean;
   orderNumber: string;
   userId: number;
   status: OrderStatus;

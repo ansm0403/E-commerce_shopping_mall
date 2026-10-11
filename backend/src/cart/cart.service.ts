@@ -54,7 +54,7 @@ export class CartService {
   async getMyCart(userId: number): Promise<CartEntity> {
     const cart = await this.getOrCreateCart(userId);
 
-    return this.cartRepository.findOne({
+    return this.cartRepository.findOneOrFail({
       where: { id: cart.id },
       relations: ['items', 'items.product', 'items.product.images'],
       order: { items: { createdAt: 'DESC' } },

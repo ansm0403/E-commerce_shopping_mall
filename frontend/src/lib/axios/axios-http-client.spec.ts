@@ -127,7 +127,8 @@ describe('authClient 401 인터셉터', () => {
 
     // 다시 로그인하면 플래그를 풀어 요청이 나간다
     resetLoggingOutFlag();
-    sessionStorage.setItem('accessToken', 'fresh-login-token');
+    const { authStorage } = await import('../../service/auth-storage');
+    authStorage.setAccessToken('fresh-login-token', false);
     authAdapter.mockImplementation((config) => Promise.resolve(ok(config, 'ok')));
     await expect(authClient.get('/cart')).resolves.toMatchObject({ data: 'ok' });
     expect(authHeader(authAdapter.mock.calls[0][0])).toBe('Bearer fresh-login-token');

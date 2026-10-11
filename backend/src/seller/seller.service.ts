@@ -19,9 +19,9 @@ export class SellerService {
     @InjectRepository(SellerEntity)
     private readonly sellerRepository: Repository<SellerEntity>,
     @InjectRepository(UserModel)
-    private readonly userRepository: Repository<UserModel>,
+    userRepository: Repository<UserModel>,
     @InjectRepository(RoleEntity)
-    private readonly roleRepository: Repository<RoleEntity>,
+    roleRepository: Repository<RoleEntity>,
     private readonly commonService: CommonService,
     private readonly dataSource: DataSource,
   ) {}

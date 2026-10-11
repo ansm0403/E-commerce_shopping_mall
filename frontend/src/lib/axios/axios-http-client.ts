@@ -1,4 +1,9 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import { authRevision, withSessionLock } from '../../service/auth-session';
+import axios, {
+  AxiosError,
+  CanceledError,
+  InternalAxiosRequestConfig,
+} from 'axios';
 import { authStorage } from '../../../src/service/auth-storage';
 import { reportApiError } from './report-api-error';
 
@@ -15,6 +20,44 @@ let refreshPromise: Promise<string | null> | null = null;
 let isLoggingOut = false; // 로그아웃 처리 중 플래그
 const MAX_RETRY_COUNT = 3;
 const REFRESH_API_ENDPOINT = '/auth/refresh';
+let accountRequests = new AbortController();
+type AccountRequest = InternalAxiosRequestConfig & {
+  _authRevision?: string;
+  _authCallerSignal?: AbortSignal;
+  _authSignalCleanup?: () => void;
+};
+
+function trackAccountSignal(config: AccountRequest) {
+  const caller =
+    config._authCallerSignal ?? (config.signal as AbortSignal | undefined);
+  config._authCallerSignal = caller;
+  const account = accountRequests.signal;
+  if (!caller) {
+    config.signal = account;
+    return;
+  }
+  if (typeof AbortSignal.any === 'function') {
+    config.signal = AbortSignal.any([caller, account]);
+    return;
+  }
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  const cleanup = () => {
+    caller.removeEventListener('abort', abort);
+    account.removeEventListener('abort', abort);
+  };
+  config._authSignalCleanup = cleanup;
+  if (caller.aborted || account.aborted) abort();
+  else {
+    caller.addEventListener('abort', abort, { once: true });
+    account.addEventListener('abort', abort, { once: true });
+  }
+  config.signal = controller.signal;
+}
+export function cancelAccountRequests() {
+  accountRequests.abort();
+  accountRequests = new AbortController();
+}
 
 // 공개 API용 클라이언트 (인증 불필요)
 export const publicClient = axios.create(baseConfig);
@@ -49,6 +92,12 @@ authClient.interceptors.request.use(
       return Promise.reject(new Error('Logging out...'));
     }
 
+    const tracked = config as AccountRequest;
+    tracked._authRevision ??= authRevision();
+    if (tracked._authRevision !== authRevision())
+      return Promise.reject(new CanceledError('Account changed'));
+    // Cover private queries whose existing service wrapper does not yet accept a query signal.
+    trackAccountSignal(tracked);
     // localStorage와 sessionStorage 둘 다 확인
     const token = authStorage.getAccessToken();
 
@@ -86,7 +135,7 @@ authClient.interceptors.request.use(
  */
 export const refreshAccessToken = async (): Promise<string | null> => {
   // 이미 로그아웃 절차 중이면 더 이상 갱신 시도하지 않음 (무한 루프 방지)
-  if (isLoggingOut) {
+  if (isLoggingOut || authStorage.isLogoutPending()) {
     return null;
   }
 
@@ -99,22 +148,37 @@ export const refreshAccessToken = async (): Promise<string | null> => {
   // (2) "내가 refresh를 시작했다" 표시 + 다른 요청들과 공유할 Promise 생성.
   isRefreshing = true;
 
-  refreshPromise = (async () => {
+  const revision = authRevision();
+  refreshPromise = withSessionLock(async () => {
     try {
+      if (
+        revision !== authRevision() ||
+        isLoggingOut ||
+        authStorage.isLogoutPending()
+      )
+        return null;
       // refreshToken은 쿠키에 저장되어 있어 자동으로 전송됨 (withCredentials: true)
       const response = await publicClient.post(REFRESH_API_ENDPOINT);
 
       const { accessToken } = response.data;
 
       // localStorage 또는 sessionStorage에 저장 (기존에 저장된 위치에)
+      if (revision !== authRevision() || isLoggingOut) return null;
       authStorage.refreshAccessToken(accessToken);
 
       return accessToken;
-    } catch {
+    } catch (error) {
       // 로그아웃 처리 중 플래그 설정 (무한 루프 방지)
-      if (isLoggingOut) {
+      if (isLoggingOut || revision !== authRevision()) {
         return null;
       }
+
+      // A network timeout, rate limit or temporary server outage does not prove
+      // the cookie session expired. Preserve the account and let callers retry.
+      if (
+        (error as { response?: { status?: number } })?.response?.status !== 401
+      )
+        throw error;
 
       isLoggingOut = true;
 
@@ -132,19 +196,36 @@ export const refreshAccessToken = async (): Promise<string | null> => {
       isRefreshing = false;
       refreshPromise = null;
     }
-  })();
+  });
   return refreshPromise;
 };
 
 authClient.interceptors.response.use(
   (response) => {
+    (response.config as AccountRequest)._authSignalCleanup?.();
+    if (
+      (
+        response.config as InternalAxiosRequestConfig & {
+          _authRevision?: string;
+        }
+      )._authRevision !== authRevision()
+    )
+      throw new CanceledError('Account changed');
     return response;
   },
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: number;
+      _authRevision?: string;
     };
+    (error.config as AccountRequest | undefined)?._authSignalCleanup?.();
 
+    if (
+      axios.isCancel(error) ||
+      (originalRequest?._authRevision &&
+        originalRequest._authRevision !== authRevision())
+    )
+      return Promise.reject(new CanceledError('Account changed'));
     // Refresh API 엔드포인트는 interceptor 로직에서 제외
     if (originalRequest?.url?.includes(REFRESH_API_ENDPOINT)) {
       reportApiError(error, 'auth'); // 401 은 리포터가 걸러낸다
@@ -172,7 +253,10 @@ authClient.interceptors.response.use(
         // Access Token 갱신
         const newAccessToken = await refreshAccessToken();
 
-        if (!newAccessToken) {
+        if (
+          !newAccessToken ||
+          originalRequest._authRevision !== authRevision()
+        ) {
           return Promise.reject(error);
         }
 
@@ -194,6 +278,10 @@ authClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export function beginLoggingOut() {
+  isLoggingOut = true;
+}
 
 // 로그인 성공 후 isLoggingOut 플래그 리셋 (router.push 방식 대비)
 export function resetLoggingOutFlag() {

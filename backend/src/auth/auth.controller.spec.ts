@@ -130,7 +130,7 @@ describe('AuthController', () => {
       const out = await controller.demoLogin(res as unknown as Response, ctx.ipAddress, ctx.userAgent, undefined, 'mobile');
 
       expect(out).toMatchObject({ accessToken: 'access.jwt', refreshToken: 'refresh.jwt', user: { isDemo: true } });
-      expect(authService.demoLogin).toHaveBeenCalledWith({ ipAddress: ctx.ipAddress, userAgent: ctx.userAgent, deviceId: undefined });
+      expect(authService.demoLogin).toHaveBeenCalledWith({ ipAddress: ctx.ipAddress, userAgent: ctx.userAgent, deviceId: undefined }, 'admin');
     });
   });
 

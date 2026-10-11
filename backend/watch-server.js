@@ -6,7 +6,7 @@ const fs = require('fs');
 let serverProcess = null;
 let restartTimer = null;
 const serverFile = path.join(__dirname, 'dist', 'main.js');
-const DEBOUNCE_DELAY = 5000; // 2초 대기
+const DEBOUNCE_DELAY = 5000;
 
 function startServer() {
   // 이전 프로세스가 있으면 종료
@@ -39,7 +39,7 @@ function scheduleRestart() {
     clearTimeout(restartTimer);
   }
 
-  // 2초 후에 재시작하도록 예약
+  // 빌드 파일이 안정화된 뒤에 재시작
   restartTimer = setTimeout(() => {
     console.log('File changed, restarting...');
     startServer();
@@ -48,9 +48,12 @@ function scheduleRestart() {
 }
 
 // 파일 감시 시작
-const watcher = chokidar.watch(serverFile, {
+// Webpack이 dist 디렉터리를 삭제·재생성해도 감시가 유지되도록 부모 디렉터리를 감시한다.
+const watcher = chokidar.watch(__dirname, {
+  depth: 1,
+  ignored: (filePath) => ![__dirname, path.dirname(serverFile), serverFile].includes(path.resolve(filePath)),
   persistent: true,
-  ignoreInitial: false,
+  ignoreInitial: true,
   awaitWriteFinish: {
     stabilityThreshold: 500,
     pollInterval: 100
@@ -68,9 +71,8 @@ watcher.on('change', () => {
 });
 
 watcher.on('add', () => {
-  if (!serverProcess) {
-    startServer();
-  }
+  // 기존 서버가 있어도 재생성된 번들을 반영한다.
+  scheduleRestart();
 });
 
 // 종료 처리

@@ -1,3 +1,4 @@
+import { DemoPolicyService } from '../demo/demo-policy.service';
 import {
   Injectable,
   NotFoundException,
@@ -33,11 +34,14 @@ export class InquiryService {
     @InjectRepository(SellerEntity)
     private readonly sellerRepository: Repository<SellerEntity>,
     private readonly commonService: CommonService,
+    private readonly demoPolicy: DemoPolicyService,
   ) {}
 
   // ── Buyer ──
 
   async create(userId: number, dto: CreateInquiryDto) {
+    const demo = await this.demoPolicy.createDemoInquiry(userId, dto);
+    if (demo) return this.findOneWithUser(demo.id);
     const product = await this.productRepository.findOne({
       where: { id: dto.productId },
     });
@@ -95,6 +99,7 @@ export class InquiryService {
   }
 
   async delete(userId: number, inquiryId: number) {
+    await this.demoPolicy.forbidDemo(userId);
     const inquiry = await this.inquiryRepository.findOne({
       where: { id: inquiryId },
     });
@@ -111,7 +116,10 @@ export class InquiryService {
       throw new BadRequestException('답변이 완료된 문의는 삭제할 수 없습니다.');
     }
 
-    await this.inquiryRepository.remove(inquiry);
+    const deleted = await this.inquiryRepository.delete({ id: inquiry.id, userId, status: InquiryStatus.WAITING });
+    if (deleted.affected !== 1) {
+      throw new BadRequestException('이미 삭제되었거나 답변이 완료된 문의입니다.');
+    }
     return { message: '문의가 삭제되었습니다.' };
   }
 
@@ -123,10 +131,16 @@ export class InquiryService {
       throw new NotFoundException('셀러 정보를 찾을 수 없습니다.');
     }
 
-    return this.commonService.paginate(query, this.inquiryRepository, 'seller/inquiries', {
-      where: { sellerId: seller.id, ...(query.status ? { status: query.status } : {}) },
+    const result = await this.commonService.paginate(query, this.inquiryRepository, 'seller/inquiries', {
+      where: {
+        sellerId: seller.id,
+        ...((await this.demoPolicy.user(userId))?.isDemo ? { id: In(await this.demoPolicy.demoInquiryIds(seller.id)) } : {}),
+        ...(query.status ? { status: query.status } : {}),
+      },
       relations: ['user', 'product'],
     });
+    const demo=(await this.demoPolicy.user(userId))?.isDemo;
+    return {...result, data: result.data.map(inquiry => ({...inquiry, canAnswer: !demo || (!!inquiry.user?.isDemo && inquiry.user.email===process.env.DEMO_BUYER_EMAIL)}))};
   }
 
   async answer(userId: number, inquiryId: number, dto: AnswerInquiryDto) {
@@ -143,6 +157,7 @@ export class InquiryService {
       throw new NotFoundException('문의를 찾을 수 없습니다.');
     }
 
+    await this.demoPolicy.assertInquiryActor(userId, inquiry);
     if (inquiry.sellerId !== seller.id) {
       throw new ForbiddenException('본인 상품에 대한 문의만 답변할 수 있습니다.');
     }
@@ -151,10 +166,14 @@ export class InquiryService {
       throw new BadRequestException('이미 답변이 완료된 문의입니다.');
     }
 
-    inquiry.answer = dto.answer;
-    inquiry.answeredAt = new Date();
-    inquiry.status = InquiryStatus.ANSWERED;
-    await this.inquiryRepository.save(inquiry);
+    // 답변/삭제가 겹치거나 같은 문의에 동시 답변해도 첫 답변만 저장한다.
+    const updated = await this.inquiryRepository.update(
+      { id: inquiry.id, sellerId: seller.id, status: InquiryStatus.WAITING },
+      { answer: dto.answer, answeredAt: new Date(), status: InquiryStatus.ANSWERED },
+    );
+    if (updated.affected !== 1) {
+      throw new BadRequestException('이미 답변이 완료되었거나 삭제된 문의입니다.');
+    }
 
     return this.findOneWithUser(inquiry.id);
   }

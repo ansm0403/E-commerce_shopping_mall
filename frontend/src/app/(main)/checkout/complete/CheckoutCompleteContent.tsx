@@ -29,10 +29,24 @@ export default function CheckoutCompleteContent() {
 
   const order = data?.data as OrderResponse | undefined;
 
-  if (isLoading || !order) {
+  if (isLoading || !isHydrated) {
     return (
       <div className="py-20 text-center">
         <div className="inline-block w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!order || order.status !== 'paid') {
+    return (
+      <div className="py-20 text-center">
+        <p>결제 완료 상태를 확인할 수 없습니다.</p>
+        <button
+          onClick={() => router.push('/my/orders')}
+          className="mt-4 underline"
+        >
+          주문 내역에서 확인하기
+        </button>
       </div>
     );
   }
@@ -55,7 +69,6 @@ export default function CheckoutCompleteContent() {
 
   return (
     <div className="py-12 flex flex-col items-center">
-
       {/* 성공 아이콘 */}
       <div className="relative mb-6">
         <div className="w-24 h-24 rounded-full bg-green-100 flex items-center justify-center animate-[scale-in_0.4s_ease-out]">
@@ -66,18 +79,25 @@ export default function CheckoutCompleteContent() {
             stroke="currentColor"
             strokeWidth={2.5}
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M5 13l4 4L19 7"
+            />
           </svg>
         </div>
       </div>
 
       {/* 타이틀 */}
-      <h1 className="text-2xl font-bold text-secondary-900 mb-2">결제가 완료되었습니다!</h1>
+      <h1 className="text-2xl font-bold text-secondary-900 mb-2">
+        {order.isDemoCheckout
+          ? '테스트 결제가 완료되었습니다!'
+          : '결제가 완료되었습니다!'}
+      </h1>
       <p className="text-secondary-500 text-sm mb-8">{orderDate}</p>
 
       {/* 주문 요약 카드 */}
       <div className="w-full max-w-md bg-white rounded-2xl border border-secondary-200 p-6 space-y-5">
-
         {/* 주문 번호 */}
         <div className="flex items-center justify-between text-sm">
           <span className="text-secondary-500">주문 번호</span>
@@ -90,7 +110,9 @@ export default function CheckoutCompleteContent() {
 
         {/* 상품 정보 */}
         <div>
-          <p className="text-xs font-semibold text-secondary-400 uppercase tracking-wide mb-3">주문 상품</p>
+          <p className="text-xs font-semibold text-secondary-400 uppercase tracking-wide mb-3">
+            주문 상품
+          </p>
           <div className="space-y-3">
             {order.items.map((item) => (
               <div key={item.id} className="flex items-center gap-3">
@@ -109,8 +131,12 @@ export default function CheckoutCompleteContent() {
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-secondary-900 truncate">{item.productName}</p>
-                  <p className="text-xs text-secondary-400">{item.quantity}개</p>
+                  <p className="text-sm font-semibold text-secondary-900 truncate">
+                    {item.productName}
+                  </p>
+                  <p className="text-xs text-secondary-400">
+                    {item.quantity}개
+                  </p>
                 </div>
                 <p className="text-sm font-bold text-secondary-800 shrink-0">
                   {Number(item.subtotal).toLocaleString()}원
@@ -145,7 +171,9 @@ export default function CheckoutCompleteContent() {
 
       {/* 안내 문구 */}
       <p className="mt-5 text-xs text-secondary-400 text-center leading-relaxed">
-        주문이 접수되었습니다. 배송 현황은 주문 상세에서 확인할 수 있습니다.
+        {order.isDemoCheckout
+          ? '실제 청구와 배송은 발생하지 않습니다. 배송·리뷰는 주문 내역의 준비된 주문으로 계속 체험할 수 있습니다.'
+          : '주문이 접수되었습니다. 배송 현황은 주문 상세에서 확인할 수 있습니다.'}
       </p>
 
       {/* 버튼 */}
@@ -157,13 +185,14 @@ export default function CheckoutCompleteContent() {
           주문 상세 보기
         </button>
         <button
-          onClick={() => router.push('/products')}
+          onClick={() =>
+            router.push(order.isDemoCheckout ? '/my/orders' : '/products')
+          }
           className="flex-1 py-3 border border-secondary-300 text-secondary-600 rounded-xl font-semibold hover:bg-secondary-50 active:scale-95 transition-all text-sm"
         >
-          쇼핑 계속하기
+          {order.isDemoCheckout ? '배송·리뷰 체험하기' : '쇼핑 계속하기'}
         </button>
       </div>
-
     </div>
   );
 }

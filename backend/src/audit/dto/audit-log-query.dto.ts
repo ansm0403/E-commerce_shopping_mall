@@ -1,5 +1,5 @@
 import { Transform, Type } from 'class-transformer';
-import { IsDateString, IsEnum, IsNumber, IsOptional, IsString, IsBoolean, Max, Min } from 'class-validator';
+import { IsDateString, IsNumber, IsOptional, IsString, IsBoolean, Max, Min } from 'class-validator';
 import { AuditAction } from '../entity/audit-log.entity';
 
 export class AuditLogQueryDto {

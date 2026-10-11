@@ -1,13 +1,20 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { orderQueryOptions } from '@/lib/react-query/order-query-options';
 import { reviewQueryOptions } from '@/lib/react-query/review-query-options';
-import { useCancelOrder, useConfirmOrder, useCancelPayment } from '@/hooks/useOrder';
+import {
+  useCancelOrder,
+  useConfirmOrder,
+  useCancelPayment,
+  useTestDeliverOrder,
+  useReconcileDemoCheckout,
+} from '@/hooks/useOrder';
 import { useCreateReview, useUpdateReview } from '@/hooks/useReview';
 import { Modal, ModalFooter } from '@/components/common/Modal';
 import ReviewForm from '@/components/review/ReviewForm';
@@ -40,7 +47,14 @@ const STATUS_COLOR: Record<OrderStatus, string> = {
 };
 
 // 진행 단계 (cancelled/completed 제외)
-const STEPS: OrderStatus[] = ['pending_payment', 'paid', 'preparing', 'shipped', 'delivered', 'completed'];
+const STEPS: OrderStatus[] = [
+  'pending_payment',
+  'paid',
+  'preparing',
+  'shipped',
+  'delivered',
+  'completed',
+];
 
 // ─── 메인 컴포넌트 ────────────────────────────────────────────────────────────
 
@@ -62,7 +76,9 @@ export default function OrderDetailPage() {
   const order = data?.data as OrderResponse | undefined;
 
   if (isLoading) {
-    return <div className="py-20 text-center text-secondary-400">불러오는 중...</div>;
+    return (
+      <div className="py-20 text-center text-secondary-400">불러오는 중...</div>
+    );
   }
 
   if (!order) {
@@ -93,6 +109,22 @@ export default function OrderDetailPage() {
         <h1 className="text-xl font-bold text-secondary-900">주문 상세</h1>
       </div>
 
+      {order.isDemoCheckout && (
+        <div className="mb-4 rounded-xl border border-primary-200 bg-primary-50 p-4 text-sm text-secondary-700">
+          <p>
+            PortOne 테스트 결제 주문입니다. 실제 청구·배송·정산은 진행하지
+            않습니다.
+          </p>
+          <Link className="mt-2 inline-block underline" href="/my/orders">
+            준비된 주문으로 배송·리뷰 체험하기
+          </Link>
+          {order.status !== 'paid' && (
+            <Link className="ml-4 underline" href="/checkout">
+              장바구니로 다시 결제하기
+            </Link>
+          )}
+        </div>
+      )}
       <div className="space-y-4">
         {/* 주문 상태 */}
         <StatusCard order={order} />
@@ -117,45 +149,115 @@ export default function OrderDetailPage() {
 
 function StatusCard({ order }: { order: OrderResponse }) {
   const isCancelled = order.status === 'cancelled';
-  const currentStepIdx = STEPS.indexOf(order.status);
+  const steps: OrderStatus[] = order.isDemoCheckout
+    ? ['pending_payment', 'paid']
+    : STEPS;
+  const currentStepIdx = steps.indexOf(order.status);
+  const testDelivery = useTestDeliverOrder(order.orderNumber);
+  const reconcile = useReconcileDemoCheckout(order.orderNumber);
+
+  const handleTestDelivery = async () => {
+    if (
+      !confirm('리뷰 작성 테스트를 위해 이 주문을 배송 완료 처리하시겠습니까?')
+    )
+      return;
+    try {
+      await testDelivery.mutateAsync();
+    } catch {
+      // onError 핸들러에서 안내
+    }
+  };
 
   return (
     <section className="bg-white rounded-xl border border-secondary-200 p-5">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div>
           <p className="text-xs text-secondary-400 mb-0.5">
             {new Date(order.createdAt).toLocaleDateString('ko-KR', {
-              year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
             })}
           </p>
           <p className="text-xs text-secondary-500">{order.orderNumber}</p>
         </div>
-        <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${STATUS_COLOR[order.status]}`}>
-          {STATUS_LABEL[order.status]}
-        </span>
+        <div className="flex flex-wrap items-center gap-2">
+          <span
+            className={`px-3 py-1 rounded-full text-sm font-semibold border ${
+              STATUS_COLOR[order.status]
+            }`}
+          >
+            {STATUS_LABEL[order.status]}
+          </span>
+          {order.isDemoCheckout && order.status === 'pending_payment' && (
+            <button
+              onClick={() => reconcile.mutate()}
+              disabled={reconcile.isPending}
+              className="text-sm text-primary-600 underline disabled:opacity-60"
+            >
+              {reconcile.isPending ? '확인 중...' : '결제 상태 다시 확인'}
+            </button>
+          )}
+          {order.canTestDeliver === true && (
+            <button
+              onClick={handleTestDelivery}
+              disabled={testDelivery.isPending}
+              aria-describedby="test-delivery-description"
+              className="px-3 py-1.5 rounded-lg text-sm font-semibold border border-primary-300 text-primary-600 hover:bg-primary-50 transition-colors disabled:opacity-60"
+            >
+              {testDelivery.isPending ? '처리 중...' : '배송 완료 처리'}
+            </button>
+          )}
+        </div>
       </div>
+      {order.canTestDeliver === true && (
+        <p
+          id="test-delivery-description"
+          className="text-xs text-secondary-500"
+        >
+          리뷰 작성 테스트를 위한 버튼입니다. 배송 준비 중에도 완료 처리할 수
+          있으며, 처리 후 구매 확정을 누르면 리뷰를 작성할 수 있습니다.
+        </p>
+      )}
 
       {/* 진행 단계 표시 (취소가 아닌 경우) */}
       {!isCancelled && (
         <div className="mt-5">
           {/* 원 + 연결선 */}
           <div className="flex items-center">
-            {STEPS.map((step, idx) => {
+            {steps.map((step, idx) => {
               const isActive = idx === currentStepIdx;
               const isPast = idx < currentStepIdx;
               return (
-                <div key={step} className="flex items-center flex-1 last:flex-none">
+                <div
+                  key={step}
+                  className="flex items-center flex-1 last:flex-none"
+                >
                   {/* 원 */}
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
-                    isPast
-                      ? 'bg-primary-600 border-primary-600'
-                      : isActive
-                      ? 'bg-white border-primary-600 ring-2 ring-primary-200'
-                      : 'bg-white border-secondary-200'
-                  }`}>
+                  <div
+                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
+                      isPast
+                        ? 'bg-primary-600 border-primary-600'
+                        : isActive
+                        ? 'bg-white border-primary-600 ring-2 ring-primary-200'
+                        : 'bg-white border-secondary-200'
+                    }`}
+                  >
                     {isPast && (
-                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      <svg
+                        className="w-3 h-3 text-white"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={3}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                     )}
                     {isActive && (
@@ -163,10 +265,14 @@ function StatusCard({ order }: { order: OrderResponse }) {
                     )}
                   </div>
                   {/* 연결선 */}
-                  {idx < STEPS.length - 1 && (
-                    <div className={`h-0.5 flex-1 mx-1 transition-all ${
-                      idx < currentStepIdx ? 'bg-primary-400' : 'bg-secondary-200'
-                    }`} />
+                  {idx < steps.length - 1 && (
+                    <div
+                      className={`h-0.5 flex-1 mx-1 transition-all ${
+                        idx < currentStepIdx
+                          ? 'bg-primary-400'
+                          : 'bg-secondary-200'
+                      }`}
+                    />
                   )}
                 </div>
               );
@@ -174,18 +280,20 @@ function StatusCard({ order }: { order: OrderResponse }) {
           </div>
           {/* 라벨 */}
           <div className="flex mt-2">
-            {STEPS.map((step, idx) => {
+            {steps.map((step, idx) => {
               const isActive = idx === currentStepIdx;
               const isPast = idx < currentStepIdx;
               return (
                 <div key={step} className="flex-1 last:flex-none text-center">
-                  <span className={`text-[10px] leading-tight ${
-                    isActive
-                      ? 'text-primary-600 font-bold'
-                      : isPast
-                      ? 'text-secondary-500'
-                      : 'text-secondary-300'
-                  }`}>
+                  <span
+                    className={`text-[10px] leading-tight ${
+                      isActive
+                        ? 'text-primary-600 font-bold'
+                        : isPast
+                        ? 'text-secondary-500'
+                        : 'text-secondary-300'
+                    }`}
+                  >
                     {STATUS_LABEL[step]}
                   </span>
                 </div>
@@ -197,14 +305,16 @@ function StatusCard({ order }: { order: OrderResponse }) {
 
       {/* 취소 사유 */}
       {isCancelled && order.cancellationReason && (
-        <p className="text-sm text-red-500 mt-2">취소 사유: {order.cancellationReason}</p>
+        <p className="text-sm text-red-500 mt-2">
+          취소 사유: {order.cancellationReason}
+        </p>
       )}
     </section>
   );
 }
 
 function ItemsCard({ order }: { order: OrderResponse }) {
-  const isCompleted = order.status === 'completed';
+  const isCompleted = !order.isDemoCheckout && order.status === 'completed';
 
   // 구매확정 주문에서만 내 리뷰를 조회해 항목별 작성/수정 상태를 판별.
   const myReviewsQuery = useQuery({
@@ -226,7 +336,10 @@ function ItemsCard({ order }: { order: OrderResponse }) {
       <div className="divide-y divide-secondary-100">
         {order.items.map((item) => (
           <div key={item.id} className="py-3 first:pt-0 last:pb-0">
-            <div className="flex items-center gap-3">
+            <Link
+              href={`/products/${item.productId}`}
+              className="flex items-center gap-3 group rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+            >
               {item.productImageUrl ? (
                 <img
                   src={item.productImageUrl}
@@ -241,15 +354,18 @@ function ItemsCard({ order }: { order: OrderResponse }) {
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-secondary-900 truncate">{item.productName}</p>
+                <p className="text-sm font-semibold text-secondary-900 truncate group-hover:text-primary-600 group-hover:underline underline-offset-2">
+                  {item.productName}
+                </p>
                 <p className="text-xs text-secondary-500">
-                  {Number(item.productPrice).toLocaleString()}원 × {item.quantity}개
+                  {Number(item.productPrice).toLocaleString()}원 ×{' '}
+                  {item.quantity}개
                 </p>
               </div>
               <p className="text-sm font-bold text-secondary-900 shrink-0">
                 {Number(item.subtotal).toLocaleString()}원
               </p>
-            </div>
+            </Link>
 
             {/* 구매확정 항목별 리뷰 작성/수정 진입 */}
             {isCompleted && (
@@ -265,7 +381,9 @@ function ItemsCard({ order }: { order: OrderResponse }) {
         ))}
       </div>
       <div className="border-t border-secondary-200 pt-3 mt-1 flex justify-between items-center">
-        <span className="text-sm font-bold text-secondary-900">총 결제금액</span>
+        <span className="text-sm font-bold text-secondary-900">
+          총 결제금액
+        </span>
         <span className="text-base font-bold text-primary-600">
           {Number(order.totalAmount).toLocaleString()}원
         </span>
@@ -289,13 +407,15 @@ function ItemReviewAction({
   const createReview = useCreateReview();
   const updateReview = useUpdateReview();
 
+  const { user } = useAuth();
   const isEdit = !!existingReview;
 
   // 30일 수정 제한(백엔드 강제) — 프론트도 버튼 비활성+안내
   const daysSince = existingReview
     ? (Date.now() - new Date(existingReview.createdAt).getTime()) / 86_400_000
     : 0;
-  const editLocked = isEdit && daysSince > REVIEW_EDIT_WINDOW_DAYS;
+  const editLocked =
+    isEdit && (daysSince > REVIEW_EDIT_WINDOW_DAYS || !!user?.isDemo);
 
   const handleSubmit = async (values: { rating: number; comment: string }) => {
     try {
@@ -324,9 +444,15 @@ function ItemReviewAction({
       {editLocked ? (
         <span
           className="text-xs text-secondary-400"
-          title="리뷰 작성 후 30일이 지나 수정할 수 없습니다."
+          title={
+            user?.isDemo
+              ? '공용 체험에서는 작성한 리뷰를 수정할 수 없습니다.'
+              : '리뷰 작성 후 30일이 지나 수정할 수 없습니다.'
+          }
         >
-          작성한 리뷰 (수정 기간 만료)
+          {user?.isDemo
+            ? '작성한 리뷰 (체험 계정 수정 제한)'
+            : '작성한 리뷰 (수정 기간 만료)'}
         </span>
       ) : (
         <button
@@ -361,7 +487,9 @@ function ItemReviewAction({
               </span>
             </div>
           )}
-          <p className="text-sm font-semibold text-secondary-900">{item.productName}</p>
+          <p className="text-sm font-semibold text-secondary-900">
+            {item.productName}
+          </p>
         </div>
         <ReviewForm
           initialRating={existingReview?.rating ?? 5}
@@ -395,7 +523,11 @@ function ShippingCard({ order }: { order: OrderResponse }) {
             <div key={shipment.id} className="text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-secondary-600">
-                  {shipment.status === 'preparing' ? '배송 준비' : shipment.status === 'shipped' ? '배송 중' : '배송 완료'}
+                  {shipment.status === 'preparing'
+                    ? '배송 준비'
+                    : shipment.status === 'shipped'
+                    ? '배송 중'
+                    : '배송 완료'}
                 </span>
                 {shipment.trackingNumber && (
                   <span className="text-secondary-500 text-xs">
@@ -405,7 +537,8 @@ function ShippingCard({ order }: { order: OrderResponse }) {
               </div>
               {shipment.shippedAt && (
                 <p className="text-xs text-secondary-400 mt-0.5">
-                  발송: {new Date(shipment.shippedAt).toLocaleDateString('ko-KR')}
+                  발송:{' '}
+                  {new Date(shipment.shippedAt).toLocaleDateString('ko-KR')}
                 </p>
               )}
             </div>
@@ -423,14 +556,21 @@ function PaymentCard({ order }: { order: OrderResponse }) {
       <h2 className="text-sm font-bold text-secondary-900 mb-3">결제 정보</h2>
       <dl className="space-y-2 text-sm">
         <Row label="결제 수단" value={payment.paymentMethod ?? '-'} />
-        <Row label="결제 금액" value={`${Number(payment.amount).toLocaleString()}원`} />
+        <Row
+          label="결제 금액"
+          value={`${Number(payment.amount).toLocaleString()}원`}
+        />
         <Row
           label="결제 상태"
           value={
-            payment.status === 'paid' ? '결제 완료'
-              : payment.status === 'cancelled' ? '결제 취소'
-              : payment.status === 'partial_cancelled' ? '부분 취소'
-              : payment.status === 'ready' ? '결제 대기'
+            payment.status === 'paid'
+              ? '결제 완료'
+              : payment.status === 'cancelled'
+              ? '결제 취소'
+              : payment.status === 'partial_cancelled'
+              ? '부분 취소'
+              : payment.status === 'ready'
+              ? '결제 대기'
               : '실패'
           }
         />
@@ -472,6 +612,7 @@ function Row({ label, value }: { label: string; value: string }) {
 // ─── 액션 버튼 영역 ───────────────────────────────────────────────────────────
 
 function ActionSection({ order }: { order: OrderResponse }) {
+  const { user } = useAuth();
   const [cancelModal, setCancelModal] = useState(false);
   const [refundModal, setRefundModal] = useState(false);
   const [refundReason, setRefundReason] = useState('');
@@ -504,7 +645,8 @@ function ActionSection({ order }: { order: OrderResponse }) {
   };
 
   const handleConfirm = async () => {
-    if (!confirm('구매를 확정하시겠습니까? 확정 후에는 취소할 수 없습니다.')) return;
+    if (!confirm('구매를 확정하시겠습니까? 확정 후에는 취소할 수 없습니다.'))
+      return;
     try {
       await confirmOrder.mutateAsync();
     } catch {
@@ -512,8 +654,13 @@ function ActionSection({ order }: { order: OrderResponse }) {
     }
   };
 
-  const showCancelOrder = order.status === 'pending_payment';
-  const showRefund = order.status === 'paid' || order.status === 'preparing';
+  const showCancelOrder =
+    (!user?.isDemo || order.isDemoCheckout) &&
+    order.status === 'pending_payment';
+  const showRefund =
+    !user?.isDemo &&
+    (order.status === 'paid' || order.status === 'preparing') &&
+    order.shipments.every((shipment) => shipment.status === 'preparing');
   const showConfirm = order.status === 'delivered';
 
   if (!showCancelOrder && !showRefund && !showConfirm) return null;
@@ -581,7 +728,9 @@ function ActionSection({ order }: { order: OrderResponse }) {
         size="sm"
       >
         <div className="space-y-3">
-          <p className="text-sm text-secondary-600">결제를 취소하고 환불을 신청합니다.</p>
+          <p className="text-sm text-secondary-600">
+            결제를 취소하고 환불을 신청합니다.
+          </p>
           <textarea
             value={refundReason}
             onChange={(e) => setRefundReason(e.target.value)}
@@ -592,7 +741,10 @@ function ActionSection({ order }: { order: OrderResponse }) {
         </div>
         <ModalFooter>
           <button
-            onClick={() => { setRefundModal(false); setRefundReason(''); }}
+            onClick={() => {
+              setRefundModal(false);
+              setRefundReason('');
+            }}
             className="px-4 py-2 text-sm border border-secondary-300 rounded-lg text-secondary-600 hover:bg-secondary-50 transition-colors"
           >
             닫기

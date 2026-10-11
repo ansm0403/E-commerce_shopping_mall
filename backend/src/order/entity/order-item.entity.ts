@@ -1,13 +1,13 @@
 import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { BaseModel } from '../../common/entity/base.entity';
-import { OrderEntity } from './order.entity';
+import type { OrderEntity } from './order.entity';
 
 @Entity('order_items')
 export class OrderItemEntity extends BaseModel {
   @Column({ name: 'order_id' })
   orderId: number;
 
-  @ManyToOne(() => OrderEntity, (order) => order.items, { onDelete: 'CASCADE' })
+  @ManyToOne('OrderEntity', (order: OrderEntity) => order.items, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'order_id' })
   order: OrderEntity;
 

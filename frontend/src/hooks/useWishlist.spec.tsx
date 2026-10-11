@@ -6,6 +6,8 @@ import { toggleWishlist } from '../service/wishlist';
 import { authStorage } from '../service/auth-storage';
 import { wishlistKeys } from '../lib/react-query/wishlist-query-options';
 import { useWishlistToggle } from './useWishlist';
+import { AccountMutationCache } from '../lib/react-query/account-mutation-cache';
+import { advanceAuthRevision } from '../service/auth-session';
 
 /**
  * 찜 토글의 낙관적 갱신 (05-buyer-flow-complete §5·§8).
@@ -41,7 +43,7 @@ function deferred<T>() {
 }
 
 function setup(initialIds?: number[]) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  const client = new QueryClient({ mutationCache: new AccountMutationCache(), defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   if (initialIds) client.setQueryData(wishlistKeys.ids(), initialIds);
   const invalidate = jest.spyOn(client, 'invalidateQueries');
   const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -49,11 +51,12 @@ function setup(initialIds?: number[]) {
   );
   const { result } = renderHook(() => useWishlistToggle(), { wrapper });
   const ids = () => client.getQueryData<number[]>(wishlistKeys.ids());
-  return { result, ids, invalidate };
+  return { result, ids, invalidate, client };
 }
 
 describe('useWishlistToggle — 낙관적 갱신', () => {
   beforeEach(() => {
+    localStorage.clear();
     mockedToggle.mockReset();
     mockedToken.mockReset().mockReturnValue('token');
     push.mockReset();
@@ -144,5 +147,25 @@ describe('useWishlistToggle — 낙관적 갱신', () => {
     expect(mockedToggle).not.toHaveBeenCalled();
     expect(ids()).toEqual([3]);
     expect(window.alert).not.toHaveBeenCalled();
+  });
+
+  it('계정 전환 중 늦어진 낙관적 갱신이 다음 계정의 찜 목록을 바꾸지 않는다', async () => {
+    const { result, ids, invalidate, client } = setup([3]);
+    const started = deferred<void>();
+    const gate = deferred<void>();
+    jest.spyOn(client, 'cancelQueries').mockImplementation(async () => {
+      started.resolve();
+      await gate.promise;
+    });
+    const write = result.current.mutateAsync(7);
+    const canceled = expect(write).rejects.toMatchObject({ code: 'ERR_CANCELED' });
+    await started.promise;
+    advanceAuthRevision();
+    client.setQueryData(wishlistKeys.ids(), [9]);
+    await act(async () => { gate.resolve(); await canceled; });
+    expect(ids()).toEqual([9]);
+    expect(mockedToggle).not.toHaveBeenCalled();
+    expect(window.alert).not.toHaveBeenCalled();
+    expect(invalidate).not.toHaveBeenCalled();
   });
 });

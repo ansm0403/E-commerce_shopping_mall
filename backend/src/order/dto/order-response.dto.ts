@@ -37,6 +37,8 @@ class PaymentSummaryDto {
 }
 
 export class OrderResponseDto {
+  @Expose() canDemoChange?: boolean;
+  @Expose() canTestDeliver: boolean;
   @Expose() id: number;
   @Expose() orderNumber: string;
   @Expose() userId: number;

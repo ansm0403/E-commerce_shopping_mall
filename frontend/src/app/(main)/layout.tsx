@@ -1,3 +1,4 @@
+import DemoModeBanner from '../../components/console/DemoModeBanner';
 import Script from 'next/script';
 import Header from '../../components/header/Header';
 import Footer from '../../components/footer/Footer';
@@ -19,6 +20,7 @@ export default function MainLayout({
         본문으로 건너뛰기
       </a>
       <Header />
+      <DemoModeBanner />
       {/* tabIndex=-1: 건너뛰기 링크로 이동했을 때 포커스가 실제로 본문에 놓여 다음 Tab 이 본문 첫 요소로 간다 */}
       <main id="main-content" tabIndex={-1} className="outline-none scroll-mt-48">
         <MaxWidthContainer>

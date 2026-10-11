@@ -1,3 +1,4 @@
+import { DemoPolicyService } from '../demo/demo-policy.service';
 import {
   Injectable,
   NotFoundException,
@@ -11,6 +12,7 @@ import {
   In,
   LessThanOrEqual,
   MoreThanOrEqual,
+  QueryFailedError,
   Repository,
 } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -36,6 +38,7 @@ export class ReviewService {
     private readonly orderItemRepository: Repository<OrderItemEntity>,
     private readonly eventEmitter: EventEmitter2,
     private readonly commonService: CommonService,
+    private readonly demoPolicy: DemoPolicyService,
   ) {}
 
   async create(userId: number, dto: CreateReviewDto) {
@@ -52,6 +55,7 @@ export class ReviewService {
       throw new BadRequestException('구매 확정된 주문에 대해서만 리뷰를 작성할 수 있습니다.');
     }
 
+    await this.demoPolicy.assertOrderActor(userId, order.id);
     // 2. 해당 주문에 해당 상품이 포함되어 있는지 검증
     const orderItem = await this.orderItemRepository.findOne({
       where: { orderId: dto.orderId, productId: dto.productId },
@@ -80,7 +84,16 @@ export class ReviewService {
       imageUrls: dto.imageUrls ?? [],
     });
 
-    const saved = await this.reviewRepository.save(review);
+    let saved: ReviewEntity;
+    try {
+      saved = await this.reviewRepository.save(review);
+    } catch (error) {
+      // 두 요청이 사전 중복 검사를 함께 통과해도 DB의 유일성 제약으로 한 번만 저장한다.
+      if (error instanceof QueryFailedError && error.driverError?.code === '23505') {
+        throw new BadRequestException('이미 해당 주문에 대한 리뷰를 작성하셨습니다.');
+      }
+      throw error;
+    }
 
     this.eventEmitter.emit(
       'review.created',
@@ -91,6 +104,7 @@ export class ReviewService {
   }
 
   async update(userId: number, reviewId: number, dto: UpdateReviewDto) {
+    await this.demoPolicy.forbidDemo(userId);
     const review = await this.reviewRepository.findOne({
       where: { id: reviewId },
     });
@@ -134,6 +148,7 @@ export class ReviewService {
   }
 
   async delete(userId: number, reviewId: number, isAdmin: boolean) {
+    await this.demoPolicy.forbidDemo(userId);
     const review = await this.reviewRepository.findOne({
       where: { id: reviewId },
     });

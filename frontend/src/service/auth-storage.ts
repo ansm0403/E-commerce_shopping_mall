@@ -1,12 +1,15 @@
 import { getAuthChannel } from './auth-channel';
+import { authRevision, advanceAuthRevision } from './auth-session';
 
 const ACCESS = 'accessToken';
 const PERSIST = 'auth:persist';
+const TOKEN_REVISION = 'auth:token-revision';
+const LOGOUT_PENDING = 'auth:logout-pending';
 
 function broadcast(type: 'LOGIN' | 'LOGOUT' | 'TOKEN_REFRESHED') {
   try {
     const ch = getAuthChannel();
-    ch?.postMessage({ type });
+    ch?.postMessage({ type, revision: authRevision() });
   } catch (error) {
     // BroadcastChannel이 지원되지 않거나 오류 발생 시 무시
     console.warn('Broadcast failed:', error);
@@ -16,15 +19,18 @@ function broadcast(type: 'LOGIN' | 'LOGOUT' | 'TOKEN_REFRESHED') {
 export const authStorage = {
   setAccessToken(token: string, rememberMe: boolean) {
     if (typeof window === 'undefined') return;
+    const revision = advanceAuthRevision();
 
     localStorage.removeItem(ACCESS);
     sessionStorage.removeItem(ACCESS);
 
     if (rememberMe) {
       localStorage.setItem(ACCESS, token);
+      localStorage.setItem(TOKEN_REVISION, revision);
       localStorage.setItem(PERSIST, '1');
     } else {
       sessionStorage.setItem(ACCESS, token);
+      sessionStorage.setItem(TOKEN_REVISION, revision);
       localStorage.removeItem(PERSIST);
     }
 
@@ -38,8 +44,10 @@ export const authStorage = {
 
     if (rememberMe) {
       localStorage.setItem(ACCESS, token);
+      localStorage.setItem(TOKEN_REVISION, authRevision());
     } else {
       sessionStorage.setItem(ACCESS, token);
+      sessionStorage.setItem(TOKEN_REVISION, authRevision());
     }
 
     broadcast('TOKEN_REFRESHED');
@@ -47,10 +55,12 @@ export const authStorage = {
 
   clearToken() {
     if (typeof window === 'undefined') return;
+    advanceAuthRevision();
 
     localStorage.removeItem(ACCESS);
     localStorage.removeItem(PERSIST);
     sessionStorage.removeItem(ACCESS);
+    sessionStorage.removeItem(TOKEN_REVISION);
 
     broadcast('LOGOUT');
   },
@@ -63,7 +73,25 @@ export const authStorage = {
 
   getAccessToken() {
     if (typeof window === 'undefined') return null;
-    return sessionStorage.getItem(ACCESS) || localStorage.getItem(ACCESS);
+    if (this.isLogoutPending()) return null;
+    for (const storage of [sessionStorage, localStorage]) {
+      const token = storage.getItem(ACCESS);
+      const revision = storage.getItem(TOKEN_REVISION) || 'initial';
+      if (token && revision === authRevision()) return token;
+    }
+    return null;
+  },
+
+  isLogoutPending() {
+    return (
+      typeof window !== 'undefined' &&
+      localStorage.getItem(LOGOUT_PENDING) === '1'
+    );
+  },
+  markLogoutPending(pending: boolean) {
+    if (typeof window === 'undefined') return;
+    if (pending) localStorage.setItem(LOGOUT_PENDING, '1');
+    else localStorage.removeItem(LOGOUT_PENDING);
   },
 
   isRememberMe() {
@@ -72,14 +100,19 @@ export const authStorage = {
   },
 
   // 다른 탭에서 토큰 요청 시 응답
-  respondWithToken() {
+  respondWithToken(requestId?: string) {
     if (typeof window === 'undefined') return;
 
     const token = this.getAccessToken();
     if (token && !this.isRememberMe()) {
       // sessionStorage 모드일 때만 응답 (localStorage는 이미 공유됨)
       const ch = getAuthChannel();
-      ch?.postMessage({ type: 'TOKEN_RESPONSE', accessToken: token });
+      ch?.postMessage({
+        type: 'TOKEN_RESPONSE',
+        accessToken: token,
+        revision: authRevision(),
+        requestId,
+      });
     }
   },
 
@@ -88,6 +121,7 @@ export const authStorage = {
     if (typeof window === 'undefined') return;
     if (!this.isRememberMe()) {
       sessionStorage.setItem(ACCESS, token);
+      sessionStorage.setItem(TOKEN_REVISION, authRevision());
     }
   },
 };

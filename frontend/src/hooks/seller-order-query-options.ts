@@ -6,6 +6,7 @@ import type { OrderQuery, ShipOrderRequest } from '@shopping-mall/shared';
 import {
   fetchSellerOrders,
   shipOrder,
+  deliverSellerOrder,
   type SellerOrdersResponse,
 } from '../service/seller-order';
 
@@ -28,6 +29,20 @@ export function useShipOrderMutation() {
     mutationFn: ({ orderNumber, dto }: { orderNumber: string; dto: ShipOrderRequest }) =>
       shipOrder(orderNumber, dto),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: SELLER_ORDER_KEY }),
+  });
+}
+
+export function useDeliverSellerOrderMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (orderNumber: string) => deliverSellerOrder(orderNumber),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: SELLER_ORDER_KEY }),
+        queryClient.invalidateQueries({ queryKey: ['seller', 'dashboard'] }),
+        queryClient.invalidateQueries({ queryKey: ['orders'] }),
+      ]);
+    },
   });
 }
 

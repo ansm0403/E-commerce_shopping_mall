@@ -41,6 +41,8 @@ jspm_packages/
 
 # Yarn Integrity file
 .yarn-integrity
+.yarn/cache/
+.yarn/install-state.gz
 
 # dotenv environment variables file
 # (루트 패턴은 루트만 잡는다 — backend/.env 등 하위 워크스페이스의 .env 도 builder 중간 레이어에 들어가지 않게 **/ 로도 제외)
@@ -86,6 +88,13 @@ docker-compose*
 # Testing
 coverage
 .nyc_output
+test-output/
+**/test-output/
+
+# Database backups
+backups/
+**/backups/
+**/*.dump
 
 # Temporary folders
 tmp/

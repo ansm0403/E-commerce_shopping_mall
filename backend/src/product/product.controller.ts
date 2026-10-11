@@ -93,6 +93,7 @@ export class ProductController {
   }
 
   @Post()
+  @UseGuards(DemoAccountGuard)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SELLER)
   @Serialize(ProductResponseDto)
@@ -102,6 +103,7 @@ export class ProductController {
   }
 
   @Patch(':id')
+  @UseGuards(DemoAccountGuard)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SELLER)
   @Serialize(ProductResponseDto)
@@ -116,6 +118,7 @@ export class ProductController {
 
   /** 셀러: 게시/숨김/단종 토글 — 내용 수정(PATCH :id)과 달리 재심사를 발동하지 않는다 */
   @Patch(':id/status')
+  @UseGuards(DemoAccountGuard)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SELLER)
   @Serialize(ProductResponseDto)
@@ -129,6 +132,7 @@ export class ProductController {
   }
 
   @Delete(':id')
+  @UseGuards(DemoAccountGuard)
   @HttpCode(204)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SELLER)
@@ -166,6 +170,7 @@ export class ProductController {
   }
 
   @Post(':id/images')
+  @UseGuards(DemoAccountGuard)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SELLER)
   @UseInterceptors(

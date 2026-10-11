@@ -1,9 +1,11 @@
-"use client";
+'use client';
+import DemoAccountChoice from './DemoAccountChoice';
+import { authRevision } from '../../service/auth-session';
 
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useLoginMutation, useDemoLoginMutation } from "../../hook/useAuthMutation";
+import { useLoginMutation } from "../../hook/useAuthMutation";
 import { Form, TextField, CheckboxField } from "./BaseForm";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -38,7 +40,6 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const redirectTo = safeRedirectPath(searchParams.get("redirect"));
   const loginMutation = useLoginMutation();
-  const demoLoginMutation = useDemoLoginMutation();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // 이미 로그인된 사람에게 로그인 폼을 보여 주지 않는다 — 다른 탭에서 로그인했거나, 로그인한 채 /login 을 직접 연 경우.
@@ -60,13 +61,13 @@ export function LoginForm() {
     loggedInHereRef.current = true;
 
     try {
-      await loginMutation.mutateAsync({
+      const response=await loginMutation.mutateAsync({
         email: values.email,
         password: values.password,
         rememberMe: values.rememberMe,
       });
 
-      router.push(redirectTo);
+      if(response.authRevision===authRevision()) router.push(redirectTo);
     } catch (error) {
       loggedInHereRef.current = false;
       if (error instanceof AxiosError && error.response?.status === 403) {
@@ -128,29 +129,7 @@ export function LoginForm() {
         </Link>
       </div>
 
-      <div className="w-full mt-6 pt-5 border-t border-gray-200">
-        <p className="text-xs text-gray-500 text-center mb-3">채용 담당자 · 시연자용</p>
-        <button
-          type="button"
-          disabled={demoLoginMutation.isPending}
-          onClick={async () => {
-            setErrorMessage(null);
-            loggedInHereRef.current = true;
-            try {
-              await demoLoginMutation.mutateAsync();
-              router.push("/admin/dashboard");
-            } catch {
-              setErrorMessage("데모 로그인에 실패했습니다. 잠시 후 다시 시도해주세요.");
-            }
-          }}
-          className="w-full py-2.5 px-4 rounded-lg border border-dashed border-primary-400 bg-primary-50 text-primary-700 text-sm font-semibold hover:bg-primary-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {demoLoginMutation.isPending ? "로그인 중..." : "관리자 페이지 체험하기 (데모 계정)"}
-        </button>
-        <p className="text-xs text-gray-500 text-center mt-2">
-          가입 없이 관리자 대시보드를 둘러볼 수 있습니다. 일부 기능은 제한됩니다.
-        </p>
-      </div>
+      <DemoAccountChoice busy={loginMutation.isPending} onStart={() => {setErrorMessage(null); loggedInHereRef.current=true;}} onError={message => {loggedInHereRef.current=false; setErrorMessage(message);}} />
     </div>
   );
 }

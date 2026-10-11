@@ -1,4 +1,5 @@
 'use client';
+import { useAuth } from '@/contexts/AuthContext';
 
 import { useState } from 'react';
 import Link from 'next/link';
@@ -40,6 +41,7 @@ import { DEFAULT_APPROVAL_STATUS } from './SellerProductFilters';
 const TAKE = 20;
 
 export default function SellerProductTable() {
+  const {user}=useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const sp = useSearchParams();
@@ -199,6 +201,7 @@ export default function SellerProductTable() {
                   </td>
                   <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
                     <div style={{ display: 'flex', gap: '6px' }}>
+                      {user?.isDemo ? <span className="text-xs text-amber-800">체험 상품 편집 제한</span> : <>
                       <Link href={`/seller/products/${product.id}/edit`} style={actionButton('#475569')}>
                         수정
                       </Link>
@@ -218,6 +221,7 @@ export default function SellerProductTable() {
                       >
                         삭제
                       </button>
+                      </>}
                     </div>
                   </td>
                 </tr>

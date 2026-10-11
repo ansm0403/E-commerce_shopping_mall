@@ -1,3 +1,5 @@
+import { DemoPolicyService } from '../demo/demo-policy.service';
+import { mockDemoPolicy } from '../demo/demo-policy.mock';
 /**
  * Auth 통합 테스트
  *
@@ -88,6 +90,7 @@ describe('Auth Integration Tests', () => {
         }),
       ],
       providers: [
+        { provide: DemoPolicyService, useValue: mockDemoPolicy() },
         AuthService,
         AuditService,
         { provide: RedisService, useValue: mockRedisService },

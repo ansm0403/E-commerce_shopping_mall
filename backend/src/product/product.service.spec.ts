@@ -11,6 +11,8 @@ jest.mock('../order/entity/order.entity', () => ({
 }));
 
 import { ProductService } from './product.service';
+import { DemoPolicyService } from '../demo/demo-policy.service';
+import { mockDemoPolicy } from '../demo/demo-policy.mock';
 import { ProductEntity, ProductStatus, ApprovalStatus, SalesType } from './entity/product.entity';
 import { ProductImageEntity } from './entity/product-image.entity';
 import { OrderItemEntity } from '../order/entity/order-item.entity';
@@ -138,6 +140,7 @@ describe('ProductService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProductService,
+        { provide: DemoPolicyService, useValue: mockDemoPolicy() },
         { provide: getRepositoryToken(ProductEntity), useValue: mockProductRepository },
         { provide: getRepositoryToken(ProductImageEntity), useValue: mockImageRepository },
         { provide: getRepositoryToken(SellerEntity), useValue: mockSellerRepository },

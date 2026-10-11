@@ -1,3 +1,4 @@
+import { DemoPolicyService } from '../demo/demo-policy.service';
 import {
   BadRequestException,
   ForbiddenException,
@@ -5,6 +6,8 @@ import {
   InternalServerErrorException,
   Logger,
   NotFoundException,
+  Optional,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
@@ -15,13 +18,14 @@ import { firstValueFrom } from 'rxjs';
 import { AxiosError } from 'axios';
 import { PaymentEntity, PaymentStatus } from './entity/payment.entity';
 import { OrderEntity, OrderStatus } from '../order/entity/order.entity';
-import { ShipmentEntity } from '../order/entity/shipment.entity';
+import { ShipmentEntity, ShipmentStatus } from '../order/entity/shipment.entity';
 import { ProductEntity } from '../product/entity/product.entity';
 import { OrderItemEntity } from '../order/entity/order-item.entity';
 import { VerifyPaymentDto } from './dto/verify-payment.dto';
 import { CancelPaymentDto } from './dto/cancel-payment.dto';
 import { WebhookPaymentDto } from './dto/webhook-payment.dto';
 import { OrderPaidEvent, OrderCancelledEvent } from '../order/events/order.events';
+import { DEMO_PAYMENT_PREFIX, DemoCheckoutService } from '../demo/demo-checkout.service';
 
 // ─── 포트원 V2 응답 타입 ──────────────────────────────────────────────────────
 
@@ -52,15 +56,17 @@ export class PaymentService {
     @InjectRepository(PaymentEntity)
     private readonly paymentRepository: Repository<PaymentEntity>,
     @InjectRepository(OrderEntity)
-    private readonly orderRepository: Repository<OrderEntity>,
+    orderRepository: Repository<OrderEntity>,
     @InjectRepository(OrderItemEntity)
-    private readonly orderItemRepository: Repository<OrderItemEntity>,
+    orderItemRepository: Repository<OrderItemEntity>,
     @InjectRepository(ProductEntity)
-    private readonly productRepository: Repository<ProductEntity>,
+    productRepository: Repository<ProductEntity>,
     private readonly dataSource: DataSource,
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly demoPolicy: DemoPolicyService,
+    @Optional() private readonly demoCheckout?: DemoCheckoutService,
   ) {}
 
   // ──────────── 포트원 V2 API 통신 ────────────
@@ -137,6 +143,7 @@ export class PaymentService {
    * 4. 트랜잭션: Payment → PAID, Order → PAID
    */
   async verifyPayment(userId: number, dto: VerifyPaymentDto) {
+    await this.demoPolicy.forbidDemo(userId);
     // Payment 조회 (paymentId = orderNumber = merchantUid 컬럼)
     const payment = await this.paymentRepository.findOne({
       where: { paymentId: dto.paymentId },
@@ -146,6 +153,7 @@ export class PaymentService {
       throw new NotFoundException(`결제 정보를 찾을 수 없습니다: ${dto.paymentId}`);
     }
 
+    await this.demoPolicy.forbidFixtureOrder(payment.orderId);
     // 본인 주문 확인
     if (payment.order.userId !== userId) {
       throw new ForbiddenException('본인의 주문만 결제할 수 있습니다.');
@@ -263,83 +271,44 @@ export class PaymentService {
    * 결제 취소 (결제 완료 후 취소 = 환불)
    */
   async cancelPayment(userId: number, orderNumber: string, dto: CancelPaymentDto) {
-    const order = await this.orderRepository.findOne({
-      where: { orderNumber },
-      relations: ['items', 'payment'],
-    });
-    if (!order) throw new NotFoundException(`주문번호 ${orderNumber}를 찾을 수 없습니다.`);
-    if (order.userId !== userId) throw new ForbiddenException('본인의 주문만 취소할 수 있습니다.');
-
-    if (order.status !== OrderStatus.PAID && order.status !== OrderStatus.PREPARING) {
-      throw new BadRequestException('결제 완료 또는 상품 준비 중 상태의 주문만 취소할 수 있습니다.');
-    }
-
-    if (!order.payment) throw new BadRequestException('결제 정보를 찾을 수 없습니다.');
-
-    // V2: paymentId(= orderNumber)로 취소 요청 (transactionId 불필요)
-    const cancelResult = await this.cancelPaymentOnPortOne(order.payment.paymentId, dto.reason);
-
-    await this.dataSource.transaction(async (manager) => {
-      await manager.update(PaymentEntity, order.payment.id, {
-        status: PaymentStatus.CANCELLED,
-        cancelledAt: cancelResult.cancelledAt ? new Date(cancelResult.cancelledAt) : new Date(),
-        cancelAmount: cancelResult.amount,
-        cancelReason: dto.reason,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        rawResponse: cancelResult as any,
-      });
-
-      await manager.update(OrderEntity, order.id, {
-        status: OrderStatus.CANCELLED,
-        cancelledAt: new Date(),
-        cancellationReason: dto.reason,
-      });
-
-      if (order.status === OrderStatus.PREPARING) {
-        await manager.delete(ShipmentEntity, { orderId: order.id });
-      }
-
-      for (const item of order.items) {
-        await manager
-          .createQueryBuilder()
-          .update(ProductEntity)
-          .set({
-            stockQuantity: () => `"stockQuantity" + :restoreQty`,
-            salesCount: () => `GREATEST("salesCount" - :salesQty, 0)`,
-          })
-          .setParameter('restoreQty', item.quantity)
-          .setParameter('salesQty', item.quantity)
-          .where('id = :id', { id: item.productId })
-          .execute();
-      }
-    });
-
-    this.eventEmitter.emit(
-      'order.cancelled',
-      new OrderCancelledEvent(order.id, userId, orderNumber, dto.reason, true),
-    );
-
-    return this.paymentRepository.findOne({ where: { id: order.payment.id }, relations: ['order'] });
+    await this.demoPolicy.forbidDemo(userId);
+    return this.refundOrder(orderNumber, dto, userId);
   }
 
   /** 관리자: 결제 취소 */
   async cancelPaymentByAdmin(orderNumber: string, dto: CancelPaymentDto) {
-    const order = await this.orderRepository.findOne({
-      where: { orderNumber },
-      relations: ['items', 'payment'],
-    });
-    if (!order) throw new NotFoundException(`주문번호 ${orderNumber}를 찾을 수 없습니다.`);
+    return this.refundOrder(orderNumber, dto);
+  }
 
-    if (order.status !== OrderStatus.PAID && order.status !== OrderStatus.PREPARING) {
-      throw new BadRequestException('결제 완료 또는 상품 준비 중 상태의 주문만 취소할 수 있습니다.');
-    }
-
-    if (!order.payment) throw new BadRequestException('결제 정보를 찾을 수 없습니다.');
-
-    const cancelResult = await this.cancelPaymentOnPortOne(order.payment.paymentId, dto.reason);
-
-    await this.dataSource.transaction(async (manager) => {
-      await manager.update(PaymentEntity, order.payment.id, {
+  private async refundOrder(orderNumber: string, dto: CancelPaymentDto, buyerId?: number) {
+    const result = await this.dataSource.transaction(async (manager) => {
+      // 출고·배송 완료·구매 확정과 같은 주문 행 잠금으로 환불도 직렬화한다.
+      const order = await manager.findOne(OrderEntity, {
+        where: { orderNumber }, lock: { mode: 'pessimistic_write' },
+      });
+      if (!order) throw new NotFoundException(`주문번호 ${orderNumber}를 찾을 수 없습니다.`);
+      await this.demoPolicy.forbidFixtureOrder(order.id, manager);
+      if (buyerId !== undefined && order.userId !== buyerId) {
+        throw new ForbiddenException('본인의 주문만 취소할 수 있습니다.');
+      }
+      if (order.status !== OrderStatus.PAID && order.status !== OrderStatus.PREPARING) {
+        throw new BadRequestException('결제 완료 또는 상품 준비 중 상태의 주문만 취소할 수 있습니다.');
+      }
+      const payment = await manager.findOne(PaymentEntity, { where: { orderId: order.id } });
+      if (payment?.status !== PaymentStatus.PAID) {
+        throw new BadRequestException('결제 완료된 결제 정보를 찾을 수 없습니다.');
+      }
+      const shipments = await manager.find(ShipmentEntity, { where: { orderId: order.id } });
+      if (shipments.some((s) => s.status !== ShipmentStatus.PREPARING)) {
+        throw new BadRequestException('이미 출고되거나 배송 완료된 상품이 포함된 주문은 전체 환불할 수 없습니다.');
+      }
+      const items = await manager.find(OrderItemEntity, { where: { orderId: order.id } });
+      // 잠금을 유지한 채 PG 취소와 로컬 변경을 처리하여 그 사이 배송 완료가 진행되지 않게 한다.
+      const cancelResult = await this.cancelPaymentOnPortOne(payment.paymentId, dto.reason);
+      if (cancelResult.status !== 'SUCCEEDED') {
+        throw new BadRequestException('결제 취소가 완료되지 않았습니다. 잠시 후 다시 시도해주세요.');
+      }
+      await manager.update(PaymentEntity, payment.id, {
         status: PaymentStatus.CANCELLED,
         cancelledAt: cancelResult.cancelledAt ? new Date(cancelResult.cancelledAt) : new Date(),
         cancelAmount: cancelResult.amount,
@@ -356,7 +325,7 @@ export class PaymentService {
 
       await manager.delete(ShipmentEntity, { orderId: order.id });
 
-      for (const item of order.items) {
+      for (const item of items) {
         await manager
           .createQueryBuilder()
           .update(ProductEntity)
@@ -369,14 +338,15 @@ export class PaymentService {
           .where('id = :id', { id: item.productId })
           .execute();
       }
+      return { orderId: order.id, userId: order.userId, paymentId: payment.id };
     });
 
     this.eventEmitter.emit(
       'order.cancelled',
-      new OrderCancelledEvent(order.id, order.userId, orderNumber, dto.reason, true),
+      new OrderCancelledEvent(result.orderId, result.userId, orderNumber, dto.reason, true),
     );
 
-    return this.paymentRepository.findOne({ where: { id: order.payment.id }, relations: ['order'] });
+    return this.paymentRepository.findOne({ where: { id: result.paymentId }, relations: ['order'] });
   }
 
   // ──────────── V2 웹훅 ────────────
@@ -388,6 +358,12 @@ export class PaymentService {
    */
   async handleWebhook(dto: WebhookPaymentDto) {
     const { type, data } = dto;
+    // Demo payments never enter the operational order/event/settlement path.
+    // Propagate transient errors so PortOne can retry this webhook.
+    if (data.paymentId.startsWith(DEMO_PAYMENT_PREFIX)) {
+      if (!this.demoCheckout) throw new ServiceUnavailableException('체험 결제 처리 서비스를 확인할 수 없습니다.');
+      return this.demoCheckout.webhook(type, data.paymentId);
+    }
     this.logger.log(`PortOne V2 웹훅 수신 — type: ${type}, paymentId: ${data.paymentId}`);
 
     try {
@@ -417,6 +393,10 @@ export class PaymentService {
     if (!payment) {
       this.logger.warn(`V2 웹훅: 결제 정보를 찾을 수 없음 — paymentId: ${paymentId}`);
       return { message: 'payment not found' };
+    }
+
+    if (await this.demoPolicy.isFixtureOrder(payment.orderId)) {
+      return { message: 'synthetic demo payment ignored' };
     }
 
     if (payment.status === PaymentStatus.PAID) {

@@ -1,8 +1,9 @@
 'use client';
 
+import { reconcileDemoCheckout } from '@/service/demo-checkout';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { cancelOrder, confirmOrder } from '@/service/order';
+import { cancelOrder, confirmOrder, testDeliverOrder } from '@/service/order';
 import { verifyPayment, cancelPayment } from '@/service/payment';
 import { orderKeys } from '@/lib/react-query/order-query-options';
 import { cartKeys } from '@/lib/react-query/cart-query-options';
@@ -11,6 +12,21 @@ import { VerifyPaymentRequest, CancelPaymentRequest } from '@/model/order';
 function handleOrderError(error: any) {
   const message = error?.response?.data?.message ?? '오류가 발생했습니다. 다시 시도해주세요.';
   alert(Array.isArray(message) ? message.join('\n') : message);
+}
+
+export function useTestDeliverOrder(orderNumber: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => testDeliverOrder(orderNumber),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: orderKeys.all }),
+        queryClient.invalidateQueries({ queryKey: ['seller', 'orders'] }),
+        queryClient.invalidateQueries({ queryKey: ['seller', 'dashboard'] }),
+      ]);
+    },
+    onError: handleOrderError,
+  });
 }
 
 /**
@@ -87,6 +103,18 @@ export function useConfirmOrder(orderNumber: string) {
       queryClient.invalidateQueries({ queryKey: orderKeys.all });
     },
 
+    onError: handleOrderError,
+  });
+}
+
+export function useReconcileDemoCheckout(orderNumber: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => reconcileDemoCheckout(orderNumber),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: orderKeys.all });
+      queryClient.invalidateQueries({ queryKey: cartKeys.all });
+    },
     onError: handleOrderError,
   });
 }

@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import Link from 'next/link';
+import ProductCreateLink from './components/ProductCreateLink';
 import SellerProductFilters from './components/SellerProductFilters';
 import SellerProductTable from './components/SellerProductTable';
 
@@ -22,21 +22,7 @@ export default function SellerProductsPage() {
             등록한 상품은 관리자 승인 후 상점에 게시된다. 내용을 수정하면 다시 심사를 받는다.
           </p>
         </div>
-        <Link
-          href="/seller/products/new"
-          style={{
-            fontSize: '13px',
-            fontWeight: 600,
-            padding: '8px 16px',
-            borderRadius: '8px',
-            background: '#2563eb',
-            color: '#ffffff',
-            textDecoration: 'none',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          + 상품 등록
-        </Link>
+        <ProductCreateLink />
       </header>
 
       <section style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>

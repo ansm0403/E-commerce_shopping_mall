@@ -14,13 +14,13 @@ export class ReviewResponseDto extends BaseModel {
   // 프론트 리뷰 수정/삭제(PATCH·DELETE /reviews/:id)·30일 수정 가드(createdAt 기준)가
   // 이 값들을 사용하므로 명시적으로 노출한다. (ex-review-frontend §1·§7)
   @Expose()
-  id: number;
+  override id: number;
 
   @Expose()
-  createdAt: Date;
+  override createdAt: Date;
 
   @Expose()
-  updatedAt: Date;
+  override updatedAt: Date;
 
   @Expose()
   userId: number;

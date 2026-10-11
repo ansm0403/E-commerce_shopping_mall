@@ -118,6 +118,8 @@ export default function SellerInquiryTable() {
                   </td>
                   <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
                     <button
+                      disabled={!answered && inquiry.canAnswer===false}
+                      title={inquiry.canAnswer===false ? '일반 구매자의 문의는 체험 계정으로 답변할 수 없습니다.' : undefined}
                       style={actionButton(answered ? '#475569' : '#2563eb')}
                       onClick={() => {
                         setNotice(null);

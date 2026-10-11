@@ -3,12 +3,13 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SellerStatus, type SellerApplication } from '@shopping-mall/shared';
 import { useMySellerQuery, useSellerRoleSync, type RoleSyncState } from '../../../../hooks/seller-query-options';
+import { useAuth } from '../../../../contexts/AuthContext';
 import SellerApplyPage from './page';
 
 /**
  * 셀러 신청 화면의 4분기(미신청 / pending / approved / rejected) 렌더링 (01-seller-core §1-A①).
  *
- * 데이터 훅 두 개만 바꿔 끼운다 — 조회 결과(useMySellerQuery)와 승인 후 토큰 동기화 상태(useSellerRoleSync).
+ * 인증 사용자, 조회 결과(useMySellerQuery), 승인 후 토큰 동기화 상태(useSellerRoleSync)를 지정한다.
  * 폼·상태 카드·배지는 진짜를 렌더링해 "어떤 데이터에 어떤 화면"인지를 고정한다.
  */
 jest.mock('../../../../hooks/seller-query-options', () => ({
@@ -16,9 +17,11 @@ jest.mock('../../../../hooks/seller-query-options', () => ({
   useMySellerQuery: jest.fn(),
   useSellerRoleSync: jest.fn(),
 }));
+jest.mock('../../../../contexts/AuthContext', () => ({ useAuth: jest.fn() }));
 
 const mockedQuery = useMySellerQuery as jest.Mock;
 const mockedRoleSync = useSellerRoleSync as jest.Mock;
+const mockedAuth = useAuth as jest.Mock;
 
 const application = (overrides: Partial<SellerApplication> = {}): SellerApplication => ({
   id: 7,
@@ -55,6 +58,16 @@ describe('SellerApplyPage — 신청 상태 4분기', () => {
   beforeEach(() => {
     mockedQuery.mockReset();
     mockedRoleSync.mockReset();
+    mockedAuth.mockReset();
+    mockedAuth.mockReturnValue({ user: { id: 42, isDemo: false } });
+  });
+
+  it('체험 계정은 신규 신청 폼 대신 역할 체험 안내를 보여준다', () => {
+    mockedAuth.mockReturnValue({ user: { id: 42, isDemo: true } });
+    renderPage({ data: null });
+
+    expect(screen.getByText(/체험 계정에서는 셀러 신청을 제한합니다/)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: '신청하기' })).toBeNull();
   });
 
   it('불러오는 중이면 로딩 문구만', () => {

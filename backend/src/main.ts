@@ -60,7 +60,7 @@ async function bootstrap() {
     .filter(Boolean);
 
   app.enableCors({
-    origin: (origin, cb) => {
+    origin: (origin: string | undefined, cb: (error: Error | null, allow?: boolean) => void) => {
       // origin 없는 요청(서버사이드 fetch, curl 등)은 통과
       if (!origin) return cb(null, true);
       if (allowedOrigins.includes(origin)) return cb(null, true);

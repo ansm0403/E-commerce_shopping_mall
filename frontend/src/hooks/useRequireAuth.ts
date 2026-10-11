@@ -20,7 +20,7 @@ export function loginPathWithRedirect(currentPath: string): string {
  * UX 레이어일 뿐이다 — 최종 판정은 백엔드 가드가 한다.
  */
 export function useRequireAuth() {
-  const { user, isHydrated, isLoading } = useAuth();
+  const { user, isHydrated, isLoading, logoutRedirect } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -31,8 +31,8 @@ export function useRequireAuth() {
     if (isChecking || isLoggedIn) return;
     // 쿼리스트링까지 되돌린다(예: /checkout/complete?orderNumber=…).
     // useSearchParams 는 Suspense 경계를 요구하므로 이동 시점에 주소에서 직접 읽는다.
-    router.replace(loginPathWithRedirect(pathname + window.location.search));
-  }, [isChecking, isLoggedIn, pathname, router]);
+    router.replace(logoutRedirect || loginPathWithRedirect(pathname + window.location.search));
+  }, [isChecking, isLoggedIn, logoutRedirect, pathname, router]);
 
   return { user, isLoggedIn, isChecking };
 }

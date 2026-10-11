@@ -63,7 +63,7 @@ interface SecurityNumericRow {
 }
 
 /** order-trend 응답에서 한 점이 가지는 형태 (외부 노출 X — DTO와 동일 모양) */
-interface OrderTrendPoint {
+export interface OrderTrendPoint {
   date:      string;
   ordered:   number;
   paid:      number;

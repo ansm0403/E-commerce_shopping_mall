@@ -1,3 +1,4 @@
+import { DemoAccountGuard } from '../auth/guards/demo-account.guard';
 import {
   Body,
   Controller,
@@ -71,6 +72,7 @@ export class ReviewController {
   }
 
   @Patch(':id')
+  @UseGuards(DemoAccountGuard)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.BUYER)
   @Serialize(ReviewResponseDto)
@@ -84,6 +86,7 @@ export class ReviewController {
   }
 
   @Delete(':id')
+  @UseGuards(DemoAccountGuard)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.BUYER, Role.ADMIN)
   @Auditable(AuditAction.REVIEW_DELETED)

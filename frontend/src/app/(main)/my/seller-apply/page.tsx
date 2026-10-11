@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useAuth } from '../../../../contexts/AuthContext';
 import { SellerStatus } from '@shopping-mall/shared';
 import { useMySellerQuery } from '../../../../hooks/seller-query-options';
 import SellerApplyForm from './components/SellerApplyForm';
@@ -18,8 +19,11 @@ import SellerStatusCard from './components/SellerStatusCard';
  * refresh 를 시도하고 실패 시 /login 으로 보낸다(기존 동작에 위임).
  */
 export default function SellerApplyPage() {
+  const {user}=useAuth();
   const { data: application, isLoading, isError, refetch } = useMySellerQuery();
   const [isReapplying, setIsReapplying] = useState(false);
+
+  if (user?.isDemo && !application && !isLoading) return <CenteredMessage>체험 계정에서는 셀러 신청을 제한합니다. 상단의 ‘다른 역할 체험’으로 셀러 체험을 선택하세요.</CenteredMessage>;
 
   if (isLoading) {
     return <CenteredMessage>신청 현황을 불러오는 중…</CenteredMessage>;

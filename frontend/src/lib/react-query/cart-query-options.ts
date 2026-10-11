@@ -20,7 +20,7 @@ export const cartQueryOptions = {
   myCart: (enabled = true) =>
     queryOptions({
       queryKey: cartKeys.myCart,
-      queryFn: getMyCart,
+      queryFn: ({signal}) => getMyCart(signal),
       staleTime: 1000 * 60 * 5, // 5분간 캐시 유지 (뮤테이션 성공 시 invalidation으로 갱신)
       enabled,
     }),

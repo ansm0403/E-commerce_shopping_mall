@@ -1,3 +1,4 @@
+import { DemoAccountGuard } from '../auth/guards/demo-account.guard';
 import {
   Body,
   Controller,
@@ -10,6 +11,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { DemoInquiryRateGuard } from '../demo/demo-inquiry-rate.guard';
 import { InquiryService } from './inquiry.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
@@ -33,7 +35,7 @@ export class InquiryController {
   constructor(private readonly inquiryService: InquiryService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, DemoInquiryRateGuard)
   @Roles(Role.BUYER)
   @Serialize(InquiryResponseDto)
   create(
@@ -67,6 +69,7 @@ export class InquiryController {
   }
 
   @Delete(':id')
+  @UseGuards(DemoAccountGuard)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.BUYER)
   delete(

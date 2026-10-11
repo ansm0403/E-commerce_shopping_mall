@@ -101,6 +101,7 @@ export default function MyReviewsPage() {
 // ─── 개별 리뷰 수정/삭제 액션 ────────────────────────────────────────────────
 
 function MyReviewActions({ review }: { review: Review }) {
+  const {user}=useAuth();
   const [editOpen, setEditOpen] = useState(false);
   const updateReview = useUpdateReview();
   const deleteReview = useDeleteReview();
@@ -131,6 +132,7 @@ function MyReviewActions({ review }: { review: Review }) {
     }
   };
 
+  if(user?.isDemo) return <span className="text-xs text-amber-800">공용 체험 리뷰의 수정·삭제는 제한됩니다.</span>;
   return (
     <div className="flex items-center gap-2">
       <Link

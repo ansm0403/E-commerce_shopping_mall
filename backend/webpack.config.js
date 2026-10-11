@@ -15,7 +15,11 @@ module.exports = {
       main: './src/main.ts',
       // 배포용 마이그레이션 실행기(dist/migrate.js) — 운영 이미지에서
       // `node backend/dist/migrate.js` 로 호출 (docs/roadmap/ex-db-migration.md §4-0-1)
-      additionalEntryPoints: [{ entryName: 'migrate', entryPath: './src/migrate.ts' }],
+      additionalEntryPoints: [
+        { entryName: 'migrate', entryPath: './src/migrate.ts' },
+        { entryName: 'repair-demo-data', entryPath: './src/seed/repair-demo-data.ts' },
+        { entryName: 'prepare-role-demo', entryPath: './src/seed/prepare-role-demo.cli.ts' },
+      ],
       tsConfig: './tsconfig.app.json',
       assets: ['./src/assets'],
       optimization: false,

@@ -1,15 +1,10 @@
-export type AuthBroadcastMessage =
-  | { type: 'LOGIN' }
-  | { type: 'LOGOUT' }
-  | { type: 'TOKEN_REFRESHED' }
-  | { type: 'REQUEST_TOKEN' }
-  | { type: 'TOKEN_RESPONSE'; accessToken: string };
+export type AuthBroadcastMessage = { type: 'LOGIN' | 'LOGOUT' | 'TOKEN_REFRESHED' | 'REQUEST_TOKEN' | 'TOKEN_RESPONSE'; revision: string; requestId?: string; accessToken?: string };
 
 let channel: BroadcastChannel | null = null;
 
 export function getAuthChannel() {
   if (typeof window === 'undefined') return null;
-  if (!channel) {
+  if (!channel && typeof BroadcastChannel !== 'undefined') {
     channel = new BroadcastChannel('auth-channel');
   }
   return channel;

@@ -4,6 +4,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { clearWishlist, toggleWishlist } from '@/service/wishlist';
 import { authStorage } from '@/service/auth-storage';
+import { authRevision } from '@/service/auth-session';
+import { CanceledError } from 'axios';
 import { useAuth } from '@/contexts/AuthContext';
 import { hasRole } from '@/lib/roles';
 import {
@@ -49,6 +51,7 @@ export function useWishlistToggle() {
     mutationFn: (productId: number) => toggleWishlist(productId),
 
     onMutate: async (productId) => {
+      const revision = authRevision();
       // 요청 직전: 로그인 상태 확인
       if (!authStorage.getAccessToken()) {
         router.push('/login');
@@ -57,6 +60,7 @@ export function useWishlistToggle() {
 
       // 진행 중인 ids 조회가 낙관값을 덮어쓰지 않게 멈춘다
       await queryClient.cancelQueries({ queryKey: wishlistKeys.ids() });
+      if (revision !== authRevision()) throw new CanceledError('Account changed');
       const previous = queryClient.getQueryData<number[]>(wishlistKeys.ids());
       if (previous) {
         queryClient.setQueryData(

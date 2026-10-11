@@ -33,7 +33,7 @@ services:
       retries: 3
 
   backend:
-    image: ansmoon/shopping-mall-backend:latest
+    image: ${BACKEND_IMAGE:-ansmoon/shopping-mall-backend:latest}
     restart: unless-stopped
     # ports 없음 — 4000 은 compose 네트워크 안에서 nginx 만 부른다 (결정 6: 4000 비공개).
     # 호스트에서 직접 확인이 필요하면: docker compose -f docker-compose.prod.yaml exec backend curl -s localhost:4000/v1/health

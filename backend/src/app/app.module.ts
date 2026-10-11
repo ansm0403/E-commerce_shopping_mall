@@ -30,6 +30,7 @@ import { SeedModule } from '../seed/seed.module';
 import { AiModule } from '../intrastructure/ai/ai.module';
 import { AssistantModule } from '../admin/assistant/assistant.module';
 import { OpsModule } from '../ops/ops.module';
+import { DemoCheckoutApiModule } from '../demo/demo-checkout-api.module';
 
 @Module({
   imports: [
@@ -73,6 +74,7 @@ import { OpsModule } from '../ops/ops.module';
     }),
     TypeOrmModule.forFeature([RoleEntity, CategoryEntity]),
     AuthModule,
+    DemoCheckoutApiModule,
     SellerModule,
     CategoryModule,
     ProductModule,

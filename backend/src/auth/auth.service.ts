@@ -1,3 +1,4 @@
+import { DEMO_ROLES, DemoRole, demoConfigKey, DemoPolicyService } from '../demo/demo-policy.service';
 import {
   Injectable,
   UnauthorizedException,
@@ -29,6 +30,8 @@ interface JwtPayload {
   type: 'access' | 'refresh';
   tokenId?: string;
   isDemo?: boolean;
+  /** Stable across refresh rotation; separates each visitor's checkout data. */
+  demoSessionId?: string;
   /**
    * 토큰 고유 ID(JWT 표준 클레임). access 토큰에만 넣는다.
    *
@@ -49,12 +52,12 @@ interface LoginContext {
 
 @Injectable()
 export class AuthService {
+  private demoOptionsCache?: {expires: number; value: {enabled: boolean; roles: Record<DemoRole, boolean>}};
   private readonly ACCESS_TOKEN_EXPIRATION = 900; // 15분
   /** access 토큰 수명(초) — auth.module 의 JwtModule signOptions.expiresIn('15m')과 같아야 한다 */
   private static readonly ACCESS_TOKEN_TTL_SECONDS = 900;
   private readonly REFRESH_TOKEN_EXPIRATION = 604800; // 7일
   private readonly MAX_LOGIN_ATTEMPTS = 5;
-  private readonly LOGIN_LOCKOUT_DURATION = 900; // 15분
 
   constructor(
     private readonly jwtService: JwtService,
@@ -68,6 +71,7 @@ export class AuthService {
     private readonly refreshTokenRepository: Repository<RefreshTokenEntity>,
     @InjectRepository(RoleEntity)
     private readonly roleRepository: Repository<RoleEntity>,
+    private readonly demoPolicy: DemoPolicyService,
   ) {}
 
   async getMe(id: number) {
@@ -220,6 +224,7 @@ export class AuthService {
   async login(
     dto: { email: string; password: string, rememberMe?: boolean },
     context: LoginContext,
+    demoRole?: DemoRole,
   ) {
     // Rate Limiting 체크
     const canAttempt = await this.redisService.checkRateLimit(
@@ -238,7 +243,7 @@ export class AuthService {
     // 로그인 시도 횟수 확인
     const attempts = await this.redisService.getLoginAttempts(dto.email);
 
-    if (attempts >= this.MAX_LOGIN_ATTEMPTS) {
+    if (!demoRole && attempts >= this.MAX_LOGIN_ATTEMPTS) {
       const remainingTime = await this.redisService.getLoginAttemptsRemainingTime(dto.email);
 
       await this.auditLogService.log({
@@ -262,6 +267,7 @@ export class AuthService {
     });
 
     if (!user) {
+      if (demoRole) throw new ForbiddenException({message: '선택한 체험 계정이 준비되지 않았습니다.', code: 'DEMO_UNAVAILABLE'});
       await this.redisService.incrementLoginAttempts(dto.email);
 
       await this.auditLogService.log({
@@ -275,10 +281,13 @@ export class AuthService {
       throw new UnauthorizedException('이메일 또는 비밀번호가 올바르지 않습니다.');
     }
 
+    if (demoRole && !await this.isValidDemoUser(user, demoRole)) throw new ForbiddenException({message: '체험 계정이 준비되지 않았습니다.', code: 'DEMO_UNAVAILABLE'});
+
     // 비밀번호 검증
     const isPasswordValid = await bcrypt.compare(dto.password, user.password);
 
     if (!isPasswordValid) {
+      if (demoRole) throw new ForbiddenException({message: '체험 계정 설정을 확인할 수 없습니다.', code: 'DEMO_UNAVAILABLE'});
       await this.redisService.incrementLoginAttempts(dto.email);
 
       await this.auditLogService.log({
@@ -316,26 +325,40 @@ export class AuthService {
     return this.generateTokens(user, context, rememberMe);
   }
 
-  // ===== 데모 관리자 로그인 =====
-  async demoLogin(context: LoginContext) {
-    const enabled = this.configService.get<string>('DEMO_LOGIN_ENABLED');
-    if (enabled !== 'true') {
-      throw new ForbiddenException('데모 로그인이 비활성화되어 있습니다.');
+  private async isValidDemoUser(user: UserModel, role: DemoRole) {
+    const expected = role === 'seller' ? ['buyer', 'seller'] : [role];
+    const roles = user.roles.map(r => r.name);
+    return user.isDemo === true && user.isEmailVerified && roles.length === expected.length
+      && expected.every(r => roles.includes(r as Role))
+      && (role !== 'seller' || !!await this.demoPolicy.approvedSeller(user.id));
+  }
+  async demoOptions() {
+    if (this.demoOptionsCache && this.demoOptionsCache.expires > Date.now()) return this.demoOptionsCache.value;
+    const enabled = this.configService.get('DEMO_LOGIN_ENABLED') === 'true';
+    const roles = {buyer: false, seller: false, admin: false};
+    if (enabled) for (const role of DEMO_ROLES) {
+      const email = this.configService.get<string>(demoConfigKey(role, 'EMAIL'));
+      const password = this.configService.get<string>(demoConfigKey(role, 'PASSWORD'));
+      const user = email && password ? await this.usersRepository.findOne({where: {email}, relations: ['roles']}) : null;
+      roles[role] = !!user && await this.isValidDemoUser(user, role);
     }
-
-    const email = this.configService.get<string>('DEMO_ADMIN_EMAIL');
-    const password = this.configService.get<string>('DEMO_ADMIN_PASSWORD');
-
-    if (!email || !password) {
-      throw new ForbiddenException('데모 관리자 계정이 설정되지 않았습니다.');
-    }
-
-    return this.login({ email, password, rememberMe: false }, context);
+    const value = {enabled, roles};
+    this.demoOptionsCache = {expires: Date.now() + 5000, value};
+    return value;
+  }
+  async demoStatus(userId: number) { return this.demoPolicy.status(userId); }
+  async demoLogin(context: LoginContext, role: DemoRole = 'admin') {
+    if (this.configService.get('DEMO_LOGIN_ENABLED') !== 'true') throw new ForbiddenException('데모 로그인이 비활성화되어 있습니다.');
+    const email = this.configService.get<string>(demoConfigKey(role, 'EMAIL'));
+    const password = this.configService.get<string>(demoConfigKey(role, 'PASSWORD'));
+    if (!email || !password) throw new ForbiddenException({message: '선택한 체험 계정이 준비되지 않았습니다.', code: 'DEMO_UNAVAILABLE'});
+    return this.login({email, password, rememberMe: false}, context, role);
   }
 
   // ===== 토큰 생성 =====
-  private async generateTokens(user: UserModel, context: LoginContext, isPersistent: boolean) {
+  private async generateTokens(user: UserModel, context: LoginContext, isPersistent: boolean, demoSessionId?: string) {
     const tokenId = crypto.randomUUID();
+    const demoSession = user.isDemo ? (demoSessionId || crypto.randomUUID()) : undefined;
 
     // Access Token
     // jti: 발급마다 다른 값 → 같은 초에 발급돼도 토큰 문자열이 겹치지 않는다(JwtPayload.jti 주석 참고).
@@ -346,6 +369,7 @@ export class AuthService {
       roles: user.roles?.map((r) => r.name) ?? [],
       isDemo: user.isDemo ?? false,
       jti: crypto.randomUUID(),
+      ...(demoSession ? { demoSessionId: demoSession } : {}),
     };
 
     const accessToken = this.jwtService.sign(accessPayload, {
@@ -359,6 +383,7 @@ export class AuthService {
       email: user.email,
       type: 'refresh',
       tokenId,
+      ...(demoSession ? { demoSessionId: demoSession } : {}),
     };
 
     const refreshToken = this.jwtService.sign(refreshPayload, {
@@ -489,7 +514,7 @@ export class AuthService {
     const isPersistent = storedToken.isPersistent;
 
     // 새 토큰 생성
-    return this.generateTokens(user, context, isPersistent);
+    return this.generateTokens(user, context, isPersistent, payload.demoSessionId);
   }
 
   // ===== 로그아웃 =====

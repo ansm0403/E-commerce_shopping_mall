@@ -1,8 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
+import { getDemoCheckoutOrders } from '@/service/demo-checkout';
+import { hasRole } from '@/lib/roles';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { orderQueryOptions } from '@/lib/react-query/order-query-options';
@@ -43,6 +46,16 @@ export default function OrdersPage() {
   const router = useRouter();
   const { user } = useAuth();
   const isLoggedIn = !!user;
+  const isDemoBuyer =
+    !!user?.isDemo &&
+    hasRole(user, 'buyer') &&
+    !hasRole(user, 'seller') &&
+    !hasRole(user, 'admin');
+  const demoOrdersQuery = useQuery({
+    queryKey: ['orders', 'demo-checkout'],
+    queryFn: ({ signal }) => getDemoCheckoutOrders(signal),
+    enabled: isDemoBuyer,
+  });
 
   const [activeStatus, setActiveStatus] = useState<OrderStatus | ''>('');
   const [page, setPage] = useState(1);
@@ -90,6 +103,47 @@ export default function OrdersPage() {
         ))}
       </div>
 
+      {isDemoBuyer && (
+        <section className="mb-8 space-y-3">
+          <h2 className="font-semibold text-secondary-900">
+            이번 로그인에서 만든 테스트 주문
+          </h2>
+          <p className="text-sm text-secondary-500">
+            PortOne 테스트 결제 주문입니다. 실제 배송은 진행하지 않습니다.
+          </p>
+          {demoOrdersQuery.isLoading ? (
+            <SkeletonList />
+          ) : demoOrdersQuery.isError ? (
+            <button
+              className="text-sm underline"
+              onClick={() => demoOrdersQuery.refetch()}
+            >
+              테스트 주문을 불러오지 못했습니다. 다시 시도
+            </button>
+          ) : (
+            (demoOrdersQuery.data?.data ?? [])
+              .filter((order) => !activeStatus || order.status === activeStatus)
+              .map((order) => (
+                <OrderCard key={order.orderNumber} order={order} />
+              ))
+          )}
+          {!demoOrdersQuery.isLoading &&
+            !demoOrdersQuery.isError &&
+            !demoOrdersQuery.data?.data.length && (
+              <Link
+                href="/products"
+                className="inline-block text-sm text-primary-600 underline"
+              >
+                상품을 담고 테스트 결제 시작하기
+              </Link>
+            )}
+        </section>
+      )}
+      {isDemoBuyer && (
+        <h2 className="mb-3 font-semibold text-secondary-900">
+          준비된 배송·리뷰 주문
+        </h2>
+      )}
       {/* 목록 */}
       {isLoading ? (
         <SkeletonList />
@@ -98,11 +152,7 @@ export default function OrdersPage() {
       ) : (
         <div className="space-y-3">
           {orders.map((order) => (
-            <OrderCard
-              key={order.id}
-              order={order}
-              onClick={() => router.push(`/my/orders/${order.orderNumber}`)}
-            />
+            <OrderCard key={order.id} order={order} />
           ))}
         </div>
       )}
@@ -135,18 +185,18 @@ export default function OrdersPage() {
 
 // ─── OrderCard ────────────────────────────────────────────────────────────────
 
-function OrderCard({ order, onClick }: { order: OrderResponse; onClick: () => void }) {
+function OrderCard({ order }: { order: OrderResponse }) {
   const firstItem = order.items[0];
   const extraCount = order.items.length - 1;
 
   return (
-    <button
-      onClick={onClick}
-      className="w-full text-left bg-white rounded-xl border border-secondary-200 p-4 hover:border-primary-300 hover:shadow-md transition-all duration-200 group"
-    >
+    <article className="bg-white rounded-xl border border-secondary-200 p-4 hover:border-primary-300 hover:shadow-md transition-all duration-200">
       {/* 상단: 날짜 + 상태 배지 */}
       <div className="flex items-center justify-between mb-3">
-        <div>
+        <Link
+          href={`/my/orders/${order.orderNumber}`}
+          className="rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 hover:underline underline-offset-2"
+        >
           <p className="text-xs text-secondary-400">
             {new Date(order.createdAt).toLocaleDateString('ko-KR', {
               year: 'numeric',
@@ -154,51 +204,62 @@ function OrderCard({ order, onClick }: { order: OrderResponse; onClick: () => vo
               day: 'numeric',
             })}
           </p>
-          <p className="text-[11px] text-secondary-400 mt-0.5 font-mono">{order.orderNumber}</p>
-        </div>
-        <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${STATUS_COLOR[order.status]}`}>
+          <p className="text-[11px] text-secondary-400 mt-0.5 font-mono">
+            {order.orderNumber}
+          </p>
+        </Link>
+        <span
+          className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+            STATUS_COLOR[order.status]
+          }`}
+        >
           {STATUS_LABEL[order.status]}
         </span>
       </div>
 
       {/* 하단: 상품 이미지 + 이름 + 금액 + 화살표 */}
       <div className="flex items-center gap-3">
-        {/* 썸네일 */}
-        {firstItem?.productImageUrl ? (
-          <img
-            src={firstItem.productImageUrl}
-            alt={firstItem.productName}
-            className="w-14 h-14 rounded-lg object-cover shrink-0 border border-secondary-100"
-          />
-        ) : (
-          <div className="w-14 h-14 rounded-lg bg-primary-50 flex items-center justify-center shrink-0 border border-primary-100">
-            <span className="text-primary-400 font-bold text-lg">
-              {firstItem?.productName?.charAt(0) ?? '?'}
-            </span>
-          </div>
-        )}
-
-        {/* 상품명 + 금액 */}
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-secondary-900 truncate">
-            {firstItem?.productName}
-            {extraCount > 0 && (
-              <span className="ml-1 text-secondary-400 font-normal text-xs">
-                외 {extraCount}건
-              </span>
+        {firstItem && (
+          <Link
+            href={`/products/${firstItem.productId}`}
+            className="flex items-center gap-3 flex-1 min-w-0 group rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+          >
+            {firstItem.productImageUrl ? (
+              <img
+                src={firstItem.productImageUrl}
+                alt={firstItem.productName}
+                className="w-14 h-14 rounded-lg object-cover shrink-0 border border-secondary-100"
+              />
+            ) : (
+              <div className="w-14 h-14 rounded-lg bg-primary-50 flex items-center justify-center shrink-0 border border-primary-100">
+                <span className="text-primary-400 font-bold text-lg">
+                  {firstItem.productName.charAt(0)}
+                </span>
+              </div>
             )}
-          </p>
-          <p className="text-sm font-bold text-primary-600 mt-1">
-            {Number(order.totalAmount).toLocaleString()}원
-          </p>
-        </div>
-
-        {/* 화살표 */}
-        <span className="text-secondary-300 group-hover:text-primary-400 transition-colors text-lg shrink-0">
-          →
-        </span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-secondary-900 truncate group-hover:text-primary-600 group-hover:underline underline-offset-2">
+                {firstItem.productName}
+                {extraCount > 0 && (
+                  <span className="ml-1 text-secondary-400 font-normal text-xs">
+                    외 {extraCount}건
+                  </span>
+                )}
+              </p>
+              <p className="text-sm font-bold text-primary-600 mt-1">
+                {Number(order.totalAmount).toLocaleString()}원
+              </p>
+            </div>
+          </Link>
+        )}
+        <Link
+          href={`/my/orders/${order.orderNumber}`}
+          className="ml-auto shrink-0 inline-flex items-center gap-1 rounded text-xs font-medium text-secondary-500 hover:text-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+        >
+          주문 상세 <span aria-hidden="true">→</span>
+        </Link>
       </div>
-    </button>
+    </article>
   );
 }
 
@@ -241,8 +302,12 @@ function EmptyState({ onShop }: { onShop: () => void }) {
   return (
     <div className="py-20 text-center">
       <p className="text-4xl mb-4">📦</p>
-      <p className="text-base font-semibold text-secondary-700">주문 내역이 없습니다</p>
-      <p className="text-sm text-secondary-400 mt-1 mb-6">첫 주문을 시작해보세요!</p>
+      <p className="text-base font-semibold text-secondary-700">
+        주문 내역이 없습니다
+      </p>
+      <p className="text-sm text-secondary-400 mt-1 mb-6">
+        첫 주문을 시작해보세요!
+      </p>
       <button
         onClick={onShop}
         className="px-6 py-2.5 bg-primary-600 text-white rounded-lg text-sm font-semibold hover:bg-primary-700 transition-colors"

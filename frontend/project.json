@@ -2,6 +2,27 @@
   "name": "@shopping-mall/frontend",
   "$schema": "../node_modules/nx/schemas/project-schema.json",
   "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p tsconfig.json",
+        "cwd": "frontend"
+      }
+    },
+    "demo-checkout:verify": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node ../scripts/buyer-flow/verify-demo-checkout.mjs",
+        "cwd": "frontend"
+      }
+    },
+    "auth:verify": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node ../scripts/buyer-flow/verify-auth-navigation.mjs",
+        "cwd": "frontend"
+      }
+    },
     "build": {
       "inputs": [
         "production",

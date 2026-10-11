@@ -1,4 +1,5 @@
 'use client';
+import { useAuth } from '@/contexts/AuthContext';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -17,6 +18,7 @@ const PAGE_SIZE = 10;
  * 삭제는 답변 대기(waiting)일 때만 — 답변된 문의는 서버가 400 으로 막으므로 버튼을 아예 내지 않는다.
  */
 export default function MyInquiriesPage() {
+  const {user}=useAuth();
   const [page, setPage] = useState(1);
   const [target, setTarget] = useState<InquiryResponse | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -88,7 +90,7 @@ export default function MyInquiriesPage() {
                 </Link>
               }
               action={
-                inquiry.status === InquiryStatus.WAITING ? (
+                !user?.isDemo && inquiry.status === InquiryStatus.WAITING ? (
                   <button
                     onClick={() => {
                       setNotice(null);

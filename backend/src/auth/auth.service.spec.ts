@@ -1,3 +1,5 @@
+import { DemoPolicyService } from '../demo/demo-policy.service';
+import { mockDemoPolicy } from '../demo/demo-policy.mock';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
@@ -99,6 +101,7 @@ describe('AuthService', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        { provide: DemoPolicyService, useValue: mockDemoPolicy() },
         AuthService,
         { provide: getRepositoryToken(UserModel), useValue: usersRepository },
         { provide: getRepositoryToken(RefreshTokenEntity), useValue: refreshTokenRepository },
@@ -305,6 +308,39 @@ describe('AuthService', () => {
   });
 
   // ─── verifyEmail ─────────────────────────────────────────
+  describe('demo visit token claims', () => {
+    beforeEach(() => {
+      setupTokenMocks();
+      redisService.getLoginAttempts.mockResolvedValue(0);
+      usersRepository.findOne.mockResolvedValue({ ...mockUser, isDemo: true });
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+    });
+    it('issues a new visit per login and puts it into both tokens', async () => {
+      const dto = { email: mockUser.email, password: 'password' };
+      await service.login(dto, mockContext);
+      await service.login(dto, mockContext);
+      const payloads = jwtService.sign.mock.calls.map(([payload]) => payload);
+      expect(payloads[0].demoSessionId).toMatch(/^[a-f0-9-]{36}$/);
+      expect(payloads[0].demoSessionId).toBe(payloads[1].demoSessionId);
+      expect(payloads[2].demoSessionId).toBe(payloads[3].demoSessionId);
+      expect(payloads[0].demoSessionId).not.toBe(payloads[2].demoSessionId);
+    });
+    it('does not put demo visits into ordinary login tokens', async () => {
+      usersRepository.findOne.mockResolvedValue(mockUser);
+      await service.login({ email: mockUser.email, password: 'password' }, mockContext);
+      expect(jwtService.sign.mock.calls.every(([payload]) => !payload.demoSessionId)).toBe(true);
+    });
+    it('preserves the visit through refresh token rotation', async () => {
+      const demoSessionId = '894b0e52-98cc-4dc1-8d60-a876243a47f5';
+      jwtService.verify.mockReturnValue({ sub: 1, email: mockUser.email, type: 'refresh', tokenId: 'test-token-uuid', demoSessionId });
+      redisService.isRefreshTokenValid.mockResolvedValue(true);
+      refreshTokenRepository.findOne.mockResolvedValue({ id: 'test-token-uuid', userId: 1, tokenHash: 'mock-hash', isRevoked: false, isPersistent: false });
+      jest.spyOn(service as any, 'hashToken').mockReturnValue('mock-hash');
+      await service.refresh('some-refresh-token', mockContext);
+      expect(jwtService.sign.mock.calls.map(([payload]) => payload.demoSessionId)).toEqual([demoSessionId, demoSessionId]);
+    });
+  });
+
   describe('verifyEmail', () => {
     it('성공: isEmailVerified = true 저장 + 토큰 반환', async () => {
       const unverifiedUser = { ...mockUser, isEmailVerified: false };

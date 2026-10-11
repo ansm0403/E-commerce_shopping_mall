@@ -29,6 +29,7 @@ export class SellerController {
 
   // 셀러 신청 (BUYER만)
   @Post('apply')
+  @UseGuards(DemoAccountGuard)
   @Roles(Role.BUYER)
   apply(@User('sub') userId: number, @Body() dto: ApplySellerDto) {
     return this.sellerService.apply(userId, dto);

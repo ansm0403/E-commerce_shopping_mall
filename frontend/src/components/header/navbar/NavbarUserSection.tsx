@@ -2,34 +2,18 @@ import { useAuth } from '../../../contexts/AuthContext';
 import Link from 'next/link';
 import { NavbarButton } from './NavbarButton';
 import React from 'react';
-import { authStorage } from '../../../service/auth-storage';
 import { useRouter } from 'next/navigation';
-import { logout } from '../../../service/auth';
 
 export default function NavbarUserSection() {
-  const { isLoading, isAuthenticated, isHydrated } = useAuth();
+  const { isLoading, isAuthenticated, isHydrated, logout } = useAuth();
   const router = useRouter();
 
   const handleLogout = async () => {
-    const token = authStorage.getAccessToken();
-
-    if (token) {
-      try {
-        // 백엔드 로그아웃 API 호출 (토큰 블랙리스트 + DB 무효화 + 쿠키 삭제)
-        const response = await logout();
-        console.log(response.data.message); // "로그아웃 되었습니다."
-
-        // 원하는 경우 사용자에게 메시지 표시
-        // alert(response.data.message);
-        // 또는 토스트 라이브러리 사용
-      } catch (error) {
-        console.error('Logout API failed:', error);
-        // API 실패해도 로컬 토큰은 삭제
-      }
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout API failed:', error);
     }
-
-    // 로컬 토큰 삭제 + BroadcastChannel로 다른 탭에 알림
-    authStorage.clearToken();
     router.push('/');
   };
 

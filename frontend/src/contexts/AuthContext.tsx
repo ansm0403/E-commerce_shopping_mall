@@ -1,4 +1,6 @@
-'use client'
+'use client';
+import { authRevision } from '../service/auth-session';
+import { clearAccountQueries } from '../lib/react-query/clear-account-queries';
 
 import { isAxiosError } from 'axios';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -6,13 +8,18 @@ import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { authStorage } from '../service/auth-storage';
 import { getMe, logout as logoutApi, UserResponse } from '../service/auth';
 import { getAuthChannel } from '../service/auth-channel';
+import {
+  beginLoggingOut,
+  resetLoggingOutFlag,
+} from '../lib/axios/axios-http-client';
 
 interface AuthContextType {
   user: UserResponse | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   isHydrated: boolean;
-  logout: () => Promise<void>;
+  logoutRedirect?: string | null;
+  logout: (destination?: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -27,9 +34,15 @@ export const ROLE_CHECK_QUERY_KEY = ['auth', 'me'] as const;
 /** 새 탭이 다른 탭의 토큰 응답을 기다리는 시간. 같은 브라우저 안의 메시지라 보통 수 ms 면 온다. */
 const TAB_TOKEN_WAIT_MS = 300;
 
-export default function AuthContextProvider({ children }: { children: React.ReactNode }) {
+export default function AuthContextProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const queryClient = useQueryClient();
+  const tokenRequestId = useRef<string | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [logoutRedirect, setLogoutRedirect] = useState<string | null>(null);
   // "로그인 유지"를 끄면 access 토큰은 탭마다 따로(sessionStorage)다. 새 탭은 다른 탭에게 토큰을 물어보는데,
   // 답이 오기 전에 "토큰 없음 = 비로그인"으로 확정하면 로그인한 사용자의 새 탭이 로그인 화면으로 튕긴다.
   // 그래서 답을 기다리는 짧은 동안은 인증 상태를 "확인 중"으로 둔다(isLoading 에 합쳐 내보낸다).
@@ -47,56 +60,87 @@ export default function AuthContextProvider({ children }: { children: React.Reac
     if (!token && !isRememberMe && channel) {
       // sessionStorage 모드이고 토큰이 없으면 다른 탭에 요청
       setIsAwaitingTabToken(true);
-      channel.postMessage({ type: 'REQUEST_TOKEN' });
+      tokenRequestId.current = crypto.randomUUID();
+      channel.postMessage({
+        type: 'REQUEST_TOKEN',
+        revision: authRevision(),
+        requestId: tokenRequestId.current,
+      });
       // 답해 줄 탭이 없으면(정말 비로그인) 여기서 기다림을 끝낸다
-      const timer = setTimeout(() => setIsAwaitingTabToken(false), TAB_TOKEN_WAIT_MS);
+      const timer = setTimeout(
+        () => setIsAwaitingTabToken(false),
+        TAB_TOKEN_WAIT_MS
+      );
       return () => clearTimeout(timer);
     }
     return undefined;
   }, []);
 
-
   useEffect(() => {
-  const channel = getAuthChannel();
-  if (!channel) return;
+    const channel = getAuthChannel();
+    if (!channel) return;
 
-  const onMessage = (event: MessageEvent) => {
-    const { type, accessToken } = event.data ?? {};
-
-    if (type === 'LOGIN') {
-      // 다른 탭이 로그인했다. "로그인 유지"를 켰으면 localStorage 를 같이 보므로 다시 조회하면 되고,
-      // 껐으면 이 탭에는 토큰이 없다 — 그 탭에게 토큰을 달라고 한다(답은 아래 TOKEN_RESPONSE 로 온다).
-      if (!authStorage.getAccessToken() && !authStorage.isRememberMe()) {
-        channel.postMessage({ type: 'REQUEST_TOKEN' });
-      } else {
+    const onMessage = (event: MessageEvent) => {
+      const { type, accessToken, revision, requestId } = event.data ?? {};
+      if (revision !== authRevision()) return;
+      if (type === 'LOGIN' || type === 'LOGOUT') {
+        if (type === 'LOGIN') resetLoggingOutFlag();
+        else beginLoggingOut();
+        authStorage.dropTabToken();
+        void clearAccountQueries(queryClient).then(() => {
+          if (revision !== authRevision()) return;
+          if (type === 'LOGIN' && !authStorage.isRememberMe()) {
+            tokenRequestId.current = crypto.randomUUID();
+            channel.postMessage({
+              type: 'REQUEST_TOKEN',
+              revision,
+              requestId: tokenRequestId.current,
+            });
+          } else queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
+        });
+      } else if (type === 'TOKEN_REFRESHED') {
+        if (!authStorage.isRememberMe()) {
+          tokenRequestId.current = crypto.randomUUID();
+          channel.postMessage({
+            type: 'REQUEST_TOKEN',
+            revision,
+            requestId: tokenRequestId.current,
+          });
+        } else queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
+      } else if (type === 'REQUEST_TOKEN')
+        authStorage.respondWithToken(requestId);
+      else if (
+        type === 'TOKEN_RESPONSE' &&
+        accessToken &&
+        requestId === tokenRequestId.current
+      ) {
+        tokenRequestId.current = null;
+        authStorage.setTokenFromBroadcast(accessToken);
+        setIsAwaitingTabToken(false);
         queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
       }
-    } else if (type === 'LOGOUT') {
-      // 다른 탭이 로그아웃했다 — 이 탭에 따로 들고 있던 토큰도 버린다(이미 서버에서 끊긴 토큰이다)
-      authStorage.dropTabToken();
-      queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
-    } else if (type === 'TOKEN_REFRESHED') {
-      queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
-    } else if (type === 'REQUEST_TOKEN') {
-      // 다른 탭에서 토큰 요청 시 응답
-      authStorage.respondWithToken();
-    } else if (type === 'TOKEN_RESPONSE' && accessToken) {
-      // 다른 탭으로부터 토큰 받음
-      authStorage.setTokenFromBroadcast(accessToken);
-      setIsAwaitingTabToken(false);
-      queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
-    }
-  };
+    };
 
-  channel.addEventListener('message', onMessage);
-  return () => channel.removeEventListener('message', onMessage);
+    channel.addEventListener('message', onMessage);
+    return () => channel.removeEventListener('message', onMessage);
   }, [queryClient]);
-
 
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
-      if(e.key === 'accessToken' || e.key === 'auth:persist') {
-        queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
+      if (
+        e.key === 'accessToken' ||
+        e.key === 'auth:persist' ||
+        e.key === 'auth:revision'
+      ) {
+        if (e.key === 'auth:revision') {
+          const revision = authRevision();
+          void clearAccountQueries(queryClient).then(() => {
+            if (revision === authRevision())
+              void queryClient.invalidateQueries({
+                queryKey: ['auth', 'user'],
+              });
+          });
+        } else queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
       }
     };
 
@@ -104,24 +148,14 @@ export default function AuthContextProvider({ children }: { children: React.Reac
     return () => window.removeEventListener('storage', onStorage);
   }, [queryClient]);
 
-  const logout = async () => {
-    try {
-      await logoutApi();
-    } finally {
-      authStorage.clearToken();
-      queryClient.setQueryData(['auth', 'user'], null);
-      queryClient.removeQueries({ queryKey: ROLE_CHECK_QUERY_KEY });
-      queryClient.removeQueries({ queryKey: ['cart'] });
-      // 계정에 묶인 캐시 — 남겨 두면 다음에 로그인한 사용자에게 앞사람의 찜·문의·프로필이 잠깐 보인다
-      queryClient.removeQueries({ queryKey: ['wishlist'] });
-      queryClient.removeQueries({ queryKey: ['inquiries'] });
-      queryClient.removeQueries({ queryKey: ['user'] });
-    }
+  const logout = async (destination?: string) => {
+    setLogoutRedirect(destination ?? null);
+    await logoutApi();
   };
 
   const { data: user, isLoading } = useQuery({
     queryKey: ['auth', 'user'],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       // 토큰이 없으면 API 요청하지 않고 null 반환
       const token = authStorage.getAccessToken();
       if (!token) {
@@ -129,11 +163,14 @@ export default function AuthContextProvider({ children }: { children: React.Reac
       }
 
       try {
-        const response = await getMe();
+        const response = await getMe(signal);
         return response.data;
       } catch (error) {
         // 401/403: 토큰 만료 또는 권한 없음 → 비로그인으로 처리
-        if (isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 403)) {
+        if (
+          isAxiosError(error) &&
+          (error.response?.status === 401 || error.response?.status === 403)
+        ) {
           return null;
         }
         // 네트워크 오류, 500 등: React Query가 처리하도록 throw
@@ -146,17 +183,18 @@ export default function AuthContextProvider({ children }: { children: React.Reac
     enabled: isHydrated && !isAwaitingTabToken,
   });
 
-  // 이 탭에서 하는 로그인·로그아웃은 그 자리에서 역할 캐시를 지운다(useAuthMutation·위의 logout).
-  // 여기는 나머지 길 — 다른 탭의 로그아웃/계정 전환, 세션 만료 — 을 한 곳에서 받는다:
-  // "있던 사용자"가 사라지거나 다른 사람으로 바뀌면 비운다. 가드가 화면에 떠 있으면 reset 이 곧바로 다시 조회시킨다.
-  // (처음 로딩의 "없음 → 있음"은 건너뛴다 — 가드가 막 받아 온 응답을 지우면 화면이 한 번 더 깜빡인다)
+  // 로그인·로그아웃 서비스와 다른 탭 이벤트가 계정 전환의 개인 캐시를 정리한다.
+  // /auth/me 조회로 세션 만료가 확인된 경우도 개인 캐시를 정리한다.
   const userId = user?.id ?? null;
   const previousUserId = useRef<number | string | null>(null);
   useEffect(() => {
     const previous = previousUserId.current;
     previousUserId.current = userId;
-    if (previous !== null && previous !== userId) {
-      queryClient.resetQueries({ queryKey: ROLE_CHECK_QUERY_KEY });
+    if (userId !== null) setLogoutRedirect(null);
+    if (previous !== null && userId === null) {
+      // Session expiry also clears private data. Never restore a captured user
+      // after this asynchronous cleanup: another login may already have completed.
+      void clearAccountQueries(queryClient);
     }
   }, [userId, queryClient]);
 
@@ -167,6 +205,7 @@ export default function AuthContextProvider({ children }: { children: React.Reac
         isLoading: isLoading || isAwaitingTabToken,
         isAuthenticated: !!user,
         isHydrated,
+        logoutRedirect,
         logout,
       }}
     >

@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { mockProductCatalog } from './mock-product-catalog';
+import { planMockOwnership } from '../../seed/demo-ownership-plan';
 import { ProductEntity } from '../../product/entity/product.entity';
 import { ProductImageEntity } from '../../product/entity/product-image.entity';
 import { CategoryEntity } from '../../category/entity/category.entity';
@@ -17,30 +19,20 @@ export class ProductSeedService {
   ) {}
 
   async seedProducts() {
-    const [
-      { beautyProductsData },
-      { clothingProductsData },
-      { shoesProductsData },
-      { bookProductsData },
-      { foodProductsData },
-      { livingProductsData },
-    ] = await Promise.all([
-      import('../../data/beauty-products'),
-      import('../../data/clothing-products'),
-      import('../../data/shoes-products'),
-      import('../../data/book-products'),
-      import('../../data/food-products'),
-      import('../../data/living-products'),
-    ]);
-
-    const rawData = [
-      ...beautyProductsData,
-      ...clothingProductsData,
-      ...shoesProductsData,
-      ...bookProductsData,
-      ...foodProductsData,
-      ...livingProductsData,
-    ];
+    const seller = await this.productRepository.manager.query(
+      `SELECT s.id FROM sellers s JOIN users u ON u.id = s.user_id
+       WHERE u.email = $1 AND u.is_demo=false AND s.status = 'approved'
+         AND EXISTS (SELECT 1 FROM user_roles ur JOIN roles r ON r.id = ur.role_id
+                     WHERE ur.user_id = u.id AND r.name = 'seller')`,
+      [process.env.TEST_SELLER_EMAIL || 'seller1@seed.com'],
+    );
+    if (!seller[0]) throw new Error('승인된 테스트 셀러를 먼저 준비하세요. TEST_SELLER_EMAIL을 확인하세요.');
+    const rawData = mockProductCatalog;
+    const existingProducts = await this.productRepository.find({ relations: ['images'] });
+    const plan = planMockOwnership(existingProducts.map((p) => ({
+      ...p, urls: p.images.map((img) => img.url),
+    })), rawData, seller[0].id);
+    if (plan.ambiguous.length) throw new Error('중복 mock 상품이 있습니다. 데이터 보정 대상을 확인하세요.');
 
     // slug 및 대문자 변형 모두 지원하는 category → id 맵 구성
     const categories = await this.categoryRepository.find();
@@ -50,12 +42,17 @@ export class ProductSeedService {
       categoryMap.set(cat.slug.toUpperCase(), cat.id);
     }
 
-    // 기존 상품 전체 삭제 (CASCADE로 연관 테이블 포함)
-    await this.productRepository.manager.query('TRUNCATE TABLE products CASCADE');
-
     for (const { category, imageUrl, ...rest } of rawData as any[]) {
+      const existing = await this.productRepository.findOne({ where: { seedKey: rest.seedKey } });
+      if (existing) continue;
+      const legacy = plan.updates.find((p) => p.seedKey === rest.seedKey);
+      if (legacy) {
+        await this.productRepository.update(legacy.id, { seedKey: legacy.seedKey, sellerId: legacy.sellerId });
+        continue;
+      }
       const product = await this.productRepository.save({
         ...rest,
+        sellerId: seller[0].id,
         categoryId: category ? (categoryMap.get(category) ?? null) : null,
       });
 
@@ -69,7 +66,7 @@ export class ProductSeedService {
     }
 
     return {
-      message: `총 ${rawData.length}개 상품 시드 완료 (뷰티:${beautyProductsData.length}, 의류:${clothingProductsData.length}, 신발:${shoesProductsData.length}, 도서:${bookProductsData.length}, 식품:${foodProductsData.length}, 생활:${livingProductsData.length})`,
+      message: `총 ${rawData.length}개 mock 상품 준비 완료 (테스트 셀러: ${seller[0].id})`,
     };
   }
 }

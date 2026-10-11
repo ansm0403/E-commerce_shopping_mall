@@ -1,3 +1,5 @@
+import { DemoPolicyService } from '../demo/demo-policy.service';
+import { mockDemoPolicy } from '../demo/demo-policy.mock';
 /**
  * 결제 동시성 통합 테스트 — 진짜 PostgreSQL 위에서 `SELECT … FOR UPDATE` 가 실제로 직렬화하는지 본다.
  *
@@ -89,6 +91,7 @@ describe('PaymentService 동시성 (integration, real Postgres FOR UPDATE)', () 
         TypeOrmModule.forFeature([PaymentEntity, OrderEntity, OrderItemEntity, ProductEntity]),
       ],
       providers: [
+        { provide: DemoPolicyService, useValue: mockDemoPolicy() },
         PaymentService,
         { provide: HttpService, useValue: { get: jest.fn(), post: jest.fn() } },
         { provide: ConfigService, useValue: { get: jest.fn(() => undefined) } },

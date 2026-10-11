@@ -1,5 +1,12 @@
 import { Expose, Type } from 'class-transformer';
 
+class CartProductImageDto {
+  @Expose() id: number;
+  @Expose() url: string;
+  @Expose() isPrimary: boolean;
+  @Expose() sortOrder: number;
+}
+
 class CartProductSummaryDto {
   @Expose() id: number;
   @Expose() name: string;
@@ -10,6 +17,10 @@ class CartProductSummaryDto {
   @Expose() approvalStatus: string;
   @Expose() isEvent: boolean;
   @Expose() discountRate: number | null;
+
+  @Expose()
+  @Type(() => CartProductImageDto)
+  images: CartProductImageDto[];
 }
 
 class CartItemResponseDto {

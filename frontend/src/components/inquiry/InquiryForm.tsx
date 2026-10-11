@@ -50,6 +50,7 @@ export default function InquiryForm({ productId }: InquiryFormProps) {
     );
   }
 
+  if (user.isDemo && hasRole(user, 'seller')) return <p className="text-sm text-amber-800">?? ??? ??? ???? ?????.</p>;
   if (!hasRole(user, 'buyer')) {
     return (
       <p className="rounded-lg bg-secondary-50 px-4 py-3 text-sm text-secondary-700">

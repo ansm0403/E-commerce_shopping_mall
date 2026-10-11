@@ -1,3 +1,4 @@
+import DemoWriteRestriction from '@/components/forms/DemoWriteRestriction';
 import ProductForm from '../components/ProductForm';
 
 /**
@@ -8,7 +9,7 @@ import ProductForm from '../components/ProductForm';
 export default function SellerProductNewPage() {
   return (
     <div className="flex justify-center py-4">
-      <ProductForm />
+      <DemoWriteRestriction><ProductForm /></DemoWriteRestriction>
     </div>
   );
 }

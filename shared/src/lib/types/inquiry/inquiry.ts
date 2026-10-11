@@ -29,6 +29,7 @@ export interface AnswerInquiryRequest {
 }
 
 export interface InquiryResponse extends Inquiry {
+  canAnswer?: boolean;
   user: {
     id: number;
     nickName: string;

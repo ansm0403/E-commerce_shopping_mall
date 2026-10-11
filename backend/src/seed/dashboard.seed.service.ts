@@ -66,6 +66,8 @@ export class DashboardSeedService implements OnApplicationBootstrap {
       // 데모 관리자 계정은 reset/alreadySeeded 체크와 독립적으로 항상 실행 (멱등)
       await this.seedDemoAdmin();
 
+      const { userIds, sellerIds } = await this.seedUsers();
+
       const alreadySeeded = await this.isSeedDataPresent();
       if (alreadySeeded) {
         console.log('⚠️   이미 시드 데이터가 있습니다.');
@@ -75,8 +77,8 @@ export class DashboardSeedService implements OnApplicationBootstrap {
       }
 
       // SEED_PRODUCTS=true: 상품 시드를 배치 경로로 실행 (HTTP 엔드포인트·관리자 토큰 불필요).
-      // alreadySeeded 게이트 *뒤*에 두어, no-op 재실행이 TRUNCATE products CASCADE 를
-      // 때리는 사고를 막는다. 카테고리는 부팅 시드가 만드는데, 완전히 빈 DB에서 이 배치만
+      // 계정과 승인된 셀러를 먼저 준비한다. 상품 시드는 기존 상품을 보존하며 재실행할 수 있다.
+      // 카테고리는 부팅 시드가 만드는데, 완전히 빈 DB에서 이 배치만
       // 단독 실행하면 라이프사이클 훅 순서상 아직 없을 수 있어 명시적으로 검사한다.
       if (process.env['SEED_PRODUCTS'] === 'true') {
         const [{ count: categoryCount }] = (await this.ds.query(
@@ -91,8 +93,6 @@ export class DashboardSeedService implements OnApplicationBootstrap {
         const { message } = await this.productSeedService.seedProducts();
         console.log(`  ✓ ${message}`);
       }
-
-      const { userIds, sellerIds } = await this.seedUsers();
 
       // §3-C: 시드 주문 order_items 에 끼워 넣을 실제 published 상품 풀(999999 대체)
       const productPool = await this.reviewSeedService.loadPublishedProductPool();
@@ -364,7 +364,7 @@ export class DashboardSeedService implements OnApplicationBootstrap {
 
         // ── order_items INSERT ──
         for (const item of chosenItems) {
-          const sellerId = sellerIds[rand(0, sellerIds.length - 1)];
+          const sellerId = item.sellerId;
           await this.ds.query(
             `INSERT INTO order_items (
               order_id, product_id, seller_id,
@@ -426,7 +426,7 @@ export class DashboardSeedService implements OnApplicationBootstrap {
   private pickOrderItems(
     productPool: SeedProductRef[],
     itemCount: number,
-  ): { productId: number; name: string; price: number; imageUrl: string | null }[] {
+  ): { productId: number; name: string; price: number; imageUrl: string | null; sellerId: number | null }[] {
     if (productPool.length === 0) {
       // 폴백: 실제 상품이 없을 때만 합성값 사용(과거 동작 유지)
       const idx = rand(0, PRODUCT_PRICES.length - 1);
@@ -435,16 +435,17 @@ export class DashboardSeedService implements OnApplicationBootstrap {
         name: PRODUCT_NAMES[idx],
         price: PRODUCT_PRICES[idx],
         imageUrl: null,
+        sellerId: null,
       }));
     }
 
     const pool = [...productPool];
-    const out: { productId: number; name: string; price: number; imageUrl: string | null }[] = [];
+    const out: { productId: number; name: string; price: number; imageUrl: string | null; sellerId: number | null }[] = [];
     const n = Math.min(itemCount, pool.length);
     for (let i = 0; i < n; i++) {
       const idx = rand(0, pool.length - 1);
       const p = pool[idx];
-      out.push({ productId: p.id, name: p.name, price: p.price, imageUrl: p.imageUrl });
+      out.push({ productId: p.id, name: p.name, price: p.price, imageUrl: p.imageUrl, sellerId: p.sellerId });
       pool.splice(idx, 1);
     }
     return out;

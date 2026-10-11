@@ -3,7 +3,6 @@ import {
   ForbiddenException,
   Inject,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -21,13 +20,14 @@ import { ProductQueryDto } from './dto/product-query.dto';
 import { ProductCreatedEvent, ProductApprovedEvent, ProductRejectedEvent } from './events/product.events';
 import { CommonService } from '../common/common.service';
 import {
-  IProductSearchService,
   PRODUCT_SEARCH_SERVICE,
 } from './interfaces/product-search.interface';
+import type { IProductSearchService } from './interfaces/product-search.interface';
+import { DemoPolicyService } from '../demo/demo-policy.service';
+import { mockProductCatalog } from '../common/seeds/mock-product-catalog';
 
 @Injectable()
 export class ProductService {
-  private readonly logger = new Logger(ProductService.name);
 
   constructor(
     @InjectRepository(ProductEntity)
@@ -46,6 +46,7 @@ export class ProductService {
     private readonly commonService: CommonService,
     @Inject(PRODUCT_SEARCH_SERVICE)
     private readonly searchService: IProductSearchService,
+    private readonly demoPolicy: DemoPolicyService,
   ) {}
 
   private static readonly CACHE_TTL_LIST = 60;      // 목록 60초
@@ -185,8 +186,14 @@ export class ProductService {
   /** 셀러: 본인 상품 목록 (모든 상태) */
   async findMyProducts(userId: number, query: ProductQueryDto) {
     const seller = await this.getApprovedSeller(userId);
+    const demo = (await this.demoPolicy.user(userId))?.isDemo;
+    const owner = demo ? await this.demoPolicy.catalogSeller() : seller;
+    if (!owner) throw new ForbiddenException('샘플 상품의 판매자가 준비되지 않았습니다.');
 
-    const fixedWhere: FindOptionsWhere<ProductEntity> = { sellerId: seller.id };
+    const fixedWhere: FindOptionsWhere<ProductEntity> = {
+      sellerId: owner.id,
+      ...(demo ? { seedKey: In(mockProductCatalog.map((p) => p.seedKey)) } : {}),
+    };
     if (query.categoryId)    fixedWhere.categoryId    = query.categoryId;
     if (query.status)        fixedWhere.status        = query.status;
     if (query.approvalStatus) fixedWhere.approvalStatus = query.approvalStatus;
@@ -213,7 +220,9 @@ export class ProductService {
     if (!product) {
       throw new NotFoundException(`상품 ID ${id}를 찾을 수 없습니다.`);
     }
-    if (product.sellerId !== seller.id) {
+    const demo = (await this.demoPolicy.user(userId))?.isDemo;
+    const owner = demo ? await this.demoPolicy.catalogSeller() : seller;
+    if (!owner || product.sellerId !== owner.id || (demo && !mockProductCatalog.some((sample) => sample.seedKey === product.seedKey))) {
       throw new ForbiddenException('본인의 상품만 조회할 수 있습니다.');
     }
     return product;

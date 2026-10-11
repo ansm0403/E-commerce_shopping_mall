@@ -15,7 +15,7 @@ jest.mock('../contexts/AuthContext', () => ({ useAuth: jest.fn() }));
 const mockedAuth = useAuth as jest.Mock;
 const replace = jest.fn();
 
-const auth = (state: { user?: object | null; isHydrated?: boolean; isLoading?: boolean }) =>
+const auth = (state: { user?: object | null; isHydrated?: boolean; isLoading?: boolean; logoutRedirect?: string | null }) =>
   mockedAuth.mockReturnValue({ user: null, isHydrated: true, isLoading: false, ...state });
 
 describe('useRequireAuth', () => {
@@ -65,6 +65,15 @@ describe('useRequireAuth', () => {
     renderHook(() => useRequireAuth());
 
     expect(replace).toHaveBeenCalledWith('/login?redirect=%2Fcheckout%2Fcomplete%3ForderNumber%3DA-1');
+  });
+
+  it('preserves the role-choice destination when logout clears a protected page', () => {
+    auth({ user: { id: 1 } });
+    const { rerender } = renderHook(() => useRequireAuth());
+    auth({ user: null, logoutRedirect: '/login#demo-choice' });
+    rerender();
+    expect(replace).toHaveBeenCalledWith('/login#demo-choice');
+    expect(replace).not.toHaveBeenCalledWith('/login?redirect=%2Fmy%2Forders');
   });
 
   it('확인 중 → 비로그인 확정으로 바뀌는 순간에 한 번 이동한다', () => {

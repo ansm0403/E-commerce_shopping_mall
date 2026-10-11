@@ -5,6 +5,7 @@ import {
   FindManyOptions,
   FindOptionsOrder,
   FindOptionsWhere,
+  FindOperator,
   Repository,
 } from 'typeorm';
 import { BaseModel } from './entity/base.entity';
@@ -12,7 +13,8 @@ import { ConfigService } from '@nestjs/config';
 import { SORTABLE_COLUMNS, SortableKey } from './const/sortable-columns.const';
 import { encodeCursor, decodeCursor } from './utils/cursor';
 
-type SortKey<T extends BaseModel> = Extract<SortableKey, keyof T>;
+type PaginatedEntity = Pick<BaseModel, 'id' | 'createdAt'>;
+type SortKey<T extends PaginatedEntity> = Extract<SortableKey, keyof T>;
 
 @Injectable()
 export class CommonService {
@@ -25,7 +27,7 @@ export class CommonService {
    */
   private static readonly MAX_TAKE = 100;
 
-  async paginate<T extends BaseModel>(
+  async paginate<T extends PaginatedEntity>(
     dto: BasePaginateDto,
     repository: Repository<T>,
     path: string,
@@ -74,7 +76,7 @@ export class CommonService {
   /**
    * 페이지 기반 페이지네이션
    */
-  private async pagePaginate<T extends BaseModel>(
+  private async pagePaginate<T extends PaginatedEntity>(
     dto: BasePaginateDto,
     repository: Repository<T>,
     sortBy: SortKey<T>,
@@ -115,7 +117,7 @@ export class CommonService {
    * 커서 기반 페이지네이션 (무한 스크롤)
    * QueryBuilder를 사용하여 필터와 커서 조건을 정확히 결합
    */
-  private async cursorPaginate<T extends BaseModel>(
+  private async cursorPaginate<T extends PaginatedEntity>(
     dto: BasePaginateDto,
     repository: Repository<T>,
     path: string,
@@ -138,10 +140,12 @@ export class CommonService {
       .orderBy(`entity.${String(sortBy)}`, sortOrder)
       .addOrderBy('entity.id', sortOrder);
 
-    // 4. 고정 where 조건 추가 (overrideFindOptions에서) — 원시값(enum/string/number)만 처리
+    // 4. 고정 where 조건 추가 (원시값 및 In 등의 TypeORM 연산자)
     if (overrideFindOptions.where && typeof overrideFindOptions.where === 'object' && !Array.isArray(overrideFindOptions.where)) {
       Object.entries(overrideFindOptions.where).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && typeof value !== 'object') {
+        if (value instanceof FindOperator) {
+          qb.andWhere({ [key]: value });
+        } else if (value !== undefined && value !== null && typeof value !== 'object') {
           qb.andWhere(`entity.${key} = :__fixed_${key}`, { [`__fixed_${key}`]: value });
         }
       });
@@ -261,7 +265,7 @@ export class CommonService {
    * QueryBuilder에 커서 조건 적용
    * (sortBy < value) OR (sortBy = value AND id < lastId)
    */
-  private applyCursorCondition<T extends BaseModel>(
+  private applyCursorCondition<T extends PaginatedEntity>(
     qb: any,
     cursor: string,
     sortBy: SortKey<T>,
@@ -364,7 +368,7 @@ export class CommonService {
   /**
    * 정렬 조건 생성
    */
-  private buildOrderClause<T extends BaseModel>(
+  private buildOrderClause<T extends PaginatedEntity>(
     sortBy: SortKey<T>,
     sortOrder: 'ASC' | 'DESC'
   ): FindOptionsOrder<T> {
@@ -377,7 +381,7 @@ export class CommonService {
   /**
    * 커서 인코딩: 마지막 아이템의 sortBy 값과 id를 base64로 인코딩
    */
-  private encodeCursor<T extends BaseModel, K extends keyof T>(item: T, sortBy: K): string {
+  private encodeCursor<T extends PaginatedEntity, K extends keyof T>(item: T, sortBy: K): string {
     return encodeCursor({
       sortValue: item[sortBy],
       id: item['id'] as number,
@@ -387,7 +391,7 @@ export class CommonService {
   /**
    * 다음 페이지 URL 생성
    */
-  private buildNextUrl<T extends BaseModel>(
+  private buildNextUrl<T extends PaginatedEntity>(
     dto: BasePaginateDto,
     path: string,
     nextCursor: string,

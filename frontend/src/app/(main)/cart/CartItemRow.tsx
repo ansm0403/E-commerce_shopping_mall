@@ -2,7 +2,9 @@
 
 import { FaTrash } from 'react-icons/fa';
 import { CartItem } from '@/model/cart';
-import { useUpdateCartItem, useRemoveCartItem } from '@/hooks/useCart';
+import { useUpdateCartItem, useRemoveCartItem } from '../../../hooks/useCart';
+import { getProductImageUrl } from '../../../components/home/ProductCard';
+import ProductPhoto from '../../../components/home/ProductPhoto';
 
 interface CartItemRowProps {
   item: CartItem;
@@ -35,11 +37,13 @@ export default function CartItemRow({ item }: CartItemRowProps) {
   return (
     <div className={`grid grid-cols-[48px_minmax(0,1fr)_auto] items-center gap-3 p-4 bg-white rounded-2xl border border-primary-100 transition-opacity sm:flex sm:gap-4 ${isMutating ? 'opacity-50' : ''}`}>
 
-      {/* 브랜드 이니셜 아바타 */}
-      <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-[#e9eee4] flex items-center justify-center shrink-0">
-        <span className="text-primary-600 font-bold text-xl">
-          {product.brand.charAt(0).toUpperCase()}
-        </span>
+      {/* 상품 썸네일 */}
+      <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-[#e9eee4] overflow-hidden p-1 shrink-0">
+        <ProductPhoto
+          src={getProductImageUrl(product)}
+          alt={product.name}
+          className="h-full w-full object-contain"
+        />
       </div>
 
       {/* 상품 정보 */}
