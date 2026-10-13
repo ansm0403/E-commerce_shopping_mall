@@ -1,0 +1,5 @@
+{
+  "extends": "../tsconfig.eval.json",
+  "compilerOptions": { "types": ["node", "express", "multer"] },
+  "include": ["*.ts", "../run-eval.ts"]
+}

@@ -1,0 +1,1303 @@
+{
+  "runId": "2026-10-13T10-25-25-845Z",
+  "model": "gemini-3.1-flash-lite",
+  "profile": {
+    "id": "gemini-embedding-2-768-review-inquiry-v1",
+    "model": "gemini-embedding-2",
+    "dimensions": 768,
+    "preprocessingVersion": "v1",
+    "maskingVersion": "scrub-text-v1",
+    "chunkingVersion": "unicode-paragraph-v1",
+    "queryTemplate": "task: search result | query: {text}",
+    "documentTemplate": "title: {title} | text: {text}",
+    "maxCodePoints": 1000,
+    "overlapCodePoints": 100,
+    "maxInputBytes": 4096,
+    "maxChunks": 32
+  },
+  "codeVersion": {
+    "sha256": "fa4d339586d698cfcf7a4815cf6c67177384e7f48e94aa582251ae9514fff68c",
+    "files": [
+      "src/search/semantic-search.service.ts",
+      "src/search/search-document.ts",
+      "src/search/search-input.ts",
+      "src/search/search-profile.ts",
+      "src/admin/assistant/assistant.service.ts",
+      "src/admin/assistant/assistant-tools.ts",
+      "src/admin/assistant/assistant-tool-schemas.ts",
+      "src/intrastructure/ai/providers/gemini.client.ts",
+      "eval/search/fixture.ts",
+      "eval/search/final-fixture.ts"
+    ],
+    "description": "SHA256 of evaluated working-tree sources, including uncommitted changes."
+  },
+  "split": "improvement",
+  "planned": 20,
+  "executed": 20,
+  "repetitions": 1,
+  "inputReport": "eval/results/search-retrieval-improvement-2026-10-13T10-14-30-346Z.json",
+  "protocol": "Fixed retrieval A=recent five; B=first exact vector search. Alternate A/B. Same single-turn prompt/date/model. No model tool planning in this controlled comparison.",
+  "llmRequests": 40,
+  "usage": {
+    "inputTokens": 48251,
+    "outputTokens": 1064,
+    "cachedTokens": 0
+  },
+  "humanReviewPending": 40,
+  "cases": [
+    {
+      "caseId": "improve-1-explicit",
+      "query": "팔을 움직이기 어려울 만큼 옷이 조이는 불만",
+      "relevantIds": [
+        1
+      ],
+      "answers": [
+        {
+          "mode": "A",
+          "reply": "가져온 자료에서는 관련 근거를 찾지 못했습니다.",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1234,
+            "outputTokens": 14,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1248
+          },
+          "elapsedMs": 8779.8762,
+          "suppliedIds": [
+            10,
+            9,
+            8,
+            7,
+            6
+          ],
+          "necessaryChecks": {
+            "citedRelevant": false,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": true
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        },
+        {
+          "mode": "B",
+          "reply": "요청하신 불만 사항에 대한 내용은 다음과 같습니다.\n\n* **리뷰 #1**: \"팔 부분이 꽉 끼고 움직이기 어려워요.\"",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1227,
+            "outputTokens": 33,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1260
+          },
+          "elapsedMs": 4929.676199999998,
+          "suppliedIds": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "necessaryChecks": {
+            "citedRelevant": true,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": false
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        }
+      ]
+    },
+    {
+      "caseId": "improve-1-paraphrase",
+      "query": "고객이 겪은 문제를 찾아줘: 팔을 움직이기 어려울 만큼 옷이 조이는 불만",
+      "relevantIds": [
+        1
+      ],
+      "answers": [
+        {
+          "mode": "B",
+          "reply": "해당 문제와 관련된 리뷰는 다음과 같습니다.\n\n* 리뷰 #1: \"팔 부분이 꽉 끼고 움직이기 어려워요.\"",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1236,
+            "outputTokens": 29,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1265
+          },
+          "elapsedMs": 2687.4535000000033,
+          "suppliedIds": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "necessaryChecks": {
+            "citedRelevant": true,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": false
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        },
+        {
+          "mode": "A",
+          "reply": "가져온 자료에서는 관련 근거를 찾지 못했습니다.",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1243,
+            "outputTokens": 14,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1257
+          },
+          "elapsedMs": 8329.820000000003,
+          "suppliedIds": [
+            10,
+            9,
+            8,
+            7,
+            6
+          ],
+          "necessaryChecks": {
+            "citedRelevant": false,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": true
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        }
+      ]
+    },
+    {
+      "caseId": "improve-2-explicit",
+      "query": "빨래 후 옷이 수축했다는 반응",
+      "relevantIds": [
+        11
+      ],
+      "answers": [
+        {
+          "mode": "A",
+          "reply": "제공해주신 자료에서는 관련 근거를 찾지 못했습니다.",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1236,
+            "outputTokens": 15,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1251
+          },
+          "elapsedMs": 5699.338199999998,
+          "suppliedIds": [
+            20,
+            19,
+            18,
+            17,
+            16
+          ],
+          "necessaryChecks": {
+            "citedRelevant": false,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": true
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        },
+        {
+          "mode": "B",
+          "reply": "상품 2의 리뷰 중 세탁 후 수축에 관한 부정적인 반응은 다음과 같습니다.\n\n* **리뷰 #11:** \"한 번 세탁하니 길이가 줄어 버렸어요.\"",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1225,
+            "outputTokens": 42,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1267
+          },
+          "elapsedMs": 6585.754400000005,
+          "suppliedIds": [
+            11,
+            12,
+            13,
+            14,
+            15
+          ],
+          "necessaryChecks": {
+            "citedRelevant": true,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": false
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        }
+      ]
+    },
+    {
+      "caseId": "improve-2-paraphrase",
+      "query": "고객이 겪은 문제를 찾아줘: 빨래 후 옷이 수축했다는 반응",
+      "relevantIds": [
+        11
+      ],
+      "answers": [
+        {
+          "mode": "B",
+          "reply": "제공해주신 자료에서 해당 문제를 겪은 리뷰는 다음과 같습니다.\n\n*   리뷰 #11: \"한 번 세탁하니 길이가 줄어 버렸어요.\"",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1234,
+            "outputTokens": 38,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1272
+          },
+          "elapsedMs": 6719.4902,
+          "suppliedIds": [
+            11,
+            12,
+            13,
+            14,
+            15
+          ],
+          "necessaryChecks": {
+            "citedRelevant": true,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": false
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        },
+        {
+          "mode": "A",
+          "reply": "가져온 자료에서는 관련 근거를 찾지 못했습니다.",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1245,
+            "outputTokens": 14,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1259
+          },
+          "elapsedMs": 2373.9187999999995,
+          "suppliedIds": [
+            20,
+            19,
+            18,
+            17,
+            16
+          ],
+          "necessaryChecks": {
+            "citedRelevant": false,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": true
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        }
+      ]
+    },
+    {
+      "caseId": "improve-3-explicit",
+      "query": "솔기가 피부를 자극한다는 불만",
+      "relevantIds": [
+        21
+      ],
+      "answers": [
+        {
+          "mode": "A",
+          "reply": "가져온 자료에서는 관련 근거를 찾지 못했습니다.",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1234,
+            "outputTokens": 14,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1248
+          },
+          "elapsedMs": 8582.3623,
+          "suppliedIds": [
+            30,
+            29,
+            28,
+            27,
+            26
+          ],
+          "necessaryChecks": {
+            "citedRelevant": false,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": true
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        },
+        {
+          "mode": "B",
+          "reply": "제공해주신 자료에서 해당 불만을 확인했습니다.\n\n* **리뷰 #21**: \"봉제선이 피부를 계속 긁어서 따가워요.\" (부정)",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1226,
+            "outputTokens": 41,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1267
+          },
+          "elapsedMs": 3815.296000000002,
+          "suppliedIds": [
+            21,
+            22,
+            23,
+            24,
+            25
+          ],
+          "necessaryChecks": {
+            "citedRelevant": true,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": false
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        }
+      ]
+    },
+    {
+      "caseId": "improve-3-paraphrase",
+      "query": "고객이 겪은 문제를 찾아줘: 솔기가 피부를 자극한다는 불만",
+      "relevantIds": [
+        21
+      ],
+      "answers": [
+        {
+          "mode": "B",
+          "reply": "제공해주신 자료를 검토한 결과, 솔기가 피부를 자극한다는 불만 사항은 다음과 같습니다.\n\n* **리뷰 #21**: \"봉제선이 피부를 계속 긁어서 따가워요.\" (부정적 의견)",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1235,
+            "outputTokens": 56,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1291
+          },
+          "elapsedMs": 6520.157799999994,
+          "suppliedIds": [
+            21,
+            22,
+            23,
+            24,
+            25
+          ],
+          "necessaryChecks": {
+            "citedRelevant": true,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": false
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        },
+        {
+          "mode": "A",
+          "reply": "가져온 자료에서는 관련 근거를 찾지 못했습니다.",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1243,
+            "outputTokens": 14,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1257
+          },
+          "elapsedMs": 5806.5025999999925,
+          "suppliedIds": [
+            30,
+            29,
+            28,
+            27,
+            26
+          ],
+          "necessaryChecks": {
+            "citedRelevant": false,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": true
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        }
+      ]
+    },
+    {
+      "caseId": "improve-4-explicit",
+      "query": "신발 안으로 물이 들어온 경험",
+      "relevantIds": [
+        31
+      ],
+      "answers": [
+        {
+          "mode": "A",
+          "reply": "가져온 자료에서는 관련 근거를 찾지 못했습니다.",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1235,
+            "outputTokens": 14,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1249
+          },
+          "elapsedMs": 8587.706399999995,
+          "suppliedIds": [
+            40,
+            39,
+            38,
+            37,
+            36
+          ],
+          "necessaryChecks": {
+            "citedRelevant": false,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": true
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        },
+        {
+          "mode": "B",
+          "reply": "요청하신 상품 4의 리뷰에서 신발 안으로 물이 들어온 경험과 관련된 내용은 다음과 같습니다.\n\n*   **리뷰 #31**: \"비 오는 날 신었더니 양말까지 젖었어요.\"",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1225,
+            "outputTokens": 48,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1273
+          },
+          "elapsedMs": 5414.075500000006,
+          "suppliedIds": [
+            31,
+            32,
+            33,
+            34,
+            35
+          ],
+          "necessaryChecks": {
+            "citedRelevant": true,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": false
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        }
+      ]
+    },
+    {
+      "caseId": "improve-4-paraphrase",
+      "query": "고객이 겪은 문제를 찾아줘: 신발 안으로 물이 들어온 경험",
+      "relevantIds": [
+        31
+      ],
+      "answers": [
+        {
+          "mode": "B",
+          "reply": "상품 4 리뷰에서 신발 안으로 물이 들어왔다는 부정적인 경험이 포함된 내용은 다음과 같습니다.\n\n*   **리뷰 #31**: \"비 오는 날 신었더니 양말까지 젖었어요.\"",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1234,
+            "outputTokens": 48,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1282
+          },
+          "elapsedMs": 6723.714300000007,
+          "suppliedIds": [
+            31,
+            32,
+            33,
+            34,
+            35
+          ],
+          "necessaryChecks": {
+            "citedRelevant": true,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": false
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        },
+        {
+          "mode": "A",
+          "reply": "가져온 자료에서는 관련 근거를 찾지 못했습니다.",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1244,
+            "outputTokens": 14,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1258
+          },
+          "elapsedMs": 5719.536199999988,
+          "suppliedIds": [
+            40,
+            39,
+            38,
+            37,
+            36
+          ],
+          "necessaryChecks": {
+            "citedRelevant": false,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": true
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        }
+      ]
+    },
+    {
+      "caseId": "improve-5-explicit",
+      "query": "걸을 때 발뒤꿈치가 쓸린다는 불만",
+      "relevantIds": [
+        41
+      ],
+      "answers": [
+        {
+          "mode": "A",
+          "reply": "가져온 자료에서는 관련 근거를 찾지 못했습니다.",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1237,
+            "outputTokens": 14,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1251
+          },
+          "elapsedMs": 5816.99549999999,
+          "suppliedIds": [
+            50,
+            49,
+            48,
+            47,
+            46
+          ],
+          "necessaryChecks": {
+            "citedRelevant": false,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": true
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        },
+        {
+          "mode": "B",
+          "reply": "제공해주신 자료에서 해당 불만을 확인하였습니다.\n\n*   **리뷰 #41**: \"오래 걸으니 뒤꿈치에 물집이 생겨요.\"",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1229,
+            "outputTokens": 38,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1267
+          },
+          "elapsedMs": 5835.8810000000085,
+          "suppliedIds": [
+            41,
+            42,
+            43,
+            44,
+            45
+          ],
+          "necessaryChecks": {
+            "citedRelevant": true,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": false
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        }
+      ]
+    },
+    {
+      "caseId": "improve-5-paraphrase",
+      "query": "고객이 겪은 문제를 찾아줘: 걸을 때 발뒤꿈치가 쓸린다는 불만",
+      "relevantIds": [
+        41
+      ],
+      "answers": [
+        {
+          "mode": "B",
+          "reply": "제시해주신 자료를 확인한 결과, 요청하신 내용과 관련된 정보는 다음과 같습니다.\n\n* **리뷰 #41**: \"오래 걸으니 뒤꿈치에 물집이 생겨요.\"",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1238,
+            "outputTokens": 45,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1283
+          },
+          "elapsedMs": 6512.636200000008,
+          "suppliedIds": [
+            41,
+            42,
+            43,
+            44,
+            45
+          ],
+          "necessaryChecks": {
+            "citedRelevant": true,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": false
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        },
+        {
+          "mode": "A",
+          "reply": "가져온 자료에서는 관련 근거를 찾지 못했습니다.",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1246,
+            "outputTokens": 14,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1260
+          },
+          "elapsedMs": 4199.590599999996,
+          "suppliedIds": [
+            50,
+            49,
+            48,
+            47,
+            46
+          ],
+          "necessaryChecks": {
+            "citedRelevant": false,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": true
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        }
+      ]
+    },
+    {
+      "caseId": "improve-6-explicit",
+      "query": "배터리가 너무 빨리 소모된다는 반응",
+      "relevantIds": [
+        51
+      ],
+      "answers": [
+        {
+          "mode": "A",
+          "reply": "가져온 자료에서는 관련 근거를 찾지 못했습니다.",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1236,
+            "outputTokens": 14,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1250
+          },
+          "elapsedMs": 4548.794199999989,
+          "suppliedIds": [
+            60,
+            59,
+            58,
+            57,
+            56
+          ],
+          "necessaryChecks": {
+            "citedRelevant": false,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": true
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        },
+        {
+          "mode": "B",
+          "reply": "상품 6의 리뷰 중 배터리 소모와 관련된 내용은 다음과 같습니다.\n\n- 리뷰 #51: \"충전해도 한 시간 만에 전원이 꺼져요.\" (부정)",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1226,
+            "outputTokens": 42,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1268
+          },
+          "elapsedMs": 5998.916700000016,
+          "suppliedIds": [
+            51,
+            52,
+            53,
+            54,
+            55
+          ],
+          "necessaryChecks": {
+            "citedRelevant": true,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": false
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        }
+      ]
+    },
+    {
+      "caseId": "improve-6-paraphrase",
+      "query": "고객이 겪은 문제를 찾아줘: 배터리가 너무 빨리 소모된다는 반응",
+      "relevantIds": [
+        51
+      ],
+      "answers": [
+        {
+          "mode": "B",
+          "reply": "리뷰 #51에서 배터리 소모와 관련된 부정적인 반응을 찾았습니다.\n\n* **리뷰 #51**: \"충전해도 한 시간 만에 전원이 꺼져요.\"",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1235,
+            "outputTokens": 43,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1278
+          },
+          "elapsedMs": 6115.0945000000065,
+          "suppliedIds": [
+            51,
+            52,
+            53,
+            54,
+            55
+          ],
+          "necessaryChecks": {
+            "citedRelevant": true,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": false
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        },
+        {
+          "mode": "A",
+          "reply": "가져온 자료에서는 관련 근거를 찾지 못했습니다.",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1245,
+            "outputTokens": 14,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1259
+          },
+          "elapsedMs": 5910.0536999999895,
+          "suppliedIds": [
+            60,
+            59,
+            58,
+            57,
+            56
+          ],
+          "necessaryChecks": {
+            "citedRelevant": false,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": true
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        }
+      ]
+    },
+    {
+      "caseId": "improve-7-explicit",
+      "query": "기계 소음 때문에 수면을 방해받은 경험",
+      "relevantIds": [
+        61
+      ],
+      "answers": [
+        {
+          "mode": "A",
+          "reply": "가져온 자료에서는 관련 근거를 찾지 못했습니다.",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1239,
+            "outputTokens": 14,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1253
+          },
+          "elapsedMs": 6871.546300000016,
+          "suppliedIds": [
+            70,
+            69,
+            68,
+            67,
+            66
+          ],
+          "necessaryChecks": {
+            "citedRelevant": false,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": true
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        },
+        {
+          "mode": "B",
+          "reply": "리뷰 #61에서 해당 내용을 찾았습니다.\n\n**부정 리뷰:**\n* 리뷰 #61: \"작동할 때 소리가 커서 잠을 잘 수 없어요.\"",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1231,
+            "outputTokens": 40,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1271
+          },
+          "elapsedMs": 7935.044099999999,
+          "suppliedIds": [
+            61,
+            62,
+            63,
+            64,
+            65
+          ],
+          "necessaryChecks": {
+            "citedRelevant": true,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": false
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        }
+      ]
+    },
+    {
+      "caseId": "improve-7-paraphrase",
+      "query": "고객이 겪은 문제를 찾아줘: 기계 소음 때문에 수면을 방해받은 경험",
+      "relevantIds": [
+        61
+      ],
+      "answers": [
+        {
+          "mode": "B",
+          "reply": "상품 7의 리뷰 중 해당 문제를 겪은 내용은 다음과 같습니다.\n\n*   **리뷰 #61**: \"작동할 때 소리가 커서 잠을 잘 수 없어요.\"",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1240,
+            "outputTokens": 41,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1281
+          },
+          "elapsedMs": 10613.521099999984,
+          "suppliedIds": [
+            61,
+            62,
+            63,
+            64,
+            65
+          ],
+          "necessaryChecks": {
+            "citedRelevant": true,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": false
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        },
+        {
+          "mode": "A",
+          "reply": "가져온 자료에서는 관련 근거를 찾지 못했습니다.",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1248,
+            "outputTokens": 14,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1262
+          },
+          "elapsedMs": 5233.746400000004,
+          "suppliedIds": [
+            70,
+            69,
+            68,
+            67,
+            66
+          ],
+          "necessaryChecks": {
+            "citedRelevant": false,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": true
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        }
+      ]
+    },
+    {
+      "caseId": "improve-8-explicit",
+      "query": "제품이 파손된 상태로 도착했다는 불만",
+      "relevantIds": [
+        71
+      ],
+      "answers": [
+        {
+          "mode": "A",
+          "reply": "가져온 자료에서는 관련 근거를 찾지 못했습니다.",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1237,
+            "outputTokens": 14,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1251
+          },
+          "elapsedMs": 3071.1420000000217,
+          "suppliedIds": [
+            80,
+            79,
+            78,
+            77,
+            76
+          ],
+          "necessaryChecks": {
+            "citedRelevant": false,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": true
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        },
+        {
+          "mode": "B",
+          "reply": "부정 리뷰 확인 결과는 다음과 같습니다.\n\n* **리뷰 #71**: \"포장을 열자마자 깨진 조각이 나왔어요.\"",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1228,
+            "outputTokens": 33,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1261
+          },
+          "elapsedMs": 5458.2602999999945,
+          "suppliedIds": [
+            71,
+            72,
+            73,
+            74,
+            75
+          ],
+          "necessaryChecks": {
+            "citedRelevant": true,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": false
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        }
+      ]
+    },
+    {
+      "caseId": "improve-8-paraphrase",
+      "query": "고객이 겪은 문제를 찾아줘: 제품이 파손된 상태로 도착했다는 불만",
+      "relevantIds": [
+        71
+      ],
+      "answers": [
+        {
+          "mode": "B",
+          "reply": "상품 8 리뷰에서 제품 파손과 관련된 내용은 다음과 같습니다.\n\n- 리뷰 #71: \"포장을 열자마자 깨진 조각이 나왔어요.\"",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1237,
+            "outputTokens": 36,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1273
+          },
+          "elapsedMs": 9385.551899999991,
+          "suppliedIds": [
+            71,
+            72,
+            73,
+            74,
+            75
+          ],
+          "necessaryChecks": {
+            "citedRelevant": true,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": false
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        },
+        {
+          "mode": "A",
+          "reply": "가져온 자료에서는 관련 근거를 찾지 못했습니다.",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1246,
+            "outputTokens": 14,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1260
+          },
+          "elapsedMs": 6458.88029999999,
+          "suppliedIds": [
+            80,
+            79,
+            78,
+            77,
+            76
+          ],
+          "necessaryChecks": {
+            "citedRelevant": false,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": true
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        }
+      ]
+    },
+    {
+      "caseId": "improve-9-explicit",
+      "query": "화장품 사용 후 피부가 자극된 경험",
+      "relevantIds": [
+        81
+      ],
+      "answers": [
+        {
+          "mode": "A",
+          "reply": "가져온 자료에서는 관련 근거를 찾지 못했습니다.",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1237,
+            "outputTokens": 14,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1251
+          },
+          "elapsedMs": 4206.806899999996,
+          "suppliedIds": [
+            90,
+            89,
+            88,
+            87,
+            86
+          ],
+          "necessaryChecks": {
+            "citedRelevant": false,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": true
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        },
+        {
+          "mode": "B",
+          "reply": "상품 9의 리뷰 중 피부 자극과 관련된 내용은 다음과 같습니다.\n\n* **리뷰 #81**: \"발랐더니 얼굴이 붉어지고 따가웠어요.\" (부정)",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1228,
+            "outputTokens": 43,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1271
+          },
+          "elapsedMs": 7585.674100000004,
+          "suppliedIds": [
+            81,
+            82,
+            83,
+            84,
+            85
+          ],
+          "necessaryChecks": {
+            "citedRelevant": true,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": false
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        }
+      ]
+    },
+    {
+      "caseId": "improve-9-paraphrase",
+      "query": "고객이 겪은 문제를 찾아줘: 화장품 사용 후 피부가 자극된 경험",
+      "relevantIds": [
+        81
+      ],
+      "answers": [
+        {
+          "mode": "B",
+          "reply": "상품 9 리뷰에서 피부 자극과 관련된 내용은 다음과 같습니다.\n\n- 리뷰 #81: \"발랐더니 얼굴이 붉어지고 따가웠어요.\"",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1237,
+            "outputTokens": 36,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1273
+          },
+          "elapsedMs": 2241.3516000000236,
+          "suppliedIds": [
+            81,
+            82,
+            83,
+            84,
+            85
+          ],
+          "necessaryChecks": {
+            "citedRelevant": true,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": false
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        },
+        {
+          "mode": "A",
+          "reply": "가져온 자료에서는 관련 근거를 찾지 못했습니다.",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1246,
+            "outputTokens": 14,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1260
+          },
+          "elapsedMs": 10411.796299999987,
+          "suppliedIds": [
+            90,
+            89,
+            88,
+            87,
+            86
+          ],
+          "necessaryChecks": {
+            "citedRelevant": false,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": true
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        }
+      ]
+    },
+    {
+      "caseId": "improve-10-explicit",
+      "query": "용기가 제대로 밀폐되지 않는다는 반응",
+      "relevantIds": [
+        91
+      ],
+      "answers": [
+        {
+          "mode": "A",
+          "reply": "제공해주신 자료에서는 용기가 제대로 밀폐되지 않는다는 관련 근거를 찾지 못했습니다.",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1247,
+            "outputTokens": 23,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1270
+          },
+          "elapsedMs": 4608.214299999992,
+          "suppliedIds": [
+            100,
+            99,
+            98,
+            97,
+            96
+          ],
+          "necessaryChecks": {
+            "citedRelevant": false,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": true
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        },
+        {
+          "mode": "B",
+          "reply": "",
+          "llmRequests": 1,
+          "usage": null,
+          "elapsedMs": 1874.4033000000054,
+          "suppliedIds": [
+            91,
+            92,
+            93,
+            94,
+            95
+          ],
+          "necessaryChecks": {
+            "citedRelevant": false,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": false
+          },
+          "humanReview": "pending",
+          "errorCode": "ASSISTANT_UNAVAILABLE"
+        }
+      ]
+    },
+    {
+      "caseId": "improve-10-paraphrase",
+      "query": "고객이 겪은 문제를 찾아줘: 용기가 제대로 밀폐되지 않는다는 반응",
+      "relevantIds": [
+        91
+      ],
+      "answers": [
+        {
+          "mode": "B",
+          "reply": "요청하신 내용과 관련하여 찾은 근거는 다음과 같습니다.\n\n*   **리뷰 #91**: \"뚜껑을 닫아도 가방 안으로 내용물이 새요.\"",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1246,
+            "outputTokens": 42,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1288
+          },
+          "elapsedMs": 9620.176399999997,
+          "suppliedIds": [
+            91,
+            92,
+            93,
+            94,
+            95
+          ],
+          "necessaryChecks": {
+            "citedRelevant": true,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": false
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        },
+        {
+          "mode": "A",
+          "reply": "가져온 자료에서는 관련 근거를 찾지 못했습니다.",
+          "llmRequests": 1,
+          "usage": {
+            "inputTokens": 1256,
+            "outputTokens": 14,
+            "cachedTokens": 0,
+            "thoughtsTokens": 0,
+            "totalTokens": 1270
+          },
+          "elapsedMs": 4830.42359999998,
+          "suppliedIds": [
+            100,
+            99,
+            98,
+            97,
+            96
+          ],
+          "necessaryChecks": {
+            "citedRelevant": false,
+            "citedOnlySupplied": true,
+            "noEvidenceAcknowledged": true
+          },
+          "humanReview": "pending",
+          "errorCode": null
+        }
+      ]
+    }
+  ]
+}

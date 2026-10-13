@@ -1,0 +1,101 @@
+{
+  "runId": "2026-10-13T07-43-38-571Z",
+  "profile": {
+    "id": "gemini-embedding-2-768-review-inquiry-v1",
+    "model": "gemini-embedding-2",
+    "dimensions": 768,
+    "preprocessingVersion": "v1",
+    "maskingVersion": "scrub-text-v1",
+    "chunkingVersion": "unicode-paragraph-v1",
+    "queryTemplate": "task: search result | query: {text}",
+    "documentTemplate": "title: {title} | text: {text}",
+    "maxCodePoints": 1000,
+    "overlapCodePoints": 100,
+    "maxInputBytes": 4096,
+    "maxChunks": 32
+  },
+  "passed": true,
+  "planned": 3,
+  "executed": 3,
+  "unexecuted": 0,
+  "syntheticInputsOnly": true,
+  "sdkVersion": "2.8.0",
+  "normalizationCriterion": "finite nonzero 768 dimensions; L2 norm within 0.001 of 1",
+  "usage": {
+    "requests": 6,
+    "inputCodePoints": 2358,
+    "inputBytes": 5800,
+    "inputTokens": null
+  },
+  "cases": [
+    {
+      "caseId": "korean-query",
+      "status": "pass",
+      "inputCount": 1,
+      "vectorCount": 1,
+      "dimensions": [
+        768
+      ],
+      "norms": [
+        0.9999997844705553
+      ],
+      "normalized": true,
+      "distinctVectors": true,
+      "elapsedMs": 760.3833000000013,
+      "usage": {
+        "requests": 1,
+        "inputBytes": 71,
+        "inputCodePoints": 45,
+        "inputTokens": null
+      }
+    },
+    {
+      "caseId": "independent-documents",
+      "status": "pass",
+      "inputCount": 2,
+      "vectorCount": 2,
+      "dimensions": [
+        768,
+        768
+      ],
+      "norms": [
+        0.9999999656874659,
+        0.9999998434971776
+      ],
+      "normalized": true,
+      "distinctVectors": true,
+      "elapsedMs": 11954.035899999999,
+      "usage": {
+        "requests": 2,
+        "inputBytes": 122,
+        "inputCodePoints": 74,
+        "inputTokens": null
+      }
+    },
+    {
+      "caseId": "long-korean-emoji",
+      "status": "pass",
+      "inputCount": 3,
+      "vectorCount": 3,
+      "dimensions": [
+        768,
+        768,
+        768
+      ],
+      "norms": [
+        1.0000002863344823,
+        0.9999999480085264,
+        1.0000002166785609
+      ],
+      "normalized": true,
+      "distinctVectors": true,
+      "elapsedMs": 17953.727899999998,
+      "usage": {
+        "requests": 3,
+        "inputBytes": 5607,
+        "inputCodePoints": 2239,
+        "inputTokens": null
+      }
+    }
+  ]
+}

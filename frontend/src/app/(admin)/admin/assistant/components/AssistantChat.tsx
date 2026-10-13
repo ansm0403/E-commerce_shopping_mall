@@ -16,22 +16,21 @@ export default function AssistantChat() {
   // 스크린리더 알림: 상태가 바뀔 때만 문구를 바꾼다("응답 생성 중" → "○○ 조회 중" → "응답 완료. 본문").
   const [announcement, setAnnouncement] = useState('');
   const wasStreamingRef = useRef(false);
-  const delayedRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     const ended = wasStreamingRef.current && !streaming;
-    const next = nextAnnouncement(wasStreamingRef.current, streaming, messages[messages.length - 1]);
+    const next = nextAnnouncement(wasStreamingRef.current, streaming, messages[messages.length - 1], error);
     wasStreamingRef.current = streaming;
     if (next === null) return;
-    if (delayedRef.current) clearTimeout(delayedRef.current);
-    if (!ended) {
+    if (!ended || next === '') {
       setAnnouncement(next);
       return;
     }
     // 끝났을 때(완료·중지)는 조금 늦게 알린다. 같은 순간 중지 버튼이 사라지며 포커스가 입력창으로 돌아가는데,
     // 스크린리더는 포커스가 바뀌면 하던 말을 끊고 새 포커스를 읽는다 → 동시에 넣은 알림이 묻혔다(NVDA 청취로 발견).
-    delayedRef.current = setTimeout(() => setAnnouncement(next), END_ANNOUNCEMENT_DELAY_MS);
-  }, [messages, streaming]);
-  useEffect(() => () => void (delayedRef.current && clearTimeout(delayedRef.current)), []);
+    const delayed = setTimeout(() => setAnnouncement(next), END_ANNOUNCEMENT_DELAY_MS);
+    // 새 요청·오류·대화 초기화가 도착하면 이전 답변의 완료 알림을 취소한다.
+    return () => clearTimeout(delayed);
+  }, [messages, streaming, error]);
 
   return (
     // 100dvh — 모바일 주소창이 접히고 펼쳐질 때 100vh 는 넘치거나 남는다

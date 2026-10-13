@@ -1,5 +1,6 @@
 import type { AssistantStreamEvent } from '@shopping-mall/shared';
 import { AssistantService } from './assistant.service';
+import { classifyLlmFailure, LlmTimeoutError } from '../../intrastructure/ai/llm-failure';
 import type {
   LlmClient,
   LlmStreamEvent,
@@ -68,7 +69,7 @@ async function collect(gen: AsyncGenerator<AssistantStreamEvent>) {
   return out;
 }
 
-const params = { message: '지난달 매출 알려줘', adminUserId: 1 };
+const params = { message: '지난달 매출 알려줘', adminUserId: 1, roles: ['admin'] };
 const usage = { inputTokens: 10, outputTokens: 5, cachedTokens: 0 };
 const assistantRows = (saved: Saved[]) => saved.filter((m) => m.role === 'assistant');
 
@@ -211,6 +212,59 @@ describe('AssistantService.streamChat — 중단(B-2)', () => {
     const events = await collect(service.streamChat(params, new AbortController().signal));
 
     expect(events.map((e) => e.type)).toEqual(['meta', 'text', 'error']);
+    expect(assistantRows(saved)).toEqual([]);
+  });
+});
+
+describe('AssistantService.streamChat — safe failure diagnosis', () => {
+  it('reports an owned SDK timeout after a tool and logs the deadline separately from turn wall time', async () => {
+    const timeout = new LlmTimeoutError('request', 60000, 60002);
+    const { service, saved } = setup(async function* (args) {
+      args.onRequest?.();
+      yield { type: 'tool_call', call: { name: 'summarize_reviews', args: {} } };
+      args.onRequest?.();
+      args.onRequestFailure?.(classifyLlmFailure(timeout));
+      throw timeout;
+    });
+    jest.spyOn(service['logger'], 'warn').mockImplementation(() => undefined);
+    const events = await collect(service.streamChat(params));
+    expect(events.map(event => event.type)).toEqual(['meta', 'tool', 'error']);
+    expect(events.at(-1)).toEqual({ type: 'error', message: 'AI 응답 대기 시간이 초과됐습니다. 잠시 후 다시 시도해주세요.' });
+    for (const level of ['warn', 'error'] as const) {
+      expect(service['logger'][level]).toHaveBeenCalledWith(expect.stringContaining('code=LLM_TIMEOUT httpStatus=none'));
+      expect(service['logger'][level]).toHaveBeenCalledWith(expect.stringContaining('timeoutScope=request timeoutMs=60000 sdkWaitMs=60002'));
+    }
+    expect(service['logger'].error).toHaveBeenCalledWith(expect.stringContaining('llmRequests=2 toolCalls=1'));
+    expect(assistantRows(saved)).toEqual([]);
+  });
+
+  it('distinguishes rate limits and logs measured requests without the SDK error body', async () => {
+    // eslint-disable-next-line require-yield -- The upstream request fails before its first stream event.
+    const { service, saved } = setup(async function* (args) {
+      args.onRequest?.();
+      throw { status: 429, message: 'test@example.com 010-1234-5678 API-key=secret', response: { secret: 'raw' } };
+    });
+    const events = await collect(service.streamChat(params));
+    expect(events.at(-1)).toEqual({ type: 'error', message: 'AI 요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요.' });
+    expect(service['logger'].error).toHaveBeenCalledWith(expect.stringContaining('code=LLM_RATE_LIMIT httpStatus=429'));
+    expect(service['logger'].error).toHaveBeenCalledWith(expect.stringContaining('llmRequests=1'));
+    expect(JSON.stringify(jest.mocked(service['logger'].error).mock.calls)).not.toMatch(/test@example.com|010-1234-5678|API-key|secret|raw/);
+    expect(assistantRows(saved)).toEqual([]);
+  });
+
+  it('reports an upstream outage after a tool round without inventing a successful completion', async () => {
+    const { service, saved } = setup(async function* (args) {
+      args.onRequest?.();
+      yield { type: 'tool_call', call: { name: 'summarize_reviews', args: {} } };
+      args.onRequest?.();
+      yield { type: 'text', delta: '부분 답변' };
+      throw { status: 503, message: 'SQL password request body' };
+    });
+    const events = await collect(service.streamChat(params));
+    expect(events.map(event => event.type)).toEqual(['meta', 'tool', 'text', 'error']);
+    expect(events.at(-1)).toEqual({ type: 'error', message: 'AI 서비스가 일시적으로 응답하지 않습니다. 잠시 후 다시 시도해주세요.' });
+    expect(service['logger'].error).toHaveBeenCalledWith(expect.stringContaining('code=LLM_UNAVAILABLE httpStatus=503'));
+    expect(service['logger'].error).toHaveBeenCalledWith(expect.stringContaining('llmRequests=2 toolCalls=1'));
     expect(assistantRows(saved)).toEqual([]);
   });
 });

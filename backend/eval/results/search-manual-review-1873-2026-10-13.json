@@ -1,0 +1,46 @@
+{
+  "phase": "review-index-manual",
+  "dateKst": "2026-10-13",
+  "database": "shopping_mall_search_manual",
+  "port": 15433,
+  "reviewId": 1873,
+  "evidence": "User-confirmed browser actions and pasted CLI output; assistant read-only database check after deletion",
+  "passed": true,
+  "cases": [
+    {
+      "caseId": "create-review",
+      "jobId": "1",
+      "sourceVersion": "1",
+      "status": "done",
+      "passed": true,
+      "nxCommandSecondsReported": 42
+    },
+    {
+      "caseId": "edit-review-body",
+      "jobId": "2",
+      "sourceVersion": "2",
+      "status": "done",
+      "passed": true,
+      "nxCommandSecondsReported": 3
+    },
+    {
+      "caseId": "edit-rating-only",
+      "jobId": "3",
+      "sourceVersion": "3",
+      "status": "reused",
+      "passed": true,
+      "nxCommandSecondsReported": 2
+    },
+    {
+      "caseId": "delete-review-cascade",
+      "databaseCheckRecordedAtUtc": "2026-10-13 09:13:49 UTC",
+      "reviewRows": 0,
+      "jobRows": 0,
+      "chunkRows": 0,
+      "passed": true
+    }
+  ],
+  "timingBoundary": "Rounded Nx CLI execution durations pasted by the user; includes CLI startup and processing. Not isolated embedding latency or HTTP save-to-search latency.",
+  "embeddingRequestCount": null,
+  "limitations": "No per-request usage or timing capture. Deleted chunks are unavailable for independent post-run dimension or masking inspection. Semantic search and chat integration were not tested."
+}

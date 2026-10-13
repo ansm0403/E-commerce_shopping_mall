@@ -1,0 +1,398 @@
+{
+  "runId": "2026-10-13T11-20-15-057Z",
+  "split": "regression",
+  "model": "gemini-3.1-flash-lite",
+  "profile": {
+    "id": "gemini-embedding-2-768-review-inquiry-v1",
+    "model": "gemini-embedding-2",
+    "dimensions": 768,
+    "preprocessingVersion": "v1",
+    "maskingVersion": "scrub-text-v1",
+    "chunkingVersion": "unicode-paragraph-v1",
+    "queryTemplate": "task: search result | query: {text}",
+    "documentTemplate": "title: {title} | text: {text}",
+    "maxCodePoints": 1000,
+    "overlapCodePoints": 100,
+    "maxInputBytes": 4096,
+    "maxChunks": 32
+  },
+  "fixtureVersion": "reviews-final-v1",
+  "goldenVersion": 1,
+  "dateKst": "2026-10-13",
+  "codeVersion": {
+    "sha256": "f055dbebc9d16423b92f2a61c74b427fe1dc8057b29b1484f718802f40649379",
+    "files": [
+      "src/search/semantic-search.service.ts",
+      "src/search/search-document.ts",
+      "src/search/search-input.ts",
+      "src/search/search-profile.ts",
+      "src/admin/assistant/assistant.service.ts",
+      "src/admin/assistant/assistant-tools.ts",
+      "src/admin/assistant/assistant-tool-schemas.ts",
+      "src/intrastructure/ai/providers/gemini.client.ts",
+      "eval/search/fixture.ts",
+      "eval/search/final-fixture.ts",
+      "eval/search/final-fixture-v2.ts"
+    ],
+    "description": "SHA256 of evaluated working-tree sources, including uncommitted changes."
+  },
+  "criteria": {
+    "retrieval": {
+      "hitAt5": 0.95,
+      "recallAt5": 0.9,
+      "maxApiErrors": 0
+    },
+    "answer": {
+      "minimumEvidenceSuccessRate": 0.9,
+      "minimumNoEvidenceSuccessRate": 0.9,
+      "unmaskedContacts": 0,
+      "invalidCitations": 0
+    },
+    "review": "Developer reviews all 30 final answers. Automated citation/fact checks are necessary checks, not final correctness judgments.",
+    "frozenBeforeFinalExecution": "2026-10-13"
+  },
+  "syntheticReviews": 100,
+  "originalReviews": 0,
+  "repetitions": 1,
+  "planned": 1,
+  "executed": 1,
+  "unexecuted": 0,
+  "errorCode": null,
+  "fullSuite": false,
+  "selectedCaseIds": [
+    "med-reviews-category"
+  ],
+  "masterPlanned": 20,
+  "apiErrors": 0,
+  "llmRequests": 2,
+  "usage": {
+    "inputTokens": 9023,
+    "outputTokens": 165,
+    "cachedTokens": 0
+  },
+  "usageCompleteness": "Successful traces only. Failed attempts may consume tokens for which the SDK supplies no final usage.",
+  "failedAttempts": 0,
+  "embeddingUsageThisRun": {
+    "requests": 0,
+    "inputCodePoints": 0,
+    "inputBytes": 0,
+    "inputTokens": null
+  },
+  "generated": {
+    "document": 0,
+    "query": 0
+  },
+  "cacheHits": {
+    "document": 100,
+    "query": 0
+  },
+  "toolRegression": {
+    "passed": 1,
+    "planned": 1
+  },
+  "finalNecessaryChecks": null,
+  "humanReviewPending": 1,
+  "limitations": "Synthetic fixture; one repetition. Necessary checks are not answer correctness. Developer must review all final answers. CLI elapsed time includes per-request quota pacing, not HTTP latency.",
+  "cases": [
+    {
+      "caseId": "med-reviews-category",
+      "question": "신발 카테고리 리뷰 반응이 어떤지 요약해줘",
+      "expected": {
+        "id": "med-reviews-category",
+        "difficulty": "medium",
+        "behavior": "answer",
+        "question": "신발 카테고리 리뷰 반응이 어떤지 요약해줘",
+        "expect": {
+          "type": "tool_call",
+          "tools": [
+            "summarize_reviews"
+          ],
+          "argsContain": {
+            "categoryName": "신발"
+          }
+        },
+        "notes": "카테고리 필터(하위 확장 체인 D4 경유). '신발'은 시드 실재 최상위 카테고리."
+      },
+      "trace": {
+        "reply": "조회된 '신발' 카테고리 내 리뷰 데이터는 현재 시스템상 일반 상품들의 리뷰와 혼재되어 있어, 해당 카테고리만을 특정하여 의미 있는 반응을 요약하기 어렵습니다.\n\n현재 확인된 리뷰 내용들은 디자인에 대한 긍정적인 의견과 함께, 제품 품질 및 기능에 대한 개별적인 불만 사항들이 포함되어 있으나 신발 제품과 관련된 구체적인 리뷰는 식별되지 않았습니다. 다른 카테고리나 상품 단위로 문의해 주시면 다시 확인해 드리겠습니다.",
+        "toolCalls": [
+          {
+            "name": "summarize_reviews",
+            "args": {
+              "startDate": "2026-09-13",
+              "categoryName": "신발",
+              "endDate": "2026-10-13"
+            },
+            "result": {
+              "count": 30,
+              "reviews": [
+                {
+                  "id": 1100,
+                  "productId": 110,
+                  "productName": "합성 상품 110",
+                  "rating": 5,
+                  "comment": "상품 110의 디자인이 마음에 듭니다. 자동 주차 기능에 대한 사용 경험은 적지 않았습니다.",
+                  "createdAt": "2026-10-12T00:00:00.000Z"
+                },
+                {
+                  "id": 1099,
+                  "productId": 110,
+                  "productName": "합성 상품 110",
+                  "rating": 5,
+                  "comment": "상품 110의 디자인이 마음에 듭니다. 자동 주차 기능에 대한 사용 경험은 적지 않았습니다.",
+                  "createdAt": "2026-10-12T00:00:00.000Z"
+                },
+                {
+                  "id": 1098,
+                  "productId": 110,
+                  "productName": "합성 상품 110",
+                  "rating": 5,
+                  "comment": "상품 110의 디자인이 마음에 듭니다. 자동 주차 기능에 대한 사용 경험은 적지 않았습니다.",
+                  "createdAt": "2026-10-12T00:00:00.000Z"
+                },
+                {
+                  "id": 1097,
+                  "productId": 110,
+                  "productName": "합성 상품 110",
+                  "rating": 5,
+                  "comment": "상품 110의 디자인이 마음에 듭니다. 자동 주차 기능에 대한 사용 경험은 적지 않았습니다.",
+                  "createdAt": "2026-10-12T00:00:00.000Z"
+                },
+                {
+                  "id": 1096,
+                  "productId": 110,
+                  "productName": "합성 상품 110",
+                  "rating": 5,
+                  "comment": "상품 110의 디자인이 마음에 듭니다. 자동 주차 기능에 대한 사용 경험은 적지 않았습니다.",
+                  "createdAt": "2026-10-12T00:00:00.000Z"
+                },
+                {
+                  "id": 1095,
+                  "productId": 110,
+                  "productName": "합성 상품 110",
+                  "rating": 5,
+                  "comment": "지퍼를 끝까지 올려도 이가 벌어져 열려요.",
+                  "createdAt": "2026-10-12T00:00:00.000Z"
+                },
+                {
+                  "id": 1093,
+                  "productId": 110,
+                  "productName": "합성 상품 110",
+                  "rating": 5,
+                  "comment": "걱정했던 \"프린터가 종이를 여러 장 한꺼번에 물고 걸려요.\"와 같은 문제는 실제로 없었고 정상적으로 작동해 만족합니다.",
+                  "createdAt": "2026-10-12T00:00:00.000Z"
+                },
+                {
+                  "id": 1090,
+                  "productId": 109,
+                  "productName": "합성 상품 109",
+                  "rating": 5,
+                  "comment": "상품 109의 디자인이 마음에 듭니다. 심박수 측정 기능에 대한 사용 경험은 적지 않았습니다.",
+                  "createdAt": "2026-10-12T00:00:00.000Z"
+                },
+                {
+                  "id": 1089,
+                  "productId": 109,
+                  "productName": "합성 상품 109",
+                  "rating": 5,
+                  "comment": "상품 109의 디자인이 마음에 듭니다. 심박수 측정 기능에 대한 사용 경험은 적지 않았습니다.",
+                  "createdAt": "2026-10-12T00:00:00.000Z"
+                },
+                {
+                  "id": 1088,
+                  "productId": 109,
+                  "productName": "합성 상품 109",
+                  "rating": 5,
+                  "comment": "상품 109의 디자인이 마음에 듭니다. 심박수 측정 기능에 대한 사용 경험은 적지 않았습니다.",
+                  "createdAt": "2026-10-12T00:00:00.000Z"
+                },
+                {
+                  "id": 1087,
+                  "productId": 109,
+                  "productName": "합성 상품 109",
+                  "rating": 5,
+                  "comment": "상품 109의 디자인이 마음에 듭니다. 심박수 측정 기능에 대한 사용 경험은 적지 않았습니다.",
+                  "createdAt": "2026-10-12T00:00:00.000Z"
+                },
+                {
+                  "id": 1086,
+                  "productId": 109,
+                  "productName": "합성 상품 109",
+                  "rating": 5,
+                  "comment": "상품 109의 디자인이 마음에 듭니다. 심박수 측정 기능에 대한 사용 경험은 적지 않았습니다.",
+                  "createdAt": "2026-10-12T00:00:00.000Z"
+                },
+                {
+                  "id": 1085,
+                  "productId": 109,
+                  "productName": "합성 상품 109",
+                  "rating": 5,
+                  "comment": "프린터가 종이를 여러 장 한꺼번에 물고 걸려요.",
+                  "createdAt": "2026-10-12T00:00:00.000Z"
+                },
+                {
+                  "id": 1083,
+                  "productId": 109,
+                  "productName": "합성 상품 109",
+                  "rating": 5,
+                  "comment": "걱정했던 \"흡입구가 자꾸 막혀 먼지를 다시 뱉어내요.\"와 같은 문제는 실제로 없었고 정상적으로 작동해 만족합니다.",
+                  "createdAt": "2026-10-12T00:00:00.000Z"
+                },
+                {
+                  "id": 1080,
+                  "productId": 108,
+                  "productName": "합성 상품 108",
+                  "rating": 5,
+                  "comment": "상품 108의 디자인이 마음에 듭니다. 음식 냉동 기능에 대한 사용 경험은 적지 않았습니다.",
+                  "createdAt": "2026-10-12T00:00:00.000Z"
+                },
+                {
+                  "id": 1079,
+                  "productId": 108,
+                  "productName": "합성 상품 108",
+                  "rating": 5,
+                  "comment": "상품 108의 디자인이 마음에 듭니다. 음식 냉동 기능에 대한 사용 경험은 적지 않았습니다.",
+                  "createdAt": "2026-10-12T00:00:00.000Z"
+                },
+                {
+                  "id": 1078,
+                  "productId": 108,
+                  "productName": "합성 상품 108",
+                  "rating": 5,
+                  "comment": "상품 108의 디자인이 마음에 듭니다. 음식 냉동 기능에 대한 사용 경험은 적지 않았습니다.",
+                  "createdAt": "2026-10-12T00:00:00.000Z"
+                },
+                {
+                  "id": 1077,
+                  "productId": 108,
+                  "productName": "합성 상품 108",
+                  "rating": 5,
+                  "comment": "상품 108의 디자인이 마음에 듭니다. 음식 냉동 기능에 대한 사용 경험은 적지 않았습니다.",
+                  "createdAt": "2026-10-12T00:00:00.000Z"
+                },
+                {
+                  "id": 1076,
+                  "productId": 108,
+                  "productName": "합성 상품 108",
+                  "rating": 5,
+                  "comment": "상품 108의 디자인이 마음에 듭니다. 음식 냉동 기능에 대한 사용 경험은 적지 않았습니다.",
+                  "createdAt": "2026-10-12T00:00:00.000Z"
+                },
+                {
+                  "id": 1075,
+                  "productId": 108,
+                  "productName": "합성 상품 108",
+                  "rating": 5,
+                  "comment": "흡입구가 자꾸 막혀 먼지를 다시 뱉어내요.",
+                  "createdAt": "2026-10-12T00:00:00.000Z"
+                },
+                {
+                  "id": 1073,
+                  "productId": 108,
+                  "productName": "합성 상품 108",
+                  "rating": 5,
+                  "comment": "걱정했던 \"침대 가장자리가 꺼져서 누우면 한쪽으로 기울어요.\"와 같은 문제는 실제로 없었고 정상적으로 작동해 만족합니다.",
+                  "createdAt": "2026-10-12T00:00:00.000Z"
+                },
+                {
+                  "id": 1070,
+                  "productId": 107,
+                  "productName": "합성 상품 107",
+                  "rating": 5,
+                  "comment": "상품 107의 디자인이 마음에 듭니다. UV 차단 기능에 대한 사용 경험은 적지 않았습니다.",
+                  "createdAt": "2026-10-12T00:00:00.000Z"
+                },
+                {
+                  "id": 1069,
+                  "productId": 107,
+                  "productName": "합성 상품 107",
+                  "rating": 5,
+                  "comment": "상품 107의 디자인이 마음에 듭니다. UV 차단 기능에 대한 사용 경험은 적지 않았습니다.",
+                  "createdAt": "2026-10-12T00:00:00.000Z"
+                },
+                {
+                  "id": 1068,
+                  "productId": 107,
+                  "productName": "합성 상품 107",
+                  "rating": 5,
+                  "comment": "상품 107의 디자인이 마음에 듭니다. UV 차단 기능에 대한 사용 경험은 적지 않았습니다.",
+                  "createdAt": "2026-10-12T00:00:00.000Z"
+                },
+                {
+                  "id": 1067,
+                  "productId": 107,
+                  "productName": "합성 상품 107",
+                  "rating": 5,
+                  "comment": "상품 107의 디자인이 마음에 듭니다. UV 차단 기능에 대한 사용 경험은 적지 않았습니다.",
+                  "createdAt": "2026-10-12T00:00:00.000Z"
+                },
+                {
+                  "id": 1066,
+                  "productId": 107,
+                  "productName": "합성 상품 107",
+                  "rating": 5,
+                  "comment": "상품 107의 디자인이 마음에 듭니다. UV 차단 기능에 대한 사용 경험은 적지 않았습니다.",
+                  "createdAt": "2026-10-12T00:00:00.000Z"
+                },
+                {
+                  "id": 1065,
+                  "productId": 107,
+                  "productName": "합성 상품 107",
+                  "rating": 5,
+                  "comment": "침대 가장자리가 꺼져서 누우면 한쪽으로 기울어요.",
+                  "createdAt": "2026-10-12T00:00:00.000Z"
+                },
+                {
+                  "id": 1063,
+                  "productId": 107,
+                  "productName": "합성 상품 107",
+                  "rating": 5,
+                  "comment": "걱정했던 \"손잡이가 너무 뜨거워 맨손으로 들 수 없어요.\"와 같은 문제는 실제로 없었고 정상적으로 작동해 만족합니다.",
+                  "createdAt": "2026-10-12T00:00:00.000Z"
+                },
+                {
+                  "id": 1060,
+                  "productId": 106,
+                  "productName": "합성 상품 106",
+                  "rating": 5,
+                  "comment": "상품 106의 디자인이 마음에 듭니다. 전자 결제 기능에 대한 사용 경험은 적지 않았습니다.",
+                  "createdAt": "2026-10-12T00:00:00.000Z"
+                },
+                {
+                  "id": 1059,
+                  "productId": 106,
+                  "productName": "합성 상품 106",
+                  "rating": 5,
+                  "comment": "상품 106의 디자인이 마음에 듭니다. 전자 결제 기능에 대한 사용 경험은 적지 않았습니다.",
+                  "createdAt": "2026-10-12T00:00:00.000Z"
+                }
+              ]
+            }
+          }
+        ],
+        "usage": {
+          "inputTokens": 9023,
+          "outputTokens": 165,
+          "cachedTokens": 0,
+          "thoughtsTokens": 0,
+          "totalTokens": 9188
+        },
+        "llmRequests": 2
+      },
+      "llmRequests": 2,
+      "elapsedMs": 9536.258399999999,
+      "errorCode": null,
+      "necessaryChecks": {
+        "status": "pass",
+        "violations": []
+      },
+      "humanReview": "pending",
+      "attempts": [
+        {
+          "llmRequests": 2,
+          "errorCode": null
+        }
+      ]
+    }
+  ]
+}

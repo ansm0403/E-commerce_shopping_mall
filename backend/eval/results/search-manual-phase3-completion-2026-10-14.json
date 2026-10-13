@@ -1,0 +1,45 @@
+{
+  "dateKst": "2026-10-14",
+  "recordType": "User-reported completion of phase 3 browser verification",
+  "source": "Latest user conversation results and explicit statement that all manual scenarios were verified",
+  "productId": 577,
+  "reviewId": 1874,
+  "overallManualStatus": "complete per user report",
+  "providedResults": [
+    {
+      "caseId": "explicit-no-date-range-max-rating-2",
+      "question": "상품 577의 전체 기간 리뷰 중 2점 이하만 대상으로, 소매가 조여 움직이기 어렵다는 불만을 의미 검색으로 찾아줘. 기간 제한을 추가하지 말고 적용한 조건을 알려줘.",
+      "reply": "상품 ID 577에 대해 평점 2점 이하, 검색어 '소매가 조여 움직이기 어렵다'로 조회하였으나, 해당 조건의 데이터가 없습니다. 적용한 조건: 상품 ID 577, 평점 2점 이하, 검색어 소매가 조여 움직이기 어렵다, 기간 제한 없음.",
+      "assessment": "Expected no-data response; explicitly states no date restriction"
+    },
+    {
+      "caseId": "modified-source-indexing-before-ready",
+      "question": "상품 577 리뷰에서 팔 부분이 넉넉해서 움직이기 편하다는 반응을 의미 검색으로 찾아줘. 리뷰 ID와 원문을 인용해줘.",
+      "reply": "요청하신 상품 577의 리뷰에서 '팔 부분이 넉넉해서 움직이기 편하다'는 내용에 대해 검색을 시도했으나, 현재 해당 데이터의 색인 작업이 진행 중(indexing)이라 관련 정보를 바로 가져올 수 없습니다. 잠시 후 다시 시도해 주시기 바랍니다.",
+      "assessment": "Distinguishes indexing from absent source; does not cite previous negative text"
+    },
+    {
+      "caseId": "modified-source-ready-followup",
+      "question": "다시 시도해줘",
+      "reply": "상품 577 리뷰에서 관련 내용을 확인했습니다. 리뷰 #1874: 팔 부분이 조이지 않고 넉넉해서 움직이기 편합니다.",
+      "assessment": "Follow-up preserves product and query context; cites current positive source text"
+    },
+    {
+      "caseId": "deleted-source-excluded",
+      "question": "상품 577 리뷰에서 팔 부분이 넉넉해서 움직이기 편하다는 반응을 의미 검색으로 찾아줘. 리뷰 ID와 원문을 인용해줘.",
+      "reply": "상품 577에 대해 '팔 부분이 넉넉하여 움직이기 편하다'는 내용으로 검색하였으나, 해당 조건의 데이터가 없습니다.",
+      "assessment": "Does not return deleted review #1874"
+    }
+  ],
+  "remainingScenariosWithinManualProcedure": [
+    { "caseId": "rating-only-reuse-and-body-polarity", "status": "complete per explicit user statement", "detailedCliAndReplyNotProvidedInLatestMessage": true },
+    { "caseId": "cancel-next-question-and-partial-message-restoration", "status": "complete per explicit user statement", "detailedLogsNotProvidedInLatestMessage": true }
+  ],
+  "caveats": [
+    "This record is based on user reports; the agent did not run new model requests, query or mutate the user database",
+    "The earlier reply that introduced an unrequested recent-month range remains preserved; explicit no-date-range success does not prove all unconstrained phrasings are correct",
+    "Manual browser verification does not complete the separate 30-answer human review, whole-dataset initial indexing, or public release conditions"
+  ],
+  "nextImplementation": "Phase 4: public inquiry and answer indexing/search, private inquiry exclusion and normal/demo write-path verification",
+  "publicReleaseRemaining": ["Final 30-answer human review", "Target environment and initial review indexing readiness", "No unresolved failed current-source jobs"]
+}

@@ -16,11 +16,13 @@ import {
 } from './entity/demo-checkout.entity';
 import { DemoCheckoutService } from './demo-checkout.service';
 import { DemoPortOneService } from './demo-portone.service';
+import { SearchIndexJobsModule } from '../search/search-index-jobs.module';
 
 @Global()
 @Module({
   imports: [
     HttpModule,
+    SearchIndexJobsModule,
     TypeOrmModule.forFeature([
       DemoFixtureEntity,
       UserModel,

@@ -1,20 +1,144 @@
-import { EventEmitter } from 'events';
+import { EventEmitter } from 'node:events';
 import type { Response } from 'express';
 import type { AssistantStreamEvent } from '@shopping-mall/shared';
 import { AssistantController } from './assistant.controller';
 import { AssistantStreamRegistry } from './assistant-stream-registry';
 import type { AssistantService } from './assistant.service';
+import { Role } from '../../user/entity/role.entity';
 
-/**
- * 스트림 중단의 두 경로가 같은 signal 로 서비스에 닿는지 — 서비스는 mock(받은 signal 만 본다).
- *  ① 명시적 중지(stream/cancel + requestId) ② 연결 끊김(res 'close')
- */
-
-// 서비스 모듈을 실제로 읽으면 엔티티 순환 import 가 @swc/jest 에서 TDZ 로 죽는다(타입만 쓴다)
 jest.mock('./assistant.service', () => ({ AssistantService: class {} }));
 jest.mock('../../auth/guards/jwt-auth.guard', () => ({ JwtAuthGuard: class {} }));
 jest.mock('../../auth/guards/roles.guard', () => ({ RolesGuard: class {} }));
 jest.mock('../../user/entity/role.entity', () => ({ Role: { ADMIN: 'admin' } }));
+
+class StreamResponse extends EventEmitter {
+  writableEnded = false;
+  destroyed = false;
+  setHeader = jest.fn();
+  flushHeaders = jest.fn();
+  write = jest.fn((frame: string) => {
+    if (this.writableEnded || this.destroyed) throw new Error('WRITE_AFTER_RESPONSE_CLOSED');
+    return true;
+  });
+  end = jest.fn(() => { this.writableEnded = true; });
+}
+
+function setup(fail = false) {
+  let complete!: () => void;
+  const pending = new Promise<void>(resolve => { complete = resolve; });
+  let signal!: AbortSignal;
+  const streamChat = jest.fn(async function* (_params: unknown, receivedSignal: AbortSignal) {
+    signal = receivedSignal;
+    // Deliberately ignores cancellation until complete(): heartbeat cleanup must not await the service.
+    await pending;
+    if (fail) throw new Error('synthetic provider detail must not reach SSE');
+    yield { type: 'done' as const };
+  });
+  const registry = new AssistantStreamRegistry();
+  const controller = new AssistantController({ streamChat } as unknown as AssistantService, registry);
+  const response = new StreamResponse();
+  const request = controller.stream({ message: '테스트 질문', requestId: 'heartbeat-test' }, 1, response as unknown as Response, [Role.ADMIN]);
+  return { controller, registry, response, request, complete, get signal() { return signal; } };
+}
+
+const frames = (response: StreamResponse) => response.write.mock.calls.map(([frame]) => frame);
+
+describe('AssistantController — SSE keep-alive lifecycle', () => {
+  beforeEach(() => jest.useFakeTimers());
+  afterEach(() => jest.useRealTimers());
+
+  it('sends only comment heartbeats every 15 seconds while generation is pending', async () => {
+    const state = setup();
+    await jest.advanceTimersByTimeAsync(14999);
+    expect(frames(state.response)).toEqual([]);
+    await jest.advanceTimersByTimeAsync(1);
+    expect(frames(state.response)).toEqual([': keep-alive\n\n']);
+    await jest.advanceTimersByTimeAsync(15000);
+    expect(frames(state.response)).toEqual([': keep-alive\n\n', ': keep-alive\n\n']);
+    expect(frames(state.response).every(frame => !frame.startsWith('data:'))).toBe(true);
+    expect(state.response.setHeader).toHaveBeenCalledWith('Content-Type', 'text/event-stream; charset=utf-8');
+    expect(state.response.setHeader).toHaveBeenCalledWith('X-Accel-Buffering', 'no');
+    state.complete();
+    await state.request;
+    expect(frames(state.response).filter(frame => frame.startsWith('data:'))).toEqual(['data: {"type":"done"}\n\n']);
+    expect(jest.getTimerCount()).toBe(0);
+  });
+
+  it('normal completion removes the timer, close listener and registry entry before ending the response', async () => {
+    const state = setup();
+    expect(state.response.listenerCount('close')).toBe(1);
+    expect(state.registry.size).toBe(1);
+    state.complete();
+    await state.request;
+    expect(state.response.end).toHaveBeenCalledTimes(1);
+    expect(state.response.listenerCount('close')).toBe(0);
+    expect(state.registry.size).toBe(0);
+    expect(jest.getTimerCount()).toBe(0);
+    const savedFrames = frames(state.response);
+    await jest.advanceTimersByTimeAsync(60000);
+    expect(frames(state.response)).toEqual(savedFrames);
+  });
+
+  it('generation errors emit the safe error event and clear pending heartbeats', async () => {
+    const state = setup(true);
+    await jest.advanceTimersByTimeAsync(15000);
+    state.complete();
+    await state.request;
+    expect(frames(state.response)).toEqual([
+      ': keep-alive\n\n',
+      'data: {"type":"error","message":"AI 응답 생성에 실패했습니다."}\n\n',
+    ]);
+    expect(state.response.listenerCount('close')).toBe(0);
+    expect(state.registry.size).toBe(0);
+    expect(jest.getTimerCount()).toBe(0);
+    await jest.advanceTimersByTimeAsync(60000);
+    expect(state.response.write).toHaveBeenCalledTimes(2);
+  });
+
+  it('explicit cancellation clears heartbeats immediately even if the service settles late', async () => {
+    const state = setup();
+    await jest.advanceTimersByTimeAsync(15000);
+    state.controller.cancelStream({ requestId: 'heartbeat-test' }, 1);
+    expect(state.signal.aborted).toBe(true);
+    expect(jest.getTimerCount()).toBe(0);
+    await jest.advanceTimersByTimeAsync(60000);
+    expect(frames(state.response)).toEqual([': keep-alive\n\n']);
+    state.complete();
+    await state.request;
+    expect(frames(state.response)).toEqual([': keep-alive\n\n']);
+    expect(state.response.listenerCount('close')).toBe(0);
+    expect(state.registry.size).toBe(0);
+  });
+
+  it('socket closure aborts generation and clears the timer before late service completion', async () => {
+    const state = setup();
+    await jest.advanceTimersByTimeAsync(15000);
+    state.response.destroyed = true;
+    state.response.emit('close');
+    expect(state.signal.aborted).toBe(true);
+    expect(jest.getTimerCount()).toBe(0);
+    await jest.advanceTimersByTimeAsync(60000);
+    expect(frames(state.response)).toEqual([': keep-alive\n\n']);
+    state.complete();
+    await state.request;
+    expect(frames(state.response)).toEqual([': keep-alive\n\n']);
+    expect(state.response.listenerCount('close')).toBe(0);
+    expect(state.registry.size).toBe(0);
+  });
+
+  it('never writes a heartbeat after the response has already ended', async () => {
+    const state = setup();
+    state.response.writableEnded = true;
+    state.response.emit('close');
+    await jest.advanceTimersByTimeAsync(60000);
+    expect(state.response.write).not.toHaveBeenCalled();
+    state.complete();
+    await state.request;
+    expect(state.response.write).not.toHaveBeenCalled();
+    expect(state.response.listenerCount('close')).toBe(0);
+    expect(jest.getTimerCount()).toBe(0);
+  });
+});
 
 class FakeResponse extends EventEmitter {
   writes: string[] = [];
@@ -35,7 +159,7 @@ class FakeResponse extends EventEmitter {
 }
 
 /** signal 이 중단될 때까지 기다리는 스트림 — "도구 실행 중" 상태를 흉내 낸다 */
-function setup() {
+function setupCancellation() {
   let seenSignal: AbortSignal | undefined;
   const streamChat = jest.fn(async function* (_params: unknown, signal?: AbortSignal) {
     seenSignal = signal;
@@ -56,7 +180,7 @@ const tick = () => new Promise((resolve) => setImmediate(resolve));
 
 describe('AssistantController — 스트림 중단', () => {
   it('① stream/cancel 로 같은 requestId 를 보내면 진행 중인 스트림의 signal 이 중단된다', async () => {
-    const { controller, registry, res, signal } = setup();
+    const { controller, registry, res, signal } = setupCancellation();
 
     const running = controller.stream({ message: 'q', requestId: 'req-1' }, 1, res as unknown as Response);
     await tick();
@@ -73,7 +197,7 @@ describe('AssistantController — 스트림 중단', () => {
   });
 
   it('다른 사용자의 cancel 은 스트림을 끊지 못한다', async () => {
-    const { controller, res, signal } = setup();
+    const { controller, res, signal } = setupCancellation();
 
     const running = controller.stream({ message: 'q', requestId: 'req-1' }, 1, res as unknown as Response);
     await tick();
@@ -86,7 +210,7 @@ describe('AssistantController — 스트림 중단', () => {
   });
 
   it('② 응답이 끝나기 전에 연결이 닫히면 signal 이 중단된다', async () => {
-    const { controller, res, signal } = setup();
+    const { controller, res, signal } = setupCancellation();
 
     const running = controller.stream({ message: 'q' }, 1, res as unknown as Response);
     await tick();
@@ -114,7 +238,7 @@ describe('AssistantController — 스트림 중단', () => {
   });
 
   it('끝난 스트림·모르는 id 의 cancel 은 아무 일도 하지 않는다(예외 없음)', () => {
-    const { controller } = setup();
+    const { controller } = setupCancellation();
     expect(() => controller.cancelStream({ requestId: 'gone' }, 1)).not.toThrow();
   });
 });

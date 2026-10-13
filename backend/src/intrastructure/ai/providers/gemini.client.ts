@@ -5,6 +5,7 @@ import type {
   Content,
   Part,
   GenerateContentConfig,
+  GenerateContentResponse,
   GenerateContentResponseUsageMetadata,
 } from '@google/genai';
 import {
@@ -16,6 +17,8 @@ import {
   LlmToolDef,
   LlmUsage,
 } from '../llm-client.interface';
+import { classifyLlmFailure, LlmFailure } from '../llm-failure';
+import { LlmRequestDeadline, LlmSdkWaitBudget } from '../llm-request-deadline';
 
 /**
  * Gemini functionDeclarations 묶음(중립 LlmToolDef[] → Gemini tools config).
@@ -50,6 +53,8 @@ export class GeminiClient implements LlmClient {
   private readonly logger = new Logger(GeminiClient.name);
   private readonly ai: GoogleGenAI | null;
   private readonly model: string;
+  private readonly requestTimeoutMs: number = 60000;
+  private readonly turnTimeoutMs: number = 180000;
 
   /** explicit CachedContent 사용 여부(기본 off). 무료티어에선 켜도 생성 실패→no-op. */
   private readonly explicitCacheEnabled: boolean;
@@ -72,6 +77,8 @@ export class GeminiClient implements LlmClient {
       );
       return;
     }
+    this.requestTimeoutMs = this.readTimeout('GEMINI_REQUEST_TIMEOUT_MS', 60000, 120000);
+    this.turnTimeoutMs = this.readTimeout('GEMINI_TURN_TIMEOUT_MS', 180000, 300000);
     this.ai = new GoogleGenAI({ apiKey });
     this.logger.log(
       `Gemini 클라이언트 활성 (model=${this.model}, explicitCache=${this.explicitCacheEnabled})`,
@@ -136,14 +143,20 @@ export class GeminiClient implements LlmClient {
     tools: LlmToolDef[];
     executeTool: (call: LlmToolCall) => Promise<unknown>;
     signal?: AbortSignal;
+    onRequest?: () => void;
+    onRequestFailure?: (failure: LlmFailure) => void;
+    beforeRequest?: () => Promise<void>;
+    responseSchema?: Record<string, unknown>;
   }): AsyncIterable<LlmStreamEvent> {
     const { signal } = params;
     if (!this.ai) {
       throw new Error('GeminiClient 비활성: GEMINI_API_KEY 가 설정되지 않았습니다.');
     }
 
+    if (signal?.aborted) return;
+
     // 중립 LlmToolDef[] → Gemini functionDeclarations. parametersJsonSchema로 표준 스키마 그대로 전달.
-    const toolsCfg: GeminiToolsConfig = [
+    const toolsCfg: GeminiToolsConfig = params.tools.length ? [
       {
         functionDeclarations: params.tools.map((t) => ({
           name: t.name,
@@ -151,15 +164,18 @@ export class GeminiClient implements LlmClient {
           parametersJsonSchema: t.parameters,
         })),
       },
-    ];
+    ] : undefined;
 
     // 캐시는 1회만 시도. 성공 시 config 에 cachedContent 만 두고 system/tools 는 재전송하지 않는다.
-    const cacheName = await this.ensureCachePrefix(params.system, toolsCfg);
+    const turnBudget = new LlmSdkWaitBudget(this.turnTimeoutMs);
+    const cacheName = await this.ensureCachePrefix(params.system, toolsCfg, signal, turnBudget);
     // abortSignal 은 SDK 의 **클라이언트 쪽 취소**다 — 진행 중인 요청의 응답 읽기를 끊을 뿐, 이미 나간 요청은 과금된다.
     // 그래서 절감은 아래의 "다음 라운드를 열지 않는다" 만큼이다.
     const config: GenerateContentConfig = {
       ...this.buildConfig(params.system, toolsCfg, cacheName),
-      ...(signal ? { abortSignal: signal } : {}),
+      // App-owned deadlines below distinguish timeout from genuine SDK AbortError.
+      httpOptions: { retryOptions: { attempts: 1 } },
+      ...(params.responseSchema ? { responseMimeType: 'application/json', responseJsonSchema: params.responseSchema } : {}),
     };
     const contents: Content[] = this.toContentsWithDynamic(
       params.messages,
@@ -178,32 +194,77 @@ export class GeminiClient implements LlmClient {
 
     // 도구 호출 루프: 모델이 도구를 더 요청하지 않을 때까지(최대 MAX_ROUNDS) 왕복.
     const MAX_ROUNDS = 5;
+    let retriesRemaining = 1;
     for (let round = 0; round < MAX_ROUNDS; round++) {
       // 중단됐으면 새 라운드(= 새 LLM 요청)를 열지 않는다. usage·done 없이 끝낸다.
       if (signal?.aborted) return;
-      const stream = await this.ai.models.generateContentStream({
-        model: this.model,
-        contents,
-        config,
-      });
-
       const calls: LlmToolCall[] = [];
       const modelParts: Part[] = []; // 모델이 보낸 원본 parts(thoughtSignature 포함)를 누적
       let lastUsage: GenerateContentResponseUsageMetadata | undefined;
-      for await (const chunk of stream) {
-        if (chunk.usageMetadata) lastUsage = chunk.usageMetadata;
-        for (const part of chunk.candidates?.[0]?.content?.parts ?? []) {
-          modelParts.push(part);
-          if (part.text) yield { type: 'text', delta: part.text };
-          if (part.functionCall) {
-            calls.push({
-              id: part.functionCall.id,
-              name: part.functionCall.name ?? '',
-              args: (part.functionCall.args ?? {}) as Record<string, unknown>,
-            });
+      for (;;) {
+        await params.beforeRequest?.();
+        if (signal?.aborted) return;
+        const deadline = new LlmRequestDeadline(this.requestTimeoutMs, turnBudget, signal);
+        let iterator: AsyncIterator<GenerateContentResponse> | undefined;
+        let streamFinished = false;
+        let streamClosed = false;
+        const closeStream = () => {
+          if (!streamClosed && iterator?.return) {
+            streamClosed = true;
+            // return() can wait behind a hung next(); consume it without delaying failure.
+            try { void Promise.resolve(iterator.return()).catch(() => undefined); } catch { /* best effort */ }
           }
+        };
+        try {
+          await deadline.wait(() => {
+            params.onRequest?.();
+            const pending = this.ai!.models.generateContentStream({ model: this.model, contents,
+              config: { ...config, abortSignal: deadline.signal } });
+            return pending.then(stream => {
+              iterator = stream[Symbol.asyncIterator]();
+              if (deadline.closed) closeStream();
+              return stream;
+            });
+          });
+          for (;;) {
+            const next = await deadline.wait(() => iterator!.next());
+            if (next.done) { streamFinished = true; break; }
+            const chunk = next.value;
+            if (signal?.aborted) return;
+            if (chunk.usageMetadata) lastUsage = chunk.usageMetadata;
+            for (const part of chunk.candidates?.[0]?.content?.parts ?? []) {
+              if (signal?.aborted) return;
+              modelParts.push(part);
+              if (part.text) yield { type: 'text', delta: part.text };
+              if (part.functionCall) calls.push({
+                id: part.functionCall.id, name: part.functionCall.name ?? '',
+                args: (part.functionCall.args ?? {}) as Record<string, unknown>,
+              });
+            }
+          }
+          break;
+        } catch (error) {
+          const failure = classifyLlmFailure(error, signal?.aborted);
+          params.onRequestFailure?.(failure);
+          // One retry per entire turn; never replay a partial text or buffered tool call.
+          if (signal?.aborted) return;
+          if (retriesRemaining && modelParts.length === 0 && [500, 502, 503, 504].includes(failure.httpStatus ?? 0)) {
+            retriesRemaining--;
+            this.accumulateUsage(agg, lastUsage, round);
+            lastUsage = undefined;
+            this.logger.warn(`GEMINI_REQUEST_RETRY code=${failure.code} httpStatus=${failure.httpStatus} round=${round + 1}`);
+            deadline.close(true);
+            closeStream();
+            await this.waitForRetry(signal);
+            continue;
+          }
+          throw error;
+        } finally {
+          deadline.close(!streamFinished);
+          if (!streamFinished) closeStream();
         }
       }
+      if (signal?.aborted) return;
 
       // 라운드별 usage 를 합산 + 적중 관측용 debug 로그(round≥2 면 cachedTokens>0 기대).
       this.accumulateUsage(agg, lastUsage, round);
@@ -226,12 +287,15 @@ export class GeminiClient implements LlmClient {
         // 중단됐으면 남은 도구(DB 조회)도 실행하지 않는다.
         if (signal?.aborted) return;
         yield { type: 'tool_call', call };
+        // The consumer can cancel while this generator is suspended at the tool event.
+        if (signal?.aborted) return;
         let result: unknown;
         try {
           result = await params.executeTool(call);
         } catch (e) {
-          result = { error: (e as Error).message };
+          result = { error: { code: 'TOOL_UNAVAILABLE', message: '도구 실행에 실패했습니다.' } };
         }
+        if (signal?.aborted) return;
         contents.push({
           role: 'user',
           parts: [
@@ -255,6 +319,22 @@ export class GeminiClient implements LlmClient {
     yield { type: 'done' };
   }
 
+  private async waitForRetry(signal?: AbortSignal): Promise<void> {
+    if (signal?.aborted) return;
+    await new Promise<void>(resolve => {
+      const finish = () => { clearTimeout(timer); signal?.removeEventListener('abort', finish); resolve(); };
+      const timer = setTimeout(finish, 1000);
+      signal?.addEventListener('abort', finish, { once: true });
+    });
+  }
+
+  private readTimeout(key: string, fallback: number, maximum: number): number {
+    const value = this.config.get<unknown>(key, fallback);
+    const number = typeof value === 'number' || typeof value === 'string' ? Number(value) : Number.NaN;
+    if (!Number.isSafeInteger(number) || number < 1 || number > maximum) throw new Error(`INVALID_${key}`);
+    return number;
+  }
+
   /**
    * (Phase 6) explicit CachedContent 생성 — 스캐폴드(기본 off, no-op 폴백).
    * - GEMINI_EXPLICIT_CACHE!=='true' 또는 비활성이면 즉시 null(implicit 경로).
@@ -264,12 +344,15 @@ export class GeminiClient implements LlmClient {
   private async ensureCachePrefix(
     system: LlmSystemPrompt,
     toolsCfg: GeminiToolsConfig,
+    signal?: AbortSignal,
+    turnBudget = new LlmSdkWaitBudget(this.turnTimeoutMs),
   ): Promise<string | null> {
     if (!this.explicitCacheEnabled || !this.ai) return null;
     if (this.cacheAttempted) return this.cacheName;
     this.cacheAttempted = true;
+    const deadline = new LlmRequestDeadline(this.requestTimeoutMs, turnBudget, signal);
     try {
-      const cache = await this.ai.caches.create({
+      const cache = await deadline.wait(() => this.ai!.caches.create({
         model: this.model,
         config: {
           displayName: 'assistant-prefix',
@@ -277,19 +360,20 @@ export class GeminiClient implements LlmClient {
           // caches.create 의 tools 는 Tool[](ToolListUnion 보다 좁음) — never 로 캐스팅.
           ...(toolsCfg ? { tools: toolsCfg as never } : {}),
           ttl: '3600s',
+          abortSignal: deadline.signal,
         },
-      });
+      }));
       this.cacheName = cache.name ?? null;
       this.logger.log(
         `explicit 캐시 생성 성공: ${this.cacheName} (totalTokens=${cache.usageMetadata?.totalTokenCount})`,
       );
-    } catch (e) {
+    } catch {
       this.cacheName = null;
       this.logger.warn(
-        `explicit 캐시 생성 실패 → implicit 캐싱으로 진행(무료티어/미지원/최소치 미달 가능): ${
-          (e as Error).message
-        }`,
+        'EXPLICIT_CACHE_UNAVAILABLE — implicit 캐싱으로 진행',
       );
+    } finally {
+      deadline.close(true);
     }
     return this.cacheName;
   }

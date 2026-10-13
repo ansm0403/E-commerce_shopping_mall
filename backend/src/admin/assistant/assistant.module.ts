@@ -12,6 +12,7 @@ import { AssistantService } from './assistant.service';
 import { AssistantStreamRegistry } from './assistant-stream-registry';
 import { AssistantConversationEntity } from './entity/conversation.entity';
 import { AssistantMessageEntity } from './entity/message.entity';
+import { SearchModule } from '../../search/search.module';
 
 /**
  * 관리자 AI 어시스턴트 모듈.
@@ -37,6 +38,7 @@ import { AssistantMessageEntity } from './entity/message.entity';
     CategoryModule,
     ReviewModule,
     InquiryModule,
+    SearchModule,
   ],
   controllers: [AssistantController],
   providers: [AssistantService, AssistantStreamRegistry],

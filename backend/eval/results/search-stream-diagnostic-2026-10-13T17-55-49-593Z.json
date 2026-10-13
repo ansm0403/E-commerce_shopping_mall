@@ -1,0 +1,40 @@
+{
+  "runId": "2026-10-13T17-55-49-593Z",
+  "caseId": "rating",
+  "question": "상품 577의 2점 이하 리뷰에서 소매가 조여 움직이기 어렵다는 불만을 의미 검색으로 찾아줘. 리뷰 ID와 원문을 인용해줘.",
+  "model": "gemini-3.1-flash-lite",
+  "planned": 1,
+  "executed": 1,
+  "llmRequests": 1,
+  "requestFailures": [
+    {
+      "code": "LLM_TIMEOUT",
+      "httpStatus": null,
+      "message": "AI 응답 대기 시간이 초과됐습니다. 잠시 후 다시 시도해주세요.",
+      "timeoutScope": "request",
+      "timeoutMs": 60000,
+      "elapsedMs": 60005
+    }
+  ],
+  "errorCode": "LLM_TIMEOUT",
+  "httpStatus": null,
+  "timeouts": {
+    "requestTimeoutMs": 60000,
+    "turnTimeoutMs": 180000,
+    "diagnosticTimeoutMs": 195000
+  },
+  "elapsedMs": 60013.670699999995,
+  "eventTypes": [
+    "meta",
+    "error"
+  ],
+  "errorMessage": "AI 응답 대기 시간이 초과됐습니다. 잠시 후 다시 시도해주세요.",
+  "reply": "",
+  "tools": [],
+  "fixture": {
+    "syntheticReviews": 1,
+    "userDatabaseAccess": false,
+    "embeddingRequests": 0
+  },
+  "caveat": "Current live API probe using the app service/prompt/dispatcher/stream with a fixed synthetic search result. No HTTP authentication or real DB/vector search. Does not establish the cause of previous failures or answer correctness."
+}

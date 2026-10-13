@@ -333,8 +333,9 @@ tools: [{
 - [x] 적대적 엣지케이스 검증(실 DB 실측) + 버그 2건 수정: 음수 `take`·불량 날짜(`2026-13-45`/`지난주`) 크래시 → 하한 클램프 + `normalizeDateRange` 검증. `In([])`=0행·scrubText 오마스킹 0건 확인. 상세 §8-10b.
 - 🎯 시연: "최근 부정 리뷰 핵심만 요약", "미답변 문의 요약".
 
-**5b — 임베딩/벡터 검색 (나중, 데이터 많아지면)**
-- [ ] pgvector 등으로 의미 검색 후 상위 청크만 첨부. (현재 시드 규모엔 5a로 충분)
+**5b — 임베딩/벡터 검색**
+- [x] pgvector 기반 리뷰·공개 문의 의미 검색과 상위 원문 인용 구현. 검색 공개는 전체 초기 색인·실패 해소·최종 답변 사람 검토 후 활성화.
+- [설계와 단계별 구현 기록](./ex-ai-vector-search.md): 원문 변경·삭제 반영, 질문 처리, 기존 도구 연결과 검색 평가를 구현했다. 정형 배송 조회와 집계·결합 분석은 후속 단계다.
 
 **소스 조사 결과 (추측 금지 — 실제 시그니처)**
 - 리뷰: `ReviewService.getByProduct(productId, query)` 만 존재(productId 필수, relations `['user']`). **"전 상품 최근/부정 리뷰" 메서드 없음.** 엔티티 `ReviewEntity`: `rating(smallint)`, `comment(text)`, `imageUrls`, `userId`, `productId`. ⚠ `ReviewModule`은 `exports: [TypeOrmModule]`만 — **ReviewService 미export.**

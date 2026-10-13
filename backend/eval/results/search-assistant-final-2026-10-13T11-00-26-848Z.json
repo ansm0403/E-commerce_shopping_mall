@@ -1,0 +1,99 @@
+{
+  "runId": "2026-10-13T11-00-26-848Z",
+  "split": "final",
+  "model": "gemini-3.1-flash-lite",
+  "profile": {
+    "id": "gemini-embedding-2-768-review-inquiry-v1",
+    "model": "gemini-embedding-2",
+    "dimensions": 768,
+    "preprocessingVersion": "v1",
+    "maskingVersion": "scrub-text-v1",
+    "chunkingVersion": "unicode-paragraph-v1",
+    "queryTemplate": "task: search result | query: {text}",
+    "documentTemplate": "title: {title} | text: {text}",
+    "maxCodePoints": 1000,
+    "overlapCodePoints": 100,
+    "maxInputBytes": 4096,
+    "maxChunks": 32
+  },
+  "fixtureVersion": "reviews-final-v2",
+  "goldenVersion": 1,
+  "dateKst": "2026-10-13",
+  "codeVersion": {
+    "sha256": "69a6939b0b2a9ce17b5922c33c3ae97235b8d71d2e54a4535a5bcf1959f5ab4b",
+    "files": [
+      "src/search/semantic-search.service.ts",
+      "src/search/search-document.ts",
+      "src/search/search-input.ts",
+      "src/search/search-profile.ts",
+      "src/admin/assistant/assistant.service.ts",
+      "src/admin/assistant/assistant-tools.ts",
+      "src/admin/assistant/assistant-tool-schemas.ts",
+      "src/intrastructure/ai/providers/gemini.client.ts",
+      "eval/search/fixture.ts",
+      "eval/search/final-fixture.ts",
+      "eval/search/final-fixture-v2.ts"
+    ],
+    "description": "SHA256 of evaluated working-tree sources, including uncommitted changes."
+  },
+  "criteria": {
+    "retrieval": {
+      "hitAt5": 0.95,
+      "recallAt5": 0.9,
+      "maxApiErrors": 0
+    },
+    "answer": {
+      "minimumEvidenceSuccessRate": 0.9,
+      "minimumNoEvidenceSuccessRate": 0.9,
+      "unmaskedContacts": 0,
+      "invalidCitations": 0
+    },
+    "review": "Developer reviews all 30 final answers. Automated citation/fact checks are necessary checks, not final correctness judgments.",
+    "frozenBeforeFinalExecution": "2026-10-13",
+    "reason": "V1 revealed literal matching and rating-based polarity errors. V2 shares no source/product/topic/question with either previous corpus."
+  },
+  "syntheticReviews": 100,
+  "originalReviews": 0,
+  "repetitions": 1,
+  "planned": 30,
+  "executed": 0,
+  "unexecuted": 30,
+  "errorCode": "ASSISTANT_EVALUATION_FAILED",
+  "apiErrors": 0,
+  "llmRequests": 0,
+  "usage": {
+    "inputTokens": 0,
+    "outputTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageCompleteness": "Successful traces only. Failed attempts may consume tokens for which the SDK supplies no final usage.",
+  "failedAttempts": 0,
+  "embeddingUsageThisRun": {
+    "requests": 0,
+    "inputCodePoints": 0,
+    "inputBytes": 0,
+    "inputTokens": null
+  },
+  "generated": {
+    "document": 0,
+    "query": 0
+  },
+  "cacheHits": {
+    "document": 4,
+    "query": 0
+  },
+  "toolRegression": null,
+  "finalNecessaryChecks": {
+    "evidence": {
+      "passed": 0,
+      "planned": 20
+    },
+    "noEvidence": {
+      "passed": 0,
+      "planned": 10
+    }
+  },
+  "humanReviewPending": 0,
+  "limitations": "Synthetic fixture; one repetition. Necessary checks are not answer correctness. Developer must review all final answers. CLI elapsed time includes per-request quota pacing, not HTTP latency.",
+  "cases": []
+}

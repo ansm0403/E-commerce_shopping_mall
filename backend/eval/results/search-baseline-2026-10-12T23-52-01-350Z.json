@@ -1,0 +1,441 @@
+{
+  "runId": "2026-10-12T23-52-01-350Z",
+  "mode": "structured-baseline",
+  "fixtureVersion": "reviews-improvement-v1",
+  "fixtureType": "synthetic",
+  "originalReviews": 0,
+  "syntheticReviews": 100,
+  "questionCount": 20,
+  "codeVersion": "3cf48c443733f0afe00de004ae8c4bc92355d6af",
+  "workingTree": "implementation-in-progress",
+  "baselinePolicy": "same product/rating filters, recent 5 sources; semantic query ignored",
+  "cases": [
+    {
+      "caseId": "improve-1-explicit",
+      "query": "팔을 움직이기 어려울 만큼 옷이 조이는 불만",
+      "productId": 1,
+      "maxRating": null,
+      "relevantIds": [
+        1
+      ],
+      "reason": "직접 해당 문제를 서술한 원문. 높은 별점이어도 불만 근거.",
+      "sourceIds": [
+        10,
+        9,
+        8,
+        7,
+        6
+      ],
+      "hitAt5": 0,
+      "recallAt5": 0,
+      "precisionAt5": 0,
+      "dbMs": 2.693199999999706
+    },
+    {
+      "caseId": "improve-1-paraphrase",
+      "query": "고객이 겪은 문제를 찾아줘: 팔을 움직이기 어려울 만큼 옷이 조이는 불만",
+      "productId": 1,
+      "maxRating": null,
+      "relevantIds": [
+        1
+      ],
+      "reason": "동일 근거의 표현 변경 질문. 같은 개선용 그룹에만 보관.",
+      "sourceIds": [
+        10,
+        9,
+        8,
+        7,
+        6
+      ],
+      "hitAt5": 0,
+      "recallAt5": 0,
+      "precisionAt5": 0,
+      "dbMs": 1.211999999999989
+    },
+    {
+      "caseId": "improve-2-explicit",
+      "query": "빨래 후 옷이 수축했다는 반응",
+      "productId": 2,
+      "maxRating": null,
+      "relevantIds": [
+        11
+      ],
+      "reason": "직접 해당 문제를 서술한 원문. 높은 별점이어도 불만 근거.",
+      "sourceIds": [
+        20,
+        19,
+        18,
+        17,
+        16
+      ],
+      "hitAt5": 0,
+      "recallAt5": 0,
+      "precisionAt5": 0,
+      "dbMs": 1.0799000000001797
+    },
+    {
+      "caseId": "improve-2-paraphrase",
+      "query": "고객이 겪은 문제를 찾아줘: 빨래 후 옷이 수축했다는 반응",
+      "productId": 2,
+      "maxRating": null,
+      "relevantIds": [
+        11
+      ],
+      "reason": "동일 근거의 표현 변경 질문. 같은 개선용 그룹에만 보관.",
+      "sourceIds": [
+        20,
+        19,
+        18,
+        17,
+        16
+      ],
+      "hitAt5": 0,
+      "recallAt5": 0,
+      "precisionAt5": 0,
+      "dbMs": 1.8291999999996733
+    },
+    {
+      "caseId": "improve-3-explicit",
+      "query": "솔기가 피부를 자극한다는 불만",
+      "productId": 3,
+      "maxRating": null,
+      "relevantIds": [
+        21
+      ],
+      "reason": "직접 해당 문제를 서술한 원문. 높은 별점이어도 불만 근거.",
+      "sourceIds": [
+        30,
+        29,
+        28,
+        27,
+        26
+      ],
+      "hitAt5": 0,
+      "recallAt5": 0,
+      "precisionAt5": 0,
+      "dbMs": 1.6439000000000306
+    },
+    {
+      "caseId": "improve-3-paraphrase",
+      "query": "고객이 겪은 문제를 찾아줘: 솔기가 피부를 자극한다는 불만",
+      "productId": 3,
+      "maxRating": null,
+      "relevantIds": [
+        21
+      ],
+      "reason": "동일 근거의 표현 변경 질문. 같은 개선용 그룹에만 보관.",
+      "sourceIds": [
+        30,
+        29,
+        28,
+        27,
+        26
+      ],
+      "hitAt5": 0,
+      "recallAt5": 0,
+      "precisionAt5": 0,
+      "dbMs": 1.5151999999998225
+    },
+    {
+      "caseId": "improve-4-explicit",
+      "query": "신발 안으로 물이 들어온 경험",
+      "productId": 4,
+      "maxRating": null,
+      "relevantIds": [
+        31
+      ],
+      "reason": "직접 해당 문제를 서술한 원문. 높은 별점이어도 불만 근거.",
+      "sourceIds": [
+        40,
+        39,
+        38,
+        37,
+        36
+      ],
+      "hitAt5": 0,
+      "recallAt5": 0,
+      "precisionAt5": 0,
+      "dbMs": 1.380200000000059
+    },
+    {
+      "caseId": "improve-4-paraphrase",
+      "query": "고객이 겪은 문제를 찾아줘: 신발 안으로 물이 들어온 경험",
+      "productId": 4,
+      "maxRating": null,
+      "relevantIds": [
+        31
+      ],
+      "reason": "동일 근거의 표현 변경 질문. 같은 개선용 그룹에만 보관.",
+      "sourceIds": [
+        40,
+        39,
+        38,
+        37,
+        36
+      ],
+      "hitAt5": 0,
+      "recallAt5": 0,
+      "precisionAt5": 0,
+      "dbMs": 1.530500000000302
+    },
+    {
+      "caseId": "improve-5-explicit",
+      "query": "걸을 때 발뒤꿈치가 쓸린다는 불만",
+      "productId": 5,
+      "maxRating": null,
+      "relevantIds": [
+        41
+      ],
+      "reason": "직접 해당 문제를 서술한 원문. 높은 별점이어도 불만 근거.",
+      "sourceIds": [
+        50,
+        49,
+        48,
+        47,
+        46
+      ],
+      "hitAt5": 0,
+      "recallAt5": 0,
+      "precisionAt5": 0,
+      "dbMs": 1.4916000000002896
+    },
+    {
+      "caseId": "improve-5-paraphrase",
+      "query": "고객이 겪은 문제를 찾아줘: 걸을 때 발뒤꿈치가 쓸린다는 불만",
+      "productId": 5,
+      "maxRating": null,
+      "relevantIds": [
+        41
+      ],
+      "reason": "동일 근거의 표현 변경 질문. 같은 개선용 그룹에만 보관.",
+      "sourceIds": [
+        50,
+        49,
+        48,
+        47,
+        46
+      ],
+      "hitAt5": 0,
+      "recallAt5": 0,
+      "precisionAt5": 0,
+      "dbMs": 1.3466999999996005
+    },
+    {
+      "caseId": "improve-6-explicit",
+      "query": "배터리가 너무 빨리 소모된다는 반응",
+      "productId": 6,
+      "maxRating": null,
+      "relevantIds": [
+        51
+      ],
+      "reason": "직접 해당 문제를 서술한 원문. 높은 별점이어도 불만 근거.",
+      "sourceIds": [
+        60,
+        59,
+        58,
+        57,
+        56
+      ],
+      "hitAt5": 0,
+      "recallAt5": 0,
+      "precisionAt5": 0,
+      "dbMs": 1.5453999999999724
+    },
+    {
+      "caseId": "improve-6-paraphrase",
+      "query": "고객이 겪은 문제를 찾아줘: 배터리가 너무 빨리 소모된다는 반응",
+      "productId": 6,
+      "maxRating": null,
+      "relevantIds": [
+        51
+      ],
+      "reason": "동일 근거의 표현 변경 질문. 같은 개선용 그룹에만 보관.",
+      "sourceIds": [
+        60,
+        59,
+        58,
+        57,
+        56
+      ],
+      "hitAt5": 0,
+      "recallAt5": 0,
+      "precisionAt5": 0,
+      "dbMs": 1.627799999999752
+    },
+    {
+      "caseId": "improve-7-explicit",
+      "query": "기계 소음 때문에 수면을 방해받은 경험",
+      "productId": 7,
+      "maxRating": null,
+      "relevantIds": [
+        61
+      ],
+      "reason": "직접 해당 문제를 서술한 원문. 높은 별점이어도 불만 근거.",
+      "sourceIds": [
+        70,
+        69,
+        68,
+        67,
+        66
+      ],
+      "hitAt5": 0,
+      "recallAt5": 0,
+      "precisionAt5": 0,
+      "dbMs": 1.7989999999999782
+    },
+    {
+      "caseId": "improve-7-paraphrase",
+      "query": "고객이 겪은 문제를 찾아줘: 기계 소음 때문에 수면을 방해받은 경험",
+      "productId": 7,
+      "maxRating": null,
+      "relevantIds": [
+        61
+      ],
+      "reason": "동일 근거의 표현 변경 질문. 같은 개선용 그룹에만 보관.",
+      "sourceIds": [
+        70,
+        69,
+        68,
+        67,
+        66
+      ],
+      "hitAt5": 0,
+      "recallAt5": 0,
+      "precisionAt5": 0,
+      "dbMs": 1.5661000000000058
+    },
+    {
+      "caseId": "improve-8-explicit",
+      "query": "제품이 파손된 상태로 도착했다는 불만",
+      "productId": 8,
+      "maxRating": null,
+      "relevantIds": [
+        71
+      ],
+      "reason": "직접 해당 문제를 서술한 원문. 높은 별점이어도 불만 근거.",
+      "sourceIds": [
+        80,
+        79,
+        78,
+        77,
+        76
+      ],
+      "hitAt5": 0,
+      "recallAt5": 0,
+      "precisionAt5": 0,
+      "dbMs": 1.2559999999998581
+    },
+    {
+      "caseId": "improve-8-paraphrase",
+      "query": "고객이 겪은 문제를 찾아줘: 제품이 파손된 상태로 도착했다는 불만",
+      "productId": 8,
+      "maxRating": null,
+      "relevantIds": [
+        71
+      ],
+      "reason": "동일 근거의 표현 변경 질문. 같은 개선용 그룹에만 보관.",
+      "sourceIds": [
+        80,
+        79,
+        78,
+        77,
+        76
+      ],
+      "hitAt5": 0,
+      "recallAt5": 0,
+      "precisionAt5": 0,
+      "dbMs": 1.8407000000001972
+    },
+    {
+      "caseId": "improve-9-explicit",
+      "query": "화장품 사용 후 피부가 자극된 경험",
+      "productId": 9,
+      "maxRating": null,
+      "relevantIds": [
+        81
+      ],
+      "reason": "직접 해당 문제를 서술한 원문. 높은 별점이어도 불만 근거.",
+      "sourceIds": [
+        90,
+        89,
+        88,
+        87,
+        86
+      ],
+      "hitAt5": 0,
+      "recallAt5": 0,
+      "precisionAt5": 0,
+      "dbMs": 1.1365999999998166
+    },
+    {
+      "caseId": "improve-9-paraphrase",
+      "query": "고객이 겪은 문제를 찾아줘: 화장품 사용 후 피부가 자극된 경험",
+      "productId": 9,
+      "maxRating": null,
+      "relevantIds": [
+        81
+      ],
+      "reason": "동일 근거의 표현 변경 질문. 같은 개선용 그룹에만 보관.",
+      "sourceIds": [
+        90,
+        89,
+        88,
+        87,
+        86
+      ],
+      "hitAt5": 0,
+      "recallAt5": 0,
+      "precisionAt5": 0,
+      "dbMs": 1.1109000000001288
+    },
+    {
+      "caseId": "improve-10-explicit",
+      "query": "용기가 제대로 밀폐되지 않는다는 반응",
+      "productId": 10,
+      "maxRating": null,
+      "relevantIds": [
+        91
+      ],
+      "reason": "직접 해당 문제를 서술한 원문. 높은 별점이어도 불만 근거.",
+      "sourceIds": [
+        100,
+        99,
+        98,
+        97,
+        96
+      ],
+      "hitAt5": 0,
+      "recallAt5": 0,
+      "precisionAt5": 0,
+      "dbMs": 1.0734000000002197
+    },
+    {
+      "caseId": "improve-10-paraphrase",
+      "query": "고객이 겪은 문제를 찾아줘: 용기가 제대로 밀폐되지 않는다는 반응",
+      "productId": 10,
+      "maxRating": null,
+      "relevantIds": [
+        91
+      ],
+      "reason": "동일 근거의 표현 변경 질문. 같은 개선용 그룹에만 보관.",
+      "sourceIds": [
+        100,
+        99,
+        98,
+        97,
+        96
+      ],
+      "hitAt5": 0,
+      "recallAt5": 0,
+      "precisionAt5": 0,
+      "dbMs": 1.2613000000001193
+    }
+  ],
+  "summary": {
+    "hitAt5": 0,
+    "recallAt5": 0,
+    "precisionAt5": 0
+  },
+  "embeddingRequests": 0,
+  "llmRequests": 0
+}

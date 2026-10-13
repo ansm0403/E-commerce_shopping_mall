@@ -1,0 +1,3645 @@
+# 최종 30문항 사람 검토
+
+측정 결과: eval/results/search-assistant-final-2026-10-13T11-07-46-261Z.json
+
+각 문항의 조건·인용·긍정/부정·추가 주장·근거 없음 설명을 대조해 사람 판정을 통과/실패로 바꾸고 이유를 적는다. 아직 확정 답변 성공률은 없다.
+
+다음은 코드 에이전트가 확인한 대조 참고사항이며 사람 판정이 아니다. 3-meaning·7-meaning은 보조 판정 API가 실패했으므로 원문으로 직접 확인한다. 4-meaning의 “문제가 없었다”는 설명은 실제 2033 원문에도 있다. 9-rating의 보조 판정은 polarity=false지만 이유에서는 올바르게 문제 없음 원문을 제외했다고 설명해 모순된다. 10-rating도 2093 원문의 “문제는 실제로 없었습니다”와 배송 때문에 낮은 별점을 준 내용을 함께 대조한다. 9-meaning의 도구 결과에는 2083이 실제 존재하므로 judge의 “없는 리뷰” 설명은 틀렸다. 다만 답변의 “확인하는 차원에서 작성”이라는 작성 의도는 원문에 명시되지 않아 별도로 검토해야 한다.
+
+## 1. final-v2-1-meaning
+
+상품 201의 2026년 10월 1일부터 13일까지 리뷰에서 옷에서 전기가 올라 착용이 불편한 불만을 찾아 원본 ID와 인용으로 알려줘.
+
+정답 조건: {"caseId":"final-v2-1-meaning","query":"옷에서 전기가 올라 착용이 불편한 불만","productId":201,"maxRating":null,"startDate":"2026-10-01","endDate":"2026-10-13","relevantIds":[2001,2002],"reason":"본문으로 확인한 불만 두 건. 높은 별점 포함. 낮은 별점의 문제 없음·기간 밖·다른 문제는 비관련.","question":"상품 201의 2026년 10월 1일부터 13일까지 리뷰에서 옷에서 전기가 올라 착용이 불편한 불만을 찾아 원본 ID와 인용으로 알려줘.","answerFacts":["찌릿"],"noEvidence":false}
+
+답변:
+
+요청하신 기간(2026-10-01 ~ 2026-10-13) 내 상품 201의 리뷰 중, 정전기 관련 불편을 호소한 내용은 다음과 같습니다.
+
+*   **리뷰 #2001**
+    *   인용: "소매를 만지면 찌릿하고 천이 몸에 달라붙어요."
+*   **리뷰 #2002**
+    *   인용: "소매를 만지면 찌릿하고 천이 몸에 달라붙어요."
+
+참고로 리뷰 #2003의 경우 "소매를 만지면 찌릿하고 천이 몸에 달라붙어요"라는 현상을 언급하였으나, 해당 문제는 실제로 겪지 않았다고 명시되어 있어 불만 사례에서 제외하였습니다.
+
+실제 도구·인용:
+
+```json
+[
+  {
+    "name": "summarize_reviews",
+    "args": {
+      "startDate": "2026-10-01",
+      "productId": 201,
+      "query": "전기 정전기 착용 불편",
+      "endDate": "2026-10-13"
+    },
+    "result": {
+      "status": "ok",
+      "mode": "semantic",
+      "scope": {
+        "sourceType": "review",
+        "timezone": "Asia/Seoul",
+        "unit": "source",
+        "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+        "query": "전기 정전기 착용 불편",
+        "productIds": [
+          201
+        ],
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-13",
+        "take": 5,
+        "checkedAt": "2026-10-13T11:01:51.029Z"
+      },
+      "coverage": {
+        "total": 9,
+        "ready": 9,
+        "pending": 0,
+        "failed": 0,
+        "partial": false
+      },
+      "data": {
+        "sources": [
+          {
+            "sourceType": "review",
+            "id": 2001,
+            "productId": 201,
+            "rating": 5,
+            "createdAt": "2026-10-02T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "소매를 만지면 찌릿하고 천이 몸에 달라붙어요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2002,
+            "productId": 201,
+            "rating": 2,
+            "createdAt": "2026-10-02T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "소매를 만지면 찌릿하고 천이 몸에 달라붙어요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2003,
+            "productId": 201,
+            "rating": 2,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "걱정했던 \"소매를 만지면 찌릿하고 천이 몸에 달라붙어요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2005,
+            "productId": 201,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "가방 끈이 어깨를 파고들어 멍이 들었어요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2006,
+            "productId": 201,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 201의 디자인이 마음에 듭니다. 자동 분류 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          }
+        ],
+        "candidateChunkCount": 9,
+        "omittedSourceCount": 4,
+        "contextTruncated": false
+      },
+      "error": null
+    }
+  }
+]
+```
+
+보조 판정: {"conditions":true,"evidence":true,"polarity":true,"noUnsupportedClaims":true,"stateExplanation":true,"reason":"도구 인자와 기간 설정이 정확하며, 리뷰 ID 2001, 2002의 불만 내용을 인용하여 답변하였습니다. 2003 리뷰에 대한 해석 또한 자료에 근거하여 논리적입니다."}
+
+사람 판정: **미검토**
+
+불일치 이유: 미작성
+
+## 2. final-v2-1-rating
+
+상품 201의 2026년 10월 1일부터 13일까지 2점 이하 리뷰에서 옷에서 전기가 올라 착용이 불편한 불만을 찾아 원본 ID와 인용으로 알려줘.
+
+정답 조건: {"caseId":"final-v2-1-rating","query":"옷에서 전기가 올라 착용이 불편한 불만의 구체적 사례","productId":201,"maxRating":2,"startDate":"2026-10-01","endDate":"2026-10-13","relevantIds":[2002],"reason":"상품·기간·2점 이하를 만족하며 본문에 해당 불만이 있는 한 건. 낮은 별점의 문제 없음은 비관련.","question":"상품 201의 2026년 10월 1일부터 13일까지 2점 이하 리뷰에서 옷에서 전기가 올라 착용이 불편한 불만을 찾아 원본 ID와 인용으로 알려줘.","answerFacts":["찌릿"],"noEvidence":false}
+
+답변:
+
+상품 201의 2026년 10월 1일부터 13일까지 작성된 2점 이하 리뷰 중, 문의하신 '전기가 오르는 불편함'에 대한 내용은 다음과 같습니다.
+
+*   **리뷰 #2002**: "소매를 만지면 찌릿하고 천이 몸에 달라붙어요."
+
+참고로 리뷰 #2003의 경우, 동일한 문구를 언급했으나 "실제로 없었다"고 명시하고 있어 불만 사항에 해당하지 않습니다.
+
+실제 도구·인용:
+
+```json
+[
+  {
+    "name": "summarize_reviews",
+    "args": {
+      "maxRating": 2,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "query": "전기 정전기 옷 착용 불편 불편함 따가움",
+      "productId": 201
+    },
+    "result": {
+      "status": "ok",
+      "mode": "semantic",
+      "scope": {
+        "sourceType": "review",
+        "timezone": "Asia/Seoul",
+        "unit": "source",
+        "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+        "query": "전기 정전기 옷 착용 불편 불편함 따가움",
+        "productIds": [
+          201
+        ],
+        "maxRating": 2,
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-13",
+        "take": 5,
+        "checkedAt": "2026-10-13T11:02:01.754Z"
+      },
+      "coverage": {
+        "total": 2,
+        "ready": 2,
+        "pending": 0,
+        "failed": 0,
+        "partial": false
+      },
+      "data": {
+        "sources": [
+          {
+            "sourceType": "review",
+            "id": 2002,
+            "productId": 201,
+            "rating": 2,
+            "createdAt": "2026-10-02T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "소매를 만지면 찌릿하고 천이 몸에 달라붙어요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2003,
+            "productId": 201,
+            "rating": 2,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "걱정했던 \"소매를 만지면 찌릿하고 천이 몸에 달라붙어요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+              }
+            ]
+          }
+        ],
+        "candidateChunkCount": 2,
+        "omittedSourceCount": 0,
+        "contextTruncated": false
+      },
+      "error": null
+    }
+  }
+]
+```
+
+보조 판정: {"conditions":true,"evidence":true,"polarity":true,"noUnsupportedClaims":true,"stateExplanation":true,"reason":"도구 호출 인자가 요청 조건을 완벽히 충족하며, 리뷰 2002의 근거를 정확히 인용함. 리뷰 2003의 반대 의견을 명확히 구분하여 불만 사항으로 오인하지 않음."}
+
+사람 판정: **미검토**
+
+불일치 이유: 미작성
+
+## 3. final-v2-1-absent
+
+상품 201의 2026년 10월 1일부터 13일까지 리뷰에서 자동 분류 기능이 고장났다는 불만을 찾아줘.
+
+정답 조건: {"caseId":"final-v2-1-absent","query":"자동 분류 기능이 고장났다는 불만","productId":201,"maxRating":null,"startDate":"2026-10-01","endDate":"2026-10-13","relevantIds":[],"reason":"지정 기능의 고장 경험은 조건 범위에 없다. 미사용이라는 원문은 긍정·고장 경험의 근거가 아니다.","question":"상품 201의 2026년 10월 1일부터 13일까지 리뷰에서 자동 분류 기능이 고장났다는 불만을 찾아줘.","answerFacts":[],"noEvidence":true}
+
+답변:
+
+요청하신 기간(2026-10-01 ~ 2026-10-13) 동안 상품 201의 리뷰를 분석한 결과, 해당 기간 내에는 '자동 분류 기능 고장'과 관련된 불만 리뷰를 찾을 수 없었습니다.
+
+실제 도구·인용:
+
+```json
+[
+  {
+    "name": "summarize_reviews",
+    "args": {
+      "productId": 201,
+      "endDate": "2026-10-13",
+      "startDate": "2026-10-01",
+      "query": "자동 분류 기능 고장"
+    },
+    "result": {
+      "status": "ok",
+      "mode": "semantic",
+      "scope": {
+        "sourceType": "review",
+        "timezone": "Asia/Seoul",
+        "unit": "source",
+        "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+        "query": "자동 분류 기능 고장",
+        "productIds": [
+          201
+        ],
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-13",
+        "take": 5,
+        "checkedAt": "2026-10-13T11:02:16.184Z"
+      },
+      "coverage": {
+        "total": 9,
+        "ready": 9,
+        "pending": 0,
+        "failed": 0,
+        "partial": false
+      },
+      "data": {
+        "sources": [
+          {
+            "sourceType": "review",
+            "id": 2006,
+            "productId": 201,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 201의 디자인이 마음에 듭니다. 자동 분류 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2007,
+            "productId": 201,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 201의 디자인이 마음에 듭니다. 자동 분류 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2008,
+            "productId": 201,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 201의 디자인이 마음에 듭니다. 자동 분류 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2009,
+            "productId": 201,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 201의 디자인이 마음에 듭니다. 자동 분류 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2010,
+            "productId": 201,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 201의 디자인이 마음에 듭니다. 자동 분류 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          }
+        ],
+        "candidateChunkCount": 9,
+        "omittedSourceCount": 4,
+        "contextTruncated": false
+      },
+      "error": null
+    }
+  }
+]
+```
+
+보조 판정: {"conditions":true,"evidence":true,"polarity":true,"noUnsupportedClaims":true,"stateExplanation":true,"reason":"도구 인자값과 기간이 명확히 지켜졌으며, 불만 사례가 없음을 합리적으로 설명하고 있습니다."}
+
+사람 판정: **미검토**
+
+불일치 이유: 미작성
+
+## 4. final-v2-2-meaning
+
+상품 202의 2026년 10월 1일부터 13일까지 리뷰에서 짐을 메면 어깨가 눌려 아픈 경험을 찾아 원본 ID와 인용으로 알려줘.
+
+정답 조건: {"caseId":"final-v2-2-meaning","query":"짐을 메면 어깨가 눌려 아픈 경험","productId":202,"maxRating":null,"startDate":"2026-10-01","endDate":"2026-10-13","relevantIds":[2011,2012],"reason":"본문으로 확인한 불만 두 건. 높은 별점 포함. 낮은 별점의 문제 없음·기간 밖·다른 문제는 비관련.","question":"상품 202의 2026년 10월 1일부터 13일까지 리뷰에서 짐을 메면 어깨가 눌려 아픈 경험을 찾아 원본 ID와 인용으로 알려줘.","answerFacts":["어깨"],"noEvidence":false}
+
+답변:
+
+요청하신 상품 202에 대해 2026년 10월 1일부터 13일까지의 리뷰를 확인한 결과, 어깨 통증과 관련하여 다음 사례를 찾았습니다.
+
+* **리뷰 #2011, #2012**: "가방 끈이 어깨를 파고들어 멍이 들었어요."
+
+참고로 리뷰 #2013의 경우, 작성자가 해당 문제에 대해 언급했으나 실제로는 겪지 않았다고 명시하고 있습니다.
+
+실제 도구·인용:
+
+```json
+[
+  {
+    "name": "summarize_reviews",
+    "args": {
+      "query": "어깨 아픔 눌림 통증 짐 가방 끈",
+      "productId": 202,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13"
+    },
+    "result": {
+      "status": "ok",
+      "mode": "semantic",
+      "scope": {
+        "sourceType": "review",
+        "timezone": "Asia/Seoul",
+        "unit": "source",
+        "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+        "query": "어깨 아픔 눌림 통증 짐 가방 끈",
+        "productIds": [
+          202
+        ],
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-13",
+        "take": 5,
+        "checkedAt": "2026-10-13T11:02:26.949Z"
+      },
+      "coverage": {
+        "total": 9,
+        "ready": 9,
+        "pending": 0,
+        "failed": 0,
+        "partial": false
+      },
+      "data": {
+        "sources": [
+          {
+            "sourceType": "review",
+            "id": 2011,
+            "productId": 202,
+            "rating": 5,
+            "createdAt": "2026-10-02T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "가방 끈이 어깨를 파고들어 멍이 들었어요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2012,
+            "productId": 202,
+            "rating": 2,
+            "createdAt": "2026-10-02T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "가방 끈이 어깨를 파고들어 멍이 들었어요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2013,
+            "productId": 202,
+            "rating": 2,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "걱정했던 \"가방 끈이 어깨를 파고들어 멍이 들었어요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2015,
+            "productId": 202,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "햇빛이 비치면 커튼 너머 실루엣이 그대로 보여요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2016,
+            "productId": 202,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 202의 디자인이 마음에 듭니다. 야간 조도 감지 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          }
+        ],
+        "candidateChunkCount": 9,
+        "omittedSourceCount": 4,
+        "contextTruncated": false
+      },
+      "error": null
+    }
+  }
+]
+```
+
+보조 판정: {"conditions":true,"evidence":true,"polarity":true,"noUnsupportedClaims":true,"stateExplanation":true,"reason":"조건과 원문 데이터를 모두 정확하게 반영하였으며, 불만 사항에 대해 적절한 근거 ID와 인용을 제공했습니다. 또한 2013번 리뷰를 긍정문으로 오해하지 않고 문제없음을 명확히 구분하였습니다."}
+
+사람 판정: **미검토**
+
+불일치 이유: 미작성
+
+## 5. final-v2-2-rating
+
+상품 202의 2026년 10월 1일부터 13일까지 2점 이하 리뷰에서 짐을 메면 어깨가 눌려 아픈 경험을 찾아 원본 ID와 인용으로 알려줘.
+
+정답 조건: {"caseId":"final-v2-2-rating","query":"짐을 메면 어깨가 눌려 아픈 경험의 구체적 사례","productId":202,"maxRating":2,"startDate":"2026-10-01","endDate":"2026-10-13","relevantIds":[2012],"reason":"상품·기간·2점 이하를 만족하며 본문에 해당 불만이 있는 한 건. 낮은 별점의 문제 없음은 비관련.","question":"상품 202의 2026년 10월 1일부터 13일까지 2점 이하 리뷰에서 짐을 메면 어깨가 눌려 아픈 경험을 찾아 원본 ID와 인용으로 알려줘.","answerFacts":["어깨"],"noEvidence":false}
+
+답변:
+
+상품 202의 2026년 10월 1일부터 13일까지 작성된 2점 이하 리뷰 중, 요청하신 '어깨가 눌려 아픈 경험'과 관련된 내용은 다음과 같습니다.
+
+*   **리뷰 #2012**: "가방 끈이 어깨를 파고들어 멍이 들었어요."
+
+참고로 함께 검색된 리뷰 #2013은 어깨 통증에 관한 실제 경험이 아니라 배송 문제로 별점을 낮게 준 사례임을 알려드립니다.
+
+실제 도구·인용:
+
+```json
+[
+  {
+    "name": "summarize_reviews",
+    "args": {
+      "productId": 202,
+      "query": "어깨가 눌려 아픔 짐 메면 아픔 어깨 통증",
+      "endDate": "2026-10-13",
+      "startDate": "2026-10-01",
+      "maxRating": 2
+    },
+    "result": {
+      "status": "ok",
+      "mode": "semantic",
+      "scope": {
+        "sourceType": "review",
+        "timezone": "Asia/Seoul",
+        "unit": "source",
+        "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+        "query": "어깨가 눌려 아픔 짐 메면 아픔 어깨 통증",
+        "productIds": [
+          202
+        ],
+        "maxRating": 2,
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-13",
+        "take": 5,
+        "checkedAt": "2026-10-13T11:02:40.846Z"
+      },
+      "coverage": {
+        "total": 2,
+        "ready": 2,
+        "pending": 0,
+        "failed": 0,
+        "partial": false
+      },
+      "data": {
+        "sources": [
+          {
+            "sourceType": "review",
+            "id": 2012,
+            "productId": 202,
+            "rating": 2,
+            "createdAt": "2026-10-02T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "가방 끈이 어깨를 파고들어 멍이 들었어요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2013,
+            "productId": 202,
+            "rating": 2,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "걱정했던 \"가방 끈이 어깨를 파고들어 멍이 들었어요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+              }
+            ]
+          }
+        ],
+        "candidateChunkCount": 2,
+        "omittedSourceCount": 0,
+        "contextTruncated": false
+      },
+      "error": null
+    }
+  }
+]
+```
+
+보조 판정: {"conditions":true,"evidence":true,"polarity":true,"noUnsupportedClaims":true,"stateExplanation":true,"reason":"조건과 원문 ID, 인용문을 모두 정확하게 포함하였으며, 불만과 긍정 리뷰에 대한 구분도 적절하게 처리되었습니다."}
+
+사람 판정: **미검토**
+
+불일치 이유: 미작성
+
+## 6. final-v2-2-absent
+
+상품 202의 2026년 10월 1일부터 13일까지 리뷰에서 야간 조도 감지 기능이 고장났다는 불만을 찾아줘.
+
+정답 조건: {"caseId":"final-v2-2-absent","query":"야간 조도 감지 기능이 고장났다는 불만","productId":202,"maxRating":null,"startDate":"2026-10-01","endDate":"2026-10-13","relevantIds":[],"reason":"지정 기능의 고장 경험은 조건 범위에 없다. 미사용이라는 원문은 긍정·고장 경험의 근거가 아니다.","question":"상품 202의 2026년 10월 1일부터 13일까지 리뷰에서 야간 조도 감지 기능이 고장났다는 불만을 찾아줘.","answerFacts":[],"noEvidence":true}
+
+답변:
+
+요청하신 기간(2026-10-01 ~ 2026-10-13) 내 상품 202의 리뷰를 분석한 결과, 야간 조도 감지 기능이 고장났다는 불만은 확인되지 않았습니다.
+
+검색된 리뷰들에서는 해당 기능을 사용하지 않았다는 내용만 확인되었습니다.
+
+실제 도구·인용:
+
+```json
+[
+  {
+    "name": "summarize_reviews",
+    "args": {
+      "startDate": "2026-10-01",
+      "query": "야간 조도 감지 고장",
+      "endDate": "2026-10-13",
+      "productId": 202
+    },
+    "result": {
+      "status": "ok",
+      "mode": "semantic",
+      "scope": {
+        "sourceType": "review",
+        "timezone": "Asia/Seoul",
+        "unit": "source",
+        "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+        "query": "야간 조도 감지 고장",
+        "productIds": [
+          202
+        ],
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-13",
+        "take": 5,
+        "checkedAt": "2026-10-13T11:02:52.726Z"
+      },
+      "coverage": {
+        "total": 9,
+        "ready": 9,
+        "pending": 0,
+        "failed": 0,
+        "partial": false
+      },
+      "data": {
+        "sources": [
+          {
+            "sourceType": "review",
+            "id": 2016,
+            "productId": 202,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 202의 디자인이 마음에 듭니다. 야간 조도 감지 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2017,
+            "productId": 202,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 202의 디자인이 마음에 듭니다. 야간 조도 감지 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2018,
+            "productId": 202,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 202의 디자인이 마음에 듭니다. 야간 조도 감지 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2019,
+            "productId": 202,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 202의 디자인이 마음에 듭니다. 야간 조도 감지 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2020,
+            "productId": 202,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 202의 디자인이 마음에 듭니다. 야간 조도 감지 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          }
+        ],
+        "candidateChunkCount": 9,
+        "omittedSourceCount": 4,
+        "contextTruncated": false
+      },
+      "error": null
+    }
+  }
+]
+```
+
+보조 판정: {"conditions":true,"evidence":true,"polarity":true,"noUnsupportedClaims":true,"stateExplanation":true,"reason":"검색 기간과 상품 ID를 정확히 설정하여 도구를 호출하였고, 결과 데이터를 바탕으로 해당 불만이 존재하지 않음을 올바르게 설명하였습니다."}
+
+사람 판정: **미검토**
+
+불일치 이유: 미작성
+
+## 7. final-v2-3-meaning
+
+상품 203의 2026년 10월 1일부터 13일까지 리뷰에서 가림막으로 사생활을 보호하기 어렵다는 불만을 찾아 원본 ID와 인용으로 알려줘.
+
+정답 조건: {"caseId":"final-v2-3-meaning","query":"가림막으로 사생활을 보호하기 어렵다는 불만","productId":203,"maxRating":null,"startDate":"2026-10-01","endDate":"2026-10-13","relevantIds":[2021,2022],"reason":"본문으로 확인한 불만 두 건. 높은 별점 포함. 낮은 별점의 문제 없음·기간 밖·다른 문제는 비관련.","question":"상품 203의 2026년 10월 1일부터 13일까지 리뷰에서 가림막으로 사생활을 보호하기 어렵다는 불만을 찾아 원본 ID와 인용으로 알려줘.","answerFacts":["실루엣"],"noEvidence":false}
+
+답변:
+
+요청하신 기간(2026-10-01 ~ 2026-10-13) 내 상품 203의 리뷰 중 사생활 보호 관련 불만 내용은 다음과 같습니다.
+
+*   **리뷰 #2021**: "햇빛이 비치면 커튼 너머 실루엣이 그대로 보여요."
+*   **리뷰 #2022**: "햇빛이 비치면 커튼 너머 실루엣이 그대로 보여요."
+
+참고로 리뷰 #2023은 해당 현상에 대해 "실제로 없었다"고 언급하고 있으나, 위 두 리뷰에서 동일한 사생활 보호 문제를 지적하고 있습니다.
+
+실제 도구·인용:
+
+```json
+[
+  {
+    "name": "summarize_reviews",
+    "args": {
+      "startDate": "2026-10-01",
+      "query": "가림막 사생활 보호 불만",
+      "endDate": "2026-10-13",
+      "productId": 203
+    },
+    "result": {
+      "status": "ok",
+      "mode": "semantic",
+      "scope": {
+        "sourceType": "review",
+        "timezone": "Asia/Seoul",
+        "unit": "source",
+        "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+        "query": "가림막 사생활 보호 불만",
+        "productIds": [
+          203
+        ],
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-13",
+        "take": 5,
+        "checkedAt": "2026-10-13T11:03:05.165Z"
+      },
+      "coverage": {
+        "total": 9,
+        "ready": 9,
+        "pending": 0,
+        "failed": 0,
+        "partial": false
+      },
+      "data": {
+        "sources": [
+          {
+            "sourceType": "review",
+            "id": 2021,
+            "productId": 203,
+            "rating": 5,
+            "createdAt": "2026-10-02T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "햇빛이 비치면 커튼 너머 실루엣이 그대로 보여요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2022,
+            "productId": 203,
+            "rating": 2,
+            "createdAt": "2026-10-02T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "햇빛이 비치면 커튼 너머 실루엣이 그대로 보여요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2023,
+            "productId": 203,
+            "rating": 2,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "걱정했던 \"햇빛이 비치면 커튼 너머 실루엣이 그대로 보여요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2026,
+            "productId": 203,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 203의 디자인이 마음에 듭니다. 오프라인 번역 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2027,
+            "productId": 203,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 203의 디자인이 마음에 듭니다. 오프라인 번역 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          }
+        ],
+        "candidateChunkCount": 9,
+        "omittedSourceCount": 4,
+        "contextTruncated": false
+      },
+      "error": null
+    }
+  }
+]
+```
+
+보조 판정: null
+
+사람 판정: **미검토**
+
+불일치 이유: 미작성
+
+## 8. final-v2-3-rating
+
+상품 203의 2026년 10월 1일부터 13일까지 2점 이하 리뷰에서 가림막으로 사생활을 보호하기 어렵다는 불만을 찾아 원본 ID와 인용으로 알려줘.
+
+정답 조건: {"caseId":"final-v2-3-rating","query":"가림막으로 사생활을 보호하기 어렵다는 불만의 구체적 사례","productId":203,"maxRating":2,"startDate":"2026-10-01","endDate":"2026-10-13","relevantIds":[2022],"reason":"상품·기간·2점 이하를 만족하며 본문에 해당 불만이 있는 한 건. 낮은 별점의 문제 없음은 비관련.","question":"상품 203의 2026년 10월 1일부터 13일까지 2점 이하 리뷰에서 가림막으로 사생활을 보호하기 어렵다는 불만을 찾아 원본 ID와 인용으로 알려줘.","answerFacts":["실루엣"],"noEvidence":false}
+
+답변:
+
+상품 203의 2026년 10월 1일부터 13일까지 작성된 2점 이하 리뷰 중, 사생활 보호와 관련된 불만 내용은 다음과 같습니다.
+
+*   **리뷰 #2022**: "햇빛이 비치면 커튼 너머 실루엣이 그대로 보여요."
+
+참고로 함께 검색된 리뷰 #2023은 배송 문제로 별점을 낮게 부여한 사례이며, 실루엣 노출 문제는 없었다고 언급하고 있습니다.
+
+실제 도구·인용:
+
+```json
+[
+  {
+    "name": "summarize_reviews",
+    "args": {
+      "productId": 203,
+      "maxRating": 2,
+      "endDate": "2026-10-13",
+      "startDate": "2026-10-01",
+      "query": "가림막 사생활 보호 불만"
+    },
+    "result": {
+      "status": "ok",
+      "mode": "semantic",
+      "scope": {
+        "sourceType": "review",
+        "timezone": "Asia/Seoul",
+        "unit": "source",
+        "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+        "query": "가림막 사생활 보호 불만",
+        "productIds": [
+          203
+        ],
+        "maxRating": 2,
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-13",
+        "take": 5,
+        "checkedAt": "2026-10-13T11:03:16.982Z"
+      },
+      "coverage": {
+        "total": 2,
+        "ready": 2,
+        "pending": 0,
+        "failed": 0,
+        "partial": false
+      },
+      "data": {
+        "sources": [
+          {
+            "sourceType": "review",
+            "id": 2022,
+            "productId": 203,
+            "rating": 2,
+            "createdAt": "2026-10-02T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "햇빛이 비치면 커튼 너머 실루엣이 그대로 보여요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2023,
+            "productId": 203,
+            "rating": 2,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "걱정했던 \"햇빛이 비치면 커튼 너머 실루엣이 그대로 보여요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+              }
+            ]
+          }
+        ],
+        "candidateChunkCount": 2,
+        "omittedSourceCount": 0,
+        "contextTruncated": false
+      },
+      "error": null
+    }
+  }
+]
+```
+
+보조 판정: {"conditions":true,"evidence":true,"polarity":true,"noUnsupportedClaims":true,"stateExplanation":true,"reason":"조건과 원문 데이터가 모두 정확하게 반영되었으며, 불만 사례를 인용하여 정답을 올바르게 도출함."}
+
+사람 판정: **미검토**
+
+불일치 이유: 미작성
+
+## 9. final-v2-3-absent
+
+상품 203의 2026년 10월 1일부터 13일까지 리뷰에서 오프라인 번역 기능이 고장났다는 불만을 찾아줘.
+
+정답 조건: {"caseId":"final-v2-3-absent","query":"오프라인 번역 기능이 고장났다는 불만","productId":203,"maxRating":null,"startDate":"2026-10-01","endDate":"2026-10-13","relevantIds":[],"reason":"지정 기능의 고장 경험은 조건 범위에 없다. 미사용이라는 원문은 긍정·고장 경험의 근거가 아니다.","question":"상품 203의 2026년 10월 1일부터 13일까지 리뷰에서 오프라인 번역 기능이 고장났다는 불만을 찾아줘.","answerFacts":[],"noEvidence":true}
+
+답변:
+
+요청하신 기간(2026-10-01 ~ 2026-10-13) 내 상품 203의 리뷰를 분석한 결과, 오프라인 번역 기능이 고장 났다는 불만은 찾을 수 없었습니다. 검색된 리뷰들은 해당 기능을 사용하지 않았다는 내용이거나 디자인에 대한 긍정적인 평가였습니다.
+
+실제 도구·인용:
+
+```json
+[
+  {
+    "name": "summarize_reviews",
+    "args": {
+      "query": "오프라인 번역 고장",
+      "productId": 203,
+      "endDate": "2026-10-13",
+      "startDate": "2026-10-01"
+    },
+    "result": {
+      "status": "ok",
+      "mode": "semantic",
+      "scope": {
+        "sourceType": "review",
+        "timezone": "Asia/Seoul",
+        "unit": "source",
+        "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+        "query": "오프라인 번역 고장",
+        "productIds": [
+          203
+        ],
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-13",
+        "take": 5,
+        "checkedAt": "2026-10-13T11:03:29.595Z"
+      },
+      "coverage": {
+        "total": 9,
+        "ready": 9,
+        "pending": 0,
+        "failed": 0,
+        "partial": false
+      },
+      "data": {
+        "sources": [
+          {
+            "sourceType": "review",
+            "id": 2026,
+            "productId": 203,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 203의 디자인이 마음에 듭니다. 오프라인 번역 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2027,
+            "productId": 203,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 203의 디자인이 마음에 듭니다. 오프라인 번역 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2028,
+            "productId": 203,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 203의 디자인이 마음에 듭니다. 오프라인 번역 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2029,
+            "productId": 203,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 203의 디자인이 마음에 듭니다. 오프라인 번역 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2030,
+            "productId": 203,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 203의 디자인이 마음에 듭니다. 오프라인 번역 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          }
+        ],
+        "candidateChunkCount": 9,
+        "omittedSourceCount": 4,
+        "contextTruncated": false
+      },
+      "error": null
+    }
+  }
+]
+```
+
+보조 판정: {"conditions":true,"evidence":true,"polarity":true,"noUnsupportedClaims":true,"stateExplanation":true,"reason":"도구 인자와 조건이 일치하며, 검색 결과 내에 해당 불만이 존재하지 않음을 정확히 확인하고 안내함."}
+
+사람 판정: **미검토**
+
+불일치 이유: 미작성
+
+## 10. final-v2-4-meaning
+
+상품 204의 2026년 10월 1일부터 13일까지 리뷰에서 세탁 중 색이 다른 빨래로 옮겨간 문제을 찾아 원본 ID와 인용으로 알려줘.
+
+정답 조건: {"caseId":"final-v2-4-meaning","query":"세탁 중 색이 다른 빨래로 옮겨간 문제","productId":204,"maxRating":null,"startDate":"2026-10-01","endDate":"2026-10-13","relevantIds":[2031,2032],"reason":"본문으로 확인한 불만 두 건. 높은 별점 포함. 낮은 별점의 문제 없음·기간 밖·다른 문제는 비관련.","question":"상품 204의 2026년 10월 1일부터 13일까지 리뷰에서 세탁 중 색이 다른 빨래로 옮겨간 문제을 찾아 원본 ID와 인용으로 알려줘.","answerFacts":["물들"],"noEvidence":false}
+
+답변:
+
+상품 204에 대하여 요청하신 기간(2026-10-01~10-13) 내 리뷰를 확인한 결과, 세탁 중 색이 옮겨가는 문제와 관련된 내용은 아래와 같습니다.
+
+* **리뷰 #2031 (평점 5):** "같이 빤 흰 옷이 푸른색으로 물들어 버렸어요."
+* **리뷰 #2032 (평점 2):** "같이 빤 흰 옷이 푸른색으로 물들어 버렸어요."
+
+참고로 리뷰 #2033의 경우, 동일한 현상을 언급하며 해당 문제가 실제로 발생하지 않았음을 언급하고 있습니다.
+
+실제 도구·인용:
+
+```json
+[
+  {
+    "name": "summarize_reviews",
+    "args": {
+      "productId": 204,
+      "endDate": "2026-10-13",
+      "query": "세탁 중 색이 다른 빨래로 옮겨간 문제",
+      "startDate": "2026-10-01"
+    },
+    "result": {
+      "status": "ok",
+      "mode": "semantic",
+      "scope": {
+        "sourceType": "review",
+        "timezone": "Asia/Seoul",
+        "unit": "source",
+        "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+        "query": "세탁 중 색이 다른 빨래로 옮겨간 문제",
+        "productIds": [
+          204
+        ],
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-13",
+        "take": 5,
+        "checkedAt": "2026-10-13T11:03:41.682Z"
+      },
+      "coverage": {
+        "total": 9,
+        "ready": 9,
+        "pending": 0,
+        "failed": 0,
+        "partial": false
+      },
+      "data": {
+        "sources": [
+          {
+            "sourceType": "review",
+            "id": 2031,
+            "productId": 204,
+            "rating": 5,
+            "createdAt": "2026-10-02T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "같이 빤 흰 옷이 푸른색으로 물들어 버렸어요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2032,
+            "productId": 204,
+            "rating": 2,
+            "createdAt": "2026-10-02T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "같이 빤 흰 옷이 푸른색으로 물들어 버렸어요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2033,
+            "productId": 204,
+            "rating": 2,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "걱정했던 \"같이 빤 흰 옷이 푸른색으로 물들어 버렸어요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2035,
+            "productId": 204,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "책표지 모서리가 일주일 만에 너덜너덜해졌어요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2036,
+            "productId": 204,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 204의 디자인이 마음에 듭니다. 자동 세제 투입 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          }
+        ],
+        "candidateChunkCount": 9,
+        "omittedSourceCount": 4,
+        "contextTruncated": false
+      },
+      "error": null
+    }
+  }
+]
+```
+
+보조 판정: {"conditions":true,"evidence":true,"polarity":true,"noUnsupportedClaims":false,"stateExplanation":true,"reason":"답변에서 리뷰 #2033의 내용을 언급하며, 해당 리뷰는 실제 불만이 없었음에도 불구하고 '동일한 현상을 언급하며'라고 서술하여 사용자가 불만으로 오해할 소지를 만들었습니다. 또한 자료에 없는 '문제가 발생하지 않았음을 언급하고 있습니다'라는 해석적 설명을 덧붙여 지원되지 않는 내용을 포함했습니다."}
+
+사람 판정: **미검토**
+
+불일치 이유: 미작성
+
+## 11. final-v2-4-rating
+
+상품 204의 2026년 10월 1일부터 13일까지 2점 이하 리뷰에서 세탁 중 색이 다른 빨래로 옮겨간 문제을 찾아 원본 ID와 인용으로 알려줘.
+
+정답 조건: {"caseId":"final-v2-4-rating","query":"세탁 중 색이 다른 빨래로 옮겨간 문제의 구체적 사례","productId":204,"maxRating":2,"startDate":"2026-10-01","endDate":"2026-10-13","relevantIds":[2032],"reason":"상품·기간·2점 이하를 만족하며 본문에 해당 불만이 있는 한 건. 낮은 별점의 문제 없음은 비관련.","question":"상품 204의 2026년 10월 1일부터 13일까지 2점 이하 리뷰에서 세탁 중 색이 다른 빨래로 옮겨간 문제을 찾아 원본 ID와 인용으로 알려줘.","answerFacts":["물들"],"noEvidence":false}
+
+답변:
+
+요청하신 상품 204의 2026년 10월 1일부터 13일까지 2점 이하 리뷰 중, 세탁 시 색이 번지는 문제에 대한 내용은 다음과 같습니다.
+
+*   **리뷰 #2032**: "같이 빤 흰 옷이 푸른색으로 물들어 버렸어요."
+
+참고로, 동일한 문구가 포함된 리뷰 #2033의 경우, 해당 작성자는 언급된 문제(이염)를 경험하지 않았으며, 별점은 배송 문제로 낮게 부여했다고 밝히고 있습니다.
+
+실제 도구·인용:
+
+```json
+[
+  {
+    "name": "summarize_reviews",
+    "args": {
+      "productId": 204,
+      "query": "세탁 중 색이 다른 빨래로 옮겨간 문제",
+      "endDate": "2026-10-13",
+      "startDate": "2026-10-01",
+      "maxRating": 2
+    },
+    "result": {
+      "status": "ok",
+      "mode": "semantic",
+      "scope": {
+        "sourceType": "review",
+        "timezone": "Asia/Seoul",
+        "unit": "source",
+        "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+        "query": "세탁 중 색이 다른 빨래로 옮겨간 문제",
+        "productIds": [
+          204
+        ],
+        "maxRating": 2,
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-13",
+        "take": 5,
+        "checkedAt": "2026-10-13T11:03:51.730Z"
+      },
+      "coverage": {
+        "total": 2,
+        "ready": 2,
+        "pending": 0,
+        "failed": 0,
+        "partial": false
+      },
+      "data": {
+        "sources": [
+          {
+            "sourceType": "review",
+            "id": 2032,
+            "productId": 204,
+            "rating": 2,
+            "createdAt": "2026-10-02T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "같이 빤 흰 옷이 푸른색으로 물들어 버렸어요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2033,
+            "productId": 204,
+            "rating": 2,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "걱정했던 \"같이 빤 흰 옷이 푸른색으로 물들어 버렸어요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+              }
+            ]
+          }
+        ],
+        "candidateChunkCount": 2,
+        "omittedSourceCount": 0,
+        "contextTruncated": false
+      },
+      "error": null
+    }
+  }
+]
+```
+
+보조 판정: {"conditions":true,"evidence":true,"polarity":true,"noUnsupportedClaims":true,"stateExplanation":true,"reason":"조건과 원문 데이터를 모두 충족하였으며, 리뷰 ID 2032의 이염 문제를 정확히 인용하고 2033의 반대 사례까지 합리적으로 설명함."}
+
+사람 판정: **미검토**
+
+불일치 이유: 미작성
+
+## 12. final-v2-4-absent
+
+상품 204의 2026년 10월 1일부터 13일까지 리뷰에서 자동 세제 투입 기능이 고장났다는 불만을 찾아줘.
+
+정답 조건: {"caseId":"final-v2-4-absent","query":"자동 세제 투입 기능이 고장났다는 불만","productId":204,"maxRating":null,"startDate":"2026-10-01","endDate":"2026-10-13","relevantIds":[],"reason":"지정 기능의 고장 경험은 조건 범위에 없다. 미사용이라는 원문은 긍정·고장 경험의 근거가 아니다.","question":"상품 204의 2026년 10월 1일부터 13일까지 리뷰에서 자동 세제 투입 기능이 고장났다는 불만을 찾아줘.","answerFacts":[],"noEvidence":true}
+
+답변:
+
+요청하신 기간(2026-10-01 ~ 2026-10-13) 동안 상품 204에 대한 리뷰를 분석한 결과, '자동 세제 투입 기능' 고장에 대한 불만은 찾을 수 없었습니다.
+
+검색된 리뷰들에서는 해당 기능을 사용하지 않았다는 내용만 확인되었습니다.
+
+*   **리뷰 #2036, #2037, #2038, #2039, #2040**: "자동 세제 투입 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+
+실제 도구·인용:
+
+```json
+[
+  {
+    "name": "summarize_reviews",
+    "args": {
+      "query": "자동 세제 투입 기능 고장",
+      "endDate": "2026-10-13",
+      "startDate": "2026-10-01",
+      "productId": 204
+    },
+    "result": {
+      "status": "ok",
+      "mode": "semantic",
+      "scope": {
+        "sourceType": "review",
+        "timezone": "Asia/Seoul",
+        "unit": "source",
+        "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+        "query": "자동 세제 투입 기능 고장",
+        "productIds": [
+          204
+        ],
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-13",
+        "take": 5,
+        "checkedAt": "2026-10-13T11:04:05.781Z"
+      },
+      "coverage": {
+        "total": 9,
+        "ready": 9,
+        "pending": 0,
+        "failed": 0,
+        "partial": false
+      },
+      "data": {
+        "sources": [
+          {
+            "sourceType": "review",
+            "id": 2036,
+            "productId": 204,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 204의 디자인이 마음에 듭니다. 자동 세제 투입 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2037,
+            "productId": 204,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 204의 디자인이 마음에 듭니다. 자동 세제 투입 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2038,
+            "productId": 204,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 204의 디자인이 마음에 듭니다. 자동 세제 투입 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2039,
+            "productId": 204,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 204의 디자인이 마음에 듭니다. 자동 세제 투입 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2040,
+            "productId": 204,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 204의 디자인이 마음에 듭니다. 자동 세제 투입 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          }
+        ],
+        "candidateChunkCount": 9,
+        "omittedSourceCount": 4,
+        "contextTruncated": false
+      },
+      "error": null
+    }
+  }
+]
+```
+
+보조 판정: {"conditions":true,"evidence":true,"polarity":true,"noUnsupportedClaims":true,"stateExplanation":true,"reason":"도구 호출 인자가 요청 기간 및 상품 ID를 정확히 준수하였으며, 검색 결과에 불만이 없음을 원문에 기반하여 정확히 답변하였습니다."}
+
+사람 판정: **미검토**
+
+불일치 이유: 미작성
+
+## 13. final-v2-5-meaning
+
+상품 205의 2026년 10월 1일부터 13일까지 리뷰에서 책의 겉면이 마찰을 견디지 못한 불만을 찾아 원본 ID와 인용으로 알려줘.
+
+정답 조건: {"caseId":"final-v2-5-meaning","query":"책의 겉면이 마찰을 견디지 못한 불만","productId":205,"maxRating":null,"startDate":"2026-10-01","endDate":"2026-10-13","relevantIds":[2041,2042],"reason":"본문으로 확인한 불만 두 건. 높은 별점 포함. 낮은 별점의 문제 없음·기간 밖·다른 문제는 비관련.","question":"상품 205의 2026년 10월 1일부터 13일까지 리뷰에서 책의 겉면이 마찰을 견디지 못한 불만을 찾아 원본 ID와 인용으로 알려줘.","answerFacts":["모서리"],"noEvidence":false}
+
+답변:
+
+상품 205의 2026년 10월 1일부터 13일까지의 리뷰 중, 책 겉면 마찰로 인한 손상과 관련된 불만 사례는 다음과 같습니다.
+
+* **리뷰 #2042**: "책표지 모서리가 일주일 만에 너덜너덜해졌어요."
+
+(참고: 리뷰 #2041은 동일한 인용을 포함하고 있으나 평점이 5점입니다. 리뷰 #2043은 해당 현상이 없었다고 언급하고 있습니다.)
+
+실제 도구·인용:
+
+```json
+[
+  {
+    "name": "summarize_reviews",
+    "args": {
+      "query": "책 겉면 마찰 손상 헤짐 까짐",
+      "endDate": "2026-10-13",
+      "productId": 205,
+      "startDate": "2026-10-01"
+    },
+    "result": {
+      "status": "ok",
+      "mode": "semantic",
+      "scope": {
+        "sourceType": "review",
+        "timezone": "Asia/Seoul",
+        "unit": "source",
+        "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+        "query": "책 겉면 마찰 손상 헤짐 까짐",
+        "productIds": [
+          205
+        ],
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-13",
+        "take": 5,
+        "checkedAt": "2026-10-13T11:04:15.124Z"
+      },
+      "coverage": {
+        "total": 9,
+        "ready": 9,
+        "pending": 0,
+        "failed": 0,
+        "partial": false
+      },
+      "data": {
+        "sources": [
+          {
+            "sourceType": "review",
+            "id": 2041,
+            "productId": 205,
+            "rating": 5,
+            "createdAt": "2026-10-02T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "책표지 모서리가 일주일 만에 너덜너덜해졌어요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2042,
+            "productId": 205,
+            "rating": 2,
+            "createdAt": "2026-10-02T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "책표지 모서리가 일주일 만에 너덜너덜해졌어요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2043,
+            "productId": 205,
+            "rating": 2,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "걱정했던 \"책표지 모서리가 일주일 만에 너덜너덜해졌어요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2045,
+            "productId": 205,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "냉장 보관했는데 며칠 만에 곰팡이가 퍼졌어요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2046,
+            "productId": 205,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 205의 디자인이 마음에 듭니다. 자동 급식 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          }
+        ],
+        "candidateChunkCount": 9,
+        "omittedSourceCount": 4,
+        "contextTruncated": false
+      },
+      "error": null
+    }
+  }
+]
+```
+
+보조 판정: {"conditions":true,"evidence":true,"polarity":true,"noUnsupportedClaims":true,"stateExplanation":true,"reason":"조건과 도구 사용이 정확하며, 2041과 2042가 불만을 직접 언급하고 있음을 명시했습니다. 2043은 불만이 없었다고 부정한 리뷰임에도 이를 적절히 필터링하고 인용하여 설명했습니다."}
+
+사람 판정: **미검토**
+
+불일치 이유: 미작성
+
+## 14. final-v2-5-rating
+
+상품 205의 2026년 10월 1일부터 13일까지 2점 이하 리뷰에서 책의 겉면이 마찰을 견디지 못한 불만을 찾아 원본 ID와 인용으로 알려줘.
+
+정답 조건: {"caseId":"final-v2-5-rating","query":"책의 겉면이 마찰을 견디지 못한 불만의 구체적 사례","productId":205,"maxRating":2,"startDate":"2026-10-01","endDate":"2026-10-13","relevantIds":[2042],"reason":"상품·기간·2점 이하를 만족하며 본문에 해당 불만이 있는 한 건. 낮은 별점의 문제 없음은 비관련.","question":"상품 205의 2026년 10월 1일부터 13일까지 2점 이하 리뷰에서 책의 겉면이 마찰을 견디지 못한 불만을 찾아 원본 ID와 인용으로 알려줘.","answerFacts":["모서리"],"noEvidence":false}
+
+답변:
+
+상품 205에 대하여 요청하신 기간(2026-10-01~2026-10-13) 내 2점 이하 리뷰를 분석한 결과는 다음과 같습니다.
+
+책의 겉면(표지) 마찰과 관련된 불만은 아래 리뷰에서 확인되었습니다.
+
+*   **리뷰 #2042**: "책표지 모서리가 일주일 만에 너덜너덜해졌어요."
+
+참고로, 리뷰 #2043은 배송 일정에 대한 불만으로, 본문에 언급된 표지 관련 내용은 실제 문제가 없었다고 밝히고 있어 해당 불만과는 무관합니다.
+
+실제 도구·인용:
+
+```json
+[
+  {
+    "name": "summarize_reviews",
+    "args": {
+      "endDate": "2026-10-13",
+      "query": "겉면 마찰 불만",
+      "startDate": "2026-10-01",
+      "maxRating": 2,
+      "productId": 205
+    },
+    "result": {
+      "status": "ok",
+      "mode": "semantic",
+      "scope": {
+        "sourceType": "review",
+        "timezone": "Asia/Seoul",
+        "unit": "source",
+        "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+        "query": "겉면 마찰 불만",
+        "productIds": [
+          205
+        ],
+        "maxRating": 2,
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-13",
+        "take": 5,
+        "checkedAt": "2026-10-13T11:04:28.768Z"
+      },
+      "coverage": {
+        "total": 2,
+        "ready": 2,
+        "pending": 0,
+        "failed": 0,
+        "partial": false
+      },
+      "data": {
+        "sources": [
+          {
+            "sourceType": "review",
+            "id": 2042,
+            "productId": 205,
+            "rating": 2,
+            "createdAt": "2026-10-02T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "책표지 모서리가 일주일 만에 너덜너덜해졌어요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2043,
+            "productId": 205,
+            "rating": 2,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "걱정했던 \"책표지 모서리가 일주일 만에 너덜너덜해졌어요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+              }
+            ]
+          }
+        ],
+        "candidateChunkCount": 2,
+        "omittedSourceCount": 0,
+        "contextTruncated": false
+      },
+      "error": null
+    }
+  }
+]
+```
+
+보조 판정: {"conditions":true,"evidence":true,"polarity":true,"noUnsupportedClaims":true,"stateExplanation":true,"reason":"상품, 기간, 별점 조건을 준수하였으며, 관련 원본 ID와 구체적인 인용을 제시하여 질문의 요구사항을 정확히 충족했습니다. 또한 리뷰 #2043의 내용을 긍정적인 맥락으로 정확히 해석하였습니다."}
+
+사람 판정: **미검토**
+
+불일치 이유: 미작성
+
+## 15. final-v2-5-absent
+
+상품 205의 2026년 10월 1일부터 13일까지 리뷰에서 자동 급식 기능이 고장났다는 불만을 찾아줘.
+
+정답 조건: {"caseId":"final-v2-5-absent","query":"자동 급식 기능이 고장났다는 불만","productId":205,"maxRating":null,"startDate":"2026-10-01","endDate":"2026-10-13","relevantIds":[],"reason":"지정 기능의 고장 경험은 조건 범위에 없다. 미사용이라는 원문은 긍정·고장 경험의 근거가 아니다.","question":"상품 205의 2026년 10월 1일부터 13일까지 리뷰에서 자동 급식 기능이 고장났다는 불만을 찾아줘.","answerFacts":[],"noEvidence":true}
+
+답변:
+
+요청하신 기간(2026-10-01 ~ 2026-10-13) 동안 상품 205에 대해 검색한 결과, 자동 급식 기능이 고장 났다는 불만 내용은 찾을 수 없었습니다. 검색된 리뷰들은 해당 기능을 사용하지 않았다는 내용이었습니다.
+
+실제 도구·인용:
+
+```json
+[
+  {
+    "name": "summarize_reviews",
+    "args": {
+      "query": "자동 급식 기능 고장",
+      "endDate": "2026-10-13",
+      "startDate": "2026-10-01",
+      "productId": 205
+    },
+    "result": {
+      "status": "ok",
+      "mode": "semantic",
+      "scope": {
+        "sourceType": "review",
+        "timezone": "Asia/Seoul",
+        "unit": "source",
+        "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+        "query": "자동 급식 기능 고장",
+        "productIds": [
+          205
+        ],
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-13",
+        "take": 5,
+        "checkedAt": "2026-10-13T11:04:39.291Z"
+      },
+      "coverage": {
+        "total": 9,
+        "ready": 9,
+        "pending": 0,
+        "failed": 0,
+        "partial": false
+      },
+      "data": {
+        "sources": [
+          {
+            "sourceType": "review",
+            "id": 2046,
+            "productId": 205,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 205의 디자인이 마음에 듭니다. 자동 급식 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2047,
+            "productId": 205,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 205의 디자인이 마음에 듭니다. 자동 급식 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2048,
+            "productId": 205,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 205의 디자인이 마음에 듭니다. 자동 급식 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2049,
+            "productId": 205,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 205의 디자인이 마음에 듭니다. 자동 급식 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2050,
+            "productId": 205,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 205의 디자인이 마음에 듭니다. 자동 급식 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          }
+        ],
+        "candidateChunkCount": 9,
+        "omittedSourceCount": 4,
+        "contextTruncated": false
+      },
+      "error": null
+    }
+  }
+]
+```
+
+보조 판정: {"conditions":true,"evidence":true,"polarity":true,"noUnsupportedClaims":true,"stateExplanation":true,"reason":"도구 인자를 정확히 전달하였으며, 검색 결과에 고장 불만이 없음을 사실대로 답변하였습니다."}
+
+사람 판정: **미검토**
+
+불일치 이유: 미작성
+
+## 16. final-v2-6-meaning
+
+상품 206의 2026년 10월 1일부터 13일까지 리뷰에서 보관한 식품에 균이 생겨 먹기 힘든 경험을 찾아 원본 ID와 인용으로 알려줘.
+
+정답 조건: {"caseId":"final-v2-6-meaning","query":"보관한 식품에 균이 생겨 먹기 힘든 경험","productId":206,"maxRating":null,"startDate":"2026-10-01","endDate":"2026-10-13","relevantIds":[2051,2052],"reason":"본문으로 확인한 불만 두 건. 높은 별점 포함. 낮은 별점의 문제 없음·기간 밖·다른 문제는 비관련.","question":"상품 206의 2026년 10월 1일부터 13일까지 리뷰에서 보관한 식품에 균이 생겨 먹기 힘든 경험을 찾아 원본 ID와 인용으로 알려줘.","answerFacts":["곰팡이"],"noEvidence":false}
+
+답변:
+
+상품 206에 대해 요청하신 기간(2026년 10월 1일~13일) 내 리뷰를 분석한 결과, 보관 중 식품에 곰팡이가 생겼다는 내용의 리뷰를 찾았습니다.
+
+* **리뷰 #2051, #2052**: "냉장 보관했는데 며칠 만에 곰팡이가 퍼졌어요."
+
+참고로 리뷰 #2053은 유사한 문제를 언급하며 오히려 그런 현상이 없었다고 기술하고 있어, 해당 경험과 상반된 내용을 포함하고 있음을 알려드립니다.
+
+실제 도구·인용:
+
+```json
+[
+  {
+    "name": "summarize_reviews",
+    "args": {
+      "startDate": "2026-10-01",
+      "productId": 206,
+      "endDate": "2026-10-13",
+      "query": "균이 생겨 먹기 힘든 식품 보관"
+    },
+    "result": {
+      "status": "ok",
+      "mode": "semantic",
+      "scope": {
+        "sourceType": "review",
+        "timezone": "Asia/Seoul",
+        "unit": "source",
+        "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+        "query": "균이 생겨 먹기 힘든 식품 보관",
+        "productIds": [
+          206
+        ],
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-13",
+        "take": 5,
+        "checkedAt": "2026-10-13T11:04:53.969Z"
+      },
+      "coverage": {
+        "total": 9,
+        "ready": 9,
+        "pending": 0,
+        "failed": 0,
+        "partial": false
+      },
+      "data": {
+        "sources": [
+          {
+            "sourceType": "review",
+            "id": 2051,
+            "productId": 206,
+            "rating": 5,
+            "createdAt": "2026-10-02T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "냉장 보관했는데 며칠 만에 곰팡이가 퍼졌어요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2052,
+            "productId": 206,
+            "rating": 2,
+            "createdAt": "2026-10-02T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "냉장 보관했는데 며칠 만에 곰팡이가 퍼졌어요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2053,
+            "productId": 206,
+            "rating": 2,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "걱정했던 \"냉장 보관했는데 며칠 만에 곰팡이가 퍼졌어요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2055,
+            "productId": 206,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "마우스를 가만히 놔도 커서가 혼자 움직여요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2056,
+            "productId": 206,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 206의 디자인이 마음에 듭니다. 모션 인식 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          }
+        ],
+        "candidateChunkCount": 9,
+        "omittedSourceCount": 4,
+        "contextTruncated": false
+      },
+      "error": null
+    }
+  }
+]
+```
+
+보조 판정: {"conditions":true,"evidence":true,"polarity":true,"noUnsupportedClaims":true,"stateExplanation":true,"reason":"요청한 상품 ID, 기간, 조건을 모두 준수하였으며, 관련 ID 2051과 2052의 불만 내용을 인용하여 정확하게 답변하였습니다. 특히 리뷰 2053의 부정적 문맥을 올바르게 파악하여 불만으로 오해하지 않고 배제하였습니다."}
+
+사람 판정: **미검토**
+
+불일치 이유: 미작성
+
+## 17. final-v2-6-rating
+
+상품 206의 2026년 10월 1일부터 13일까지 2점 이하 리뷰에서 보관한 식품에 균이 생겨 먹기 힘든 경험을 찾아 원본 ID와 인용으로 알려줘.
+
+정답 조건: {"caseId":"final-v2-6-rating","query":"보관한 식품에 균이 생겨 먹기 힘든 경험의 구체적 사례","productId":206,"maxRating":2,"startDate":"2026-10-01","endDate":"2026-10-13","relevantIds":[2052],"reason":"상품·기간·2점 이하를 만족하며 본문에 해당 불만이 있는 한 건. 낮은 별점의 문제 없음은 비관련.","question":"상품 206의 2026년 10월 1일부터 13일까지 2점 이하 리뷰에서 보관한 식품에 균이 생겨 먹기 힘든 경험을 찾아 원본 ID와 인용으로 알려줘.","answerFacts":["곰팡이"],"noEvidence":false}
+
+답변:
+
+요청하신 상품 206의 2026년 10월 1일부터 13일까지의 리뷰 중, 보관 관련 문제(곰팡이 등)에 대한 내용은 아래와 같습니다.
+
+*   **리뷰 #2052**: "냉장 보관했는데 며칠 만에 곰팡이가 퍼졌어요."
+
+참고로, 리뷰 #2053의 경우 해당 현상을 언급했으나 실제로는 겪지 않았으며 별점은 배송 문제로 낮게 준 것으로 확인되었습니다.
+
+실제 도구·인용:
+
+```json
+[
+  {
+    "name": "summarize_reviews",
+    "args": {
+      "maxRating": 2,
+      "endDate": "2026-10-13",
+      "query": "보관 식품 균 곰팡이 부패 먹기 힘듦",
+      "productId": 206,
+      "startDate": "2026-10-01"
+    },
+    "result": {
+      "status": "ok",
+      "mode": "semantic",
+      "scope": {
+        "sourceType": "review",
+        "timezone": "Asia/Seoul",
+        "unit": "source",
+        "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+        "query": "보관 식품 균 곰팡이 부패 먹기 힘듦",
+        "productIds": [
+          206
+        ],
+        "maxRating": 2,
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-13",
+        "take": 5,
+        "checkedAt": "2026-10-13T11:05:06.088Z"
+      },
+      "coverage": {
+        "total": 2,
+        "ready": 2,
+        "pending": 0,
+        "failed": 0,
+        "partial": false
+      },
+      "data": {
+        "sources": [
+          {
+            "sourceType": "review",
+            "id": 2052,
+            "productId": 206,
+            "rating": 2,
+            "createdAt": "2026-10-02T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "냉장 보관했는데 며칠 만에 곰팡이가 퍼졌어요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2053,
+            "productId": 206,
+            "rating": 2,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "걱정했던 \"냉장 보관했는데 며칠 만에 곰팡이가 퍼졌어요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+              }
+            ]
+          }
+        ],
+        "candidateChunkCount": 2,
+        "omittedSourceCount": 0,
+        "contextTruncated": false
+      },
+      "error": null
+    }
+  }
+]
+```
+
+보조 판정: {"conditions":true,"evidence":true,"polarity":true,"noUnsupportedClaims":true,"stateExplanation":true,"reason":"모든 조건과 자료 범위를 정확히 준수하였으며, 실제 도구 결과에 기반하여 답변하였습니다. 특히 리뷰 2053의 부정적 문맥을 올바르게 파악하여 불만 사항으로 오해하지 않고 배송 문제로 인한 별점 하락임을 명확히 설명했습니다."}
+
+사람 판정: **미검토**
+
+불일치 이유: 미작성
+
+## 18. final-v2-6-absent
+
+상품 206의 2026년 10월 1일부터 13일까지 리뷰에서 모션 인식 기능이 고장났다는 불만을 찾아줘.
+
+정답 조건: {"caseId":"final-v2-6-absent","query":"모션 인식 기능이 고장났다는 불만","productId":206,"maxRating":null,"startDate":"2026-10-01","endDate":"2026-10-13","relevantIds":[],"reason":"지정 기능의 고장 경험은 조건 범위에 없다. 미사용이라는 원문은 긍정·고장 경험의 근거가 아니다.","question":"상품 206의 2026년 10월 1일부터 13일까지 리뷰에서 모션 인식 기능이 고장났다는 불만을 찾아줘.","answerFacts":[],"noEvidence":true}
+
+답변:
+
+요청하신 상품 206의 2026년 10월 1일부터 13일까지의 리뷰를 확인했으나, 해당 기간에 '모션 인식 기능 고장'과 직접적으로 관련된 불만 사례는 찾지 못했습니다.
+
+조회된 리뷰들은 모션 인식 기능을 사용하지 않았다는 내용이나 일반적인 사용 후기였으며, 언급하신 기능 고장에 대한 근거는 발견되지 않았습니다.
+
+실제 도구·인용:
+
+```json
+[
+  {
+    "name": "summarize_reviews",
+    "args": {
+      "endDate": "2026-10-13",
+      "startDate": "2026-10-01",
+      "productId": 206,
+      "query": "모션 인식 기능 고장"
+    },
+    "result": {
+      "status": "ok",
+      "mode": "semantic",
+      "scope": {
+        "sourceType": "review",
+        "timezone": "Asia/Seoul",
+        "unit": "source",
+        "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+        "query": "모션 인식 기능 고장",
+        "productIds": [
+          206
+        ],
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-13",
+        "take": 5,
+        "checkedAt": "2026-10-13T11:05:16.304Z"
+      },
+      "coverage": {
+        "total": 9,
+        "ready": 9,
+        "pending": 0,
+        "failed": 0,
+        "partial": false
+      },
+      "data": {
+        "sources": [
+          {
+            "sourceType": "review",
+            "id": 2055,
+            "productId": 206,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "마우스를 가만히 놔도 커서가 혼자 움직여요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2056,
+            "productId": 206,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 206의 디자인이 마음에 듭니다. 모션 인식 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2057,
+            "productId": 206,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 206의 디자인이 마음에 듭니다. 모션 인식 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2058,
+            "productId": 206,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 206의 디자인이 마음에 듭니다. 모션 인식 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2059,
+            "productId": 206,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 206의 디자인이 마음에 듭니다. 모션 인식 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          }
+        ],
+        "candidateChunkCount": 9,
+        "omittedSourceCount": 4,
+        "contextTruncated": false
+      },
+      "error": null
+    }
+  }
+]
+```
+
+보조 판정: {"conditions":true,"evidence":true,"polarity":true,"noUnsupportedClaims":true,"stateExplanation":true,"reason":"도구 인자 및 조건이 정확하며, 원문에 없는 불만을 지어내지 않고 데이터 기준으로 근거 없음을 올바르게 설명함."}
+
+사람 판정: **미검토**
+
+불일치 이유: 미작성
+
+## 19. final-v2-7-meaning
+
+상품 207의 2026년 10월 1일부터 13일까지 리뷰에서 입력 기기를 멈췄는데 포인터가 이동하는 문제을 찾아 원본 ID와 인용으로 알려줘.
+
+정답 조건: {"caseId":"final-v2-7-meaning","query":"입력 기기를 멈췄는데 포인터가 이동하는 문제","productId":207,"maxRating":null,"startDate":"2026-10-01","endDate":"2026-10-13","relevantIds":[2061,2062],"reason":"본문으로 확인한 불만 두 건. 높은 별점 포함. 낮은 별점의 문제 없음·기간 밖·다른 문제는 비관련.","question":"상품 207의 2026년 10월 1일부터 13일까지 리뷰에서 입력 기기를 멈췄는데 포인터가 이동하는 문제을 찾아 원본 ID와 인용으로 알려줘.","answerFacts":["커서"],"noEvidence":false}
+
+답변:
+
+요청하신 상품 207의 2026년 10월 1일부터 13일까지의 리뷰 중, 입력 기기(마우스)를 사용하지 않을 때 포인터가 이동한다는 불만 사례는 다음과 같습니다.
+
+* **리뷰 #2061:** "마우스를 가만히 놔도 커서가 혼자 움직여요."
+* **리뷰 #2062:** "마우스를 가만히 놔도 커서가 혼자 움직여요."
+
+참고로 리뷰 #2063의 경우 동일한 현상을 언급하며 문제가 없었다고 밝히고 있습니다.
+
+실제 도구·인용:
+
+```json
+[
+  {
+    "name": "summarize_reviews",
+    "args": {
+      "endDate": "2026-10-13",
+      "startDate": "2026-10-01",
+      "query": "입력 기기 멈춤 포인터 이동 문제",
+      "productId": 207
+    },
+    "result": {
+      "status": "ok",
+      "mode": "semantic",
+      "scope": {
+        "sourceType": "review",
+        "timezone": "Asia/Seoul",
+        "unit": "source",
+        "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+        "query": "입력 기기 멈춤 포인터 이동 문제",
+        "productIds": [
+          207
+        ],
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-13",
+        "take": 5,
+        "checkedAt": "2026-10-13T11:05:26.762Z"
+      },
+      "coverage": {
+        "total": 9,
+        "ready": 9,
+        "pending": 0,
+        "failed": 0,
+        "partial": false
+      },
+      "data": {
+        "sources": [
+          {
+            "sourceType": "review",
+            "id": 2061,
+            "productId": 207,
+            "rating": 5,
+            "createdAt": "2026-10-02T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "마우스를 가만히 놔도 커서가 혼자 움직여요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2062,
+            "productId": 207,
+            "rating": 2,
+            "createdAt": "2026-10-02T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "마우스를 가만히 놔도 커서가 혼자 움직여요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2063,
+            "productId": 207,
+            "rating": 2,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "걱정했던 \"마우스를 가만히 놔도 커서가 혼자 움직여요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2065,
+            "productId": 207,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "의자 높이를 맞춰도 앉으면 천천히 내려가요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2066,
+            "productId": 207,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 207의 디자인이 마음에 듭니다. 생체 인증 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          }
+        ],
+        "candidateChunkCount": 9,
+        "omittedSourceCount": 4,
+        "contextTruncated": false
+      },
+      "error": null
+    }
+  }
+]
+```
+
+보조 판정: null
+
+사람 판정: **미검토**
+
+불일치 이유: 미작성
+
+## 20. final-v2-7-rating
+
+상품 207의 2026년 10월 1일부터 13일까지 2점 이하 리뷰에서 입력 기기를 멈췄는데 포인터가 이동하는 문제을 찾아 원본 ID와 인용으로 알려줘.
+
+정답 조건: {"caseId":"final-v2-7-rating","query":"입력 기기를 멈췄는데 포인터가 이동하는 문제의 구체적 사례","productId":207,"maxRating":2,"startDate":"2026-10-01","endDate":"2026-10-13","relevantIds":[2062],"reason":"상품·기간·2점 이하를 만족하며 본문에 해당 불만이 있는 한 건. 낮은 별점의 문제 없음은 비관련.","question":"상품 207의 2026년 10월 1일부터 13일까지 2점 이하 리뷰에서 입력 기기를 멈췄는데 포인터가 이동하는 문제을 찾아 원본 ID와 인용으로 알려줘.","answerFacts":["커서"],"noEvidence":false}
+
+답변:
+
+상품 207에 대해 요청하신 기간(2026-10-01~10-13) 내 2점 이하 리뷰를 분석한 결과, 해당 문제에 대한 근거는 다음과 같습니다.
+
+*   **리뷰 #2062**: "마우스를 가만히 놔도 커서가 혼자 움직여요."
+
+참고로 리뷰 #2063의 경우, 동일한 문구를 언급했으나 실제로는 해당 문제가 발생하지 않았음을 밝히고 있습니다.
+
+실제 도구·인용:
+
+```json
+[
+  {
+    "name": "summarize_reviews",
+    "args": {
+      "startDate": "2026-10-01",
+      "productId": 207,
+      "maxRating": 2,
+      "endDate": "2026-10-13",
+      "query": "입력 기기 멈춤 포인터 이동"
+    },
+    "result": {
+      "status": "ok",
+      "mode": "semantic",
+      "scope": {
+        "sourceType": "review",
+        "timezone": "Asia/Seoul",
+        "unit": "source",
+        "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+        "query": "입력 기기 멈춤 포인터 이동",
+        "productIds": [
+          207
+        ],
+        "maxRating": 2,
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-13",
+        "take": 5,
+        "checkedAt": "2026-10-13T11:05:41.696Z"
+      },
+      "coverage": {
+        "total": 2,
+        "ready": 2,
+        "pending": 0,
+        "failed": 0,
+        "partial": false
+      },
+      "data": {
+        "sources": [
+          {
+            "sourceType": "review",
+            "id": 2062,
+            "productId": 207,
+            "rating": 2,
+            "createdAt": "2026-10-02T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "마우스를 가만히 놔도 커서가 혼자 움직여요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2063,
+            "productId": 207,
+            "rating": 2,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "걱정했던 \"마우스를 가만히 놔도 커서가 혼자 움직여요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+              }
+            ]
+          }
+        ],
+        "candidateChunkCount": 2,
+        "omittedSourceCount": 0,
+        "contextTruncated": false
+      },
+      "error": null
+    }
+  }
+]
+```
+
+보조 판정: {"conditions":true,"evidence":true,"polarity":true,"noUnsupportedClaims":true,"stateExplanation":true,"reason":"조건에 명시된 기간, 별점, 제품 번호를 정확히 준수하였으며, 관련 리뷰 ID와 인용을 정확히 제시하였습니다. 부정적인 내용을 긍정적인 맥락으로 왜곡하지 않았으며, 추가적인 허위 사실 없이 결과를 잘 도출했습니다."}
+
+사람 판정: **미검토**
+
+불일치 이유: 미작성
+
+## 21. final-v2-7-absent
+
+상품 207의 2026년 10월 1일부터 13일까지 리뷰에서 생체 인증 기능이 고장났다는 불만을 찾아줘.
+
+정답 조건: {"caseId":"final-v2-7-absent","query":"생체 인증 기능이 고장났다는 불만","productId":207,"maxRating":null,"startDate":"2026-10-01","endDate":"2026-10-13","relevantIds":[],"reason":"지정 기능의 고장 경험은 조건 범위에 없다. 미사용이라는 원문은 긍정·고장 경험의 근거가 아니다.","question":"상품 207의 2026년 10월 1일부터 13일까지 리뷰에서 생체 인증 기능이 고장났다는 불만을 찾아줘.","answerFacts":[],"noEvidence":true}
+
+답변:
+
+요청하신 기간(2026-10-01 ~ 2026-10-13) 동안 상품 207의 리뷰를 분석한 결과, 생체 인증 기능이 고장 났다는 불만 사항은 발견되지 않았습니다.
+
+조회된 리뷰 데이터 중 생체 인증과 관련된 내용은 "사용하지 않아 관련 경험을 적지 않았다"는 사용자 의견(리뷰 #2066, #2067, #2068, #2069, #2070 등)뿐입니다.
+
+실제 도구·인용:
+
+```json
+[
+  {
+    "name": "summarize_reviews",
+    "args": {
+      "query": "생체 인증 고장",
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "productId": 207
+    },
+    "result": {
+      "status": "ok",
+      "mode": "semantic",
+      "scope": {
+        "sourceType": "review",
+        "timezone": "Asia/Seoul",
+        "unit": "source",
+        "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+        "query": "생체 인증 고장",
+        "productIds": [
+          207
+        ],
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-13",
+        "take": 5,
+        "checkedAt": "2026-10-13T11:05:55.592Z"
+      },
+      "coverage": {
+        "total": 9,
+        "ready": 9,
+        "pending": 0,
+        "failed": 0,
+        "partial": false
+      },
+      "data": {
+        "sources": [
+          {
+            "sourceType": "review",
+            "id": 2066,
+            "productId": 207,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 207의 디자인이 마음에 듭니다. 생체 인증 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2067,
+            "productId": 207,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 207의 디자인이 마음에 듭니다. 생체 인증 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2068,
+            "productId": 207,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 207의 디자인이 마음에 듭니다. 생체 인증 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2069,
+            "productId": 207,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 207의 디자인이 마음에 듭니다. 생체 인증 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2070,
+            "productId": 207,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 207의 디자인이 마음에 듭니다. 생체 인증 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          }
+        ],
+        "candidateChunkCount": 9,
+        "omittedSourceCount": 4,
+        "contextTruncated": false
+      },
+      "error": null
+    }
+  }
+]
+```
+
+보조 판정: {"conditions":true,"evidence":true,"polarity":true,"noUnsupportedClaims":true,"stateExplanation":true,"reason":"도구 호출 인자가 질문의 조건(ID 207, 기간 2026-10-01~2026-10-13)을 완벽히 준수하였으며, 해당 기간 리뷰에서 고장 관련 불만이 존재하지 않음을 정확하게 설명하였습니다."}
+
+사람 판정: **미검토**
+
+불일치 이유: 미작성
+
+## 22. final-v2-8-meaning
+
+상품 208의 2026년 10월 1일부터 13일까지 리뷰에서 좌석 높이 설정이 유지되지 않는 불만을 찾아 원본 ID와 인용으로 알려줘.
+
+정답 조건: {"caseId":"final-v2-8-meaning","query":"좌석 높이 설정이 유지되지 않는 불만","productId":208,"maxRating":null,"startDate":"2026-10-01","endDate":"2026-10-13","relevantIds":[2071,2072],"reason":"본문으로 확인한 불만 두 건. 높은 별점 포함. 낮은 별점의 문제 없음·기간 밖·다른 문제는 비관련.","question":"상품 208의 2026년 10월 1일부터 13일까지 리뷰에서 좌석 높이 설정이 유지되지 않는 불만을 찾아 원본 ID와 인용으로 알려줘.","answerFacts":["높이"],"noEvidence":false}
+
+답변:
+
+상품 208의 2026년 10월 1일부터 13일까지 리뷰 중 좌석 높이 설정과 관련된 불만은 다음과 같습니다.
+
+*   **리뷰 #2071:** "의자 높이를 맞춰도 앉으면 천천히 내려가요."
+*   **리뷰 #2072:** "의자 높이를 맞춰도 앉으면 천천히 내려가요."
+
+참고로, 리뷰 #2073은 해당 현상에 대해 "실제로 없었다"고 언급하고 있습니다.
+
+실제 도구·인용:
+
+```json
+[
+  {
+    "name": "summarize_reviews",
+    "args": {
+      "productId": 208,
+      "endDate": "2026-10-13",
+      "query": "좌석 높이 설정이 유지되지 않음",
+      "startDate": "2026-10-01"
+    },
+    "result": {
+      "status": "ok",
+      "mode": "semantic",
+      "scope": {
+        "sourceType": "review",
+        "timezone": "Asia/Seoul",
+        "unit": "source",
+        "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+        "query": "좌석 높이 설정이 유지되지 않음",
+        "productIds": [
+          208
+        ],
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-13",
+        "take": 5,
+        "checkedAt": "2026-10-13T11:06:03.390Z"
+      },
+      "coverage": {
+        "total": 9,
+        "ready": 9,
+        "pending": 0,
+        "failed": 0,
+        "partial": false
+      },
+      "data": {
+        "sources": [
+          {
+            "sourceType": "review",
+            "id": 2071,
+            "productId": 208,
+            "rating": 5,
+            "createdAt": "2026-10-02T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "의자 높이를 맞춰도 앉으면 천천히 내려가요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2072,
+            "productId": 208,
+            "rating": 2,
+            "createdAt": "2026-10-02T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "의자 높이를 맞춰도 앉으면 천천히 내려가요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2073,
+            "productId": 208,
+            "rating": 2,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "걱정했던 \"의자 높이를 맞춰도 앉으면 천천히 내려가요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2075,
+            "productId": 208,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "면도할 때 털이 뽑혀 피부가 따가워요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2076,
+            "productId": 208,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 208의 디자인이 마음에 듭니다. 대기질 측정 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          }
+        ],
+        "candidateChunkCount": 9,
+        "omittedSourceCount": 4,
+        "contextTruncated": false
+      },
+      "error": null
+    }
+  }
+]
+```
+
+보조 판정: {"conditions":true,"evidence":true,"polarity":true,"noUnsupportedClaims":true,"stateExplanation":true,"reason":"조건에 명시된 기간과 상품 ID를 도구 호출에 정확히 반영하였으며, 관련 ID 2071, 2072에 대한 인용을 올바르게 수행하였습니다. 또한 부정적인 경험이 없음을 밝힌 2073 리뷰에 대한 극성 해석도 정확합니다."}
+
+사람 판정: **미검토**
+
+불일치 이유: 미작성
+
+## 23. final-v2-8-rating
+
+상품 208의 2026년 10월 1일부터 13일까지 2점 이하 리뷰에서 좌석 높이 설정이 유지되지 않는 불만을 찾아 원본 ID와 인용으로 알려줘.
+
+정답 조건: {"caseId":"final-v2-8-rating","query":"좌석 높이 설정이 유지되지 않는 불만의 구체적 사례","productId":208,"maxRating":2,"startDate":"2026-10-01","endDate":"2026-10-13","relevantIds":[2072],"reason":"상품·기간·2점 이하를 만족하며 본문에 해당 불만이 있는 한 건. 낮은 별점의 문제 없음은 비관련.","question":"상품 208의 2026년 10월 1일부터 13일까지 2점 이하 리뷰에서 좌석 높이 설정이 유지되지 않는 불만을 찾아 원본 ID와 인용으로 알려줘.","answerFacts":["높이"],"noEvidence":false}
+
+답변:
+
+상품 208에 대한 2026년 10월 1일부터 13일까지의 리뷰 중, 요청하신 '좌석 높이 설정 유지' 관련 불만은 다음과 같습니다.
+
+*   **리뷰 ID: 2072**
+    *   **인용:** "의자 높이를 맞춰도 앉으면 천천히 내려가요."
+
+참고로 함께 검색된 리뷰 ID 2073은 해당 현상을 언급했으나, 본문에서 "실제로 없었다"고 밝히고 있어 불만 근거에 해당하지 않습니다.
+
+실제 도구·인용:
+
+```json
+[
+  {
+    "name": "summarize_reviews",
+    "args": {
+      "query": "좌석 높이 설정이 유지되지 않음",
+      "maxRating": 2,
+      "productId": 208,
+      "endDate": "2026-10-13",
+      "startDate": "2026-10-01"
+    },
+    "result": {
+      "status": "ok",
+      "mode": "semantic",
+      "scope": {
+        "sourceType": "review",
+        "timezone": "Asia/Seoul",
+        "unit": "source",
+        "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+        "query": "좌석 높이 설정이 유지되지 않음",
+        "productIds": [
+          208
+        ],
+        "maxRating": 2,
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-13",
+        "take": 5,
+        "checkedAt": "2026-10-13T11:06:18.628Z"
+      },
+      "coverage": {
+        "total": 2,
+        "ready": 2,
+        "pending": 0,
+        "failed": 0,
+        "partial": false
+      },
+      "data": {
+        "sources": [
+          {
+            "sourceType": "review",
+            "id": 2072,
+            "productId": 208,
+            "rating": 2,
+            "createdAt": "2026-10-02T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "의자 높이를 맞춰도 앉으면 천천히 내려가요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2073,
+            "productId": 208,
+            "rating": 2,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "걱정했던 \"의자 높이를 맞춰도 앉으면 천천히 내려가요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+              }
+            ]
+          }
+        ],
+        "candidateChunkCount": 2,
+        "omittedSourceCount": 0,
+        "contextTruncated": false
+      },
+      "error": null
+    }
+  }
+]
+```
+
+보조 판정: {"conditions":true,"evidence":true,"polarity":true,"noUnsupportedClaims":true,"stateExplanation":true,"reason":"도구 인자 및 조건이 정확히 준수되었으며, 답변은 2072 리뷰의 불만을 명확히 인용함과 동시에 2073 리뷰의 내용을 정확히 해석하여 불만 여부를 올바르게 판단했습니다."}
+
+사람 판정: **미검토**
+
+불일치 이유: 미작성
+
+## 24. final-v2-8-absent
+
+상품 208의 2026년 10월 1일부터 13일까지 리뷰에서 대기질 측정 기능이 고장났다는 불만을 찾아줘.
+
+정답 조건: {"caseId":"final-v2-8-absent","query":"대기질 측정 기능이 고장났다는 불만","productId":208,"maxRating":null,"startDate":"2026-10-01","endDate":"2026-10-13","relevantIds":[],"reason":"지정 기능의 고장 경험은 조건 범위에 없다. 미사용이라는 원문은 긍정·고장 경험의 근거가 아니다.","question":"상품 208의 2026년 10월 1일부터 13일까지 리뷰에서 대기질 측정 기능이 고장났다는 불만을 찾아줘.","answerFacts":[],"noEvidence":true}
+
+답변:
+
+요청하신 상품 208의 2026년 10월 1일부터 13일까지의 리뷰 중 대기질 측정 기능 고장과 관련된 불만 사항을 검색했으나, 가져온 자료에서는 관련 근거를 찾지 못했습니다.
+
+조회된 리뷰들은 해당 기능을 사용하지 않았거나 디자인에 만족한다는 내용이었습니다.
+
+실제 도구·인용:
+
+```json
+[
+  {
+    "name": "summarize_reviews",
+    "args": {
+      "productId": 208,
+      "query": "대기질 측정 기능 고장",
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13"
+    },
+    "result": {
+      "status": "ok",
+      "mode": "semantic",
+      "scope": {
+        "sourceType": "review",
+        "timezone": "Asia/Seoul",
+        "unit": "source",
+        "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+        "query": "대기질 측정 기능 고장",
+        "productIds": [
+          208
+        ],
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-13",
+        "take": 5,
+        "checkedAt": "2026-10-13T11:06:27.642Z"
+      },
+      "coverage": {
+        "total": 9,
+        "ready": 9,
+        "pending": 0,
+        "failed": 0,
+        "partial": false
+      },
+      "data": {
+        "sources": [
+          {
+            "sourceType": "review",
+            "id": 2076,
+            "productId": 208,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 208의 디자인이 마음에 듭니다. 대기질 측정 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2077,
+            "productId": 208,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 208의 디자인이 마음에 듭니다. 대기질 측정 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2078,
+            "productId": 208,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 208의 디자인이 마음에 듭니다. 대기질 측정 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2079,
+            "productId": 208,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 208의 디자인이 마음에 듭니다. 대기질 측정 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2080,
+            "productId": 208,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 208의 디자인이 마음에 듭니다. 대기질 측정 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          }
+        ],
+        "candidateChunkCount": 9,
+        "omittedSourceCount": 4,
+        "contextTruncated": false
+      },
+      "error": null
+    }
+  }
+]
+```
+
+보조 판정: {"conditions":true,"evidence":true,"polarity":true,"noUnsupportedClaims":true,"stateExplanation":true,"reason":"조건에 맞게 리뷰를 검색하였으며, 원문에서 기능 고장 불만을 찾을 수 없음을 근거(기능 미사용 언급)와 함께 정확히 설명하였습니다."}
+
+사람 판정: **미검토**
+
+불일치 이유: 미작성
+
+## 25. final-v2-9-meaning
+
+상품 209의 2026년 10월 1일부터 13일까지 리뷰에서 털을 깎는 과정에서 피부가 아픈 경험을 찾아 원본 ID와 인용으로 알려줘.
+
+정답 조건: {"caseId":"final-v2-9-meaning","query":"털을 깎는 과정에서 피부가 아픈 경험","productId":209,"maxRating":null,"startDate":"2026-10-01","endDate":"2026-10-13","relevantIds":[2081,2082],"reason":"본문으로 확인한 불만 두 건. 높은 별점 포함. 낮은 별점의 문제 없음·기간 밖·다른 문제는 비관련.","question":"상품 209의 2026년 10월 1일부터 13일까지 리뷰에서 털을 깎는 과정에서 피부가 아픈 경험을 찾아 원본 ID와 인용으로 알려줘.","answerFacts":["따가"],"noEvidence":false}
+
+답변:
+
+상품 209의 2026년 10월 1일부터 13일까지 리뷰 중 털을 깎는 과정에서 피부 통증을 언급한 사례는 다음과 같습니다.
+
+* **리뷰 #2081**: "면도할 때 털이 뽑혀 피부가 따가워요."
+* **리뷰 #2082**: "면도할 때 털이 뽑혀 피부가 따가워요."
+
+참고로 리뷰 #2083에서도 동일한 문구가 언급되었으나, 해당 리뷰 작성자는 이 문제를 실제 겪은 것이 아니라 언급된 문제를 확인하는 차원에서 작성한 것으로 확인됩니다.
+
+실제 도구·인용:
+
+```json
+[
+  {
+    "name": "summarize_reviews",
+    "args": {
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "query": "털 깎는 과정 피부 아픔 통증 상처",
+      "productId": 209
+    },
+    "result": {
+      "status": "ok",
+      "mode": "semantic",
+      "scope": {
+        "sourceType": "review",
+        "timezone": "Asia/Seoul",
+        "unit": "source",
+        "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+        "query": "털 깎는 과정 피부 아픔 통증 상처",
+        "productIds": [
+          209
+        ],
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-13",
+        "take": 5,
+        "checkedAt": "2026-10-13T11:06:43.831Z"
+      },
+      "coverage": {
+        "total": 9,
+        "ready": 9,
+        "pending": 0,
+        "failed": 0,
+        "partial": false
+      },
+      "data": {
+        "sources": [
+          {
+            "sourceType": "review",
+            "id": 2081,
+            "productId": 209,
+            "rating": 5,
+            "createdAt": "2026-10-02T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "면도할 때 털이 뽑혀 피부가 따가워요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2082,
+            "productId": 209,
+            "rating": 2,
+            "createdAt": "2026-10-02T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "면도할 때 털이 뽑혀 피부가 따가워요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2083,
+            "productId": 209,
+            "rating": 2,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "걱정했던 \"면도할 때 털이 뽑혀 피부가 따가워요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2085,
+            "productId": 209,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "잔 테두리가 두꺼워 마시면 음료가 턱으로 흘러요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2086,
+            "productId": 209,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 209의 디자인이 마음에 듭니다. 자동 분리 수거 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          }
+        ],
+        "candidateChunkCount": 9,
+        "omittedSourceCount": 4,
+        "contextTruncated": false
+      },
+      "error": null
+    }
+  }
+]
+```
+
+보조 판정: {"conditions":true,"evidence":true,"polarity":true,"noUnsupportedClaims":false,"stateExplanation":true,"reason":"답변에서 존재하지 않는 리뷰 2083에 대한 잘못된 정보를 지어내어 noUnsupportedClaims를 위반했습니다. 실제 도구 결과에는 해당 리뷰 내용이 존재하지 않으며, 답변자가 임의로 내용을 창작하였습니다."}
+
+사람 판정: **미검토**
+
+불일치 이유: 미작성
+
+## 26. final-v2-9-rating
+
+상품 209의 2026년 10월 1일부터 13일까지 2점 이하 리뷰에서 털을 깎는 과정에서 피부가 아픈 경험을 찾아 원본 ID와 인용으로 알려줘.
+
+정답 조건: {"caseId":"final-v2-9-rating","query":"털을 깎는 과정에서 피부가 아픈 경험의 구체적 사례","productId":209,"maxRating":2,"startDate":"2026-10-01","endDate":"2026-10-13","relevantIds":[2082],"reason":"상품·기간·2점 이하를 만족하며 본문에 해당 불만이 있는 한 건. 낮은 별점의 문제 없음은 비관련.","question":"상품 209의 2026년 10월 1일부터 13일까지 2점 이하 리뷰에서 털을 깎는 과정에서 피부가 아픈 경험을 찾아 원본 ID와 인용으로 알려줘.","answerFacts":["따가"],"noEvidence":false}
+
+답변:
+
+상품 209에 대해 요청하신 기간 내 2점 이하 리뷰를 분석한 결과, 해당 경험과 관련된 내용은 다음과 같습니다.
+
+*   **원본 ID 2082:** "면도할 때 털이 뽑혀 피부가 따가워요."
+
+참고로 원본 ID 2083의 경우 해당 문제를 언급하였으나, 실제로는 문제가 없었으며 별점은 배송 문제로 낮게 책정한 것이라고 밝히고 있습니다.
+
+실제 도구·인용:
+
+```json
+[
+  {
+    "name": "summarize_reviews",
+    "args": {
+      "endDate": "2026-10-13",
+      "maxRating": 2,
+      "query": "털을 깎는 과정 피부 아픔",
+      "productId": 209,
+      "startDate": "2026-10-01"
+    },
+    "result": {
+      "status": "ok",
+      "mode": "semantic",
+      "scope": {
+        "sourceType": "review",
+        "timezone": "Asia/Seoul",
+        "unit": "source",
+        "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+        "query": "털을 깎는 과정 피부 아픔",
+        "productIds": [
+          209
+        ],
+        "maxRating": 2,
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-13",
+        "take": 5,
+        "checkedAt": "2026-10-13T11:06:52.069Z"
+      },
+      "coverage": {
+        "total": 2,
+        "ready": 2,
+        "pending": 0,
+        "failed": 0,
+        "partial": false
+      },
+      "data": {
+        "sources": [
+          {
+            "sourceType": "review",
+            "id": 2082,
+            "productId": 209,
+            "rating": 2,
+            "createdAt": "2026-10-02T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "면도할 때 털이 뽑혀 피부가 따가워요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2083,
+            "productId": 209,
+            "rating": 2,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "걱정했던 \"면도할 때 털이 뽑혀 피부가 따가워요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+              }
+            ]
+          }
+        ],
+        "candidateChunkCount": 2,
+        "omittedSourceCount": 0,
+        "contextTruncated": false
+      },
+      "error": null
+    }
+  }
+]
+```
+
+보조 판정: {"conditions":true,"evidence":true,"polarity":false,"noUnsupportedClaims":true,"stateExplanation":true,"reason":"답변자가 ID 2083 리뷰의 '실제로는 문제가 없었다'는 내용을 수용하여 ID 2082만 해당 경험으로 분류한 것은 올바르나, 문제 없음을 언급한 리뷰(ID 2083)까지 부정적 사례로 오해하지 않고 잘 처리했습니다. 다만, polarity 항목에서 2083 리뷰를 긍정적 내용으로 보아야 함에도 이를 '문제가 없다고 밝힌' 별개의 사례로 적절히 배제했으므로 극성 판단은 성공이나, 2083의 '실제로 없었다'는 표현을 '문제 없음을 별점으로 낮게 책정한 것'이라 기술한 것은 원문에 충실합니다. 종합적으로 요구사항을 준수했습니다."}
+
+사람 판정: **미검토**
+
+불일치 이유: 미작성
+
+## 27. final-v2-9-absent
+
+상품 209의 2026년 10월 1일부터 13일까지 리뷰에서 자동 분리 수거 기능이 고장났다는 불만을 찾아줘.
+
+정답 조건: {"caseId":"final-v2-9-absent","query":"자동 분리 수거 기능이 고장났다는 불만","productId":209,"maxRating":null,"startDate":"2026-10-01","endDate":"2026-10-13","relevantIds":[],"reason":"지정 기능의 고장 경험은 조건 범위에 없다. 미사용이라는 원문은 긍정·고장 경험의 근거가 아니다.","question":"상품 209의 2026년 10월 1일부터 13일까지 리뷰에서 자동 분리 수거 기능이 고장났다는 불만을 찾아줘.","answerFacts":[],"noEvidence":true}
+
+답변:
+
+요청하신 기간(2026-10-01 ~ 2026-10-13) 동안 상품 209의 리뷰를 분석한 결과, 자동 분리 수거 기능이 고장 났다는 불만 근거를 찾지 못했습니다.
+
+조회된 리뷰들은 해당 기능을 사용하지 않거나 디자인에 대해서만 언급하고 있습니다.
+
+실제 도구·인용:
+
+```json
+[
+  {
+    "name": "summarize_reviews",
+    "args": {
+      "query": "자동 분리 수거 고장",
+      "endDate": "2026-10-13",
+      "productId": 209,
+      "startDate": "2026-10-01"
+    },
+    "result": {
+      "status": "ok",
+      "mode": "semantic",
+      "scope": {
+        "sourceType": "review",
+        "timezone": "Asia/Seoul",
+        "unit": "source",
+        "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+        "query": "자동 분리 수거 고장",
+        "productIds": [
+          209
+        ],
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-13",
+        "take": 5,
+        "checkedAt": "2026-10-13T11:07:04.933Z"
+      },
+      "coverage": {
+        "total": 9,
+        "ready": 9,
+        "pending": 0,
+        "failed": 0,
+        "partial": false
+      },
+      "data": {
+        "sources": [
+          {
+            "sourceType": "review",
+            "id": 2086,
+            "productId": 209,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 209의 디자인이 마음에 듭니다. 자동 분리 수거 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2087,
+            "productId": 209,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 209의 디자인이 마음에 듭니다. 자동 분리 수거 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2088,
+            "productId": 209,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 209의 디자인이 마음에 듭니다. 자동 분리 수거 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2089,
+            "productId": 209,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 209의 디자인이 마음에 듭니다. 자동 분리 수거 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2090,
+            "productId": 209,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 209의 디자인이 마음에 듭니다. 자동 분리 수거 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          }
+        ],
+        "candidateChunkCount": 9,
+        "omittedSourceCount": 4,
+        "contextTruncated": false
+      },
+      "error": null
+    }
+  }
+]
+```
+
+보조 판정: {"conditions":true,"evidence":true,"polarity":true,"noUnsupportedClaims":true,"stateExplanation":true,"reason":"상품 ID, 기간, 검색 인자 등을 정확하게 반영하였으며, 도구 결과에 근거하여 요청한 불만이 존재하지 않음을 올바르게 설명하였습니다."}
+
+사람 판정: **미검토**
+
+불일치 이유: 미작성
+
+## 28. final-v2-10-meaning
+
+상품 210의 2026년 10월 1일부터 13일까지 리뷰에서 컵으로 음료를 넘길 때 입 밖으로 새는 불편을 찾아 원본 ID와 인용으로 알려줘.
+
+정답 조건: {"caseId":"final-v2-10-meaning","query":"컵으로 음료를 넘길 때 입 밖으로 새는 불편","productId":210,"maxRating":null,"startDate":"2026-10-01","endDate":"2026-10-13","relevantIds":[2091,2092],"reason":"본문으로 확인한 불만 두 건. 높은 별점 포함. 낮은 별점의 문제 없음·기간 밖·다른 문제는 비관련.","question":"상품 210의 2026년 10월 1일부터 13일까지 리뷰에서 컵으로 음료를 넘길 때 입 밖으로 새는 불편을 찾아 원본 ID와 인용으로 알려줘.","answerFacts":["턱"],"noEvidence":false}
+
+답변:
+
+요청하신 상품 210의 리뷰에서 컵 사용 시 음료가 새는 불편에 관한 내용은 다음과 같습니다.
+
+*   **리뷰 #2091:** "잔 테두리가 두꺼워 마시면 음료가 턱으로 흘러요."
+*   **리뷰 #2092:** "잔 테두리가 두꺼워 마시면 음료가 턱으로 흘러요."
+
+참고로 리뷰 #2093은 해당 현상에 대해 언급은 하였으나, 본인에게는 "실제로 없었던 문제"라고 답변하고 있습니다.
+
+실제 도구·인용:
+
+```json
+[
+  {
+    "name": "summarize_reviews",
+    "args": {
+      "endDate": "2026-10-13",
+      "startDate": "2026-10-01",
+      "productId": 210,
+      "query": "컵 입 밖으로 새다 넘치다"
+    },
+    "result": {
+      "status": "ok",
+      "mode": "semantic",
+      "scope": {
+        "sourceType": "review",
+        "timezone": "Asia/Seoul",
+        "unit": "source",
+        "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+        "query": "컵 입 밖으로 새다 넘치다",
+        "productIds": [
+          210
+        ],
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-13",
+        "take": 5,
+        "checkedAt": "2026-10-13T11:07:15.843Z"
+      },
+      "coverage": {
+        "total": 9,
+        "ready": 9,
+        "pending": 0,
+        "failed": 0,
+        "partial": false
+      },
+      "data": {
+        "sources": [
+          {
+            "sourceType": "review",
+            "id": 2091,
+            "productId": 210,
+            "rating": 5,
+            "createdAt": "2026-10-02T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "잔 테두리가 두꺼워 마시면 음료가 턱으로 흘러요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2092,
+            "productId": 210,
+            "rating": 2,
+            "createdAt": "2026-10-02T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "잔 테두리가 두꺼워 마시면 음료가 턱으로 흘러요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2093,
+            "productId": 210,
+            "rating": 2,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "걱정했던 \"잔 테두리가 두꺼워 마시면 음료가 턱으로 흘러요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2095,
+            "productId": 210,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "소매를 만지면 찌릿하고 천이 몸에 달라붙어요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2096,
+            "productId": 210,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 210의 디자인이 마음에 듭니다. 무게 기록 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          }
+        ],
+        "candidateChunkCount": 9,
+        "omittedSourceCount": 4,
+        "contextTruncated": false
+      },
+      "error": null
+    }
+  }
+]
+```
+
+보조 판정: {"conditions":true,"evidence":true,"polarity":true,"noUnsupportedClaims":true,"stateExplanation":true,"reason":"조건과 원문 내용을 충실히 반영하였으며, 리뷰 #2093에 대한 판단 역시 원문 맥락을 정확하게 파악하여 처리하였습니다."}
+
+사람 판정: **미검토**
+
+불일치 이유: 미작성
+
+## 29. final-v2-10-rating
+
+상품 210의 2026년 10월 1일부터 13일까지 2점 이하 리뷰에서 컵으로 음료를 넘길 때 입 밖으로 새는 불편을 찾아 원본 ID와 인용으로 알려줘.
+
+정답 조건: {"caseId":"final-v2-10-rating","query":"컵으로 음료를 넘길 때 입 밖으로 새는 불편의 구체적 사례","productId":210,"maxRating":2,"startDate":"2026-10-01","endDate":"2026-10-13","relevantIds":[2092],"reason":"상품·기간·2점 이하를 만족하며 본문에 해당 불만이 있는 한 건. 낮은 별점의 문제 없음은 비관련.","question":"상품 210의 2026년 10월 1일부터 13일까지 2점 이하 리뷰에서 컵으로 음료를 넘길 때 입 밖으로 새는 불편을 찾아 원본 ID와 인용으로 알려줘.","answerFacts":["턱"],"noEvidence":false}
+
+답변:
+
+상품 210에 대한 2026년 10월 1일부터 13일까지의 2점 이하 리뷰 중, 문의하신 불편과 관련된 내용은 다음과 같습니다.
+
+*   **리뷰 #2092:** "잔 테두리가 두꺼워 마시면 음료가 턱으로 흘러요."
+
+참고로 리뷰 #2093의 경우 해당 불편을 언급했으나, 실제로는 문제가 없었으며 배송 일정 때문에 별점을 낮게 준 사례임을 확인했습니다.
+
+실제 도구·인용:
+
+```json
+[
+  {
+    "name": "summarize_reviews",
+    "args": {
+      "endDate": "2026-10-13",
+      "startDate": "2026-10-01",
+      "maxRating": 2,
+      "query": "입 밖으로 새는 불편",
+      "productId": 210
+    },
+    "result": {
+      "status": "ok",
+      "mode": "semantic",
+      "scope": {
+        "sourceType": "review",
+        "timezone": "Asia/Seoul",
+        "unit": "source",
+        "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+        "query": "입 밖으로 새는 불편",
+        "productIds": [
+          210
+        ],
+        "maxRating": 2,
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-13",
+        "take": 5,
+        "checkedAt": "2026-10-13T11:07:28.054Z"
+      },
+      "coverage": {
+        "total": 2,
+        "ready": 2,
+        "pending": 0,
+        "failed": 0,
+        "partial": false
+      },
+      "data": {
+        "sources": [
+          {
+            "sourceType": "review",
+            "id": 2092,
+            "productId": 210,
+            "rating": 2,
+            "createdAt": "2026-10-02T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "잔 테두리가 두꺼워 마시면 음료가 턱으로 흘러요."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2093,
+            "productId": 210,
+            "rating": 2,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "걱정했던 \"잔 테두리가 두꺼워 마시면 음료가 턱으로 흘러요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+              }
+            ]
+          }
+        ],
+        "candidateChunkCount": 2,
+        "omittedSourceCount": 0,
+        "contextTruncated": false
+      },
+      "error": null
+    }
+  }
+]
+```
+
+보조 판정: {"conditions":true,"evidence":true,"polarity":false,"noUnsupportedClaims":true,"stateExplanation":true,"reason":"답변자가 리뷰 2093의 실제 내용을 '문제가 없었음'으로 오해하여 리뷰어의 불만을 긍정문으로 잘못 해석(polarity=false)함. 실제 2093 리뷰는 '걱정했던 문제는 없었다'고 명시했으므로 이를 긍정적 후기로 분류하는 것은 논리적으로 타당하나, 지침상 낮은 별점 리뷰의 불만 사례를 긍정으로 바꾸면 안 된다는 제약 조건을 위반함."}
+
+사람 판정: **미검토**
+
+불일치 이유: 미작성
+
+## 30. final-v2-10-absent
+
+상품 210의 2026년 10월 1일부터 13일까지 리뷰에서 무게 기록 기능이 고장났다는 불만을 찾아줘.
+
+정답 조건: {"caseId":"final-v2-10-absent","query":"무게 기록 기능이 고장났다는 불만","productId":210,"maxRating":null,"startDate":"2026-10-01","endDate":"2026-10-13","relevantIds":[],"reason":"지정 기능의 고장 경험은 조건 범위에 없다. 미사용이라는 원문은 긍정·고장 경험의 근거가 아니다.","question":"상품 210의 2026년 10월 1일부터 13일까지 리뷰에서 무게 기록 기능이 고장났다는 불만을 찾아줘.","answerFacts":[],"noEvidence":true}
+
+답변:
+
+요청하신 상품 210의 2026년 10월 1일부터 13일까지의 리뷰를 확인했으나, 무게 기록 기능이 고장 났다는 불만은 찾지 못했습니다.
+
+검색된 리뷰들에서는 무게 기록 기능을 사용하지 않았다는 내용만 확인되었습니다.
+
+실제 도구·인용:
+
+```json
+[
+  {
+    "name": "summarize_reviews",
+    "args": {
+      "endDate": "2026-10-13",
+      "query": "무게 기록 기능 고장",
+      "startDate": "2026-10-01",
+      "productId": 210
+    },
+    "result": {
+      "status": "ok",
+      "mode": "semantic",
+      "scope": {
+        "sourceType": "review",
+        "timezone": "Asia/Seoul",
+        "unit": "source",
+        "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+        "query": "무게 기록 기능 고장",
+        "productIds": [
+          210
+        ],
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-13",
+        "take": 5,
+        "checkedAt": "2026-10-13T11:07:39.719Z"
+      },
+      "coverage": {
+        "total": 9,
+        "ready": 9,
+        "pending": 0,
+        "failed": 0,
+        "partial": false
+      },
+      "data": {
+        "sources": [
+          {
+            "sourceType": "review",
+            "id": 2096,
+            "productId": 210,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 210의 디자인이 마음에 듭니다. 무게 기록 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2097,
+            "productId": 210,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 210의 디자인이 마음에 듭니다. 무게 기록 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2098,
+            "productId": 210,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 210의 디자인이 마음에 듭니다. 무게 기록 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2099,
+            "productId": 210,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 210의 디자인이 마음에 듭니다. 무게 기록 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          },
+          {
+            "sourceType": "review",
+            "id": 2100,
+            "productId": 210,
+            "rating": 5,
+            "createdAt": "2026-10-12T00:00:00.000Z",
+            "quotes": [
+              {
+                "chunkIndex": 0,
+                "text": "상품 210의 디자인이 마음에 듭니다. 무게 기록 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+              }
+            ]
+          }
+        ],
+        "candidateChunkCount": 9,
+        "omittedSourceCount": 4,
+        "contextTruncated": false
+      },
+      "error": null
+    }
+  }
+]
+```
+
+보조 판정: {"conditions":true,"evidence":true,"polarity":true,"noUnsupportedClaims":true,"stateExplanation":true,"reason":"도구 인자값이 질문의 날짜 및 상품 조건을 정확히 준수했고, 검색 결과 내에 해당 불만이 존재하지 않음을 정확히 확인하여 답변함."}
+
+사람 판정: **미검토**
+
+불일치 이유: 미작성

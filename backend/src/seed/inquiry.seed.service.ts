@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Not, IsNull, Repository } from 'typeorm';
 import {
@@ -7,6 +7,7 @@ import {
 } from '../inquiry/entity/inquiry.entity';
 import { ProductEntity, ProductStatus } from '../product/entity/product.entity';
 import { rand } from './seed-helpers';
+import { SearchIndexRecorder } from '../search/search-index-recorder';
 
 /**
  * 소규모 문의(Q&A) 시드 — 관리자 AI 어시스턴트 `summarize_inquiries`(Phase 5a) 시연용.
@@ -24,6 +25,7 @@ export class InquirySeedService {
     private readonly inquiryRepo: Repository<InquiryEntity>,
     @InjectRepository(ProductEntity)
     private readonly productRepo: Repository<ProductEntity>,
+    @Optional() private readonly searchJobs?: SearchIndexRecorder,
   ) {}
 
   /** 미답변(waiting)으로 둘 질문 풀. 일부는 연락처 PII 를 포함(scrubText 시연용). */
@@ -207,7 +209,10 @@ export class InquirySeedService {
       );
     }
 
-    await this.inquiryRepo.save(inquiries);
+    await this.inquiryRepo.manager.transaction(async manager => {
+      const saved = await manager.getRepository(InquiryEntity).save(inquiries);
+      for (const inquiry of saved) await this.searchJobs?.recordInquiry(manager, inquiry.id);
+    });
 
     const waiting = inquiries.filter(
       (i) => i.status === InquiryStatus.WAITING,

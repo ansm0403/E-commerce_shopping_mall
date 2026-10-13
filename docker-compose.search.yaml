@@ -1,0 +1,23 @@
+# Isolated Phase 1 database. Does not attach or replace the application's volumes.
+name: shopping-mall-search
+services:
+  postgres-search:
+    build:
+      context: ./docker/postgres-vector
+    image: shopping-mall/postgres-vector:18.3-0.8.7
+    ports:
+      - "127.0.0.1:15433:5432"
+    environment:
+      POSTGRES_USER: search_probe
+      POSTGRES_PASSWORD: search_probe
+      POSTGRES_DB: shopping_mall_search_probe
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - search_probe_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U search_probe -d shopping_mall_search_probe"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+volumes:
+  search_probe_data:

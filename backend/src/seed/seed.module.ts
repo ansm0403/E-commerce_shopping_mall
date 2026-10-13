@@ -10,6 +10,7 @@ import { ProductModule } from '../product/product.module';
 import { DashboardSeedService } from './dashboard.seed.service';
 import { ReviewSeedService } from './review.seed.service';
 import { InquirySeedService } from './inquiry.seed.service';
+import { SearchIndexJobsModule } from '../search/search-index-jobs.module';
 
 /**
  * NODE_SEED=true 일 때만 AppModule 에 등록되는 시드 모듈.
@@ -28,6 +29,7 @@ import { InquirySeedService } from './inquiry.seed.service';
     ]),
     // SEED_PRODUCTS=true 배치 경로에서 ProductSeedService 를 쓰기 위함
     ProductModule,
+    SearchIndexJobsModule,
   ],
   providers: [DashboardSeedService, ReviewSeedService, InquirySeedService],
 })

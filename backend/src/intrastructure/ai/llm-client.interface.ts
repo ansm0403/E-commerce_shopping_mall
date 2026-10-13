@@ -1,3 +1,5 @@
+import type { LlmFailure } from './llm-failure';
+
 /**
  * 프로바이더 비종속 LLM 클라이언트 인터페이스.
  *
@@ -113,5 +115,13 @@ export interface LlmClient {
     tools: LlmToolDef[];
     executeTool: (call: LlmToolCall) => Promise<unknown>;
     signal?: AbortSignal;
+    /** Actual model request boundary, including failed requests. No prompt or user data. */
+    onRequest?: () => void;
+    /** Safe failed SDK request observations, including a failure recovered by a retry. */
+    onRequestFailure?: (failure: LlmFailure) => void;
+    /** Internal evaluation pacing; awaited before the measured request boundary. */
+    beforeRequest?: () => Promise<void>;
+    /** Optional structured text output, used by offline answer judging. */
+    responseSchema?: Record<string, unknown>;
   }): AsyncIterable<LlmStreamEvent>;
 }

@@ -19,6 +19,7 @@ export class ChatRequestDto {
 
   @IsOptional()
   @IsString()
+  @IsNotEmpty()
   @MaxLength(64)
   requestId?: string;
 }

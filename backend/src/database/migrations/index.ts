@@ -8,6 +8,7 @@ import { OpsToolCalls1790026688606 } from './1790026688606-OpsToolCalls';
 import { OpsGuidedReview1790079789208 } from './1790079789208-OpsGuidedReview';
 import { MockProductSeedKey1791676800000 } from './1791676800000-MockProductSeedKey';
 import { DemoCheckout1791849600000 } from './1791849600000-DemoCheckout';
+import { SearchFoundation1791936000000 } from './1791936000000-SearchFoundation';
 
 /**
  * 마이그레이션 명시적 등록 배열.
@@ -30,4 +31,5 @@ export const migrations: Array<new () => MigrationInterface> = [
   MockProductSeedKey1791676800000,
   RoleDemoFixtures1791763200000,
   DemoCheckout1791849600000,
+  SearchFoundation1791936000000,
 ];

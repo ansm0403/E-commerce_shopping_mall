@@ -1,0 +1,2344 @@
+{
+  "runId": "2026-10-13T19-03-40-103Z",
+  "codeVersion": {
+    "sha256": "a644fd097e9d78e8da88b22e2af1a35c60385fd079793a023fa89743381250eb",
+    "files": [
+      "src/search/semantic-search.service.ts",
+      "src/search/search-document.ts",
+      "src/search/search-input.ts",
+      "src/search/search-profile.ts",
+      "src/admin/assistant/assistant.service.ts",
+      "src/admin/assistant/assistant-tools.ts",
+      "src/admin/assistant/assistant-tool-schemas.ts",
+      "src/intrastructure/ai/providers/gemini.client.ts",
+      "src/intrastructure/ai/llm-failure.ts",
+      "src/intrastructure/ai/llm-request-deadline.ts",
+      "src/search/inquiry-index.store.ts",
+      "src/search/inquiry-index.processor.ts",
+      "src/search/search-index-recorder.ts",
+      "src/search/search-contract.ts",
+      "eval/search/inquiry-fixture.ts",
+      "eval/search/run-inquiry-search-eval.ts",
+      "eval/search/fixture.ts",
+      "eval/search/final-fixture.ts",
+      "eval/search/final-fixture-v2.ts"
+    ],
+    "description": "SHA256 of evaluated working-tree sources, including uncommitted changes."
+  },
+  "fixtureVersion": "inquiries-final-small-v1",
+  "split": "final-small",
+  "embeddingMode": "live",
+  "profile": {
+    "id": "gemini-embedding-2-768-review-inquiry-v1",
+    "model": "gemini-embedding-2",
+    "dimensions": 768,
+    "preprocessingVersion": "v1",
+    "maskingVersion": "scrub-text-v1",
+    "chunkingVersion": "unicode-paragraph-v1",
+    "queryTemplate": "task: search result | query: {text}",
+    "documentTemplate": "title: {title} | text: {text}",
+    "maxCodePoints": 1000,
+    "overlapCodePoints": 100,
+    "maxInputBytes": 4096,
+    "maxChunks": 32
+  },
+  "syntheticInquiries": 27,
+  "originalInquiries": 0,
+  "publicInquiries": 24,
+  "secretInquiries": 3,
+  "chunkCount": 24,
+  "planned": 12,
+  "executed": 12,
+  "unexecuted": 0,
+  "apiErrors": 0,
+  "errorCode": null,
+  "criteria": {
+    "frozenBeforeExecution": "2026-10-14",
+    "retrieval": {
+      "hitAt5": 0.95,
+      "recallAt5": 0.9
+    },
+    "protection": {
+      "secretSourcesReturned": 0,
+      "rawContactLeaks": 0
+    },
+    "scope": "Small synthetic retrieval validation. Final answer evaluation and human review remain separate."
+  },
+  "protection": {
+    "secretSourcesReturned": 0,
+    "rawContactLeaks": 0,
+    "protectedInputViolations": 0
+  },
+  "summary": {
+    "baseline": {
+      "hitAt5": 1,
+      "recallAt5": 0.7777777777777777,
+      "precisionAt5": 0.26666666666666666
+    },
+    "semantic": {
+      "hitAt5": 1,
+      "recallAt5": 1,
+      "precisionAt5": 0.4
+    }
+  },
+  "policy": "same fixed query/filters for recent baseline and exact cosine; 10 candidate chunks; 5 deduplicated sources; no threshold or reranker",
+  "embeddingUsageThisRun": {
+    "requests": 0,
+    "inputCodePoints": 0,
+    "inputBytes": 0,
+    "inputTokens": null
+  },
+  "generated": {
+    "document": 0,
+    "query": 0
+  },
+  "cacheHits": {
+    "document": 24,
+    "query": 12
+  },
+  "mockCalls": null,
+  "limitations": "Synthetic data, one repetition. Cached actual vectors separate query preparation latency from lookup latency. No final-answer, human-review, HTTP latency, production or full 30-question quality claims. No-evidence questions measure retrieval behavior only; retrieved candidates are not evidence judgments.",
+  "cases": [
+    {
+      "query": "가방 끈 압박으로 어깨가 아프다는 문의와 교환 답변",
+      "productId": 401,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "caseId": "inquiry-final-1-all",
+      "relevantIds": [
+        4001,
+        4002,
+        4003
+      ],
+      "question": "상품 401의 2026년 10월 1일부터 13일까지 공개 문의에서 가방 끈 압박으로 어깨가 아프다는 문의와 교환 답변를 찾아 ID와 원문을 인용해줘.",
+      "reason": "제목만 있는 공개 문의, 문의 본문, 판매자 답변의 근거 세 건. 문제 없다는 반대 경험과 비밀 문의는 비관련.",
+      "answerFacts": [
+        "어깨",
+        "교환"
+      ],
+      "noEvidence": false,
+      "searchStatus": "ok",
+      "baseline": {
+        "ids": [
+          4007,
+          4006,
+          4005,
+          4004,
+          4003
+        ],
+        "hitAt5": 1,
+        "recallAt5": 0.3333333333333333,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "inquiry",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "가방 끈 압박으로 어깨가 아프다는 문의와 교환 답변",
+            "productIds": [
+              401
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T19:03:39.836Z"
+          },
+          "coverage": {
+            "total": 7,
+            "ready": 7,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "inquiry",
+                "id": 4001,
+                "productId": 401,
+                "status": "waiting",
+                "title": "끈이 어깨를 눌러 아픈 가방 교환 문의",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n끈이 어깨를 눌러 아픈 가방 교환 문의"
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4002,
+                "productId": 401,
+                "status": "answered",
+                "title": "사용 중 생긴 문제",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n사용 중 생긴 문제\n\n[문의 본문]\n짐을 넣고 메면 끈 자국이 남고 어깨가 아픕니다. 바꿀 수 있나요?\n\n[답변]\n끈 길이를 조절해도 압박이 계속되면 교환 접수를 도와드립니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4004,
+                "productId": 401,
+                "status": "waiting",
+                "title": "상품 401 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 401 일반 문의\n\n[문의 본문]\n걱정했지만 짐을 넣고 메면 끈 자국이 남고 어깨가 아픕니다. 바꿀 수 있나요? 같은 문제는 실제로 없었습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4003,
+                "productId": 401,
+                "status": "answered",
+                "title": "관리 방법을 알려주세요",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n관리 방법을 알려주세요\n\n[문의 본문]\n제품을 안전하게 사용하는 방법이 궁금합니다.\n\n[답변]\n끈 길이를 조절해도 압박이 계속되면 교환 접수를 도와드립니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4005,
+                "productId": 401,
+                "status": "answered",
+                "title": "상품 401 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 401 일반 문의\n\n[문의 본문]\n색상과 포장 상태를 문의합니다.\n\n[답변]\n색상은 상품 상세 페이지에서 확인해주세요."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 7,
+            "omittedSourceCount": 2,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 0,
+            "inputCodePoints": 0,
+            "inputBytes": 0,
+            "inputTokens": null
+          },
+          "embeddingMs": 0.035200000000259024,
+          "databaseMs": 20.51870000000008,
+          "totalMs": 22.25590000000011,
+          "candidates": [
+            {
+              "inquiry_id": 4001,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.07985399249694292
+            },
+            {
+              "inquiry_id": 4002,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.1301311540290695
+            },
+            {
+              "inquiry_id": 4004,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.18286529728368772
+            },
+            {
+              "inquiry_id": 4003,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2138911272092563
+            },
+            {
+              "inquiry_id": 4005,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3619366098027408
+            },
+            {
+              "inquiry_id": 4006,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3645822461692433
+            },
+            {
+              "inquiry_id": 4007,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.36770465529361307
+            }
+          ],
+          "invalidatedSourceCount": 0
+        },
+        "ids": [
+          4001,
+          4002,
+          4004,
+          4003,
+          4005
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.6,
+        "relevantReturned": 3,
+        "returnedSourceCount": 5
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T18:56:48.038Z",
+        "elapsedMs": 5934.3631999999925
+      }
+    },
+    {
+      "query": "가방 끈 압박으로 어깨가 아프다는 문의와 교환 답변",
+      "productId": 401,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "caseId": "inquiry-final-1-answered",
+      "status": "answered",
+      "relevantIds": [
+        4002,
+        4003
+      ],
+      "question": "상품 401의 같은 기간 답변 완료된 공개 문의에서 가방 끈 압박으로 어깨가 아프다는 문의와 교환 답변를 찾아줘.",
+      "reason": "현재 상태가 answered인 공개 문의 본문·답변 두 건. 제목만 있는 미답변 문의는 상태 조건에서 제외.",
+      "answerFacts": [
+        "어깨",
+        "교환"
+      ],
+      "noEvidence": false,
+      "searchStatus": "ok",
+      "baseline": {
+        "ids": [
+          4005,
+          4003,
+          4002
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.4,
+        "relevantReturned": 2,
+        "returnedSourceCount": 3
+      },
+      "semantic": {
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "inquiry",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "가방 끈 압박으로 어깨가 아프다는 문의와 교환 답변",
+            "productIds": [
+              401
+            ],
+            "status": "answered",
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T19:03:39.857Z"
+          },
+          "coverage": {
+            "total": 3,
+            "ready": 3,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "inquiry",
+                "id": 4002,
+                "productId": 401,
+                "status": "answered",
+                "title": "사용 중 생긴 문제",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n사용 중 생긴 문제\n\n[문의 본문]\n짐을 넣고 메면 끈 자국이 남고 어깨가 아픕니다. 바꿀 수 있나요?\n\n[답변]\n끈 길이를 조절해도 압박이 계속되면 교환 접수를 도와드립니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4003,
+                "productId": 401,
+                "status": "answered",
+                "title": "관리 방법을 알려주세요",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n관리 방법을 알려주세요\n\n[문의 본문]\n제품을 안전하게 사용하는 방법이 궁금합니다.\n\n[답변]\n끈 길이를 조절해도 압박이 계속되면 교환 접수를 도와드립니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4005,
+                "productId": 401,
+                "status": "answered",
+                "title": "상품 401 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 401 일반 문의\n\n[문의 본문]\n색상과 포장 상태를 문의합니다.\n\n[답변]\n색상은 상품 상세 페이지에서 확인해주세요."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 3,
+            "omittedSourceCount": 0,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 0,
+            "inputCodePoints": 0,
+            "inputBytes": 0,
+            "inputTokens": null
+          },
+          "embeddingMs": 0.023199999999633292,
+          "databaseMs": 18.241399999999885,
+          "totalMs": 18.510099999999966,
+          "candidates": [
+            {
+              "inquiry_id": 4002,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.1301311540290695
+            },
+            {
+              "inquiry_id": 4003,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2138911272092563
+            },
+            {
+              "inquiry_id": 4005,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3619366098027408
+            }
+          ],
+          "invalidatedSourceCount": 0
+        },
+        "ids": [
+          4002,
+          4003,
+          4005
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.4,
+        "relevantReturned": 2,
+        "returnedSourceCount": 3
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T18:56:48.038Z",
+        "elapsedMs": 5934.3631999999925
+      }
+    },
+    {
+      "query": "가방 끈 압박으로 어깨가 아프다는 문의와 교환 답변",
+      "productId": 401,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "caseId": "inquiry-final-1-waiting",
+      "status": "waiting",
+      "relevantIds": [
+        4001
+      ],
+      "question": "상품 401의 같은 기간 답변 대기 중인 공개 문의에서 가방 끈 압박으로 어깨가 아프다는 문의와 교환 답변를 찾아줘.",
+      "reason": "제목만 있는 공개 미답변 문의 한 건. 반대 경험을 불만으로 사용하지 않는다.",
+      "answerFacts": [
+        "어깨"
+      ],
+      "noEvidence": false,
+      "searchStatus": "ok",
+      "baseline": {
+        "ids": [
+          4007,
+          4006,
+          4004,
+          4001
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 4
+      },
+      "semantic": {
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "inquiry",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "가방 끈 압박으로 어깨가 아프다는 문의와 교환 답변",
+            "productIds": [
+              401
+            ],
+            "status": "waiting",
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T19:03:39.875Z"
+          },
+          "coverage": {
+            "total": 4,
+            "ready": 4,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "inquiry",
+                "id": 4001,
+                "productId": 401,
+                "status": "waiting",
+                "title": "끈이 어깨를 눌러 아픈 가방 교환 문의",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n끈이 어깨를 눌러 아픈 가방 교환 문의"
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4004,
+                "productId": 401,
+                "status": "waiting",
+                "title": "상품 401 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 401 일반 문의\n\n[문의 본문]\n걱정했지만 짐을 넣고 메면 끈 자국이 남고 어깨가 아픕니다. 바꿀 수 있나요? 같은 문제는 실제로 없었습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4006,
+                "productId": 401,
+                "status": "waiting",
+                "title": "상품 401 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 401 일반 문의\n\n[문의 본문]\n색상과 포장 상태를 문의합니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4007,
+                "productId": 401,
+                "status": "waiting",
+                "title": "연락처 f***@***",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n연락처 f***@***\n\n[문의 본문]\n문의 연락처 ***입니다.\n\n[답변]\nf***@***으로 연락해주세요."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 4,
+            "omittedSourceCount": 0,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 0,
+            "inputCodePoints": 0,
+            "inputBytes": 0,
+            "inputTokens": null
+          },
+          "embeddingMs": 0.021999999999934516,
+          "databaseMs": 16.348699999999553,
+          "totalMs": 16.547900000000027,
+          "candidates": [
+            {
+              "inquiry_id": 4001,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.07985399249694292
+            },
+            {
+              "inquiry_id": 4004,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.18286529728368772
+            },
+            {
+              "inquiry_id": 4006,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3645822461692433
+            },
+            {
+              "inquiry_id": 4007,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.36770465529361307
+            }
+          ],
+          "invalidatedSourceCount": 0
+        },
+        "ids": [
+          4001,
+          4004,
+          4006,
+          4007
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 4
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T18:56:48.038Z",
+        "elapsedMs": 5934.3631999999925
+      }
+    },
+    {
+      "query": "가방이 자동으로 짐 무게를 기록하는 기능의 고장 문의",
+      "productId": 401,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "caseId": "inquiry-final-1-absent",
+      "relevantIds": [],
+      "question": "상품 401의 같은 기간 공개 문의에서 가방이 자동으로 짐 무게를 기록하는 기능가 고장났다는 근거를 찾아줘.",
+      "reason": "조건 범위의 모든 공개 문의에 해당 기능 고장 근거가 없다. 임계값 없는 검색 후보를 정답으로 확정하지 않는다.",
+      "answerFacts": [],
+      "noEvidence": true,
+      "searchStatus": "ok",
+      "baseline": {
+        "ids": [
+          4007,
+          4006,
+          4005,
+          4004,
+          4003
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "inquiry",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "가방이 자동으로 짐 무게를 기록하는 기능의 고장 문의",
+            "productIds": [
+              401
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T19:03:39.892Z"
+          },
+          "coverage": {
+            "total": 7,
+            "ready": 7,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "inquiry",
+                "id": 4001,
+                "productId": 401,
+                "status": "waiting",
+                "title": "끈이 어깨를 눌러 아픈 가방 교환 문의",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n끈이 어깨를 눌러 아픈 가방 교환 문의"
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4002,
+                "productId": 401,
+                "status": "answered",
+                "title": "사용 중 생긴 문제",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n사용 중 생긴 문제\n\n[문의 본문]\n짐을 넣고 메면 끈 자국이 남고 어깨가 아픕니다. 바꿀 수 있나요?\n\n[답변]\n끈 길이를 조절해도 압박이 계속되면 교환 접수를 도와드립니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4004,
+                "productId": 401,
+                "status": "waiting",
+                "title": "상품 401 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 401 일반 문의\n\n[문의 본문]\n걱정했지만 짐을 넣고 메면 끈 자국이 남고 어깨가 아픕니다. 바꿀 수 있나요? 같은 문제는 실제로 없었습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4003,
+                "productId": 401,
+                "status": "answered",
+                "title": "관리 방법을 알려주세요",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n관리 방법을 알려주세요\n\n[문의 본문]\n제품을 안전하게 사용하는 방법이 궁금합니다.\n\n[답변]\n끈 길이를 조절해도 압박이 계속되면 교환 접수를 도와드립니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4006,
+                "productId": 401,
+                "status": "waiting",
+                "title": "상품 401 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 401 일반 문의\n\n[문의 본문]\n색상과 포장 상태를 문의합니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 7,
+            "omittedSourceCount": 2,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 0,
+            "inputCodePoints": 0,
+            "inputBytes": 0,
+            "inputTokens": null
+          },
+          "embeddingMs": 0.02109999999993306,
+          "databaseMs": 17.11270000000013,
+          "totalMs": 17.257500000000164,
+          "candidates": [
+            {
+              "inquiry_id": 4001,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2865691268618159
+            },
+            {
+              "inquiry_id": 4002,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2977305714373447
+            },
+            {
+              "inquiry_id": 4004,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3000448316375758
+            },
+            {
+              "inquiry_id": 4003,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.33315493658898276
+            },
+            {
+              "inquiry_id": 4006,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3772449200737241
+            },
+            {
+              "inquiry_id": 4005,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3861761736431274
+            },
+            {
+              "inquiry_id": 4007,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4136936973236023
+            }
+          ],
+          "invalidatedSourceCount": 0
+        },
+        "ids": [
+          4001,
+          4002,
+          4004,
+          4003,
+          4006
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T18:56:54.561Z",
+        "elapsedMs": 6442.714699999997
+      }
+    },
+    {
+      "query": "빛이 통과해 사생활을 가리기 어렵다는 문의와 안감 안내",
+      "productId": 402,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "caseId": "inquiry-final-2-all",
+      "relevantIds": [
+        4011,
+        4012,
+        4013
+      ],
+      "question": "상품 402의 2026년 10월 1일부터 13일까지 공개 문의에서 빛이 통과해 사생활을 가리기 어렵다는 문의와 안감 안내를 찾아 ID와 원문을 인용해줘.",
+      "reason": "제목만 있는 공개 문의, 문의 본문, 판매자 답변의 근거 세 건. 문제 없다는 반대 경험과 비밀 문의는 비관련.",
+      "answerFacts": [
+        "암막",
+        "안감"
+      ],
+      "noEvidence": false,
+      "searchStatus": "ok",
+      "baseline": {
+        "ids": [
+          4017,
+          4016,
+          4015,
+          4014,
+          4013
+        ],
+        "hitAt5": 1,
+        "recallAt5": 0.3333333333333333,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "inquiry",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "빛이 통과해 사생활을 가리기 어렵다는 문의와 안감 안내",
+            "productIds": [
+              402
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T19:03:39.911Z"
+          },
+          "coverage": {
+            "total": 7,
+            "ready": 7,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "inquiry",
+                "id": 4012,
+                "productId": 402,
+                "status": "answered",
+                "title": "사용 중 생긴 문제",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n사용 중 생긴 문제\n\n[문의 본문]\n햇빛이 비치면 밖에서 사람 윤곽이 보입니다. 가림막으로 충분한가요?\n\n[답변]\n이 제품은 완전한 암막 커튼이 아닙니다. 사생활 보호가 필요하면 안감을 추가해주세요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4013,
+                "productId": 402,
+                "status": "answered",
+                "title": "관리 방법을 알려주세요",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n관리 방법을 알려주세요\n\n[문의 본문]\n제품을 안전하게 사용하는 방법이 궁금합니다.\n\n[답변]\n이 제품은 완전한 암막 커튼이 아닙니다. 사생활 보호가 필요하면 안감을 추가해주세요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4014,
+                "productId": 402,
+                "status": "waiting",
+                "title": "상품 402 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 402 일반 문의\n\n[문의 본문]\n걱정했지만 햇빛이 비치면 밖에서 사람 윤곽이 보입니다. 가림막으로 충분한가요? 같은 문제는 실제로 없었습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4011,
+                "productId": 402,
+                "status": "waiting",
+                "title": "커튼 뒤 사람이 보이는 문제",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n커튼 뒤 사람이 보이는 문제"
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4016,
+                "productId": 402,
+                "status": "waiting",
+                "title": "상품 402 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 402 일반 문의\n\n[문의 본문]\n색상과 포장 상태를 문의합니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 7,
+            "omittedSourceCount": 2,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 0,
+            "inputCodePoints": 0,
+            "inputBytes": 0,
+            "inputTokens": null
+          },
+          "embeddingMs": 0.02140000000008513,
+          "databaseMs": 16.724899999999707,
+          "totalMs": 16.967799999999897,
+          "candidates": [
+            {
+              "inquiry_id": 4012,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.16745669647789452
+            },
+            {
+              "inquiry_id": 4013,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.21489711118577381
+            },
+            {
+              "inquiry_id": 4014,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2265315516869616
+            },
+            {
+              "inquiry_id": 4011,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2569098931985784
+            },
+            {
+              "inquiry_id": 4016,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3764370988157103
+            },
+            {
+              "inquiry_id": 4015,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3789983081508792
+            },
+            {
+              "inquiry_id": 4017,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3892335559763882
+            }
+          ],
+          "invalidatedSourceCount": 0
+        },
+        "ids": [
+          4012,
+          4013,
+          4014,
+          4011,
+          4016
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.6,
+        "relevantReturned": 3,
+        "returnedSourceCount": 5
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T18:57:00.070Z",
+        "elapsedMs": 5459.81319999999
+      }
+    },
+    {
+      "query": "빛이 통과해 사생활을 가리기 어렵다는 문의와 안감 안내",
+      "productId": 402,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "caseId": "inquiry-final-2-answered",
+      "status": "answered",
+      "relevantIds": [
+        4012,
+        4013
+      ],
+      "question": "상품 402의 같은 기간 답변 완료된 공개 문의에서 빛이 통과해 사생활을 가리기 어렵다는 문의와 안감 안내를 찾아줘.",
+      "reason": "현재 상태가 answered인 공개 문의 본문·답변 두 건. 제목만 있는 미답변 문의는 상태 조건에서 제외.",
+      "answerFacts": [
+        "암막",
+        "안감"
+      ],
+      "noEvidence": false,
+      "searchStatus": "ok",
+      "baseline": {
+        "ids": [
+          4015,
+          4013,
+          4012
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.4,
+        "relevantReturned": 2,
+        "returnedSourceCount": 3
+      },
+      "semantic": {
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "inquiry",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "빛이 통과해 사생활을 가리기 어렵다는 문의와 안감 안내",
+            "productIds": [
+              402
+            ],
+            "status": "answered",
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T19:03:39.929Z"
+          },
+          "coverage": {
+            "total": 3,
+            "ready": 3,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "inquiry",
+                "id": 4012,
+                "productId": 402,
+                "status": "answered",
+                "title": "사용 중 생긴 문제",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n사용 중 생긴 문제\n\n[문의 본문]\n햇빛이 비치면 밖에서 사람 윤곽이 보입니다. 가림막으로 충분한가요?\n\n[답변]\n이 제품은 완전한 암막 커튼이 아닙니다. 사생활 보호가 필요하면 안감을 추가해주세요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4013,
+                "productId": 402,
+                "status": "answered",
+                "title": "관리 방법을 알려주세요",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n관리 방법을 알려주세요\n\n[문의 본문]\n제품을 안전하게 사용하는 방법이 궁금합니다.\n\n[답변]\n이 제품은 완전한 암막 커튼이 아닙니다. 사생활 보호가 필요하면 안감을 추가해주세요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4015,
+                "productId": 402,
+                "status": "answered",
+                "title": "상품 402 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 402 일반 문의\n\n[문의 본문]\n색상과 포장 상태를 문의합니다.\n\n[답변]\n색상은 상품 상세 페이지에서 확인해주세요."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 3,
+            "omittedSourceCount": 0,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 0,
+            "inputCodePoints": 0,
+            "inputBytes": 0,
+            "inputTokens": null
+          },
+          "embeddingMs": 0.019099999999980355,
+          "databaseMs": 16.56979999999976,
+          "totalMs": 16.7170000000001,
+          "candidates": [
+            {
+              "inquiry_id": 4012,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.16745669647789452
+            },
+            {
+              "inquiry_id": 4013,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.21489711118577381
+            },
+            {
+              "inquiry_id": 4015,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3789983081508792
+            }
+          ],
+          "invalidatedSourceCount": 0
+        },
+        "ids": [
+          4012,
+          4013,
+          4015
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.4,
+        "relevantReturned": 2,
+        "returnedSourceCount": 3
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T18:57:00.070Z",
+        "elapsedMs": 5459.81319999999
+      }
+    },
+    {
+      "query": "빛이 통과해 사생활을 가리기 어렵다는 문의와 안감 안내",
+      "productId": 402,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "caseId": "inquiry-final-2-waiting",
+      "status": "waiting",
+      "relevantIds": [
+        4011
+      ],
+      "question": "상품 402의 같은 기간 답변 대기 중인 공개 문의에서 빛이 통과해 사생활을 가리기 어렵다는 문의와 안감 안내를 찾아줘.",
+      "reason": "제목만 있는 공개 미답변 문의 한 건. 반대 경험을 불만으로 사용하지 않는다.",
+      "answerFacts": [
+        "암막"
+      ],
+      "noEvidence": false,
+      "searchStatus": "ok",
+      "baseline": {
+        "ids": [
+          4017,
+          4016,
+          4014,
+          4011
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 4
+      },
+      "semantic": {
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "inquiry",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "빛이 통과해 사생활을 가리기 어렵다는 문의와 안감 안내",
+            "productIds": [
+              402
+            ],
+            "status": "waiting",
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T19:03:39.949Z"
+          },
+          "coverage": {
+            "total": 4,
+            "ready": 4,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "inquiry",
+                "id": 4014,
+                "productId": 402,
+                "status": "waiting",
+                "title": "상품 402 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 402 일반 문의\n\n[문의 본문]\n걱정했지만 햇빛이 비치면 밖에서 사람 윤곽이 보입니다. 가림막으로 충분한가요? 같은 문제는 실제로 없었습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4011,
+                "productId": 402,
+                "status": "waiting",
+                "title": "커튼 뒤 사람이 보이는 문제",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n커튼 뒤 사람이 보이는 문제"
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4016,
+                "productId": 402,
+                "status": "waiting",
+                "title": "상품 402 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 402 일반 문의\n\n[문의 본문]\n색상과 포장 상태를 문의합니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4017,
+                "productId": 402,
+                "status": "waiting",
+                "title": "연락처 f***@***",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n연락처 f***@***\n\n[문의 본문]\n문의 연락처 ***입니다.\n\n[답변]\nf***@***으로 연락해주세요."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 4,
+            "omittedSourceCount": 0,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 0,
+            "inputCodePoints": 0,
+            "inputBytes": 0,
+            "inputTokens": null
+          },
+          "embeddingMs": 0.03150000000005093,
+          "databaseMs": 19.807200000000194,
+          "totalMs": 19.968900000000303,
+          "candidates": [
+            {
+              "inquiry_id": 4014,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2265315516869616
+            },
+            {
+              "inquiry_id": 4011,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2569098931985784
+            },
+            {
+              "inquiry_id": 4016,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3764370988157103
+            },
+            {
+              "inquiry_id": 4017,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3892335559763882
+            }
+          ],
+          "invalidatedSourceCount": 0
+        },
+        "ids": [
+          4014,
+          4011,
+          4016,
+          4017
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 4
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T18:57:00.070Z",
+        "elapsedMs": 5459.81319999999
+      }
+    },
+    {
+      "query": "커튼이 자동으로 공기 질을 측정하는 기능의 고장 문의",
+      "productId": 402,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "caseId": "inquiry-final-2-absent",
+      "relevantIds": [],
+      "question": "상품 402의 같은 기간 공개 문의에서 커튼이 자동으로 공기 질을 측정하는 기능가 고장났다는 근거를 찾아줘.",
+      "reason": "조건 범위의 모든 공개 문의에 해당 기능 고장 근거가 없다. 임계값 없는 검색 후보를 정답으로 확정하지 않는다.",
+      "answerFacts": [],
+      "noEvidence": true,
+      "searchStatus": "ok",
+      "baseline": {
+        "ids": [
+          4017,
+          4016,
+          4015,
+          4014,
+          4013
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "inquiry",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "커튼이 자동으로 공기 질을 측정하는 기능의 고장 문의",
+            "productIds": [
+              402
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T19:03:39.972Z"
+          },
+          "coverage": {
+            "total": 7,
+            "ready": 7,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "inquiry",
+                "id": 4011,
+                "productId": 402,
+                "status": "waiting",
+                "title": "커튼 뒤 사람이 보이는 문제",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n커튼 뒤 사람이 보이는 문제"
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4013,
+                "productId": 402,
+                "status": "answered",
+                "title": "관리 방법을 알려주세요",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n관리 방법을 알려주세요\n\n[문의 본문]\n제품을 안전하게 사용하는 방법이 궁금합니다.\n\n[답변]\n이 제품은 완전한 암막 커튼이 아닙니다. 사생활 보호가 필요하면 안감을 추가해주세요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4012,
+                "productId": 402,
+                "status": "answered",
+                "title": "사용 중 생긴 문제",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n사용 중 생긴 문제\n\n[문의 본문]\n햇빛이 비치면 밖에서 사람 윤곽이 보입니다. 가림막으로 충분한가요?\n\n[답변]\n이 제품은 완전한 암막 커튼이 아닙니다. 사생활 보호가 필요하면 안감을 추가해주세요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4014,
+                "productId": 402,
+                "status": "waiting",
+                "title": "상품 402 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 402 일반 문의\n\n[문의 본문]\n걱정했지만 햇빛이 비치면 밖에서 사람 윤곽이 보입니다. 가림막으로 충분한가요? 같은 문제는 실제로 없었습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4016,
+                "productId": 402,
+                "status": "waiting",
+                "title": "상품 402 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 402 일반 문의\n\n[문의 본문]\n색상과 포장 상태를 문의합니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 7,
+            "omittedSourceCount": 2,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 0,
+            "inputCodePoints": 0,
+            "inputBytes": 0,
+            "inputTokens": null
+          },
+          "embeddingMs": 0.03530000000000655,
+          "databaseMs": 21.36369999999988,
+          "totalMs": 21.54280000000017,
+          "candidates": [
+            {
+              "inquiry_id": 4011,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.29861774999429147
+            },
+            {
+              "inquiry_id": 4013,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.33263613757481303
+            },
+            {
+              "inquiry_id": 4012,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3485205200648671
+            },
+            {
+              "inquiry_id": 4014,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3593231057716345
+            },
+            {
+              "inquiry_id": 4016,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.42425262567618405
+            },
+            {
+              "inquiry_id": 4015,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4276581314639173
+            },
+            {
+              "inquiry_id": 4017,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.46000594377433035
+            }
+          ],
+          "invalidatedSourceCount": 0
+        },
+        "ids": [
+          4011,
+          4013,
+          4012,
+          4014,
+          4016
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T18:57:06.262Z",
+        "elapsedMs": 6114.76969999999
+      }
+    },
+    {
+      "query": "앉으면 좌석 높이가 유지되지 않는 문의와 부품 교체 안내",
+      "productId": 403,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "caseId": "inquiry-final-3-all",
+      "relevantIds": [
+        4021,
+        4022,
+        4023
+      ],
+      "question": "상품 403의 2026년 10월 1일부터 13일까지 공개 문의에서 앉으면 좌석 높이가 유지되지 않는 문의와 부품 교체 안내를 찾아 ID와 원문을 인용해줘.",
+      "reason": "제목만 있는 공개 문의, 문의 본문, 판매자 답변의 근거 세 건. 문제 없다는 반대 경험과 비밀 문의는 비관련.",
+      "answerFacts": [
+        "실린더",
+        "교체"
+      ],
+      "noEvidence": false,
+      "searchStatus": "ok",
+      "baseline": {
+        "ids": [
+          4027,
+          4026,
+          4025,
+          4024,
+          4023
+        ],
+        "hitAt5": 1,
+        "recallAt5": 0.3333333333333333,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "inquiry",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "앉으면 좌석 높이가 유지되지 않는 문의와 부품 교체 안내",
+            "productIds": [
+              403
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T19:03:39.994Z"
+          },
+          "coverage": {
+            "total": 7,
+            "ready": 7,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "inquiry",
+                "id": 4022,
+                "productId": 403,
+                "status": "answered",
+                "title": "사용 중 생긴 문제",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n사용 중 생긴 문제\n\n[문의 본문]\n높이를 올려도 앉아 있으면 조금씩 낮아집니다. 부품이 고장난 건가요?\n\n[답변]\n좌석이 내려가는 경우 가스 실린더 점검이 필요합니다. 부품 교체를 접수해주세요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4024,
+                "productId": 403,
+                "status": "waiting",
+                "title": "상품 403 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 403 일반 문의\n\n[문의 본문]\n걱정했지만 높이를 올려도 앉아 있으면 조금씩 낮아집니다. 부품이 고장난 건가요? 같은 문제는 실제로 없었습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4021,
+                "productId": 403,
+                "status": "waiting",
+                "title": "맞춰 둔 의자 높이가 내려갑니다",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n맞춰 둔 의자 높이가 내려갑니다"
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4023,
+                "productId": 403,
+                "status": "answered",
+                "title": "관리 방법을 알려주세요",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n관리 방법을 알려주세요\n\n[문의 본문]\n제품을 안전하게 사용하는 방법이 궁금합니다.\n\n[답변]\n좌석이 내려가는 경우 가스 실린더 점검이 필요합니다. 부품 교체를 접수해주세요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4027,
+                "productId": 403,
+                "status": "waiting",
+                "title": "연락처 f***@***",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n연락처 f***@***\n\n[문의 본문]\n문의 연락처 ***입니다.\n\n[답변]\nf***@***으로 연락해주세요."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 7,
+            "omittedSourceCount": 2,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 0,
+            "inputCodePoints": 0,
+            "inputBytes": 0,
+            "inputTokens": null
+          },
+          "embeddingMs": 0.032700000000204454,
+          "databaseMs": 20.206200000000536,
+          "totalMs": 20.483600000000024,
+          "candidates": [
+            {
+              "inquiry_id": 4022,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.155176107224276
+            },
+            {
+              "inquiry_id": 4024,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.18945517414273327
+            },
+            {
+              "inquiry_id": 4021,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.19244792371366926
+            },
+            {
+              "inquiry_id": 4023,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.19464051643617375
+            },
+            {
+              "inquiry_id": 4027,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.380496686548893
+            },
+            {
+              "inquiry_id": 4025,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3886517286300485
+            },
+            {
+              "inquiry_id": 4026,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.39199930429456886
+            }
+          ],
+          "invalidatedSourceCount": 0
+        },
+        "ids": [
+          4022,
+          4024,
+          4021,
+          4023,
+          4027
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.6,
+        "relevantReturned": 3,
+        "returnedSourceCount": 5
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T18:57:12.085Z",
+        "elapsedMs": 5760.608099999983
+      }
+    },
+    {
+      "query": "앉으면 좌석 높이가 유지되지 않는 문의와 부품 교체 안내",
+      "productId": 403,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "caseId": "inquiry-final-3-answered",
+      "status": "answered",
+      "relevantIds": [
+        4022,
+        4023
+      ],
+      "question": "상품 403의 같은 기간 답변 완료된 공개 문의에서 앉으면 좌석 높이가 유지되지 않는 문의와 부품 교체 안내를 찾아줘.",
+      "reason": "현재 상태가 answered인 공개 문의 본문·답변 두 건. 제목만 있는 미답변 문의는 상태 조건에서 제외.",
+      "answerFacts": [
+        "실린더",
+        "교체"
+      ],
+      "noEvidence": false,
+      "searchStatus": "ok",
+      "baseline": {
+        "ids": [
+          4025,
+          4023,
+          4022
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.4,
+        "relevantReturned": 2,
+        "returnedSourceCount": 3
+      },
+      "semantic": {
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "inquiry",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "앉으면 좌석 높이가 유지되지 않는 문의와 부품 교체 안내",
+            "productIds": [
+              403
+            ],
+            "status": "answered",
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T19:03:40.014Z"
+          },
+          "coverage": {
+            "total": 3,
+            "ready": 3,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "inquiry",
+                "id": 4022,
+                "productId": 403,
+                "status": "answered",
+                "title": "사용 중 생긴 문제",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n사용 중 생긴 문제\n\n[문의 본문]\n높이를 올려도 앉아 있으면 조금씩 낮아집니다. 부품이 고장난 건가요?\n\n[답변]\n좌석이 내려가는 경우 가스 실린더 점검이 필요합니다. 부품 교체를 접수해주세요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4023,
+                "productId": 403,
+                "status": "answered",
+                "title": "관리 방법을 알려주세요",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n관리 방법을 알려주세요\n\n[문의 본문]\n제품을 안전하게 사용하는 방법이 궁금합니다.\n\n[답변]\n좌석이 내려가는 경우 가스 실린더 점검이 필요합니다. 부품 교체를 접수해주세요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4025,
+                "productId": 403,
+                "status": "answered",
+                "title": "상품 403 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 403 일반 문의\n\n[문의 본문]\n색상과 포장 상태를 문의합니다.\n\n[답변]\n색상은 상품 상세 페이지에서 확인해주세요."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 3,
+            "omittedSourceCount": 0,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 0,
+            "inputCodePoints": 0,
+            "inputBytes": 0,
+            "inputTokens": null
+          },
+          "embeddingMs": 0.027400000000397995,
+          "databaseMs": 18.314800000000105,
+          "totalMs": 18.51850000000013,
+          "candidates": [
+            {
+              "inquiry_id": 4022,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.155176107224276
+            },
+            {
+              "inquiry_id": 4023,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.19464051643617375
+            },
+            {
+              "inquiry_id": 4025,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3886517286300485
+            }
+          ],
+          "invalidatedSourceCount": 0
+        },
+        "ids": [
+          4022,
+          4023,
+          4025
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.4,
+        "relevantReturned": 2,
+        "returnedSourceCount": 3
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T18:57:12.085Z",
+        "elapsedMs": 5760.608099999983
+      }
+    },
+    {
+      "query": "앉으면 좌석 높이가 유지되지 않는 문의와 부품 교체 안내",
+      "productId": 403,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "caseId": "inquiry-final-3-waiting",
+      "status": "waiting",
+      "relevantIds": [
+        4021
+      ],
+      "question": "상품 403의 같은 기간 답변 대기 중인 공개 문의에서 앉으면 좌석 높이가 유지되지 않는 문의와 부품 교체 안내를 찾아줘.",
+      "reason": "제목만 있는 공개 미답변 문의 한 건. 반대 경험을 불만으로 사용하지 않는다.",
+      "answerFacts": [
+        "실린더"
+      ],
+      "noEvidence": false,
+      "searchStatus": "ok",
+      "baseline": {
+        "ids": [
+          4027,
+          4026,
+          4024,
+          4021
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 4
+      },
+      "semantic": {
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "inquiry",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "앉으면 좌석 높이가 유지되지 않는 문의와 부품 교체 안내",
+            "productIds": [
+              403
+            ],
+            "status": "waiting",
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T19:03:40.036Z"
+          },
+          "coverage": {
+            "total": 4,
+            "ready": 4,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "inquiry",
+                "id": 4024,
+                "productId": 403,
+                "status": "waiting",
+                "title": "상품 403 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 403 일반 문의\n\n[문의 본문]\n걱정했지만 높이를 올려도 앉아 있으면 조금씩 낮아집니다. 부품이 고장난 건가요? 같은 문제는 실제로 없었습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4021,
+                "productId": 403,
+                "status": "waiting",
+                "title": "맞춰 둔 의자 높이가 내려갑니다",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n맞춰 둔 의자 높이가 내려갑니다"
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4027,
+                "productId": 403,
+                "status": "waiting",
+                "title": "연락처 f***@***",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n연락처 f***@***\n\n[문의 본문]\n문의 연락처 ***입니다.\n\n[답변]\nf***@***으로 연락해주세요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4026,
+                "productId": 403,
+                "status": "waiting",
+                "title": "상품 403 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 403 일반 문의\n\n[문의 본문]\n색상과 포장 상태를 문의합니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 4,
+            "omittedSourceCount": 0,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 0,
+            "inputCodePoints": 0,
+            "inputBytes": 0,
+            "inputTokens": null
+          },
+          "embeddingMs": 0.05559999999968568,
+          "databaseMs": 19.889999999999873,
+          "totalMs": 20.101000000000113,
+          "candidates": [
+            {
+              "inquiry_id": 4024,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.18945517414273327
+            },
+            {
+              "inquiry_id": 4021,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.19244792371366926
+            },
+            {
+              "inquiry_id": 4027,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.380496686548893
+            },
+            {
+              "inquiry_id": 4026,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.39199930429456886
+            }
+          ],
+          "invalidatedSourceCount": 0
+        },
+        "ids": [
+          4024,
+          4021,
+          4027,
+          4026
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 4
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T18:57:12.085Z",
+        "elapsedMs": 5760.608099999983
+      }
+    },
+    {
+      "query": "의자가 자동으로 수면 시간을 측정하는 기능의 고장 문의",
+      "productId": 403,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "caseId": "inquiry-final-3-absent",
+      "relevantIds": [],
+      "question": "상품 403의 같은 기간 공개 문의에서 의자가 자동으로 수면 시간을 측정하는 기능가 고장났다는 근거를 찾아줘.",
+      "reason": "조건 범위의 모든 공개 문의에 해당 기능 고장 근거가 없다. 임계값 없는 검색 후보를 정답으로 확정하지 않는다.",
+      "answerFacts": [],
+      "noEvidence": true,
+      "searchStatus": "ok",
+      "baseline": {
+        "ids": [
+          4027,
+          4026,
+          4025,
+          4024,
+          4023
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "inquiry",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "의자가 자동으로 수면 시간을 측정하는 기능의 고장 문의",
+            "productIds": [
+              403
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T19:03:40.060Z"
+          },
+          "coverage": {
+            "total": 7,
+            "ready": 7,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "inquiry",
+                "id": 4021,
+                "productId": 403,
+                "status": "waiting",
+                "title": "맞춰 둔 의자 높이가 내려갑니다",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n맞춰 둔 의자 높이가 내려갑니다"
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4024,
+                "productId": 403,
+                "status": "waiting",
+                "title": "상품 403 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 403 일반 문의\n\n[문의 본문]\n걱정했지만 높이를 올려도 앉아 있으면 조금씩 낮아집니다. 부품이 고장난 건가요? 같은 문제는 실제로 없었습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4022,
+                "productId": 403,
+                "status": "answered",
+                "title": "사용 중 생긴 문제",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n사용 중 생긴 문제\n\n[문의 본문]\n높이를 올려도 앉아 있으면 조금씩 낮아집니다. 부품이 고장난 건가요?\n\n[답변]\n좌석이 내려가는 경우 가스 실린더 점검이 필요합니다. 부품 교체를 접수해주세요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4023,
+                "productId": 403,
+                "status": "answered",
+                "title": "관리 방법을 알려주세요",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n관리 방법을 알려주세요\n\n[문의 본문]\n제품을 안전하게 사용하는 방법이 궁금합니다.\n\n[답변]\n좌석이 내려가는 경우 가스 실린더 점검이 필요합니다. 부품 교체를 접수해주세요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 4026,
+                "productId": 403,
+                "status": "waiting",
+                "title": "상품 403 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 403 일반 문의\n\n[문의 본문]\n색상과 포장 상태를 문의합니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 7,
+            "omittedSourceCount": 2,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 0,
+            "inputCodePoints": 0,
+            "inputBytes": 0,
+            "inputTokens": null
+          },
+          "embeddingMs": 0.035899999999855936,
+          "databaseMs": 24.212699999999586,
+          "totalMs": 24.368299999999635,
+          "candidates": [
+            {
+              "inquiry_id": 4021,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2639121885142546
+            },
+            {
+              "inquiry_id": 4024,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2786456248722482
+            },
+            {
+              "inquiry_id": 4022,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2831649532421022
+            },
+            {
+              "inquiry_id": 4023,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.30096009691716485
+            },
+            {
+              "inquiry_id": 4026,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4204573881898497
+            },
+            {
+              "inquiry_id": 4027,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.430301027226102
+            },
+            {
+              "inquiry_id": 4025,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4306278485433712
+            }
+          ],
+          "invalidatedSourceCount": 0
+        },
+        "ids": [
+          4021,
+          4024,
+          4022,
+          4023,
+          4026
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T18:57:18.095Z",
+        "elapsedMs": 5913.211899999995
+      }
+    }
+  ]
+}

@@ -3,14 +3,16 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  Optional,
 } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { DataSource, EntityManager } from 'typeorm';
 import { UserModel } from '../user/entity/user.entity';
 import { SellerEntity, SellerStatus } from '../seller/entity/seller.entity';
 import { DemoFixtureEntity, DEMO_SCOPE } from './entity/demo-fixture.entity';
 import { mockProductCatalog } from '../common/seeds/mock-product-catalog';
 import { InquiryEntity, InquiryStatus } from '../inquiry/entity/inquiry.entity';
 import { CreateInquiryDto } from '../inquiry/dto/create-inquiry.dto';
+import { SearchIndexRecorder } from '../search/search-index-recorder';
 
 export type DemoRole = 'buyer' | 'seller' | 'admin';
 export const DEMO_ROLES: DemoRole[] = ['buyer', 'seller', 'admin'];
@@ -20,7 +22,7 @@ export function demoConfigKey(role: DemoRole, field: 'EMAIL' | 'PASSWORD') {
 
 @Injectable()
 export class DemoPolicyService {
-  constructor(private readonly ds: DataSource) {}
+  constructor(private readonly ds: DataSource, @Optional() private readonly searchJobs?: SearchIndexRecorder) {}
 
   async user(userId: number, manager = this.ds.manager) {
     return manager.findOne(UserModel, { where: { id: userId } });
@@ -74,9 +76,9 @@ export class DemoPolicyService {
         '체험 주문의 계정 연결이 올바르지 않습니다.'
       );
   }
-  async assertInquiryActor(userId: number, inquiry: InquiryEntity) {
-    if (!(await this.user(userId))?.isDemo) return;
-    const buyer = await this.user(inquiry.userId);
+  async assertInquiryActor(userId: number, inquiry: InquiryEntity, manager: EntityManager = this.ds.manager) {
+    if (!(await this.user(userId, manager))?.isDemo) return;
+    const buyer = await this.user(inquiry.userId, manager);
     if (!buyer?.isDemo || buyer.email !== process.env.DEMO_BUYER_EMAIL) {
       throw new ForbiddenException(
         '일반 구매자의 문의에는 체험 계정으로 답변할 수 없습니다.'
@@ -169,7 +171,7 @@ export class DemoPolicyService {
           },
           HttpStatus.TOO_MANY_REQUESTS
         );
-      return manager.save(
+      const saved = await manager.save(
         InquiryEntity,
         manager.create(InquiryEntity, {
           userId,
@@ -181,6 +183,8 @@ export class DemoPolicyService {
           status: InquiryStatus.WAITING,
         })
       );
+      await this.searchJobs?.recordInquiry(manager, saved.id);
+      return saved;
     });
   }
   async status(userId: number) {

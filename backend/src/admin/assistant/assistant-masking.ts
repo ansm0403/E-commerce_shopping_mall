@@ -9,6 +9,17 @@
  * 게이트를 추가할 수 있다(현재는 항상 마스킹).
  */
 
+import { scrubText } from '../../common/utils/scrub-text';
+
+/** Final model boundary covers nested free text, tool arguments and evaluation traces. */
+export function maskAssistantValue(value: unknown): unknown {
+  if (typeof value === 'string') return scrubText(value);
+  if (value instanceof Date) return value;
+  if (Array.isArray(value)) return value.map(maskAssistantValue);
+  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key, item]) => [scrubText(key) ?? key, maskAssistantValue(item)]));
+  return value;
+}
+
 /** "john.doe@example.com" → "j***@***" (앞 1글자만 남기고 로컬·도메인 마스킹). */
 export function maskEmail(email: string | null | undefined): string | null {
   if (!email) return null;

@@ -39,13 +39,22 @@ describe('nextAnnouncement — 상태만 실시간, 본문은 완성 후 1회', 
     expect(nextAnnouncement(true, false, m)).toBe('응답을 중지했습니다.');
   });
 
-  it('오류로 끝나 본문이 없으면 알리지 않는다(오류 문구는 role=alert 가 맡는다)', () => {
-    expect(nextAnnouncement(true, false, assistant())).toBeNull();
+  it('본문 없이 끝나면 이전 진행 알림을 비운다', () => {
+    expect(nextAnnouncement(true, false, assistant())).toBe('');
+  });
+
+  it('도구 진행 중 오류가 오면 진행 알림을 비운다(오류 문구는 role=alert 가 맡는다)', () => {
+    const m = assistant({ tools: [{ name: 'summarize_reviews', status: 'running' }] });
+    expect(nextAnnouncement(true, true, m, 'AI 서비스 연결이 끊겼습니다.')).toBe('');
+  });
+
+  it('부분 답변 뒤 오류는 완료로 안내하지 않는다', () => {
+    expect(nextAnnouncement(true, false, assistant({ content: '일부 답변' }), '연결 오류')).toBe('');
   });
 
   it('진행한 적이 없으면 알리지 않는다 — 새로고침으로 복원된 대화를 읽어 대지 않는다', () => {
     expect(nextAnnouncement(false, false, assistant({ content: '복원된 답변' }))).toBeNull();
-    expect(nextAnnouncement(false, false, undefined)).toBeNull();
+    expect(nextAnnouncement(false, false, undefined)).toBe('');
   });
 });
 
