@@ -1,0 +1,83 @@
+{
+  "runId": "2026-10-13T17-19-16-330Z",
+  "caseId": "mold",
+  "question": "상품 577 리뷰에서 빵에 곰팡이가 생겼다는 불만을 의미 검색으로 찾아줘. 리뷰 ID와 원문을 인용해줘.",
+  "model": "gemini-3.1-flash-lite",
+  "planned": 1,
+  "executed": 1,
+  "llmRequests": 2,
+  "requestFailures": [],
+  "errorCode": null,
+  "httpStatus": null,
+  "elapsedMs": 16446.135700000003,
+  "eventTypes": [
+    "meta",
+    "tool",
+    "text",
+    "text",
+    "text",
+    "text",
+    "done"
+  ],
+  "errorMessage": null,
+  "reply": "상품 577에 대해 \"빵 곰팡이\"와 관련하여 의미 검색을 수행했으나, 가져온 자료에서는 해당 불만 근거를 찾지 못했습니다. 현재 확인된 리뷰 데이터에는 상품 사용에 대한 다른 내용만 포함되어 있습니다.",
+  "tools": [
+    {
+      "name": "summarize_reviews",
+      "args": {
+        "query": "빵 곰팡이",
+        "productId": 577
+      },
+      "result": {
+        "status": "ok",
+        "mode": "semantic",
+        "scope": {
+          "sourceType": "review",
+          "timezone": "Asia/Seoul",
+          "unit": "source",
+          "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+          "query": "빵 곰팡이",
+          "productIds": [
+            577
+          ],
+          "take": 5,
+          "checkedAt": "2026-10-13T17:19:05.248Z"
+        },
+        "coverage": {
+          "total": 1,
+          "ready": 1,
+          "pending": 0,
+          "failed": 0,
+          "partial": false
+        },
+        "data": {
+          "sources": [
+            {
+              "sourceType": "review",
+              "id": 1874,
+              "productId": 577,
+              "rating": 5,
+              "createdAt": "2026-10-13T04:58:06.826Z",
+              "quotes": [
+                {
+                  "chunkIndex": 0,
+                  "text": "팔 부분이 꽉 끼어서 움직이기 불편합니다. t***@***, ***"
+                }
+              ]
+            }
+          ],
+          "candidateChunkCount": 1,
+          "omittedSourceCount": 0,
+          "contextTruncated": false
+        },
+        "error": null
+      }
+    }
+  ],
+  "fixture": {
+    "syntheticReviews": 1,
+    "userDatabaseAccess": false,
+    "embeddingRequests": 0
+  },
+  "caveat": "Current live API probe using the app service/prompt/dispatcher/stream with a fixed synthetic search result. No HTTP authentication or real DB/vector search. Does not establish the cause of previous failures or answer correctness."
+}

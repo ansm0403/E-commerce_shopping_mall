@@ -1,4 +1,5 @@
 import { DataSource } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import Redis from 'ioredis';
 import { UserModel } from '../user/entity/user.entity';
@@ -23,6 +24,7 @@ import {
 } from '../demo/entity/demo-fixture.entity';
 import { mockProductCatalog } from '../common/seeds/mock-product-catalog';
 import { AuditLogEntity, AuditAction } from '../audit/entity/audit-log.entity';
+import { SearchIndexRecorder } from '../search/search-index-recorder';
 
 export interface PrepareDemoOptions {
   apply: boolean;
@@ -32,6 +34,8 @@ export async function prepareRoleDemo(
   ds: DataSource,
   options: PrepareDemoOptions
 ) {
+  // Leaf recorder shares the source transaction and never constructs an AI client.
+  const searchJobs = new SearchIndexRecorder(new ConfigService());
   const buyerEmail = process.env.DEMO_BUYER_EMAIL;
   const sellerEmail = process.env.DEMO_SELLER_EMAIL;
   const buyerPassword = process.env.DEMO_BUYER_PASSWORD;
@@ -364,6 +368,7 @@ export async function prepareRoleDemo(
               status: InquiryStatus.WAITING,
             })
           );
+          await searchJobs.recordInquiry(manager, inquiry.id);
           const fixture = await manager.save(
             DemoFixtureEntity,
             manager.create(DemoFixtureEntity, {

@@ -3,6 +3,9 @@ import { DemoPolicyService } from './demo-policy.service';
 import { UserModel } from '../user/entity/user.entity';
 import { DemoFixtureEntity } from './entity/demo-fixture.entity';
 import { parseDemoRole } from '../auth/dto/demo-login';
+import { SearchIndexRecorder } from '../search/search-index-recorder';
+import { InquiryEntity, InquiryStatus } from '../inquiry/entity/inquiry.entity';
+import type { DataSource } from 'typeorm';
 
 describe('Role demo boundaries', () => {
   const manager = {
@@ -115,5 +118,51 @@ describe('Role demo boundaries', () => {
       if (previousEmail === undefined) delete process.env.DEMO_BUYER_EMAIL;
       else process.env.DEMO_BUYER_EMAIL = previousEmail;
     }
+  });
+});
+
+describe('demo inquiry indexing transaction', () => {
+  const manager = { query: jest.fn(), findOne: jest.fn(), count: jest.fn(), create: jest.fn(), save: jest.fn() };
+  const ds = { manager, transaction: jest.fn() };
+  const searchJobs = { recordInquiry: jest.fn() };
+  let policy: DemoPolicyService;
+  let previousEmail: string | undefined;
+
+  beforeEach(() => {
+    jest.resetAllMocks();
+    previousEmail = process.env.DEMO_BUYER_EMAIL;
+    process.env.DEMO_BUYER_EMAIL = 'buyer@demo.test';
+    manager.findOne.mockResolvedValue({ id: 2, isDemo: true, email: 'buyer@demo.test' });
+    manager.query.mockResolvedValue([{ id: 10, seller_id: 4 }]);
+    manager.count.mockResolvedValue(0);
+    manager.create.mockImplementation((_entity, value) => value);
+    manager.save.mockResolvedValue({ id: 88 });
+    ds.transaction.mockImplementation(callback => callback(manager));
+    policy = new DemoPolicyService(ds as unknown as DataSource, searchJobs as unknown as SearchIndexRecorder);
+  });
+
+  afterEach(() => {
+    if (previousEmail === undefined) delete process.env.DEMO_BUYER_EMAIL;
+    else process.env.DEMO_BUYER_EMAIL = previousEmail;
+  });
+
+  it('records a demo source after saving it with the same transaction manager', async () => {
+    await expect(policy.createDemoInquiry(1, { productId: 10, title: '배송 문의', content: '언제 도착하나요?' })).resolves.toEqual({ id: 88 });
+    expect(manager.save).toHaveBeenCalledWith(InquiryEntity,
+      expect.objectContaining({ userId: 1, sellerId: 2, productId: 10, isSecret: false, status: InquiryStatus.WAITING }));
+    expect(searchJobs.recordInquiry).toHaveBeenCalledWith(manager, 88);
+    expect(manager.save.mock.invocationCallOrder[0]).toBeLessThan(searchJobs.recordInquiry.mock.invocationCallOrder[0]);
+  });
+
+  it('propagates indexing failures so the demo source transaction rolls back', async () => {
+    searchJobs.recordInquiry.mockRejectedValue(new Error('PROFILE_MISMATCH'));
+    await expect(policy.createDemoInquiry(1, { productId: 10, title: '배송 문의', content: '언제 도착하나요?' })).rejects.toThrow('PROFILE_MISMATCH');
+  });
+
+  it('keeps both demo actor lookups on an explicitly supplied source manager', async () => {
+    const tx = { findOne: jest.fn().mockResolvedValue({ isDemo: true, email: 'buyer@demo.test' }) };
+    await policy.assertInquiryActor(2, { userId: 1 } as InquiryEntity, tx as never);
+    expect(tx.findOne).toHaveBeenCalledTimes(2);
+    expect(manager.findOne).not.toHaveBeenCalled();
   });
 });

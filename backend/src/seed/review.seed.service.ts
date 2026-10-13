@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { ReviewEntity } from '../review/entity/review.entity';
 import { ProductEntity, ProductStatus } from '../product/entity/product.entity';
 import { rand } from './seed-helpers';
+import { SearchIndexRecorder } from '../search/search-index-recorder';
 
 /** §3-C 에서 시드 주문 order_items 에 끼워 넣을 실제 상품 후보 */
 export interface SeedProductRef {
@@ -83,6 +84,7 @@ export class ReviewSeedService {
     private readonly reviewRepo: Repository<ReviewEntity>,
     @InjectRepository(ProductEntity)
     private readonly productRepo: Repository<ProductEntity>,
+    @Optional() private readonly searchJobs?: SearchIndexRecorder,
   ) {}
 
   /**
@@ -167,7 +169,12 @@ export class ReviewSeedService {
     }
 
     // 대량 저장(청크 분할)
-    await this.reviewRepo.save(reviews, { chunk: 200 });
+    for (let offset = 0; offset < reviews.length; offset += 200) {
+      await this.ds.transaction(async manager => {
+        const saved = await manager.getRepository(ReviewEntity).save(reviews.slice(offset, offset + 200));
+        for (const review of saved) await this.searchJobs?.recordReview(manager, review.id);
+      });
+    }
 
     // 이벤트 미발행 경로이므로 상품 집계를 직접 일괄 재계산
     await this.recalculateAllAggregates();

@@ -10,6 +10,7 @@ import { ProductSummaryEntity } from '../product/entity/product-summary.entity';
 import { ReviewEventListener } from './listeners/review-event.listener';
 import { AuthModule } from '../auth/auth.module';
 import { CommonModule } from '../common/common.module';
+import { SearchIndexJobsModule } from '../search/search-index-jobs.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { CommonModule } from '../common/common.module';
     ]),
     AuthModule,
     CommonModule,
+    SearchIndexJobsModule,
   ],
   controllers: [ReviewController],
   providers: [ReviewService, ReviewEventListener],

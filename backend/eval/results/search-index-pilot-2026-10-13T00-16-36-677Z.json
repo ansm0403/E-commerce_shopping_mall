@@ -1,0 +1,64 @@
+{
+  "runId": "2026-10-13T00-16-36-677Z",
+  "phase": "review-index",
+  "profile": {
+    "id": "gemini-embedding-2-768-review-inquiry-v1",
+    "model": "gemini-embedding-2",
+    "dimensions": 768,
+    "preprocessingVersion": "v1",
+    "maskingVersion": "scrub-text-v1",
+    "chunkingVersion": "unicode-paragraph-v1",
+    "queryTemplate": "task: search result | query: {text}",
+    "documentTemplate": "title: {title} | text: {text}",
+    "maxCodePoints": 1000,
+    "overlapCodePoints": 100,
+    "maxInputBytes": 4096,
+    "maxChunks": 32
+  },
+  "syntheticSources": 2,
+  "originalSources": 0,
+  "planned": 6,
+  "executed": 6,
+  "passed": true,
+  "errorCode": null,
+  "cases": [
+    {
+      "caseId": "initial-source-1",
+      "passed": true,
+      "status": "done",
+      "elapsedMs": 599.2793999999994
+    },
+    {
+      "caseId": "initial-source-2",
+      "passed": true,
+      "status": "done",
+      "elapsedMs": 6685.9208
+    },
+    {
+      "caseId": "exclude-previous-version",
+      "passed": true
+    },
+    {
+      "caseId": "edited-source",
+      "passed": true,
+      "status": "done",
+      "elapsedMs": 5902.4889
+    },
+    {
+      "caseId": "deleted-source",
+      "passed": true
+    },
+    {
+      "caseId": "reconciliation",
+      "passed": true
+    }
+  ],
+  "usage": {
+    "requests": 3,
+    "inputCodePoints": 133,
+    "inputBytes": 229,
+    "inputTokens": null
+  },
+  "timingBoundary": "synthetic DB write start to completed index; includes configured RPM waiting; no HTTP or semantic search",
+  "limitations": "SDK/storage smoke pilot; retrieval quality, HTTP save latency and concurrency load are not measured here"
+}

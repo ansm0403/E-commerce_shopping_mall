@@ -4,6 +4,62 @@
   "private": true,
   "nx": {
     "targets": {
+      "test": {
+        "inputs": [
+          "default",
+          "^production",
+          "{workspaceRoot}/jest.preset.js",
+          { "externalDependencies": ["jest", "@swc/jest"] }
+        ],
+        "outputs": ["{projectRoot}/test-output/jest/coverage"]
+      },
+      "search:db:up": {
+        "executor": "nx:run-commands",
+        "options": { "command": "docker compose -f docker-compose.search.yaml up -d --build --wait", "cwd": "." }
+      },
+      "search:typecheck": {
+        "dependsOn": ["^build"],
+        "executor": "nx:run-commands",
+        "options": { "command": "tsc --noEmit -p eval/search/tsconfig.json", "cwd": "backend" }
+      },
+      "search:db:verify": {
+        "executor": "nx:run-commands",
+        "options": { "command": "jest -c jest.integration.config.js --runInBand search-foundation.integration", "cwd": "backend" }
+      },
+      "search:index:verify": {
+        "executor": "nx:run-commands",
+        "options": { "command": "jest -c jest.integration.config.js --runInBand review-index.integration", "cwd": "backend" }
+      },
+      "search:query:verify": { "executor": "nx:run-commands", "options": { "command": "jest -c jest.integration.config.js --runInBand semantic-search.integration", "cwd": "backend" } },
+      "search:inquiry:index:verify": { "executor": "nx:run-commands", "options": { "command": "jest -c jest.integration.config.js --runInBand inquiry-index.integration", "cwd": "backend" } },
+      "search:inquiry:query:verify": { "executor": "nx:run-commands", "options": { "command": "jest -c jest.integration.config.js --runInBand inquiry-search.integration", "cwd": "backend" } },
+      "search:inquiry:query:eval": { "executor": "nx:run-commands", "options": { "command": "node -r ts-node/register eval/search/run-inquiry-search-eval.ts", "cwd": "backend", "env": { "TS_NODE_PROJECT": "eval/search/tsconfig.json" } } },
+      "search:inquiry:assistant:pilot": { "executor": "nx:run-commands", "options": { "command": "node -r ts-node/register eval/search/run-inquiry-assistant-pilot.ts", "cwd": "backend", "env": { "TS_NODE_PROJECT": "eval/search/tsconfig.json" } } },
+      "search:inquiry:backfill": { "executor": "nx:run-commands", "options": { "command": "node -r ts-node/register src/search/inquiry-index.cli.ts backfill", "cwd": "backend", "env": { "TS_NODE_PROJECT": "tsconfig.typeorm.json" } } },
+      "search:inquiry:reconcile": { "executor": "nx:run-commands", "options": { "command": "node -r ts-node/register src/search/inquiry-index.cli.ts reconcile", "cwd": "backend", "env": { "TS_NODE_PROJECT": "tsconfig.typeorm.json" } } },
+      "search:inquiry:retry-failed": { "executor": "nx:run-commands", "options": { "command": "node -r ts-node/register src/search/inquiry-index.cli.ts retry-failed", "cwd": "backend", "env": { "TS_NODE_PROJECT": "tsconfig.typeorm.json" } } },
+      "search:inquiry:cleanup": { "executor": "nx:run-commands", "options": { "command": "node -r ts-node/register src/search/inquiry-index.cli.ts cleanup", "cwd": "backend", "env": { "TS_NODE_PROJECT": "tsconfig.typeorm.json" } } },
+      "search:inquiry:work": { "executor": "nx:run-commands", "options": { "command": "node -r ts-node/register src/search/inquiry-index.cli.ts work", "cwd": "backend", "env": { "TS_NODE_PROJECT": "tsconfig.typeorm.json" } } },
+      "search:chat:verify": { "executor": "nx:run-commands", "options": { "command": "jest -c jest.integration.config.js --runInBand assistant-search.integration", "cwd": "backend" } },
+      "search:stream:diagnose": { "executor": "nx:run-commands", "options": { "command": "node -r ts-node/register eval/search/run-stream-diagnostic.ts", "cwd": "backend", "env": { "TS_NODE_PROJECT": "eval/search/tsconfig.json" } } },
+      "search:query:eval": { "executor": "nx:run-commands", "options": { "command": "node -r ts-node/register eval/search/run-search-eval.ts", "cwd": "backend", "env": { "TS_NODE_PROJECT": "eval/tsconfig.eval.json" } } },
+      "search:answer:compare": { "executor": "nx:run-commands", "options": { "command": "node -r ts-node/register eval/search/run-answer-comparison.ts", "cwd": "backend", "env": { "TS_NODE_PROJECT": "eval/search/tsconfig.json" } } },
+      "search:assistant:eval": { "executor": "nx:run-commands", "options": { "command": "node -r ts-node/register eval/search/run-assistant-eval.ts", "cwd": "backend", "env": { "TS_NODE_PROJECT": "eval/search/tsconfig.json" } } },
+      "search:answer:judge": { "executor": "nx:run-commands", "options": { "command": "node -r ts-node/register eval/search/run-answer-judge.ts", "cwd": "backend", "env": { "TS_NODE_PROJECT": "eval/search/tsconfig.json" } } },
+      "search:index:pilot": { "executor": "nx:run-commands", "options": { "command": "node -r ts-node/register eval/search/run-index-pilot.ts", "cwd": "backend", "env": { "TS_NODE_PROJECT": "eval/tsconfig.eval.json" } } },
+      "search:backfill": { "executor": "nx:run-commands", "options": { "command": "node -r ts-node/register src/search/review-index.cli.ts backfill", "cwd": "backend", "env": { "TS_NODE_PROJECT": "tsconfig.typeorm.json" } } },
+      "search:reconcile": { "executor": "nx:run-commands", "options": { "command": "node -r ts-node/register src/search/review-index.cli.ts reconcile", "cwd": "backend", "env": { "TS_NODE_PROJECT": "tsconfig.typeorm.json" } } },
+      "search:retry-failed": { "executor": "nx:run-commands", "options": { "command": "node -r ts-node/register src/search/review-index.cli.ts retry-failed", "cwd": "backend", "env": { "TS_NODE_PROJECT": "tsconfig.typeorm.json" } } },
+      "search:work": { "executor": "nx:run-commands", "options": { "command": "node -r ts-node/register src/search/review-index.cli.ts work", "cwd": "backend", "env": { "TS_NODE_PROJECT": "tsconfig.typeorm.json" } } },
+      "search:cleanup": { "executor": "nx:run-commands", "options": { "command": "node -r ts-node/register src/search/review-index.cli.ts cleanup", "cwd": "backend", "env": { "TS_NODE_PROJECT": "tsconfig.typeorm.json" } } },
+      "search:pilot": {
+        "executor": "nx:run-commands",
+        "options": { "command": "node -r ts-node/register eval/search/run-pilot.ts", "cwd": "backend", "env": { "TS_NODE_PROJECT": "eval/tsconfig.eval.json" } }
+      },
+      "search:baseline": {
+        "executor": "nx:run-commands",
+        "options": { "command": "node -r ts-node/register eval/search/run-baseline.ts", "cwd": "backend", "env": { "TS_NODE_PROJECT": "eval/tsconfig.eval.json" } }
+      },
       "migration:generate": {
         "executor": "nx:run-commands",
         "options": {
@@ -236,6 +292,7 @@
         }
       },
       "typecheck": {
+        "dependsOn": ["^build"],
         "executor": "nx:run-commands",
         "options": {
           "command": "tsc --noEmit -p tsconfig.app.json",

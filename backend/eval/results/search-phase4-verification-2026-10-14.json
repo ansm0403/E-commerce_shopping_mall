@@ -1,0 +1,85 @@
+{
+  "dateKst": "2026-10-14",
+  "phase": "4: public inquiry semantic search",
+  "implemented": [
+    "Transactional normal, demo, seed and prepared-demo inquiry job recording",
+    "Title/content/answer indexing with contact masking, source versions and guarded leases",
+    "Public/private transition cleanup including disabled-index migrated databases",
+    "Exact cosine public inquiry search with current status/date/product/category filters and final source revalidation",
+    "Private sources excluded from coverage, citations and current candidate counts",
+    "Independent summarize_inquiries query capability with legacy query-less behavior retained",
+    "Shared embedding client and serialized alternating review/inquiry worker",
+    "Dry-run-first inquiry maintenance CLI and isolated synthetic evaluation"
+  ],
+  "checks": {
+    "allBackendUnit": { "passed": 831, "failed": 0, "suites": 55, "artifact": "search-phase4-unit-2026-10-14.json" },
+    "initialUnitFixtureFailure": { "passed": 828, "failed": 3, "artifact": "search-phase4-unit-initial-2026-10-14.json", "reason": "Unnecessary ScheduleModule in DI identity test caused duplicate Nest package Reflector mismatch; test fixture corrected" },
+    "foundationPostgres": 7,
+    "reviewIndexPostgres": 49,
+    "reviewSearchPostgres": 36,
+    "inquiryIndexPostgres": 44,
+    "inquirySearchPostgres": 41,
+    "authenticatedHttpSsePostgres": 15,
+    "allSearchSqlHttp": { "passed": 192, "failed": 0, "suites": 6 },
+    "postAnswerFixRelevantUnit": { "passed": 53, "failed": 0, "suites": 2 },
+    "backendTypecheck": "passed",
+    "searchEvaluationTypecheck": "passed",
+    "backendLintQuiet": "passed",
+    "developmentBuild": "passed",
+    "inquiryWorkDryRun": { "passed": true, "applied": false },
+    "inquiryAssistantPilotDryRun": { "passed": true, "executed": 0, "llmRequests": 0, "embeddingRequests": 0 },
+    "existingBuildMessage": "Nx pruned lockfile unavailable for @nestjs/typeorm@*; root lockfile fallback used",
+    "gitDiffCheck": "passed"
+  },
+  "retrieval": {
+    "fixture": "inquiries-final-small-v1",
+    "syntheticSources": 27, "public": 24, "private": 3, "chunks": 24,
+    "planned": 12, "executed": 12, "evidenceQuestions": 9, "noEvidenceQuestions": 3,
+    "criteriaFrozenBeforeLive": { "hitAt5": 0.95, "recallAt5": 0.9 },
+    "baseline": { "hitAt5": 1, "recallAt5": 0.7777777777777777, "precisionAt5": 0.26666666666666666 },
+    "semantic": { "hitAt5": 1, "recallAt5": 1, "precisionAt5": 0.4 },
+    "actualEmbeddingRequests": 25,
+    "privateOrRawContactExposureObserved": 0,
+    "artifact": "search-inquiry-retrieval-live-final-small-2026-10-13T18-57-18-160Z.json",
+    "cachedRecheck": { "embeddingRequests": 0, "executed": 12, "artifact": "search-inquiry-retrieval-live-final-small-2026-10-13T19-03-40-103Z.json" },
+    "caveat": "Small synthetic corpus, one repetition, fixed query and filters; not final-answer accuracy, user impact, HTTP latency or production load"
+  },
+  "assistantPilot": {
+    "initial": {
+      "artifact": "search-inquiry-assistant-pilot-2026-10-13T19-05-39-638Z.json",
+      "planned": 2, "executed": 2, "completedReplies": 2, "llmRequests": 4, "sdkFailures": 0, "embeddingRequests": 2,
+      "qualityProblems": ["Both tool calls omitted explicit endDate", "Title-only source described as having a matching body", "Actual no-problem experience included as a complaint"],
+      "materialUseAfterObservation": "answer improvement diagnostic; not final answer validation"
+    },
+    "independentConfirmation": {
+      "fixture": "inquiries-assistant-confirmation-v1", "sources": 10, "public": 8, "private": 2,
+      "artifact": "search-inquiry-assistant-pilot-2026-10-13T19-14-33-396Z.json",
+      "planned": 2, "executed": 2, "completedReplies": 1, "llmRequests": 6, "sdkFailures": 3, "embeddingRequests": 10,
+      "terminalErrorCode": "LLM_UNAVAILABLE",
+      "observedTitleCase": "Exact start/end and waiting filter; title quoted, body absence stated, actual-intact counterexample excluded; future/private source not returned",
+      "absentCase": "Exact tool dates and source exclusion; final model generation failed with HTTP 503 after bounded retry"
+    },
+    "separateAbsentRecheck": {
+      "artifact": "search-inquiry-assistant-pilot-2026-10-13T19-15-44-996Z.json",
+      "planned": 1, "executed": 1, "completedReplies": 1, "llmRequests": 3, "sdkFailures": 1, "embeddingRequests": 0,
+      "terminalErrorCode": null,
+      "observed": "Recovered initial HTTP 503; exact start/end, future-date mold source excluded, states no evidence in retrieved material"
+    },
+    "answerFixes": ["Distinct date field guidance", "hasContent/hasAnswer metadata", "Title/body/answer and whole-source negation instructions"],
+    "privateOrRawContactExposureObserved": 0,
+    "humanJudgments": "pending in separately generated review documents",
+    "caveat": "Do not merge the failed two-case run and later single-case recheck into a successful 2/2 run; no aggregate answer-accuracy claim"
+  },
+  "externalRequestsAcrossNewPhase4LiveRuns": { "embeddingRequests": 37, "llmRequests": 13, "llmSdkRequestFailuresIncludingRecovered": 4 },
+  "userDatabaseMutated": false,
+  "userEnvChanged": false,
+  "publicFlagsEnabledByAgent": false,
+  "publicReleaseRemaining": ["Buyer/seller/admin browser verification", "Initial public inquiry indexing and unresolved failures", "Final inquiry answer evaluation and human review", "Existing review 30-answer human review"],
+  "sourceSha256": {
+    "src/search/semantic-search.service.ts": "B4EB57EF51AC9D83E3C6C2BBF318ED09B755D112A93435EA83EA821F5341CA78",
+    "src/search/search-index-recorder.ts": "EF17E07B7AEB305ABBB5E4755DC5A6BEAA58D65FB89941289D03A3F8C8D1E469",
+    "src/search/inquiry-index.store.ts": "F91BEB30F03FC28A8B3402055487D9577D79EF12BF289763AF60DB5C5573646C",
+    "src/search/inquiry-index.processor.ts": "EA633AABDD01DC618B77967B8881169F7B6954786F3CB9C8E044DD07C304ECB0",
+    "src/admin/assistant/assistant.service.ts": "927214A5E3DD4B100E89EAB10C35C6E64884F799C98A6649BE41978445757F10"
+  }
+}

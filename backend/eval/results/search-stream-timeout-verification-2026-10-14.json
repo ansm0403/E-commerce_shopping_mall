@@ -1,0 +1,71 @@
+{
+  "dateKst": "2026-10-14",
+  "recordType": "Observed timeout, SSE keep-alive and UI failure-state verification",
+  "userReport": {
+    "conversation66": { "llmRequests": 3, "toolCallEvents": 1, "observedFailures": ["LLM_UNAVAILABLE/503", "LLM_NETWORK_ERROR/no-status"], "elapsedMs": 54194 },
+    "conversation67": { "llmRequests": 2, "toolCallEvents": 0, "observedFailures": ["LLM_UNAVAILABLE/503", "LLM_NETWORK_ERROR/no-status"], "elapsedMs": 37622 },
+    "inference": "Approximately 31-second post-retry failures match the previous 30-second SDK deadline. Cannot retrospectively prove transport state or search completion from tool-start events."
+  },
+  "changes": {
+    "ownedSdkDeadline": true,
+    "requestTimeoutMsDefault": 60000,
+    "turnSdkWaitBudgetMsDefault": 180000,
+    "requestConfigBoundsMs": [1, 120000],
+    "turnConfigBoundsMs": [1, 300000],
+    "excludedFromSdkWaitBudget": ["tool execution", "consumer pauses", "evaluation pacing", "retry backoff"],
+    "optionalCacheWaitBounded": true,
+    "callerCancellationDistinct": true,
+    "ignoringAbortSdkWaitBounded": true,
+    "lateStreamAndIteratorCleanup": true,
+    "additionalSdkRetriesPerTurn": 1,
+    "retryCompletedToolsOrPartialResponses": false,
+    "sseCommentHeartbeatMs": 15000,
+    "heartbeatStopsOn": ["completion", "error", "caller cancellation", "socket close"],
+    "staleAccessibleProgressClearedOnError": true,
+    "delayedCompletionCanceledOnErrorOrNewConversation": true,
+    "userEnvChanged": false,
+    "modelChanged": false,
+    "userReviewDataMutated": false
+  },
+  "checks": {
+    "focusedDeadlineProviderClassification": { "passed": 92, "failed": 0, "suites": 3 },
+    "allBackendUnit": { "passed": 746, "failed": 0, "suites": 52, "artifact": "search-stream-timeout-unit-2026-10-14.json" },
+    "frontendChatAnnouncementMessageSse": { "passed": 48, "failed": 0, "suites": 4, "artifact": "search-stream-timeout-ui-2026-10-14.json" },
+    "authenticatedHttpSsePostgres": { "passed": 9, "failed": 0 },
+    "backendTypecheck": "passed",
+    "frontendTypecheck": "passed",
+    "searchEvaluationTypecheck": "passed",
+    "backendLintQuiet": "passed",
+    "frontendLintQuiet": "passed",
+    "backendDevelopmentBuild": "passed",
+    "existingBuildMessage": "Nx pruned lockfile unavailable for @nestjs/typeorm@*; root lockfile fallback used",
+    "gitDiffCheck": "passed"
+  },
+  "liveDiagnostic": {
+    "artifact": "search-stream-diagnostic-2026-10-13T17-55-49-593Z.json",
+    "caseId": "rating",
+    "llmRequests": 1,
+    "toolCalls": 0,
+    "errorCode": "LLM_TIMEOUT",
+    "httpStatus": null,
+    "timeoutScope": "request",
+    "timeoutMs": 60000,
+    "sdkWaitMs": 60005,
+    "eventTypes": ["meta", "error"],
+    "completedAnswer": false,
+    "userDatabaseAccess": false,
+    "embeddingRequests": 0,
+    "caveat": "App service/prompt/dispatcher with fixed synthetic search results; no browser, real user DB/vector retrieval, or HTTP authentication. Timeout handling worked, but upstream response recovery is not established. Prior diagnostic artifacts remain preserved."
+  },
+  "sourceSha256": {
+    "src/intrastructure/ai/providers/gemini.client.ts": "B8E114B503D771FECB4DE8409422A07257B930E216D0818FAA2B5C998D949B5C",
+    "src/intrastructure/ai/llm-failure.ts": "2A6207AFB85041B9B49FFC4D37802B9F94D74584A5407D5F6A5B4A6D7BE6CD49",
+    "src/intrastructure/ai/llm-request-deadline.ts": "3FEFFBECBB6D884774BA87A2036B59C42D4606FC9273D93D97FD4FD37D5B13C7",
+    "src/admin/assistant/assistant.controller.ts": "99C0CB662309016C44E94BA5E45D2675F8AAE279B681FDC9BB261BC48380E3A0",
+    "src/admin/assistant/assistant.service.ts": "EDAC424C3533C9A57C912E3E25C7D24AB9B099B3CD9B01800EFE0C8A72CB7541"
+  },
+  "remaining": [
+    "Two failed browser questions remain incomplete until timely Gemini responses and expected review evidence are observed",
+    "Final 30-answer human review and author-attribution wording issue remain separate quality checks"
+  ]
+}

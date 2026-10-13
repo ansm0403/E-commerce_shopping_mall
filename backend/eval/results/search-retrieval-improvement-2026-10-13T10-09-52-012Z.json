@@ -1,0 +1,54 @@
+{
+  "runId": "2026-10-13T10-09-52-012Z",
+  "fixtureVersion": "reviews-improvement-v1",
+  "split": "improvement",
+  "profile": {
+    "id": "gemini-embedding-2-768-review-inquiry-v1",
+    "model": "gemini-embedding-2",
+    "dimensions": 768,
+    "preprocessingVersion": "v1",
+    "maskingVersion": "scrub-text-v1",
+    "chunkingVersion": "unicode-paragraph-v1",
+    "queryTemplate": "task: search result | query: {text}",
+    "documentTemplate": "title: {title} | text: {text}",
+    "maxCodePoints": 1000,
+    "overlapCodePoints": 100,
+    "maxInputBytes": 4096,
+    "maxChunks": 32
+  },
+  "syntheticReviews": 100,
+  "originalReviews": 0,
+  "chunkCount": 0,
+  "planned": 20,
+  "executed": 0,
+  "errorCode": "SEARCH_EVALUATION_FAILED",
+  "policy": "exact cosine; 10 candidate chunks; 5 deduplicated sources; no threshold or reranker",
+  "summary": {
+    "baseline": {
+      "hitAt5": 0,
+      "recallAt5": 0,
+      "precisionAt5": 0
+    },
+    "semantic": {
+      "hitAt5": 0,
+      "recallAt5": 0,
+      "precisionAt5": 0
+    }
+  },
+  "embeddingUsageThisRun": {
+    "requests": 1,
+    "inputCodePoints": 41,
+    "inputBytes": 71,
+    "inputTokens": null
+  },
+  "generated": {
+    "document": 0,
+    "query": 0
+  },
+  "cacheHits": {
+    "document": 0,
+    "query": 0
+  },
+  "limitations": "Synthetic improvement data only. Identical fixture inputs share a cached real vector for evaluation. Preparation latency includes RPM waiting. Cached query lookup latency is separate from original API preparation latency. No final answer quality or HTTP latency claims.",
+  "cases": []
+}

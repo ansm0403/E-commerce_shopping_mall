@@ -4,6 +4,7 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  Optional,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
@@ -13,6 +14,7 @@ import {
   LessThanOrEqual,
   MoreThanOrEqual,
   Repository,
+  EntityManager,
 } from 'typeorm';
 import { InquiryEntity, InquiryStatus } from './entity/inquiry.entity';
 import { scrubText } from '../common/utils/scrub-text';
@@ -23,6 +25,10 @@ import { AnswerInquiryDto } from './dto/answer-inquiry.dto';
 import { SellerInquiryQueryDto } from './dto/seller-inquiry-query.dto';
 import { BasePaginateDto } from '../common/dto/paginate.dto';
 import { CommonService } from '../common/common.service';
+import { SearchIndexRecorder } from '../search/search-index-recorder';
+
+export type InquirySearchChange = Partial<Pick<InquiryEntity,
+  'title' | 'content' | 'answer' | 'answeredAt' | 'isSecret' | 'status'>>;
 
 @Injectable()
 export class InquiryService {
@@ -35,6 +41,7 @@ export class InquiryService {
     private readonly sellerRepository: Repository<SellerEntity>,
     private readonly commonService: CommonService,
     private readonly demoPolicy: DemoPolicyService,
+    @Optional() private readonly searchJobs?: SearchIndexRecorder,
   ) {}
 
   // ── Buyer ──
@@ -63,7 +70,11 @@ export class InquiryService {
       isSecret: dto.isSecret ?? false,
     });
 
-    const saved = await this.inquiryRepository.save(inquiry);
+    const saved = await this.inquiryRepository.manager.transaction(async manager => {
+      const result = await manager.getRepository(InquiryEntity).save(inquiry);
+      await this.searchJobs?.recordInquiry(manager, result.id);
+      return result;
+    });
     return this.findOneWithUser(saved.id);
   }
 
@@ -100,26 +111,16 @@ export class InquiryService {
 
   async delete(userId: number, inquiryId: number) {
     await this.demoPolicy.forbidDemo(userId);
-    const inquiry = await this.inquiryRepository.findOne({
-      where: { id: inquiryId },
+    await this.inquiryRepository.manager.transaction(async manager => {
+      const repository = manager.getRepository(InquiryEntity);
+      const inquiry = await repository.findOne({ where: { id: inquiryId }, lock: { mode: 'pessimistic_write' } });
+      if (!inquiry) throw new NotFoundException('문의를 찾을 수 없습니다.');
+      if (inquiry.userId !== userId) throw new ForbiddenException('본인의 문의만 삭제할 수 있습니다.');
+      if (inquiry.status === InquiryStatus.ANSWERED) throw new BadRequestException('답변이 완료된 문의는 삭제할 수 없습니다.');
+      const deleted = await repository.delete({ id: inquiry.id, userId, status: InquiryStatus.WAITING });
+      if (deleted.affected !== 1) throw new BadRequestException('이미 삭제되었거나 답변이 완료된 문의입니다.');
+      // Source FK cascades remove every profile's chunks/jobs in this transaction.
     });
-
-    if (!inquiry) {
-      throw new NotFoundException('문의를 찾을 수 없습니다.');
-    }
-
-    if (inquiry.userId !== userId) {
-      throw new ForbiddenException('본인의 문의만 삭제할 수 있습니다.');
-    }
-
-    if (inquiry.status === InquiryStatus.ANSWERED) {
-      throw new BadRequestException('답변이 완료된 문의는 삭제할 수 없습니다.');
-    }
-
-    const deleted = await this.inquiryRepository.delete({ id: inquiry.id, userId, status: InquiryStatus.WAITING });
-    if (deleted.affected !== 1) {
-      throw new BadRequestException('이미 삭제되었거나 답변이 완료된 문의입니다.');
-    }
     return { message: '문의가 삭제되었습니다.' };
   }
 
@@ -149,33 +150,40 @@ export class InquiryService {
       throw new NotFoundException('셀러 정보를 찾을 수 없습니다.');
     }
 
-    const inquiry = await this.inquiryRepository.findOne({
-      where: { id: inquiryId },
+    await this.inquiryRepository.manager.transaction(async manager => {
+      const inquiry = await manager.getRepository(InquiryEntity).findOne({
+        where: { id: inquiryId }, lock: { mode: 'pessimistic_write' },
+      });
+      if (!inquiry) throw new NotFoundException('문의를 찾을 수 없습니다.');
+      await this.demoPolicy.assertInquiryActor(userId, inquiry, manager);
+      if (inquiry.sellerId !== seller.id) throw new ForbiddenException('본인 상품에 대한 문의만 답변할 수 있습니다.');
+      if (inquiry.status === InquiryStatus.ANSWERED) throw new BadRequestException('이미 답변이 완료된 문의입니다.');
+      await this.saveSearchChange(manager, inquiry,
+        { answer: dto.answer, answeredAt: new Date(), status: InquiryStatus.ANSWERED },
+        { sellerId: seller.id, status: InquiryStatus.WAITING });
     });
 
-    if (!inquiry) {
-      throw new NotFoundException('문의를 찾을 수 없습니다.');
-    }
+    return this.findOneWithUser(inquiryId);
+  }
 
-    await this.demoPolicy.assertInquiryActor(userId, inquiry);
-    if (inquiry.sellerId !== seller.id) {
-      throw new ForbiddenException('본인 상품에 대한 문의만 답변할 수 있습니다.');
+  /** Internal source-write primitive; callers hold the source row lock and enforce actor policy.
+   * No inquiry-edit endpoint is introduced. Migrations/imports/privacy changes use this same path.
+   */
+  async saveSearchChange(manager: EntityManager, inquiry: InquiryEntity, changes: InquirySearchChange,
+    expected: Partial<Pick<InquiryEntity, 'sellerId' | 'status'>> = {}): Promise<void> {
+    if (!manager.queryRunner?.isTransactionActive) throw new Error('SEARCH_JOB_REQUIRES_TRANSACTION');
+    const patch: InquirySearchChange = {};
+    for (const key of ['title', 'content', 'answer', 'answeredAt', 'isSecret', 'status'] as const) {
+      if (changes[key] !== undefined) Object.assign(patch, { [key]: changes[key] });
     }
-
-    if (inquiry.status === InquiryStatus.ANSWERED) {
-      throw new BadRequestException('이미 답변이 완료된 문의입니다.');
-    }
-
-    // 답변/삭제가 겹치거나 같은 문의에 동시 답변해도 첫 답변만 저장한다.
-    const updated = await this.inquiryRepository.update(
-      { id: inquiry.id, sellerId: seller.id, status: InquiryStatus.WAITING },
-      { answer: dto.answer, answeredAt: new Date(), status: InquiryStatus.ANSWERED },
-    );
-    if (updated.affected !== 1) {
-      throw new BadRequestException('이미 답변이 완료되었거나 삭제된 문의입니다.');
-    }
-
-    return this.findOneWithUser(inquiry.id);
+    if (Object.keys(patch).length === 0) return;
+    // Partial update never saves a stale entity's search_version or client-supplied ownership fields.
+    const where: FindOptionsWhere<InquiryEntity> = { id: inquiry.id };
+    if (expected.sellerId !== undefined) where.sellerId = expected.sellerId;
+    if (expected.status !== undefined) where.status = expected.status;
+    const updated = await manager.getRepository(InquiryEntity).update(where, patch);
+    if (updated.affected !== 1) throw new BadRequestException('이미 답변이 완료되었거나 삭제된 문의입니다.');
+    await this.searchJobs?.advanceInquiry(manager, inquiry.id);
   }
 
   private async findOneWithUser(inquiryId: number) {

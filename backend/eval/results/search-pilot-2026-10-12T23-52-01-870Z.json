@@ -1,0 +1,94 @@
+{
+  "runId": "2026-10-12T23-52-01-870Z",
+  "profile": {
+    "id": "gemini-embedding-2-768-review-inquiry-v1",
+    "model": "gemini-embedding-2",
+    "dimensions": 768,
+    "preprocessingVersion": "v1",
+    "maskingVersion": "scrub-text-v1",
+    "chunkingVersion": "unicode-paragraph-v1",
+    "queryTemplate": "task: search result | query: {text}",
+    "documentTemplate": "title: {title} | text: {text}",
+    "maxCodePoints": 1000,
+    "overlapCodePoints": 100,
+    "maxInputBytes": 4096,
+    "maxChunks": 32
+  },
+  "passed": true,
+  "planned": 3,
+  "executed": 3,
+  "unexecuted": 0,
+  "syntheticInputsOnly": true,
+  "sdkVersion": "2.8.0",
+  "normalizationCriterion": "norm recorded; cosine search also validates finite nonzero 768-dimensional response",
+  "usage": {
+    "requests": 4,
+    "inputCodePoints": 1128,
+    "inputBytes": 2732,
+    "inputTokens": null
+  },
+  "cases": [
+    {
+      "caseId": "korean-query",
+      "status": "pass",
+      "inputCount": 1,
+      "vectorCount": 1,
+      "dimensions": [
+        768
+      ],
+      "norms": [
+        0.9999997844705553
+      ],
+      "distinctVectors": true,
+      "elapsedMs": 570.9465,
+      "usage": {
+        "requests": 1,
+        "inputBytes": 71,
+        "inputCodePoints": 45,
+        "inputTokens": null
+      }
+    },
+    {
+      "caseId": "independent-documents",
+      "status": "pass",
+      "inputCount": 2,
+      "vectorCount": 2,
+      "dimensions": [
+        768,
+        768
+      ],
+      "norms": [
+        0.9999999656874659,
+        0.9999998434971776
+      ],
+      "distinctVectors": true,
+      "elapsedMs": 11971.0738,
+      "usage": {
+        "requests": 2,
+        "inputBytes": 122,
+        "inputCodePoints": 74,
+        "inputTokens": null
+      }
+    },
+    {
+      "caseId": "long-korean-emoji",
+      "status": "pass",
+      "inputCount": 1,
+      "vectorCount": 1,
+      "dimensions": [
+        768
+      ],
+      "norms": [
+        1.000000062526997
+      ],
+      "distinctVectors": true,
+      "elapsedMs": 6137.711300000001,
+      "usage": {
+        "requests": 1,
+        "inputBytes": 2539,
+        "inputCodePoints": 1009,
+        "inputTokens": null
+      }
+    }
+  ]
+}

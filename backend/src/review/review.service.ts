@@ -4,6 +4,7 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  Optional,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
@@ -26,6 +27,7 @@ import { ReviewCreatedEvent, ReviewDeletedEvent } from './events/review.events';
 import { ReviewSummaryResponseDto } from './dto/review-summary-response.dto';
 import { BasePaginateDto } from '../common/dto/paginate.dto';
 import { CommonService } from '../common/common.service';
+import { SearchIndexRecorder } from '../search/search-index-recorder';
 
 @Injectable()
 export class ReviewService {
@@ -39,6 +41,7 @@ export class ReviewService {
     private readonly eventEmitter: EventEmitter2,
     private readonly commonService: CommonService,
     private readonly demoPolicy: DemoPolicyService,
+    @Optional() private readonly searchJobs?: SearchIndexRecorder,
   ) {}
 
   async create(userId: number, dto: CreateReviewDto) {
@@ -86,7 +89,11 @@ export class ReviewService {
 
     let saved: ReviewEntity;
     try {
-      saved = await this.reviewRepository.save(review);
+      saved = await this.reviewRepository.manager.transaction(async manager => {
+        const result = await manager.getRepository(ReviewEntity).save(review);
+        await this.searchJobs?.recordReview(manager, result.id);
+        return result;
+      });
     } catch (error) {
       // 두 요청이 사전 중복 검사를 함께 통과해도 DB의 유일성 제약으로 한 번만 저장한다.
       if (error instanceof QueryFailedError && error.driverError?.code === '23505') {
@@ -105,32 +112,20 @@ export class ReviewService {
 
   async update(userId: number, reviewId: number, dto: UpdateReviewDto) {
     await this.demoPolicy.forbidDemo(userId);
-    const review = await this.reviewRepository.findOne({
-      where: { id: reviewId },
+    const { review, oldRating } = await this.reviewRepository.manager.transaction(async manager => {
+      const repository = manager.getRepository(ReviewEntity);
+      const review = await repository.findOne({ where: { id: reviewId }, lock: { mode: 'pessimistic_write' } });
+      if (!review) throw new NotFoundException('리뷰를 찾을 수 없습니다.');
+      if (review.userId !== userId) throw new ForbiddenException('본인의 리뷰만 수정할 수 있습니다.');
+      if ((Date.now() - review.createdAt.getTime()) / 86400000 > 30) throw new BadRequestException('리뷰 작성 후 30일이 지나 수정할 수 없습니다.');
+      const oldRating = review.rating;
+      if (dto.rating !== undefined) review.rating = dto.rating;
+      if (dto.comment !== undefined) review.comment = dto.comment;
+      if (dto.imageUrls !== undefined) review.imageUrls = dto.imageUrls;
+      await repository.save(review);
+      await this.searchJobs?.advanceReview(manager, review.id);
+      return { review, oldRating };
     });
-
-    if (!review) {
-      throw new NotFoundException('리뷰를 찾을 수 없습니다.');
-    }
-
-    if (review.userId !== userId) {
-      throw new ForbiddenException('본인의 리뷰만 수정할 수 있습니다.');
-    }
-
-    // 30일 수정 제한
-    const daysSinceCreation =
-      (Date.now() - review.createdAt.getTime()) / (1000 * 60 * 60 * 24);
-    if (daysSinceCreation > 30) {
-      throw new BadRequestException('리뷰 작성 후 30일이 지나 수정할 수 없습니다.');
-    }
-
-    const oldRating = review.rating;
-
-    if (dto.rating !== undefined) review.rating = dto.rating;
-    if (dto.comment !== undefined) review.comment = dto.comment;
-    if (dto.imageUrls !== undefined) review.imageUrls = dto.imageUrls;
-
-    await this.reviewRepository.save(review);
 
     // rating이 변경된 경우 이벤트 발행 (삭제 후 생성으로 처리)
     if (dto.rating !== undefined && dto.rating !== oldRating) {
@@ -149,19 +144,14 @@ export class ReviewService {
 
   async delete(userId: number, reviewId: number, isAdmin: boolean) {
     await this.demoPolicy.forbidDemo(userId);
-    const review = await this.reviewRepository.findOne({
-      where: { id: reviewId },
+    const review = await this.reviewRepository.manager.transaction(async manager => {
+      const repository = manager.getRepository(ReviewEntity);
+      const review = await repository.findOne({ where: { id: reviewId }, lock: { mode: 'pessimistic_write' } });
+      if (!review) throw new NotFoundException('리뷰를 찾을 수 없습니다.');
+      if (!isAdmin && review.userId !== userId) throw new ForbiddenException('본인의 리뷰만 삭제할 수 있습니다.');
+      await repository.remove(review);
+      return review;
     });
-
-    if (!review) {
-      throw new NotFoundException('리뷰를 찾을 수 없습니다.');
-    }
-
-    if (!isAdmin && review.userId !== userId) {
-      throw new ForbiddenException('본인의 리뷰만 삭제할 수 있습니다.');
-    }
-
-    await this.reviewRepository.remove(review);
 
     this.eventEmitter.emit(
       'review.deleted',

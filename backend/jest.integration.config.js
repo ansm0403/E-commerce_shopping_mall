@@ -2,10 +2,9 @@
 /**
  * 통합 테스트(*.integration.spec.ts) 전용 jest 설정 — 진짜 PostgreSQL 을 쓰는 스펙만 돌린다.
  *
- * 기본 jest.config.ts(단위, CI)와 따로 둔 이유 셋:
+ * 기본 jest.config.cjs(단위, CI)와 따로 둔 이유:
  *  1. 단위 설정은 `\.integration\.spec\.ts$` 를 제외한다(DB 필요).
- *  2. 로컬 Node 22 는 jest.config.ts(ESM 판정 → __dirname 없음)를 못 읽는다 → CommonJS .js 로.
- *  3. @swc/jest 는 엔티티 순환 import(order ↔ order-item ↔ shipment, cart ↔ cart-item …)에서
+ *  2. @swc/jest 는 엔티티 순환 import(order ↔ order-item ↔ shipment, cart ↔ cart-item …)에서
  *     `design:type` 메타데이터를 만들다 TDZ("Cannot access 'OrderEntity' before initialization")로 죽는다.
  *     ts-jest 의 CommonJS 출력은 같은 자리에서 undefined 를 주고 TypeORM 은 관계 타깃을 화살표 함수로 받으므로 문제없다.
  *

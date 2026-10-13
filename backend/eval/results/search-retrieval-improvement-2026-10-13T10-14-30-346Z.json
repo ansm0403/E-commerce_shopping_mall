@@ -1,0 +1,4315 @@
+{
+  "runId": "2026-10-13T10-14-30-346Z",
+  "fixtureVersion": "reviews-improvement-v1",
+  "split": "improvement",
+  "profile": {
+    "id": "gemini-embedding-2-768-review-inquiry-v1",
+    "model": "gemini-embedding-2",
+    "dimensions": 768,
+    "preprocessingVersion": "v1",
+    "maskingVersion": "scrub-text-v1",
+    "chunkingVersion": "unicode-paragraph-v1",
+    "queryTemplate": "task: search result | query: {text}",
+    "documentTemplate": "title: {title} | text: {text}",
+    "maxCodePoints": 1000,
+    "overlapCodePoints": 100,
+    "maxInputBytes": 4096,
+    "maxChunks": 32
+  },
+  "syntheticReviews": 100,
+  "originalReviews": 0,
+  "chunkCount": 100,
+  "planned": 20,
+  "executed": 20,
+  "errorCode": null,
+  "policy": "exact cosine; 10 candidate chunks; 5 deduplicated sources; no threshold or reranker",
+  "summary": {
+    "baseline": {
+      "hitAt5": 0,
+      "recallAt5": 0,
+      "precisionAt5": 0
+    },
+    "semantic": {
+      "hitAt5": 1,
+      "recallAt5": 1,
+      "precisionAt5": 0.20000000000000004
+    }
+  },
+  "embeddingUsageThisRun": {
+    "requests": 42,
+    "inputCodePoints": 2211,
+    "inputBytes": 3941,
+    "inputTokens": null
+  },
+  "generated": {
+    "document": 22,
+    "query": 20
+  },
+  "cacheHits": {
+    "document": 78,
+    "query": 0
+  },
+  "limitations": "Synthetic improvement data only. Identical fixture inputs share a cached real vector for evaluation. Preparation latency includes RPM waiting. Cached query lookup latency is separate from original API preparation latency. No final answer quality or HTTP latency claims.",
+  "cases": [
+    {
+      "caseId": "improve-1-explicit",
+      "query": "팔을 움직이기 어려울 만큼 옷이 조이는 불만",
+      "productId": 1,
+      "maxRating": null,
+      "relevantIds": [
+        1
+      ],
+      "reason": "직접 해당 문제를 서술한 원문. 높은 별점이어도 불만 근거.",
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          10,
+          9,
+          8,
+          7,
+          6
+        ],
+        "hitAt5": 0,
+        "recallAt5": 0,
+        "precisionAt5": 0,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "팔을 움직이기 어려울 만큼 옷이 조이는 불만",
+            "productIds": [
+              1
+            ],
+            "take": 5,
+            "checkedAt": "2026-10-13T10:12:36.546Z"
+          },
+          "coverage": {
+            "total": 10,
+            "ready": 10,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 1,
+                "productId": 1,
+                "rating": 5,
+                "createdAt": "2026-09-30T15:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "팔 부분이 꽉 끼고 움직이기 어려워요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2,
+                "productId": 1,
+                "rating": 4,
+                "createdAt": "2026-10-09T16:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했는데 그런 문제 없이 잘 쓰고 있어요. 작을까 걱정했는데 잘 맞아요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 3,
+                "productId": 1,
+                "rating": 4,
+                "createdAt": "2026-10-09T17:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 1의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 4,
+                "productId": 1,
+                "rating": 4,
+                "createdAt": "2026-10-09T18:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 1의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 5,
+                "productId": 1,
+                "rating": 4,
+                "createdAt": "2026-10-09T19:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 1의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 10,
+            "omittedSourceCount": 5,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 53,
+            "inputBytes": 89,
+            "inputTokens": null
+          },
+          "embeddingMs": 5678.610299999986,
+          "databaseMs": 57.51880000001984,
+          "totalMs": 5742.176999999996,
+          "candidates": [
+            {
+              "review_id": 1,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.10288613421399573
+            },
+            {
+              "review_id": 2,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3323041794843983
+            },
+            {
+              "review_id": 3,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40773863700163904
+            },
+            {
+              "review_id": 4,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40773863700163904
+            },
+            {
+              "review_id": 5,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40773863700163904
+            },
+            {
+              "review_id": 6,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40773863700163904
+            },
+            {
+              "review_id": 7,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40773863700163904
+            },
+            {
+              "review_id": 8,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40773863700163904
+            },
+            {
+              "review_id": 9,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40773863700163904
+            },
+            {
+              "review_id": 10,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40773863700163904
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:12:36.132Z",
+        "elapsedMs": 5668.845100000006
+      }
+    },
+    {
+      "caseId": "improve-1-paraphrase",
+      "query": "고객이 겪은 문제를 찾아줘: 팔을 움직이기 어려울 만큼 옷이 조이는 불만",
+      "productId": 1,
+      "maxRating": null,
+      "relevantIds": [
+        1
+      ],
+      "reason": "동일 근거의 표현 변경 질문. 같은 개선용 그룹에만 보관.",
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          10,
+          9,
+          8,
+          7,
+          6
+        ],
+        "hitAt5": 0,
+        "recallAt5": 0,
+        "precisionAt5": 0,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "고객이 겪은 문제를 찾아줘: 팔을 움직이기 어려울 만큼 옷이 조이는 불만",
+            "productIds": [
+              1
+            ],
+            "take": 5,
+            "checkedAt": "2026-10-13T10:12:41.468Z"
+          },
+          "coverage": {
+            "total": 10,
+            "ready": 10,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 1,
+                "productId": 1,
+                "rating": 5,
+                "createdAt": "2026-09-30T15:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "팔 부분이 꽉 끼고 움직이기 어려워요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2,
+                "productId": 1,
+                "rating": 4,
+                "createdAt": "2026-10-09T16:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했는데 그런 문제 없이 잘 쓰고 있어요. 작을까 걱정했는데 잘 맞아요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 3,
+                "productId": 1,
+                "rating": 4,
+                "createdAt": "2026-10-09T17:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 1의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 4,
+                "productId": 1,
+                "rating": 4,
+                "createdAt": "2026-10-09T18:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 1의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 5,
+                "productId": 1,
+                "rating": 4,
+                "createdAt": "2026-10-09T19:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 1의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 10,
+            "omittedSourceCount": 5,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 69,
+            "inputBytes": 127,
+            "inputTokens": null
+          },
+          "embeddingMs": 5948.694699999993,
+          "databaseMs": 49.37940000000526,
+          "totalMs": 5998.331699999981,
+          "candidates": [
+            {
+              "review_id": 1,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.1298118984474026
+            },
+            {
+              "review_id": 2,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.35185450977842503
+            },
+            {
+              "review_id": 3,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4151806482779524
+            },
+            {
+              "review_id": 4,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4151806482779524
+            },
+            {
+              "review_id": 5,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4151806482779524
+            },
+            {
+              "review_id": 6,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4151806482779524
+            },
+            {
+              "review_id": 7,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4151806482779524
+            },
+            {
+              "review_id": 8,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4151806482779524
+            },
+            {
+              "review_id": 9,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4151806482779524
+            },
+            {
+              "review_id": 10,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4151806482779524
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:12:42.133Z",
+        "elapsedMs": 5938.287200000021
+      }
+    },
+    {
+      "caseId": "improve-2-explicit",
+      "query": "빨래 후 옷이 수축했다는 반응",
+      "productId": 2,
+      "maxRating": null,
+      "relevantIds": [
+        11
+      ],
+      "reason": "직접 해당 문제를 서술한 원문. 높은 별점이어도 불만 근거.",
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          20,
+          19,
+          18,
+          17,
+          16
+        ],
+        "hitAt5": 0,
+        "recallAt5": 0,
+        "precisionAt5": 0,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          11,
+          12,
+          13,
+          14,
+          15
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "빨래 후 옷이 수축했다는 반응",
+            "productIds": [
+              2
+            ],
+            "take": 5,
+            "checkedAt": "2026-10-13T10:12:47.775Z"
+          },
+          "coverage": {
+            "total": 10,
+            "ready": 10,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 11,
+                "productId": 2,
+                "rating": 5,
+                "createdAt": "2026-09-30T15:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "한 번 세탁하니 길이가 줄어 버렸어요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 12,
+                "productId": 2,
+                "rating": 4,
+                "createdAt": "2026-10-09T16:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했는데 그런 문제 없이 잘 쓰고 있어요. 전체적으로 만족합니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 13,
+                "productId": 2,
+                "rating": 4,
+                "createdAt": "2026-10-09T17:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 2의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 14,
+                "productId": 2,
+                "rating": 4,
+                "createdAt": "2026-10-09T18:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 2의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 15,
+                "productId": 2,
+                "rating": 4,
+                "createdAt": "2026-10-09T19:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 2의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 10,
+            "omittedSourceCount": 5,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 45,
+            "inputBytes": 69,
+            "inputTokens": null
+          },
+          "embeddingMs": 5965.136499999993,
+          "databaseMs": 55.76009999998496,
+          "totalMs": 6021.524600000004,
+          "candidates": [
+            {
+              "review_id": 11,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.1707554023502782
+            },
+            {
+              "review_id": 12,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3581326088272824
+            },
+            {
+              "review_id": 13,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40688346253975916
+            },
+            {
+              "review_id": 14,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40688346253975916
+            },
+            {
+              "review_id": 15,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40688346253975916
+            },
+            {
+              "review_id": 16,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40688346253975916
+            },
+            {
+              "review_id": 17,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40688346253975916
+            },
+            {
+              "review_id": 18,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40688346253975916
+            },
+            {
+              "review_id": 19,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40688346253975916
+            },
+            {
+              "review_id": 20,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40688346253975916
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:12:48.145Z",
+        "elapsedMs": 5945.8616999999795
+      }
+    },
+    {
+      "caseId": "improve-2-paraphrase",
+      "query": "고객이 겪은 문제를 찾아줘: 빨래 후 옷이 수축했다는 반응",
+      "productId": 2,
+      "maxRating": null,
+      "relevantIds": [
+        11
+      ],
+      "reason": "동일 근거의 표현 변경 질문. 같은 개선용 그룹에만 보관.",
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          20,
+          19,
+          18,
+          17,
+          16
+        ],
+        "hitAt5": 0,
+        "recallAt5": 0,
+        "precisionAt5": 0,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          11,
+          12,
+          13,
+          14,
+          15
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "고객이 겪은 문제를 찾아줘: 빨래 후 옷이 수축했다는 반응",
+            "productIds": [
+              2
+            ],
+            "take": 5,
+            "checkedAt": "2026-10-13T10:12:54.116Z"
+          },
+          "coverage": {
+            "total": 10,
+            "ready": 10,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 11,
+                "productId": 2,
+                "rating": 5,
+                "createdAt": "2026-09-30T15:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "한 번 세탁하니 길이가 줄어 버렸어요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 12,
+                "productId": 2,
+                "rating": 4,
+                "createdAt": "2026-10-09T16:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했는데 그런 문제 없이 잘 쓰고 있어요. 전체적으로 만족합니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 13,
+                "productId": 2,
+                "rating": 4,
+                "createdAt": "2026-10-09T17:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 2의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 14,
+                "productId": 2,
+                "rating": 4,
+                "createdAt": "2026-10-09T18:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 2의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 15,
+                "productId": 2,
+                "rating": 4,
+                "createdAt": "2026-10-09T19:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 2의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 10,
+            "omittedSourceCount": 5,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 61,
+            "inputBytes": 107,
+            "inputTokens": null
+          },
+          "embeddingMs": 5975.221699999995,
+          "databaseMs": 77.85129999998026,
+          "totalMs": 6053.415500000003,
+          "candidates": [
+            {
+              "review_id": 11,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.16709287491291946
+            },
+            {
+              "review_id": 12,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.33546139771194605
+            },
+            {
+              "review_id": 13,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.39488846309286985
+            },
+            {
+              "review_id": 14,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.39488846309286985
+            },
+            {
+              "review_id": 15,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.39488846309286985
+            },
+            {
+              "review_id": 16,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.39488846309286985
+            },
+            {
+              "review_id": 17,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.39488846309286985
+            },
+            {
+              "review_id": 18,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.39488846309286985
+            },
+            {
+              "review_id": 19,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.39488846309286985
+            },
+            {
+              "review_id": 20,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.39488846309286985
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:12:54.196Z",
+        "elapsedMs": 5961.531500000012
+      }
+    },
+    {
+      "caseId": "improve-3-explicit",
+      "query": "솔기가 피부를 자극한다는 불만",
+      "productId": 3,
+      "maxRating": null,
+      "relevantIds": [
+        21
+      ],
+      "reason": "직접 해당 문제를 서술한 원문. 높은 별점이어도 불만 근거.",
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          30,
+          29,
+          28,
+          27,
+          26
+        ],
+        "hitAt5": 0,
+        "recallAt5": 0,
+        "precisionAt5": 0,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          21,
+          22,
+          23,
+          24,
+          25
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "솔기가 피부를 자극한다는 불만",
+            "productIds": [
+              3
+            ],
+            "take": 5,
+            "checkedAt": "2026-10-13T10:13:00.366Z"
+          },
+          "coverage": {
+            "total": 10,
+            "ready": 10,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 21,
+                "productId": 3,
+                "rating": 5,
+                "createdAt": "2026-09-30T15:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "봉제선이 피부를 계속 긁어서 따가워요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 22,
+                "productId": 3,
+                "rating": 4,
+                "createdAt": "2026-10-09T16:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했는데 그런 문제 없이 잘 쓰고 있어요. 전체적으로 만족합니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 23,
+                "productId": 3,
+                "rating": 4,
+                "createdAt": "2026-10-09T17:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 3의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 24,
+                "productId": 3,
+                "rating": 4,
+                "createdAt": "2026-10-09T18:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 3의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 25,
+                "productId": 3,
+                "rating": 4,
+                "createdAt": "2026-10-09T19:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 3의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 10,
+            "omittedSourceCount": 5,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 45,
+            "inputBytes": 71,
+            "inputTokens": null
+          },
+          "embeddingMs": 5906.549100000004,
+          "databaseMs": 52.125499999994645,
+          "totalMs": 5959.491399999999,
+          "candidates": [
+            {
+              "review_id": 21,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.12608574317863663
+            },
+            {
+              "review_id": 22,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.34561655406258307
+            },
+            {
+              "review_id": 23,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3966848860129957
+            },
+            {
+              "review_id": 24,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3966848860129957
+            },
+            {
+              "review_id": 25,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3966848860129957
+            },
+            {
+              "review_id": 26,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3966848860129957
+            },
+            {
+              "review_id": 27,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3966848860129957
+            },
+            {
+              "review_id": 28,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3966848860129957
+            },
+            {
+              "review_id": 29,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3966848860129957
+            },
+            {
+              "review_id": 30,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3966848860129957
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:13:00.183Z",
+        "elapsedMs": 5894.823999999993
+      }
+    },
+    {
+      "caseId": "improve-3-paraphrase",
+      "query": "고객이 겪은 문제를 찾아줘: 솔기가 피부를 자극한다는 불만",
+      "productId": 3,
+      "maxRating": null,
+      "relevantIds": [
+        21
+      ],
+      "reason": "동일 근거의 표현 변경 질문. 같은 개선용 그룹에만 보관.",
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          30,
+          29,
+          28,
+          27,
+          26
+        ],
+        "hitAt5": 0,
+        "recallAt5": 0,
+        "precisionAt5": 0,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          21,
+          22,
+          23,
+          24,
+          25
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "고객이 겪은 문제를 찾아줘: 솔기가 피부를 자극한다는 불만",
+            "productIds": [
+              3
+            ],
+            "take": 5,
+            "checkedAt": "2026-10-13T10:13:06.656Z"
+          },
+          "coverage": {
+            "total": 10,
+            "ready": 10,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 21,
+                "productId": 3,
+                "rating": 5,
+                "createdAt": "2026-09-30T15:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "봉제선이 피부를 계속 긁어서 따가워요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 22,
+                "productId": 3,
+                "rating": 4,
+                "createdAt": "2026-10-09T16:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했는데 그런 문제 없이 잘 쓰고 있어요. 전체적으로 만족합니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 23,
+                "productId": 3,
+                "rating": 4,
+                "createdAt": "2026-10-09T17:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 3의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 24,
+                "productId": 3,
+                "rating": 4,
+                "createdAt": "2026-10-09T18:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 3의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 25,
+                "productId": 3,
+                "rating": 4,
+                "createdAt": "2026-10-09T19:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 3의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 10,
+            "omittedSourceCount": 5,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 61,
+            "inputBytes": 109,
+            "inputTokens": null
+          },
+          "embeddingMs": 5946.550400000007,
+          "databaseMs": 53.75289999999222,
+          "totalMs": 6000.794500000018,
+          "candidates": [
+            {
+              "review_id": 21,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.15337692777055778
+            },
+            {
+              "review_id": 22,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.335567592775448
+            },
+            {
+              "review_id": 23,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3878439932241282
+            },
+            {
+              "review_id": 24,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3878439932241282
+            },
+            {
+              "review_id": 25,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3878439932241282
+            },
+            {
+              "review_id": 26,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3878439932241282
+            },
+            {
+              "review_id": 27,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3878439932241282
+            },
+            {
+              "review_id": 28,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3878439932241282
+            },
+            {
+              "review_id": 29,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3878439932241282
+            },
+            {
+              "review_id": 30,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3878439932241282
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:13:06.178Z",
+        "elapsedMs": 5934.194599999988
+      }
+    },
+    {
+      "caseId": "improve-4-explicit",
+      "query": "신발 안으로 물이 들어온 경험",
+      "productId": 4,
+      "maxRating": null,
+      "relevantIds": [
+        31
+      ],
+      "reason": "직접 해당 문제를 서술한 원문. 높은 별점이어도 불만 근거.",
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          40,
+          39,
+          38,
+          37,
+          36
+        ],
+        "hitAt5": 0,
+        "recallAt5": 0,
+        "precisionAt5": 0,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          31,
+          32,
+          33,
+          34,
+          35
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "신발 안으로 물이 들어온 경험",
+            "productIds": [
+              4
+            ],
+            "take": 5,
+            "checkedAt": "2026-10-13T10:13:11.582Z"
+          },
+          "coverage": {
+            "total": 10,
+            "ready": 10,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 31,
+                "productId": 4,
+                "rating": 5,
+                "createdAt": "2026-09-30T15:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "비 오는 날 신었더니 양말까지 젖었어요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 32,
+                "productId": 4,
+                "rating": 4,
+                "createdAt": "2026-10-09T16:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했는데 그런 문제 없이 잘 쓰고 있어요. 전체적으로 만족합니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 33,
+                "productId": 4,
+                "rating": 4,
+                "createdAt": "2026-10-09T17:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 4의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 34,
+                "productId": 4,
+                "rating": 4,
+                "createdAt": "2026-10-09T18:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 4의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 35,
+                "productId": 4,
+                "rating": 4,
+                "createdAt": "2026-10-09T19:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 4의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 10,
+            "omittedSourceCount": 5,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 45,
+            "inputBytes": 69,
+            "inputTokens": null
+          },
+          "embeddingMs": 5933.449599999993,
+          "databaseMs": 63.557399999990594,
+          "totalMs": 5997.28409999999,
+          "candidates": [
+            {
+              "review_id": 31,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.18157100677490234
+            },
+            {
+              "review_id": 32,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.36368672954314585
+            },
+            {
+              "review_id": 33,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.418005108833313
+            },
+            {
+              "review_id": 34,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.418005108833313
+            },
+            {
+              "review_id": 35,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.418005108833313
+            },
+            {
+              "review_id": 36,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.418005108833313
+            },
+            {
+              "review_id": 37,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.418005108833313
+            },
+            {
+              "review_id": 38,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.418005108833313
+            },
+            {
+              "review_id": 39,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.418005108833313
+            },
+            {
+              "review_id": 40,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.418005108833313
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:13:12.170Z",
+        "elapsedMs": 5916.905800000008
+      }
+    },
+    {
+      "caseId": "improve-4-paraphrase",
+      "query": "고객이 겪은 문제를 찾아줘: 신발 안으로 물이 들어온 경험",
+      "productId": 4,
+      "maxRating": null,
+      "relevantIds": [
+        31
+      ],
+      "reason": "동일 근거의 표현 변경 질문. 같은 개선용 그룹에만 보관.",
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          40,
+          39,
+          38,
+          37,
+          36
+        ],
+        "hitAt5": 0,
+        "recallAt5": 0,
+        "precisionAt5": 0,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          31,
+          32,
+          33,
+          34,
+          35
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "고객이 겪은 문제를 찾아줘: 신발 안으로 물이 들어온 경험",
+            "productIds": [
+              4
+            ],
+            "take": 5,
+            "checkedAt": "2026-10-13T10:13:17.882Z"
+          },
+          "coverage": {
+            "total": 10,
+            "ready": 10,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 31,
+                "productId": 4,
+                "rating": 5,
+                "createdAt": "2026-09-30T15:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "비 오는 날 신었더니 양말까지 젖었어요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 32,
+                "productId": 4,
+                "rating": 4,
+                "createdAt": "2026-10-09T16:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했는데 그런 문제 없이 잘 쓰고 있어요. 전체적으로 만족합니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 33,
+                "productId": 4,
+                "rating": 4,
+                "createdAt": "2026-10-09T17:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 4의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 34,
+                "productId": 4,
+                "rating": 4,
+                "createdAt": "2026-10-09T18:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 4의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 35,
+                "productId": 4,
+                "rating": 4,
+                "createdAt": "2026-10-09T19:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 4의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 10,
+            "omittedSourceCount": 5,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 61,
+            "inputBytes": 107,
+            "inputTokens": null
+          },
+          "embeddingMs": 5949.208799999993,
+          "databaseMs": 61.19690000000992,
+          "totalMs": 6010.715599999996,
+          "candidates": [
+            {
+              "review_id": 31,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.17685946275370412
+            },
+            {
+              "review_id": 32,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.35712955254653334
+            },
+            {
+              "review_id": 33,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.406129082729627
+            },
+            {
+              "review_id": 34,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.406129082729627
+            },
+            {
+              "review_id": 35,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.406129082729627
+            },
+            {
+              "review_id": 36,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.406129082729627
+            },
+            {
+              "review_id": 37,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.406129082729627
+            },
+            {
+              "review_id": 38,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.406129082729627
+            },
+            {
+              "review_id": 39,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.406129082729627
+            },
+            {
+              "review_id": 40,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.406129082729627
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:13:18.192Z",
+        "elapsedMs": 5935.210200000001
+      }
+    },
+    {
+      "caseId": "improve-5-explicit",
+      "query": "걸을 때 발뒤꿈치가 쓸린다는 불만",
+      "productId": 5,
+      "maxRating": null,
+      "relevantIds": [
+        41
+      ],
+      "reason": "직접 해당 문제를 서술한 원문. 높은 별점이어도 불만 근거.",
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          50,
+          49,
+          48,
+          47,
+          46
+        ],
+        "hitAt5": 0,
+        "recallAt5": 0,
+        "precisionAt5": 0,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          41,
+          42,
+          43,
+          44,
+          45
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "걸을 때 발뒤꿈치가 쓸린다는 불만",
+            "productIds": [
+              5
+            ],
+            "take": 5,
+            "checkedAt": "2026-10-13T10:13:24.139Z"
+          },
+          "coverage": {
+            "total": 10,
+            "ready": 10,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 41,
+                "productId": 5,
+                "rating": 5,
+                "createdAt": "2026-09-30T15:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "오래 걸으니 뒤꿈치에 물집이 생겨요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 42,
+                "productId": 5,
+                "rating": 4,
+                "createdAt": "2026-10-09T16:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했는데 그런 문제 없이 잘 쓰고 있어요. 전체적으로 만족합니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 43,
+                "productId": 5,
+                "rating": 4,
+                "createdAt": "2026-10-09T17:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 5의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 44,
+                "productId": 5,
+                "rating": 4,
+                "createdAt": "2026-10-09T18:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 5의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 45,
+                "productId": 5,
+                "rating": 4,
+                "createdAt": "2026-10-09T19:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 5의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 10,
+            "omittedSourceCount": 5,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 47,
+            "inputBytes": 75,
+            "inputTokens": null
+          },
+          "embeddingMs": 5923.921000000002,
+          "databaseMs": 46.72389999998268,
+          "totalMs": 5971.233799999987,
+          "candidates": [
+            {
+              "review_id": 41,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.18372439728102785
+            },
+            {
+              "review_id": 42,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.35798798669027965
+            },
+            {
+              "review_id": 43,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40860050916667967
+            },
+            {
+              "review_id": 44,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40860050916667967
+            },
+            {
+              "review_id": 45,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40860050916667967
+            },
+            {
+              "review_id": 46,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40860050916667967
+            },
+            {
+              "review_id": 47,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40860050916667967
+            },
+            {
+              "review_id": 48,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40860050916667967
+            },
+            {
+              "review_id": 49,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40860050916667967
+            },
+            {
+              "review_id": 50,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40860050916667967
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:13:24.171Z",
+        "elapsedMs": 5911.293799999985
+      }
+    },
+    {
+      "caseId": "improve-5-paraphrase",
+      "query": "고객이 겪은 문제를 찾아줘: 걸을 때 발뒤꿈치가 쓸린다는 불만",
+      "productId": 5,
+      "maxRating": null,
+      "relevantIds": [
+        41
+      ],
+      "reason": "동일 근거의 표현 변경 질문. 같은 개선용 그룹에만 보관.",
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          50,
+          49,
+          48,
+          47,
+          46
+        ],
+        "hitAt5": 0,
+        "recallAt5": 0,
+        "precisionAt5": 0,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          41,
+          42,
+          43,
+          44,
+          45
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "고객이 겪은 문제를 찾아줘: 걸을 때 발뒤꿈치가 쓸린다는 불만",
+            "productIds": [
+              5
+            ],
+            "take": 5,
+            "checkedAt": "2026-10-13T10:13:30.505Z"
+          },
+          "coverage": {
+            "total": 10,
+            "ready": 10,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 41,
+                "productId": 5,
+                "rating": 5,
+                "createdAt": "2026-09-30T15:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "오래 걸으니 뒤꿈치에 물집이 생겨요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 42,
+                "productId": 5,
+                "rating": 4,
+                "createdAt": "2026-10-09T16:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했는데 그런 문제 없이 잘 쓰고 있어요. 전체적으로 만족합니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 43,
+                "productId": 5,
+                "rating": 4,
+                "createdAt": "2026-10-09T17:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 5의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 44,
+                "productId": 5,
+                "rating": 4,
+                "createdAt": "2026-10-09T18:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 5의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 45,
+                "productId": 5,
+                "rating": 4,
+                "createdAt": "2026-10-09T19:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 5의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 10,
+            "omittedSourceCount": 5,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 63,
+            "inputBytes": 113,
+            "inputTokens": null
+          },
+          "embeddingMs": 6021.091899999999,
+          "databaseMs": 41.8811000000278,
+          "totalMs": 6063.401699999988,
+          "candidates": [
+            {
+              "review_id": 41,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.21038443004842844
+            },
+            {
+              "review_id": 42,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3431952195405842
+            },
+            {
+              "review_id": 43,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3947090420142856
+            },
+            {
+              "review_id": 44,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3947090420142856
+            },
+            {
+              "review_id": 45,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3947090420142856
+            },
+            {
+              "review_id": 46,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3947090420142856
+            },
+            {
+              "review_id": 47,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3947090420142856
+            },
+            {
+              "review_id": 48,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3947090420142856
+            },
+            {
+              "review_id": 49,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3947090420142856
+            },
+            {
+              "review_id": 50,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3947090420142856
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:13:30.243Z",
+        "elapsedMs": 6008.2079000000085
+      }
+    },
+    {
+      "caseId": "improve-6-explicit",
+      "query": "배터리가 너무 빨리 소모된다는 반응",
+      "productId": 6,
+      "maxRating": null,
+      "relevantIds": [
+        51
+      ],
+      "reason": "직접 해당 문제를 서술한 원문. 높은 별점이어도 불만 근거.",
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          60,
+          59,
+          58,
+          57,
+          56
+        ],
+        "hitAt5": 0,
+        "recallAt5": 0,
+        "precisionAt5": 0,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          51,
+          52,
+          53,
+          54,
+          55
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "배터리가 너무 빨리 소모된다는 반응",
+            "productIds": [
+              6
+            ],
+            "take": 5,
+            "checkedAt": "2026-10-13T10:13:36.737Z"
+          },
+          "coverage": {
+            "total": 10,
+            "ready": 10,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 51,
+                "productId": 6,
+                "rating": 5,
+                "createdAt": "2026-09-30T15:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "충전해도 한 시간 만에 전원이 꺼져요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 52,
+                "productId": 6,
+                "rating": 4,
+                "createdAt": "2026-10-09T16:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했는데 그런 문제 없이 잘 쓰고 있어요. 전체적으로 만족합니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 53,
+                "productId": 6,
+                "rating": 4,
+                "createdAt": "2026-10-09T17:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 6의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 54,
+                "productId": 6,
+                "rating": 4,
+                "createdAt": "2026-10-09T18:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 6의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 55,
+                "productId": 6,
+                "rating": 4,
+                "createdAt": "2026-10-09T19:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 6의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 10,
+            "omittedSourceCount": 5,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 48,
+            "inputBytes": 78,
+            "inputTokens": null
+          },
+          "embeddingMs": 5904.478600000002,
+          "databaseMs": 42.791399999987334,
+          "totalMs": 5947.431799999991,
+          "candidates": [
+            {
+              "review_id": 51,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.23470033978810367
+            },
+            {
+              "review_id": 52,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.33428843787651297
+            },
+            {
+              "review_id": 53,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3913200964117165
+            },
+            {
+              "review_id": 54,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3913200964117165
+            },
+            {
+              "review_id": 55,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3913200964117165
+            },
+            {
+              "review_id": 56,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3913200964117165
+            },
+            {
+              "review_id": 57,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3913200964117165
+            },
+            {
+              "review_id": 58,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3913200964117165
+            },
+            {
+              "review_id": 59,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3913200964117165
+            },
+            {
+              "review_id": 60,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3913200964117165
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:13:36.186Z",
+        "elapsedMs": 5889.365900000004
+      }
+    },
+    {
+      "caseId": "improve-6-paraphrase",
+      "query": "고객이 겪은 문제를 찾아줘: 배터리가 너무 빨리 소모된다는 반응",
+      "productId": 6,
+      "maxRating": null,
+      "relevantIds": [
+        51
+      ],
+      "reason": "동일 근거의 표현 변경 질문. 같은 개선용 그룹에만 보관.",
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          60,
+          59,
+          58,
+          57,
+          56
+        ],
+        "hitAt5": 0,
+        "recallAt5": 0,
+        "precisionAt5": 0,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          51,
+          52,
+          53,
+          54,
+          55
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "고객이 겪은 문제를 찾아줘: 배터리가 너무 빨리 소모된다는 반응",
+            "productIds": [
+              6
+            ],
+            "take": 5,
+            "checkedAt": "2026-10-13T10:13:41.672Z"
+          },
+          "coverage": {
+            "total": 10,
+            "ready": 10,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 51,
+                "productId": 6,
+                "rating": 5,
+                "createdAt": "2026-09-30T15:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "충전해도 한 시간 만에 전원이 꺼져요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 52,
+                "productId": 6,
+                "rating": 4,
+                "createdAt": "2026-10-09T16:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했는데 그런 문제 없이 잘 쓰고 있어요. 전체적으로 만족합니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 53,
+                "productId": 6,
+                "rating": 4,
+                "createdAt": "2026-10-09T17:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 6의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 54,
+                "productId": 6,
+                "rating": 4,
+                "createdAt": "2026-10-09T18:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 6의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 55,
+                "productId": 6,
+                "rating": 4,
+                "createdAt": "2026-10-09T19:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 6의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 10,
+            "omittedSourceCount": 5,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 64,
+            "inputBytes": 116,
+            "inputTokens": null
+          },
+          "embeddingMs": 5973.032200000016,
+          "databaseMs": 36.84279999998398,
+          "totalMs": 6010.017800000001,
+          "candidates": [
+            {
+              "review_id": 51,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.23120349645605887
+            },
+            {
+              "review_id": 52,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3301379287077275
+            },
+            {
+              "review_id": 53,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3974267832716557
+            },
+            {
+              "review_id": 54,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3974267832716557
+            },
+            {
+              "review_id": 55,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3974267832716557
+            },
+            {
+              "review_id": 56,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3974267832716557
+            },
+            {
+              "review_id": 57,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3974267832716557
+            },
+            {
+              "review_id": 58,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3974267832716557
+            },
+            {
+              "review_id": 59,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3974267832716557
+            },
+            {
+              "review_id": 60,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3974267832716557
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:13:42.208Z",
+        "elapsedMs": 5960.999500000005
+      }
+    },
+    {
+      "caseId": "improve-7-explicit",
+      "query": "기계 소음 때문에 수면을 방해받은 경험",
+      "productId": 7,
+      "maxRating": null,
+      "relevantIds": [
+        61
+      ],
+      "reason": "직접 해당 문제를 서술한 원문. 높은 별점이어도 불만 근거.",
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          70,
+          69,
+          68,
+          67,
+          66
+        ],
+        "hitAt5": 0,
+        "recallAt5": 0,
+        "precisionAt5": 0,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          61,
+          62,
+          63,
+          64,
+          65
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "기계 소음 때문에 수면을 방해받은 경험",
+            "productIds": [
+              7
+            ],
+            "take": 5,
+            "checkedAt": "2026-10-13T10:13:48.036Z"
+          },
+          "coverage": {
+            "total": 10,
+            "ready": 10,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 61,
+                "productId": 7,
+                "rating": 5,
+                "createdAt": "2026-09-30T15:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "작동할 때 소리가 커서 잠을 잘 수 없어요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 62,
+                "productId": 7,
+                "rating": 4,
+                "createdAt": "2026-10-09T16:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했는데 그런 문제 없이 잘 쓰고 있어요. 전체적으로 만족합니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 63,
+                "productId": 7,
+                "rating": 4,
+                "createdAt": "2026-10-09T17:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 7의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 64,
+                "productId": 7,
+                "rating": 4,
+                "createdAt": "2026-10-09T18:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 7의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 65,
+                "productId": 7,
+                "rating": 4,
+                "createdAt": "2026-10-09T19:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 7의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 10,
+            "omittedSourceCount": 5,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 50,
+            "inputBytes": 82,
+            "inputTokens": null
+          },
+          "embeddingMs": 6022.7696,
+          "databaseMs": 58.272999999986496,
+          "totalMs": 6081.16339999999,
+          "candidates": [
+            {
+              "review_id": 61,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.16140194671176633
+            },
+            {
+              "review_id": 62,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.35990497829788126
+            },
+            {
+              "review_id": 63,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.42711292828475167
+            },
+            {
+              "review_id": 64,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.42711292828475167
+            },
+            {
+              "review_id": 65,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.42711292828475167
+            },
+            {
+              "review_id": 66,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.42711292828475167
+            },
+            {
+              "review_id": 67,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.42711292828475167
+            },
+            {
+              "review_id": 68,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.42711292828475167
+            },
+            {
+              "review_id": 69,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.42711292828475167
+            },
+            {
+              "review_id": 70,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.42711292828475167
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:13:48.265Z",
+        "elapsedMs": 6005.148199999996
+      }
+    },
+    {
+      "caseId": "improve-7-paraphrase",
+      "query": "고객이 겪은 문제를 찾아줘: 기계 소음 때문에 수면을 방해받은 경험",
+      "productId": 7,
+      "maxRating": null,
+      "relevantIds": [
+        61
+      ],
+      "reason": "동일 근거의 표현 변경 질문. 같은 개선용 그룹에만 보관.",
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          70,
+          69,
+          68,
+          67,
+          66
+        ],
+        "hitAt5": 0,
+        "recallAt5": 0,
+        "precisionAt5": 0,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          61,
+          62,
+          63,
+          64,
+          65
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "고객이 겪은 문제를 찾아줘: 기계 소음 때문에 수면을 방해받은 경험",
+            "productIds": [
+              7
+            ],
+            "take": 5,
+            "checkedAt": "2026-10-13T10:13:54.231Z"
+          },
+          "coverage": {
+            "total": 10,
+            "ready": 10,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 61,
+                "productId": 7,
+                "rating": 5,
+                "createdAt": "2026-09-30T15:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "작동할 때 소리가 커서 잠을 잘 수 없어요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 62,
+                "productId": 7,
+                "rating": 4,
+                "createdAt": "2026-10-09T16:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했는데 그런 문제 없이 잘 쓰고 있어요. 전체적으로 만족합니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 63,
+                "productId": 7,
+                "rating": 4,
+                "createdAt": "2026-10-09T17:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 7의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 64,
+                "productId": 7,
+                "rating": 4,
+                "createdAt": "2026-10-09T18:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 7의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 65,
+                "productId": 7,
+                "rating": 4,
+                "createdAt": "2026-10-09T19:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 7의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 10,
+            "omittedSourceCount": 5,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 66,
+            "inputBytes": 120,
+            "inputTokens": null
+          },
+          "embeddingMs": 5872.024899999989,
+          "databaseMs": 37.87700000000768,
+          "totalMs": 5910.357699999993,
+          "candidates": [
+            {
+              "review_id": 61,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.15768714959925412
+            },
+            {
+              "review_id": 62,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3431132178823795
+            },
+            {
+              "review_id": 63,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4102459167847664
+            },
+            {
+              "review_id": 64,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4102459167847664
+            },
+            {
+              "review_id": 65,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4102459167847664
+            },
+            {
+              "review_id": 66,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4102459167847664
+            },
+            {
+              "review_id": 67,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4102459167847664
+            },
+            {
+              "review_id": 68,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4102459167847664
+            },
+            {
+              "review_id": 69,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4102459167847664
+            },
+            {
+              "review_id": 70,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4102459167847664
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:13:54.206Z",
+        "elapsedMs": 5861.016000000003
+      }
+    },
+    {
+      "caseId": "improve-8-explicit",
+      "query": "제품이 파손된 상태로 도착했다는 불만",
+      "productId": 8,
+      "maxRating": null,
+      "relevantIds": [
+        71
+      ],
+      "reason": "직접 해당 문제를 서술한 원문. 높은 별점이어도 불만 근거.",
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          80,
+          79,
+          78,
+          77,
+          76
+        ],
+        "hitAt5": 0,
+        "recallAt5": 0,
+        "precisionAt5": 0,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          71,
+          72,
+          73,
+          74,
+          75
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "제품이 파손된 상태로 도착했다는 불만",
+            "productIds": [
+              8
+            ],
+            "take": 5,
+            "checkedAt": "2026-10-13T10:14:00.594Z"
+          },
+          "coverage": {
+            "total": 10,
+            "ready": 10,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 71,
+                "productId": 8,
+                "rating": 5,
+                "createdAt": "2026-09-30T15:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "포장을 열자마자 깨진 조각이 나왔어요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 72,
+                "productId": 8,
+                "rating": 4,
+                "createdAt": "2026-10-09T16:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했는데 그런 문제 없이 잘 쓰고 있어요. 전체적으로 만족합니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 73,
+                "productId": 8,
+                "rating": 4,
+                "createdAt": "2026-10-09T17:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 8의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 74,
+                "productId": 8,
+                "rating": 4,
+                "createdAt": "2026-10-09T18:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 8의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 75,
+                "productId": 8,
+                "rating": 4,
+                "createdAt": "2026-10-09T19:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 8의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 10,
+            "omittedSourceCount": 5,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 49,
+            "inputBytes": 81,
+            "inputTokens": null
+          },
+          "embeddingMs": 6032.180999999982,
+          "databaseMs": 40.0962999999756,
+          "totalMs": 6072.450700000016,
+          "candidates": [
+            {
+              "review_id": 71,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.16717477627401922
+            },
+            {
+              "review_id": 72,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3415543596485143
+            },
+            {
+              "review_id": 73,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3832316537819278
+            },
+            {
+              "review_id": 74,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3832316537819278
+            },
+            {
+              "review_id": 75,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3832316537819278
+            },
+            {
+              "review_id": 76,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3832316537819278
+            },
+            {
+              "review_id": 77,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3832316537819278
+            },
+            {
+              "review_id": 78,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3832316537819278
+            },
+            {
+              "review_id": 79,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3832316537819278
+            },
+            {
+              "review_id": 80,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3832316537819278
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:14:00.273Z",
+        "elapsedMs": 6017.769
+      }
+    },
+    {
+      "caseId": "improve-8-paraphrase",
+      "query": "고객이 겪은 문제를 찾아줘: 제품이 파손된 상태로 도착했다는 불만",
+      "productId": 8,
+      "maxRating": null,
+      "relevantIds": [
+        71
+      ],
+      "reason": "동일 근거의 표현 변경 질문. 같은 개선용 그룹에만 보관.",
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          80,
+          79,
+          78,
+          77,
+          76
+        ],
+        "hitAt5": 0,
+        "recallAt5": 0,
+        "precisionAt5": 0,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          71,
+          72,
+          73,
+          74,
+          75
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "고객이 겪은 문제를 찾아줘: 제품이 파손된 상태로 도착했다는 불만",
+            "productIds": [
+              8
+            ],
+            "take": 5,
+            "checkedAt": "2026-10-13T10:14:06.847Z"
+          },
+          "coverage": {
+            "total": 10,
+            "ready": 10,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 71,
+                "productId": 8,
+                "rating": 5,
+                "createdAt": "2026-09-30T15:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "포장을 열자마자 깨진 조각이 나왔어요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 72,
+                "productId": 8,
+                "rating": 4,
+                "createdAt": "2026-10-09T16:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했는데 그런 문제 없이 잘 쓰고 있어요. 전체적으로 만족합니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 73,
+                "productId": 8,
+                "rating": 4,
+                "createdAt": "2026-10-09T17:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 8의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 74,
+                "productId": 8,
+                "rating": 4,
+                "createdAt": "2026-10-09T18:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 8의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 75,
+                "productId": 8,
+                "rating": 4,
+                "createdAt": "2026-10-09T19:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 8의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 10,
+            "omittedSourceCount": 5,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 65,
+            "inputBytes": 119,
+            "inputTokens": null
+          },
+          "embeddingMs": 5913.2759999999835,
+          "databaseMs": 56.52579999997397,
+          "totalMs": 5969.995200000005,
+          "candidates": [
+            {
+              "review_id": 71,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.16338322599133537
+            },
+            {
+              "review_id": 72,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.32689494124827567
+            },
+            {
+              "review_id": 73,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3807297945022583
+            },
+            {
+              "review_id": 74,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3807297945022583
+            },
+            {
+              "review_id": 75,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3807297945022583
+            },
+            {
+              "review_id": 76,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3807297945022583
+            },
+            {
+              "review_id": 77,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3807297945022583
+            },
+            {
+              "review_id": 78,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3807297945022583
+            },
+            {
+              "review_id": 79,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3807297945022583
+            },
+            {
+              "review_id": 80,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3807297945022583
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:14:06.236Z",
+        "elapsedMs": 5899.223900000012
+      }
+    },
+    {
+      "caseId": "improve-9-explicit",
+      "query": "화장품 사용 후 피부가 자극된 경험",
+      "productId": 9,
+      "maxRating": null,
+      "relevantIds": [
+        81
+      ],
+      "reason": "직접 해당 문제를 서술한 원문. 높은 별점이어도 불만 근거.",
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          90,
+          89,
+          88,
+          87,
+          86
+        ],
+        "hitAt5": 0,
+        "recallAt5": 0,
+        "precisionAt5": 0,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          81,
+          82,
+          83,
+          84,
+          85
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "화장품 사용 후 피부가 자극된 경험",
+            "productIds": [
+              9
+            ],
+            "take": 5,
+            "checkedAt": "2026-10-13T10:14:11.779Z"
+          },
+          "coverage": {
+            "total": 10,
+            "ready": 10,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 81,
+                "productId": 9,
+                "rating": 5,
+                "createdAt": "2026-09-30T15:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "발랐더니 얼굴이 붉어지고 따가웠어요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 82,
+                "productId": 9,
+                "rating": 4,
+                "createdAt": "2026-10-09T16:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했는데 그런 문제 없이 잘 쓰고 있어요. 전체적으로 만족합니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 83,
+                "productId": 9,
+                "rating": 4,
+                "createdAt": "2026-10-09T17:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 9의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 84,
+                "productId": 9,
+                "rating": 4,
+                "createdAt": "2026-10-09T18:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 9의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 85,
+                "productId": 9,
+                "rating": 4,
+                "createdAt": "2026-10-09T19:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 9의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 10,
+            "omittedSourceCount": 5,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 48,
+            "inputBytes": 76,
+            "inputTokens": null
+          },
+          "embeddingMs": 5955.303500000009,
+          "databaseMs": 44.891499999997905,
+          "totalMs": 6000.352500000008,
+          "candidates": [
+            {
+              "review_id": 81,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.1740216120494006
+            },
+            {
+              "review_id": 82,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3816659418745142
+            },
+            {
+              "review_id": 83,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4144462143053854
+            },
+            {
+              "review_id": 84,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4144462143053854
+            },
+            {
+              "review_id": 85,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4144462143053854
+            },
+            {
+              "review_id": 86,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4144462143053854
+            },
+            {
+              "review_id": 87,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4144462143053854
+            },
+            {
+              "review_id": 88,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4144462143053854
+            },
+            {
+              "review_id": 89,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4144462143053854
+            },
+            {
+              "review_id": 90,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4144462143053854
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:14:12.237Z",
+        "elapsedMs": 5935.155700000003
+      }
+    },
+    {
+      "caseId": "improve-9-paraphrase",
+      "query": "고객이 겪은 문제를 찾아줘: 화장품 사용 후 피부가 자극된 경험",
+      "productId": 9,
+      "maxRating": null,
+      "relevantIds": [
+        81
+      ],
+      "reason": "동일 근거의 표현 변경 질문. 같은 개선용 그룹에만 보관.",
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          90,
+          89,
+          88,
+          87,
+          86
+        ],
+        "hitAt5": 0,
+        "recallAt5": 0,
+        "precisionAt5": 0,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          81,
+          82,
+          83,
+          84,
+          85
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "고객이 겪은 문제를 찾아줘: 화장품 사용 후 피부가 자극된 경험",
+            "productIds": [
+              9
+            ],
+            "take": 5,
+            "checkedAt": "2026-10-13T10:14:18.070Z"
+          },
+          "coverage": {
+            "total": 10,
+            "ready": 10,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 81,
+                "productId": 9,
+                "rating": 5,
+                "createdAt": "2026-09-30T15:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "발랐더니 얼굴이 붉어지고 따가웠어요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 82,
+                "productId": 9,
+                "rating": 4,
+                "createdAt": "2026-10-09T16:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했는데 그런 문제 없이 잘 쓰고 있어요. 전체적으로 만족합니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 83,
+                "productId": 9,
+                "rating": 4,
+                "createdAt": "2026-10-09T17:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 9의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 84,
+                "productId": 9,
+                "rating": 4,
+                "createdAt": "2026-10-09T18:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 9의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 85,
+                "productId": 9,
+                "rating": 4,
+                "createdAt": "2026-10-09T19:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 9의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 10,
+            "omittedSourceCount": 5,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 64,
+            "inputBytes": 114,
+            "inputTokens": null
+          },
+          "embeddingMs": 5948.118600000016,
+          "databaseMs": 54.12349999998696,
+          "totalMs": 6002.426699999982,
+          "candidates": [
+            {
+              "review_id": 81,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.19361636524491788
+            },
+            {
+              "review_id": 82,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3655372146830578
+            },
+            {
+              "review_id": 83,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4059031865250159
+            },
+            {
+              "review_id": 84,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4059031865250159
+            },
+            {
+              "review_id": 85,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4059031865250159
+            },
+            {
+              "review_id": 86,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4059031865250159
+            },
+            {
+              "review_id": 87,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4059031865250159
+            },
+            {
+              "review_id": 88,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4059031865250159
+            },
+            {
+              "review_id": 89,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4059031865250159
+            },
+            {
+              "review_id": 90,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4059031865250159
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:14:18.237Z",
+        "elapsedMs": 5931.542000000016
+      }
+    },
+    {
+      "caseId": "improve-10-explicit",
+      "query": "용기가 제대로 밀폐되지 않는다는 반응",
+      "productId": 10,
+      "maxRating": null,
+      "relevantIds": [
+        91
+      ],
+      "reason": "직접 해당 문제를 서술한 원문. 높은 별점이어도 불만 근거.",
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          100,
+          99,
+          98,
+          97,
+          96
+        ],
+        "hitAt5": 0,
+        "recallAt5": 0,
+        "precisionAt5": 0,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          91,
+          92,
+          93,
+          94,
+          95
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "용기가 제대로 밀폐되지 않는다는 반응",
+            "productIds": [
+              10
+            ],
+            "take": 5,
+            "checkedAt": "2026-10-13T10:14:24.385Z"
+          },
+          "coverage": {
+            "total": 10,
+            "ready": 10,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 91,
+                "productId": 10,
+                "rating": 5,
+                "createdAt": "2026-09-30T15:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "뚜껑을 닫아도 가방 안으로 내용물이 새요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 92,
+                "productId": 10,
+                "rating": 4,
+                "createdAt": "2026-10-09T16:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했는데 그런 문제 없이 잘 쓰고 있어요. 전체적으로 만족합니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 93,
+                "productId": 10,
+                "rating": 4,
+                "createdAt": "2026-10-09T17:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 10의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 94,
+                "productId": 10,
+                "rating": 4,
+                "createdAt": "2026-10-09T18:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 10의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 95,
+                "productId": 10,
+                "rating": 4,
+                "createdAt": "2026-10-09T19:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 10의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 10,
+            "omittedSourceCount": 5,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 49,
+            "inputBytes": 81,
+            "inputTokens": null
+          },
+          "embeddingMs": 5968.667399999977,
+          "databaseMs": 56.13310000003548,
+          "totalMs": 6024.988900000026,
+          "candidates": [
+            {
+              "review_id": 91,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.20939091052189296
+            },
+            {
+              "review_id": 92,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.359893550910831
+            },
+            {
+              "review_id": 93,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4249596089172789
+            },
+            {
+              "review_id": 94,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4249596089172789
+            },
+            {
+              "review_id": 95,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4249596089172789
+            },
+            {
+              "review_id": 96,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4249596089172789
+            },
+            {
+              "review_id": 97,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4249596089172789
+            },
+            {
+              "review_id": 98,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4249596089172789
+            },
+            {
+              "review_id": 99,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4249596089172789
+            },
+            {
+              "review_id": 100,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4249596089172789
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:14:24.263Z",
+        "elapsedMs": 5950.2629000000015
+      }
+    },
+    {
+      "caseId": "improve-10-paraphrase",
+      "query": "고객이 겪은 문제를 찾아줘: 용기가 제대로 밀폐되지 않는다는 반응",
+      "productId": 10,
+      "maxRating": null,
+      "relevantIds": [
+        91
+      ],
+      "reason": "동일 근거의 표현 변경 질문. 같은 개선용 그룹에만 보관.",
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          100,
+          99,
+          98,
+          97,
+          96
+        ],
+        "hitAt5": 0,
+        "recallAt5": 0,
+        "precisionAt5": 0,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          91,
+          92,
+          93,
+          94,
+          95
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "고객이 겪은 문제를 찾아줘: 용기가 제대로 밀폐되지 않는다는 반응",
+            "productIds": [
+              10
+            ],
+            "take": 5,
+            "checkedAt": "2026-10-13T10:14:30.662Z"
+          },
+          "coverage": {
+            "total": 10,
+            "ready": 10,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 91,
+                "productId": 10,
+                "rating": 5,
+                "createdAt": "2026-09-30T15:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "뚜껑을 닫아도 가방 안으로 내용물이 새요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 92,
+                "productId": 10,
+                "rating": 4,
+                "createdAt": "2026-10-09T16:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했는데 그런 문제 없이 잘 쓰고 있어요. 전체적으로 만족합니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 93,
+                "productId": 10,
+                "rating": 4,
+                "createdAt": "2026-10-09T17:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 10의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 94,
+                "productId": 10,
+                "rating": 4,
+                "createdAt": "2026-10-09T18:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 10의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 95,
+                "productId": 10,
+                "rating": 4,
+                "createdAt": "2026-10-09T19:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 10의 색상과 디자인이 마음에 들어요. 잘 사용하고 있습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 10,
+            "omittedSourceCount": 5,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 65,
+            "inputBytes": 119,
+            "inputTokens": null
+          },
+          "embeddingMs": 5928.654099999985,
+          "databaseMs": 49.538000000000466,
+          "totalMs": 5978.366700000013,
+          "candidates": [
+            {
+              "review_id": 91,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.19442012409786713
+            },
+            {
+              "review_id": 92,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3419439385002948
+            },
+            {
+              "review_id": 93,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40670131524813136
+            },
+            {
+              "review_id": 94,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40670131524813136
+            },
+            {
+              "review_id": 95,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40670131524813136
+            },
+            {
+              "review_id": 96,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40670131524813136
+            },
+            {
+              "review_id": 97,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40670131524813136
+            },
+            {
+              "review_id": 98,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40670131524813136
+            },
+            {
+              "review_id": 99,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40670131524813136
+            },
+            {
+              "review_id": 100,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40670131524813136
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:14:30.257Z",
+        "elapsedMs": 5915.133199999982
+      }
+    }
+  ]
+}

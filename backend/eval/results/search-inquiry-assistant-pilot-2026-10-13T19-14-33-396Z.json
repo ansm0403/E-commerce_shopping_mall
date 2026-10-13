@@ -1,0 +1,522 @@
+{
+  "runId": "2026-10-13T19-14-33-396Z",
+  "live": true,
+  "fixture": "confirmation",
+  "fixtureVersion": "inquiries-assistant-confirmation-v1",
+  "model": "gemini-3.1-flash-lite",
+  "profile": {
+    "id": "gemini-embedding-2-768-review-inquiry-v1",
+    "model": "gemini-embedding-2",
+    "dimensions": 768,
+    "preprocessingVersion": "v1",
+    "maskingVersion": "scrub-text-v1",
+    "chunkingVersion": "unicode-paragraph-v1",
+    "queryTemplate": "task: search result | query: {text}",
+    "documentTemplate": "title: {title} | text: {text}",
+    "maxCodePoints": 1000,
+    "overlapCodePoints": 100,
+    "maxInputBytes": 4096,
+    "maxChunks": 32
+  },
+  "criteria": {
+    "frozenBeforeExecution": "2026-10-14",
+    "planned": 2,
+    "description": "Independent small confirmation after date/polarity/title-only fixes. Source IDs, products, topics and questions differ from the initial pilot. Human review remains required; this is not the 30-question final evaluation."
+  },
+  "initialDiagnosticPlan": {
+    "planned": 2,
+    "fixtureVersion": "inquiries-final-small-v1",
+    "role": "Initial pilot became improvement diagnostic material; preserve its original artifacts and exclude it from confirmation metrics."
+  },
+  "codeVersion": {
+    "sha256": "d420a260f00c3a98355cade3d0b7ed358c052d96b147c0e856ee5d6bb43f4126",
+    "files": [
+      "src/search/semantic-search.service.ts",
+      "src/search/search-document.ts",
+      "src/search/search-input.ts",
+      "src/search/search-profile.ts",
+      "src/admin/assistant/assistant.service.ts",
+      "src/admin/assistant/assistant-tools.ts",
+      "src/admin/assistant/assistant-tool-schemas.ts",
+      "src/intrastructure/ai/providers/gemini.client.ts",
+      "src/intrastructure/ai/llm-failure.ts",
+      "src/intrastructure/ai/llm-request-deadline.ts",
+      "src/search/inquiry-index.store.ts",
+      "src/search/inquiry-index.processor.ts",
+      "src/search/search-index-recorder.ts",
+      "src/search/search-contract.ts",
+      "eval/search/inquiry-fixture.ts",
+      "eval/search/run-inquiry-search-eval.ts",
+      "eval/search/inquiry-pilot-confirmation-fixture.ts",
+      "eval/search/run-inquiry-assistant-pilot.ts",
+      "eval/search/fixture.ts",
+      "eval/search/final-fixture.ts",
+      "eval/search/final-fixture-v2.ts"
+    ],
+    "description": "SHA256 of evaluated working-tree sources, including uncommitted changes."
+  },
+  "runnerSha256": "6cfd98879618b01dd4bdf274a66b493b9a71f34c7d9b83ebda2952bc8df6ca02",
+  "dateKst": "2026-10-13",
+  "selectedCaseIds": [
+    "inquiry-confirmation-title",
+    "inquiry-confirmation-absent"
+  ],
+  "masterPlanned": 2,
+  "planned": 2,
+  "executed": 2,
+  "unexecuted": 0,
+  "repetitions": 1,
+  "apiErrors": 1,
+  "errorCode": "LLM_UNAVAILABLE",
+  "llmRequests": 6,
+  "sdkRequestFailures": 3,
+  "requestFailures": [
+    {
+      "code": "LLM_UNAVAILABLE",
+      "httpStatus": 503,
+      "message": "AI 서비스가 일시적으로 응답하지 않습니다. 잠시 후 다시 시도해주세요."
+    },
+    {
+      "code": "LLM_UNAVAILABLE",
+      "httpStatus": 503,
+      "message": "AI 서비스가 일시적으로 응답하지 않습니다. 잠시 후 다시 시도해주세요."
+    },
+    {
+      "code": "LLM_UNAVAILABLE",
+      "httpStatus": 503,
+      "message": "AI 서비스가 일시적으로 응답하지 않습니다. 잠시 후 다시 시도해주세요."
+    }
+  ],
+  "usage": {
+    "inputTokens": 7866,
+    "outputTokens": 220,
+    "cachedTokens": 0
+  },
+  "usageCompleteness": "SDK usage from successful completed traces only; failed/recovered SDK attempts can consume tokens without supplied usage. SDK failures include recovered retries. No whole-turn retries.",
+  "timeouts": {
+    "requestTimeoutMs": 60000,
+    "turnTimeoutMs": 180000,
+    "pilotTimeoutMs": 195000
+  },
+  "elapsedMs": 78575.1889,
+  "syntheticInquiries": 10,
+  "originalInquiries": 0,
+  "publicInquiries": 8,
+  "secretInquiries": 2,
+  "chunkCount": 8,
+  "userDatabaseAccess": false,
+  "embeddingUsageThisRun": {
+    "requests": 10,
+    "inputCodePoints": 682,
+    "inputBytes": 1384,
+    "inputTokens": null
+  },
+  "generated": {
+    "document": 8,
+    "query": 2
+  },
+  "cacheHits": {
+    "document": 0,
+    "query": 0
+  },
+  "protection": {
+    "protectedInputViolations": 0,
+    "modelBoundaryViolations": 0,
+    "secretSourcesReturned": 0,
+    "rawContactOrPrivateMarkerLeaks": 0
+  },
+  "humanReviewPending": 2,
+  "limitations": "Two bounded synthetic standalone cases at most; real Gemini, real dispatcher, exact vector search in an isolated probe schema. Cached actual embeddings may be reused. First terminal failure stops remaining cases. No HTTP/browser authentication measurement, production performance claim, full answer evaluation or automatic answer correctness score. Human review is pending.",
+  "cases": [
+    {
+      "alias": "title",
+      "caseId": "inquiry-confirmation-title",
+      "question": "상품 501의 2026-10-01부터 2026-10-12까지 답변 대기 중인 공개 문의에서 배송 상자가 젖어 포장 종이가 찢어졌다는 불만을 의미 검색으로 찾아줘. 문의 ID와 원문을 인용해줘.",
+      "expected": {
+        "caseId": "inquiry-confirmation-title",
+        "question": "상품 501의 2026-10-01부터 2026-10-12까지 답변 대기 중인 공개 문의에서 배송 상자가 젖어 포장 종이가 찢어졌다는 불만을 의미 검색으로 찾아줘. 문의 ID와 원문을 인용해줘.",
+        "query": "배송 상자가 젖어 포장 종이가 찢어졌다는 불만",
+        "productId": 501,
+        "status": "waiting",
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-12",
+        "relevantIds": [
+          5001
+        ],
+        "reason": "범위 안의 실제 불만은 제목만 있는 #5001이다. #5002는 걱정했으나 실제로 멀쩡했다는 반대 경험이므로 불만 근거가 아니다. #5004는 10월 13일로 범위 밖, #5005는 비밀 문의다. 없는 본문이나 답변을 만들어 인용하면 안 된다.",
+        "answerFacts": [
+          "젖",
+          "찢"
+        ],
+        "noEvidence": false
+      },
+      "trace": {
+        "reply": "조회하신 기간 동안 상품 501에 대해 문의하신 내용 중, 요청하신 배송 상자 및 포장 상태와 관련된 불만 사례는 아래와 같습니다.\n\n**문의 #5001**\n*   **문의 제목:** 배송 상자가 젖어 포장 종이가 찢어진 문의\n*   **문의 본문:** (고객 본문이 작성되지 않은 문의입니다.)\n\n참고로, 문의 #5002의 경우 포장 상태에 대한 걱정을 언급하였으나, 원문에 \"실제로 받은 상자는 마르고 멀쩡했습니다\"라고 기재되어 있어 실제 배송 문제가 발생한 불만 사례로 분류하지 않았습니다.",
+        "toolCalls": [
+          {
+            "name": "summarize_inquiries",
+            "args": {
+              "startDate": "2026-10-01",
+              "endDate": "2026-10-12",
+              "query": "배송 상자 젖음 포장 종이 찢어짐",
+              "status": "waiting",
+              "productId": 501
+            },
+            "result": {
+              "status": "ok",
+              "mode": "semantic",
+              "scope": {
+                "sourceType": "inquiry",
+                "timezone": "Asia/Seoul",
+                "unit": "source",
+                "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+                "query": "배송 상자 젖음 포장 종이 찢어짐",
+                "productIds": [
+                  501
+                ],
+                "status": "waiting",
+                "startDate": "2026-10-01",
+                "endDate": "2026-10-12",
+                "take": 5,
+                "checkedAt": "2026-10-13T19:14:03.459Z"
+              },
+              "coverage": {
+                "total": 3,
+                "ready": 3,
+                "pending": 0,
+                "failed": 0,
+                "partial": false
+              },
+              "data": {
+                "sources": [
+                  {
+                    "sourceType": "inquiry",
+                    "id": 5001,
+                    "productId": 501,
+                    "status": "waiting",
+                    "title": "배송 상자가 젖어 포장 종이가 찢어진 문의",
+                    "hasContent": false,
+                    "hasAnswer": false,
+                    "createdAt": "2026-10-02T01:00:00.000Z",
+                    "quotes": [
+                      {
+                        "chunkIndex": 0,
+                        "text": "[문의 제목]\n배송 상자가 젖어 포장 종이가 찢어진 문의"
+                      }
+                    ]
+                  },
+                  {
+                    "sourceType": "inquiry",
+                    "id": 5002,
+                    "productId": 501,
+                    "status": "waiting",
+                    "title": "비 오는 날 포장 상태가 걱정됐어요",
+                    "hasContent": true,
+                    "hasAnswer": false,
+                    "createdAt": "2026-10-03T02:00:00.000Z",
+                    "quotes": [
+                      {
+                        "chunkIndex": 0,
+                        "text": "[문의 제목]\n비 오는 날 포장 상태가 걱정됐어요\n\n[문의 본문]\n상자가 젖거나 포장 종이가 찢어질까 걱정했지만 실제로 받은 상자는 마르고 멀쩡했습니다."
+                      }
+                    ]
+                  },
+                  {
+                    "sourceType": "inquiry",
+                    "id": 5003,
+                    "productId": 501,
+                    "status": "waiting",
+                    "title": "선물 포장 색상 선택",
+                    "hasContent": true,
+                    "hasAnswer": false,
+                    "createdAt": "2026-10-04T00:00:00.000Z",
+                    "quotes": [
+                      {
+                        "chunkIndex": 0,
+                        "text": "[문의 제목]\n선물 포장 색상 선택\n\n[문의 본문]\n포장 리본을 파란색으로 선택할 수 있나요?"
+                      }
+                    ]
+                  }
+                ],
+                "candidateChunkCount": 3,
+                "omittedSourceCount": 0,
+                "contextTruncated": false
+              },
+              "error": null
+            }
+          }
+        ],
+        "usage": {
+          "inputTokens": 7866,
+          "outputTokens": 220,
+          "cachedTokens": 0,
+          "thoughtsTokens": 0,
+          "totalTokens": 8086
+        },
+        "llmRequests": 3,
+        "llmRequestFailures": [
+          {
+            "code": "LLM_UNAVAILABLE",
+            "httpStatus": 503,
+            "message": "AI 서비스가 일시적으로 응답하지 않습니다. 잠시 후 다시 시도해주세요."
+          }
+        ]
+      },
+      "executedTools": [
+        {
+          "name": "summarize_inquiries",
+          "args": {
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-12",
+            "query": "배송 상자 젖음 포장 종이 찢어짐",
+            "status": "waiting",
+            "productId": 501
+          },
+          "result": {
+            "status": "ok",
+            "mode": "semantic",
+            "scope": {
+              "sourceType": "inquiry",
+              "timezone": "Asia/Seoul",
+              "unit": "source",
+              "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+              "query": "배송 상자 젖음 포장 종이 찢어짐",
+              "productIds": [
+                501
+              ],
+              "status": "waiting",
+              "startDate": "2026-10-01",
+              "endDate": "2026-10-12",
+              "take": 5,
+              "checkedAt": "2026-10-13T19:14:03.459Z"
+            },
+            "coverage": {
+              "total": 3,
+              "ready": 3,
+              "pending": 0,
+              "failed": 0,
+              "partial": false
+            },
+            "data": {
+              "sources": [
+                {
+                  "sourceType": "inquiry",
+                  "id": 5001,
+                  "productId": 501,
+                  "status": "waiting",
+                  "title": "배송 상자가 젖어 포장 종이가 찢어진 문의",
+                  "hasContent": false,
+                  "hasAnswer": false,
+                  "createdAt": "2026-10-02T01:00:00.000Z",
+                  "quotes": [
+                    {
+                      "chunkIndex": 0,
+                      "text": "[문의 제목]\n배송 상자가 젖어 포장 종이가 찢어진 문의"
+                    }
+                  ]
+                },
+                {
+                  "sourceType": "inquiry",
+                  "id": 5002,
+                  "productId": 501,
+                  "status": "waiting",
+                  "title": "비 오는 날 포장 상태가 걱정됐어요",
+                  "hasContent": true,
+                  "hasAnswer": false,
+                  "createdAt": "2026-10-03T02:00:00.000Z",
+                  "quotes": [
+                    {
+                      "chunkIndex": 0,
+                      "text": "[문의 제목]\n비 오는 날 포장 상태가 걱정됐어요\n\n[문의 본문]\n상자가 젖거나 포장 종이가 찢어질까 걱정했지만 실제로 받은 상자는 마르고 멀쩡했습니다."
+                    }
+                  ]
+                },
+                {
+                  "sourceType": "inquiry",
+                  "id": 5003,
+                  "productId": 501,
+                  "status": "waiting",
+                  "title": "선물 포장 색상 선택",
+                  "hasContent": true,
+                  "hasAnswer": false,
+                  "createdAt": "2026-10-04T00:00:00.000Z",
+                  "quotes": [
+                    {
+                      "chunkIndex": 0,
+                      "text": "[문의 제목]\n선물 포장 색상 선택\n\n[문의 본문]\n포장 리본을 파란색으로 선택할 수 있나요?"
+                    }
+                  ]
+                }
+              ],
+              "candidateChunkCount": 3,
+              "omittedSourceCount": 0,
+              "contextTruncated": false
+            },
+            "error": null
+          }
+        }
+      ],
+      "elapsedMs": 18354.256199999996,
+      "llmRequests": 3,
+      "requestFailures": [
+        {
+          "code": "LLM_UNAVAILABLE",
+          "httpStatus": 503,
+          "message": "AI 서비스가 일시적으로 응답하지 않습니다. 잠시 후 다시 시도해주세요."
+        }
+      ],
+      "errorCode": null,
+      "observations": {
+        "inquirySemanticCallCount": 1,
+        "expectedScopeUsed": true,
+        "unexpectedToolNames": [],
+        "resultStatuses": [
+          "ok"
+        ],
+        "returnedSourceIds": [
+          5001,
+          5002,
+          5003
+        ],
+        "citedIds": [
+          5001,
+          5002
+        ],
+        "citationIdsSupplied": true,
+        "expectedSourceCited": true,
+        "noEvidenceAcknowledged": false,
+        "secretSourcesReturned": 0,
+        "rawContactOrPrivateMarkerLeaks": 0,
+        "caveat": "Scope/citation observations only. Polarity, relevant facts, unsupported claims and answer correctness require human review; absent-case candidates are not positive evidence."
+      },
+      "humanReview": "pending"
+    },
+    {
+      "alias": "absent",
+      "caseId": "inquiry-confirmation-absent",
+      "question": "상품 502의 2026-10-01부터 2026-10-12까지 공개 문의에서 빵에 곰팡이가 생겼다는 불만을 의미 검색으로 찾아줘. 문의 ID와 원문을 인용해줘.",
+      "expected": {
+        "caseId": "inquiry-confirmation-absent",
+        "question": "상품 502의 2026-10-01부터 2026-10-12까지 공개 문의에서 빵에 곰팡이가 생겼다는 불만을 의미 검색으로 찾아줘. 문의 ID와 원문을 인용해줘.",
+        "query": "빵에 곰팡이가 생겼다는 불만",
+        "productId": 502,
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-12",
+        "relevantIds": [],
+        "reason": "기간 안의 공개 문의는 빵이 단단해진 현상·부드러운 경험·보관 봉투 안내뿐이며 곰팡이 불만 근거는 없다. #5014의 곰팡이 불만은 10월 13일로 범위 밖이고 #5015는 비밀 문의다. 관련 없는 후보를 곰팡이 근거로 인용하면 안 된다.",
+        "answerFacts": [],
+        "noEvidence": true
+      },
+      "trace": null,
+      "executedTools": [
+        {
+          "name": "summarize_inquiries",
+          "args": {
+            "query": "빵 곰팡이",
+            "startDate": "2026-10-01",
+            "productId": 502,
+            "endDate": "2026-10-12"
+          },
+          "result": {
+            "status": "ok",
+            "mode": "semantic",
+            "scope": {
+              "sourceType": "inquiry",
+              "timezone": "Asia/Seoul",
+              "unit": "source",
+              "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+              "query": "빵 곰팡이",
+              "productIds": [
+                502
+              ],
+              "startDate": "2026-10-01",
+              "endDate": "2026-10-12",
+              "take": 5,
+              "checkedAt": "2026-10-13T19:14:24.577Z"
+            },
+            "coverage": {
+              "total": 3,
+              "ready": 3,
+              "pending": 0,
+              "failed": 0,
+              "partial": false
+            },
+            "data": {
+              "sources": [
+                {
+                  "sourceType": "inquiry",
+                  "id": 5011,
+                  "productId": 502,
+                  "status": "answered",
+                  "title": "다음 날 빵이 단단해졌어요",
+                  "hasContent": true,
+                  "hasAnswer": true,
+                  "createdAt": "2026-10-03T03:00:00.000Z",
+                  "quotes": [
+                    {
+                      "chunkIndex": 0,
+                      "text": "[문의 제목]\n다음 날 빵이 단단해졌어요\n\n[문의 본문]\n빵을 냉장고에 넣었더니 다음 날 딱딱해졌습니다. 부드럽게 먹는 방법이 있나요?\n\n[답변]\n먹기 전에 살짝 데우고 남은 빵은 밀봉해 냉동 보관해주세요."
+                    }
+                  ]
+                },
+                {
+                  "sourceType": "inquiry",
+                  "id": 5012,
+                  "productId": 502,
+                  "status": "waiting",
+                  "title": "밀봉한 빵의 부드러움",
+                  "hasContent": true,
+                  "hasAnswer": false,
+                  "createdAt": "2026-10-05T01:00:00.000Z",
+                  "quotes": [
+                    {
+                      "chunkIndex": 0,
+                      "text": "[문의 제목]\n밀봉한 빵의 부드러움\n\n[문의 본문]\n밀봉해서 두니 다음 날에도 부드러웠습니다. 데워 먹어도 되나요?"
+                    }
+                  ]
+                },
+                {
+                  "sourceType": "inquiry",
+                  "id": 5013,
+                  "productId": 502,
+                  "status": "answered",
+                  "title": "보관용 봉투 사용 문의",
+                  "hasContent": true,
+                  "hasAnswer": true,
+                  "createdAt": "2026-10-04T05:00:00.000Z",
+                  "quotes": [
+                    {
+                      "chunkIndex": 0,
+                      "text": "[문의 제목]\n보관용 봉투 사용 문의\n\n[문의 본문]\n남은 빵을 보관하는 봉투를 별도로 판매하나요?\n\n[답변]\n밀봉할 수 있는 식품 보관용 봉투를 이용해주세요."
+                    }
+                  ]
+                }
+              ],
+              "candidateChunkCount": 3,
+              "omittedSourceCount": 0,
+              "contextTruncated": false
+            },
+            "error": null
+          }
+        }
+      ],
+      "elapsedMs": 17428.189,
+      "llmRequests": 3,
+      "requestFailures": [
+        {
+          "code": "LLM_UNAVAILABLE",
+          "httpStatus": 503,
+          "message": "AI 서비스가 일시적으로 응답하지 않습니다. 잠시 후 다시 시도해주세요."
+        },
+        {
+          "code": "LLM_UNAVAILABLE",
+          "httpStatus": 503,
+          "message": "AI 서비스가 일시적으로 응답하지 않습니다. 잠시 후 다시 시도해주세요."
+        }
+      ],
+      "errorCode": "LLM_UNAVAILABLE",
+      "observations": null,
+      "humanReview": "pending"
+    }
+  ]
+}

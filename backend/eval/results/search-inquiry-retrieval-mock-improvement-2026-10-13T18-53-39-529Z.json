@@ -1,0 +1,2287 @@
+{
+  "runId": "2026-10-13T18-53-39-529Z",
+  "codeVersion": {
+    "sha256": "0f6192ce4256954a3659070fef05aed36e83da3d7d8487f5a759157bb1c9a39f",
+    "files": [
+      "src/search/semantic-search.service.ts",
+      "src/search/search-document.ts",
+      "src/search/search-input.ts",
+      "src/search/search-profile.ts",
+      "src/admin/assistant/assistant.service.ts",
+      "src/admin/assistant/assistant-tools.ts",
+      "src/admin/assistant/assistant-tool-schemas.ts",
+      "src/intrastructure/ai/providers/gemini.client.ts",
+      "src/intrastructure/ai/llm-failure.ts",
+      "src/intrastructure/ai/llm-request-deadline.ts",
+      "src/search/inquiry-index.store.ts",
+      "src/search/inquiry-index.processor.ts",
+      "eval/search/fixture.ts",
+      "eval/search/final-fixture.ts",
+      "eval/search/final-fixture-v2.ts"
+    ],
+    "description": "SHA256 of evaluated working-tree sources, including uncommitted changes."
+  },
+  "fixtureVersion": "inquiries-improvement-v1",
+  "split": "improvement",
+  "embeddingMode": "mock",
+  "profile": {
+    "id": "gemini-embedding-2-768-review-inquiry-v1",
+    "model": "gemini-embedding-2",
+    "dimensions": 768,
+    "preprocessingVersion": "v1",
+    "maskingVersion": "scrub-text-v1",
+    "chunkingVersion": "unicode-paragraph-v1",
+    "queryTemplate": "task: search result | query: {text}",
+    "documentTemplate": "title: {title} | text: {text}",
+    "maxCodePoints": 1000,
+    "overlapCodePoints": 100,
+    "maxInputBytes": 4096,
+    "maxChunks": 32
+  },
+  "syntheticInquiries": 27,
+  "originalInquiries": 0,
+  "publicInquiries": 24,
+  "secretInquiries": 3,
+  "chunkCount": 24,
+  "planned": 12,
+  "executed": 12,
+  "unexecuted": 0,
+  "apiErrors": 0,
+  "errorCode": null,
+  "criteria": null,
+  "protection": {
+    "secretSourcesReturned": 0,
+    "rawContactLeaks": 0,
+    "protectedInputViolations": 0
+  },
+  "summary": {
+    "baseline": {
+      "hitAt5": 1,
+      "recallAt5": 0.7777777777777777,
+      "precisionAt5": 0.26666666666666666
+    },
+    "semantic": {
+      "hitAt5": 1,
+      "recallAt5": 1,
+      "precisionAt5": 0.4
+    }
+  },
+  "policy": "same fixed query/filters for recent baseline and exact cosine; 10 candidate chunks; 5 deduplicated sources; no threshold or reranker",
+  "embeddingUsageThisRun": {
+    "requests": 0,
+    "inputCodePoints": 0,
+    "inputBytes": 0,
+    "inputTokens": null
+  },
+  "generated": null,
+  "cacheHits": null,
+  "mockCalls": 36,
+  "limitations": "Deterministic topic vectors validate indexing, SQL filters and citations only. These scores are not semantic-quality measurements. No provider requests or final answers are generated. No-evidence queries can return unrelated candidates because the service has no threshold.",
+  "cases": [
+    {
+      "query": "세탁 후 옷이 수축한 문의와 교환 안내",
+      "productId": 301,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "caseId": "inquiry-improve-1-all",
+      "relevantIds": [
+        3001,
+        3002,
+        3003
+      ],
+      "question": "상품 301의 2026년 10월 1일부터 13일까지 공개 문의에서 세탁 후 옷이 수축한 문의와 교환 안내를 찾아 ID와 원문을 인용해줘.",
+      "reason": "제목만 있는 공개 문의, 문의 본문, 판매자 답변의 근거 세 건. 문제 없다는 반대 경험과 비밀 문의는 비관련.",
+      "answerFacts": [
+        "세탁",
+        "교환"
+      ],
+      "noEvidence": false,
+      "searchStatus": "ok",
+      "baseline": {
+        "ids": [
+          3007,
+          3006,
+          3005,
+          3004,
+          3003
+        ],
+        "hitAt5": 1,
+        "recallAt5": 0.3333333333333333,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "inquiry",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "세탁 후 옷이 수축한 문의와 교환 안내",
+            "productIds": [
+              301
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T18:53:39.276Z"
+          },
+          "coverage": {
+            "total": 7,
+            "ready": 7,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "inquiry",
+                "id": 3002,
+                "productId": 301,
+                "status": "answered",
+                "title": "사용 중 생긴 문제",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n사용 중 생긴 문제\n\n[문의 본문]\n한 번 세탁했더니 옷자락이 올라갔습니다. 교환 가능한가요?\n\n[답변]\n건조기 사용은 피해주세요. 세탁 후 수축 문제가 있으면 교환 접수를 도와드립니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3003,
+                "productId": 301,
+                "status": "answered",
+                "title": "관리 방법을 알려주세요",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n관리 방법을 알려주세요\n\n[문의 본문]\n제품을 안전하게 사용하는 방법이 궁금합니다.\n\n[답변]\n건조기 사용은 피해주세요. 세탁 후 수축 문제가 있으면 교환 접수를 도와드립니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3004,
+                "productId": 301,
+                "status": "waiting",
+                "title": "상품 301 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 301 일반 문의\n\n[문의 본문]\n걱정했지만 한 번 세탁했더니 옷자락이 올라갔습니다. 교환 가능한가요? 같은 문제는 실제로 없었습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3001,
+                "productId": 301,
+                "status": "waiting",
+                "title": "빨래하면 길이가 짧아지나요?",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n빨래하면 길이가 짧아지나요?"
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3005,
+                "productId": 301,
+                "status": "answered",
+                "title": "상품 301 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 301 일반 문의\n\n[문의 본문]\n색상과 포장 상태를 문의합니다.\n\n[답변]\n색상은 상품 상세 페이지에서 확인해주세요."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 7,
+            "omittedSourceCount": 2,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 0,
+            "inputCodePoints": 0,
+            "inputBytes": 0,
+            "inputTokens": null
+          },
+          "embeddingMs": 0.021600000000034925,
+          "databaseMs": 23.046100000000024,
+          "totalMs": 24.74519999999984,
+          "candidates": [
+            {
+              "inquiry_id": 3002,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3003,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3004,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3001,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 1
+            },
+            {
+              "inquiry_id": 3005,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 1
+            },
+            {
+              "inquiry_id": 3006,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 1
+            },
+            {
+              "inquiry_id": 3007,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 1
+            }
+          ],
+          "invalidatedSourceCount": 0
+        },
+        "ids": [
+          3002,
+          3003,
+          3004,
+          3001,
+          3005
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.6,
+        "relevantReturned": 3,
+        "returnedSourceCount": 5
+      },
+      "queryEmbeddingPreparation": null
+    },
+    {
+      "query": "세탁 후 옷이 수축한 문의와 교환 안내",
+      "productId": 301,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "caseId": "inquiry-improve-1-answered",
+      "status": "answered",
+      "relevantIds": [
+        3002,
+        3003
+      ],
+      "question": "상품 301의 같은 기간 답변 완료된 공개 문의에서 세탁 후 옷이 수축한 문의와 교환 안내를 찾아줘.",
+      "reason": "현재 상태가 answered인 공개 문의 본문·답변 두 건. 제목만 있는 미답변 문의는 상태 조건에서 제외.",
+      "answerFacts": [
+        "세탁",
+        "교환"
+      ],
+      "noEvidence": false,
+      "searchStatus": "ok",
+      "baseline": {
+        "ids": [
+          3005,
+          3003,
+          3002
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.4,
+        "relevantReturned": 2,
+        "returnedSourceCount": 3
+      },
+      "semantic": {
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "inquiry",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "세탁 후 옷이 수축한 문의와 교환 안내",
+            "productIds": [
+              301
+            ],
+            "status": "answered",
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T18:53:39.300Z"
+          },
+          "coverage": {
+            "total": 3,
+            "ready": 3,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "inquiry",
+                "id": 3002,
+                "productId": 301,
+                "status": "answered",
+                "title": "사용 중 생긴 문제",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n사용 중 생긴 문제\n\n[문의 본문]\n한 번 세탁했더니 옷자락이 올라갔습니다. 교환 가능한가요?\n\n[답변]\n건조기 사용은 피해주세요. 세탁 후 수축 문제가 있으면 교환 접수를 도와드립니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3003,
+                "productId": 301,
+                "status": "answered",
+                "title": "관리 방법을 알려주세요",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n관리 방법을 알려주세요\n\n[문의 본문]\n제품을 안전하게 사용하는 방법이 궁금합니다.\n\n[답변]\n건조기 사용은 피해주세요. 세탁 후 수축 문제가 있으면 교환 접수를 도와드립니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3005,
+                "productId": 301,
+                "status": "answered",
+                "title": "상품 301 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 301 일반 문의\n\n[문의 본문]\n색상과 포장 상태를 문의합니다.\n\n[답변]\n색상은 상품 상세 페이지에서 확인해주세요."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 3,
+            "omittedSourceCount": 0,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 0,
+            "inputCodePoints": 0,
+            "inputBytes": 0,
+            "inputTokens": null
+          },
+          "embeddingMs": 0.01919999999972788,
+          "databaseMs": 19.913499999999658,
+          "totalMs": 20.185299999999643,
+          "candidates": [
+            {
+              "inquiry_id": 3002,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3003,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3005,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 1
+            }
+          ],
+          "invalidatedSourceCount": 0
+        },
+        "ids": [
+          3002,
+          3003,
+          3005
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.4,
+        "relevantReturned": 2,
+        "returnedSourceCount": 3
+      },
+      "queryEmbeddingPreparation": null
+    },
+    {
+      "query": "세탁 후 옷이 수축한 문의와 교환 안내",
+      "productId": 301,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "caseId": "inquiry-improve-1-waiting",
+      "status": "waiting",
+      "relevantIds": [
+        3001
+      ],
+      "question": "상품 301의 같은 기간 답변 대기 중인 공개 문의에서 세탁 후 옷이 수축한 문의와 교환 안내를 찾아줘.",
+      "reason": "제목만 있는 공개 미답변 문의 한 건. 반대 경험을 불만으로 사용하지 않는다.",
+      "answerFacts": [
+        "세탁"
+      ],
+      "noEvidence": false,
+      "searchStatus": "ok",
+      "baseline": {
+        "ids": [
+          3007,
+          3006,
+          3004,
+          3001
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 4
+      },
+      "semantic": {
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "inquiry",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "세탁 후 옷이 수축한 문의와 교환 안내",
+            "productIds": [
+              301
+            ],
+            "status": "waiting",
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T18:53:39.318Z"
+          },
+          "coverage": {
+            "total": 4,
+            "ready": 4,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "inquiry",
+                "id": 3004,
+                "productId": 301,
+                "status": "waiting",
+                "title": "상품 301 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 301 일반 문의\n\n[문의 본문]\n걱정했지만 한 번 세탁했더니 옷자락이 올라갔습니다. 교환 가능한가요? 같은 문제는 실제로 없었습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3001,
+                "productId": 301,
+                "status": "waiting",
+                "title": "빨래하면 길이가 짧아지나요?",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n빨래하면 길이가 짧아지나요?"
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3006,
+                "productId": 301,
+                "status": "waiting",
+                "title": "상품 301 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 301 일반 문의\n\n[문의 본문]\n색상과 포장 상태를 문의합니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3007,
+                "productId": 301,
+                "status": "waiting",
+                "title": "연락처 f***@***",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n연락처 f***@***\n\n[문의 본문]\n문의 연락처 ***입니다.\n\n[답변]\nf***@***으로 연락해주세요."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 4,
+            "omittedSourceCount": 0,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 0,
+            "inputCodePoints": 0,
+            "inputBytes": 0,
+            "inputTokens": null
+          },
+          "embeddingMs": 0.016099999999823922,
+          "databaseMs": 17.502800000000207,
+          "totalMs": 17.70809999999983,
+          "candidates": [
+            {
+              "inquiry_id": 3004,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3001,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 1
+            },
+            {
+              "inquiry_id": 3006,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 1
+            },
+            {
+              "inquiry_id": 3007,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 1
+            }
+          ],
+          "invalidatedSourceCount": 0
+        },
+        "ids": [
+          3004,
+          3001,
+          3006,
+          3007
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 4
+      },
+      "queryEmbeddingPreparation": null
+    },
+    {
+      "query": "자동으로 세탁 온도를 조절하는 기능의 고장 문의",
+      "productId": 301,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "caseId": "inquiry-improve-1-absent",
+      "relevantIds": [],
+      "question": "상품 301의 같은 기간 공개 문의에서 자동으로 세탁 온도를 조절하는 기능가 고장났다는 근거를 찾아줘.",
+      "reason": "조건 범위의 모든 공개 문의에 해당 기능 고장 근거가 없다. 임계값 없는 검색 후보를 정답으로 확정하지 않는다.",
+      "answerFacts": [],
+      "noEvidence": true,
+      "searchStatus": "ok",
+      "baseline": {
+        "ids": [
+          3007,
+          3006,
+          3005,
+          3004,
+          3003
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "inquiry",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "자동으로 세탁 온도를 조절하는 기능의 고장 문의",
+            "productIds": [
+              301
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T18:53:39.338Z"
+          },
+          "coverage": {
+            "total": 7,
+            "ready": 7,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "inquiry",
+                "id": 3002,
+                "productId": 301,
+                "status": "answered",
+                "title": "사용 중 생긴 문제",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n사용 중 생긴 문제\n\n[문의 본문]\n한 번 세탁했더니 옷자락이 올라갔습니다. 교환 가능한가요?\n\n[답변]\n건조기 사용은 피해주세요. 세탁 후 수축 문제가 있으면 교환 접수를 도와드립니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3003,
+                "productId": 301,
+                "status": "answered",
+                "title": "관리 방법을 알려주세요",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n관리 방법을 알려주세요\n\n[문의 본문]\n제품을 안전하게 사용하는 방법이 궁금합니다.\n\n[답변]\n건조기 사용은 피해주세요. 세탁 후 수축 문제가 있으면 교환 접수를 도와드립니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3004,
+                "productId": 301,
+                "status": "waiting",
+                "title": "상품 301 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 301 일반 문의\n\n[문의 본문]\n걱정했지만 한 번 세탁했더니 옷자락이 올라갔습니다. 교환 가능한가요? 같은 문제는 실제로 없었습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3001,
+                "productId": 301,
+                "status": "waiting",
+                "title": "빨래하면 길이가 짧아지나요?",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n빨래하면 길이가 짧아지나요?"
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3005,
+                "productId": 301,
+                "status": "answered",
+                "title": "상품 301 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 301 일반 문의\n\n[문의 본문]\n색상과 포장 상태를 문의합니다.\n\n[답변]\n색상은 상품 상세 페이지에서 확인해주세요."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 7,
+            "omittedSourceCount": 2,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 0,
+            "inputCodePoints": 0,
+            "inputBytes": 0,
+            "inputTokens": null
+          },
+          "embeddingMs": 0.01569999999992433,
+          "databaseMs": 18.682800000000043,
+          "totalMs": 18.82849999999962,
+          "candidates": [
+            {
+              "inquiry_id": 3002,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3003,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3004,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3001,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 1
+            },
+            {
+              "inquiry_id": 3005,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 1
+            },
+            {
+              "inquiry_id": 3006,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 1
+            },
+            {
+              "inquiry_id": 3007,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 1
+            }
+          ],
+          "invalidatedSourceCount": 0
+        },
+        "ids": [
+          3002,
+          3003,
+          3004,
+          3001,
+          3005
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "queryEmbeddingPreparation": null
+    },
+    {
+      "query": "빗물이 신발 안으로 들어온 문의와 방수 답변",
+      "productId": 302,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "caseId": "inquiry-improve-2-all",
+      "relevantIds": [
+        3011,
+        3012,
+        3013
+      ],
+      "question": "상품 302의 2026년 10월 1일부터 13일까지 공개 문의에서 빗물이 신발 안으로 들어온 문의와 방수 답변를 찾아 ID와 원문을 인용해줘.",
+      "reason": "제목만 있는 공개 문의, 문의 본문, 판매자 답변의 근거 세 건. 문제 없다는 반대 경험과 비밀 문의는 비관련.",
+      "answerFacts": [
+        "방수",
+        "빗물"
+      ],
+      "noEvidence": false,
+      "searchStatus": "ok",
+      "baseline": {
+        "ids": [
+          3017,
+          3016,
+          3015,
+          3014,
+          3013
+        ],
+        "hitAt5": 1,
+        "recallAt5": 0.3333333333333333,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "inquiry",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "빗물이 신발 안으로 들어온 문의와 방수 답변",
+            "productIds": [
+              302
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T18:53:39.357Z"
+          },
+          "coverage": {
+            "total": 7,
+            "ready": 7,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "inquiry",
+                "id": 3011,
+                "productId": 302,
+                "status": "waiting",
+                "title": "물이 들어간 신발을 바꿀 수 있나요?",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n물이 들어간 신발을 바꿀 수 있나요?"
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3012,
+                "productId": 302,
+                "status": "answered",
+                "title": "사용 중 생긴 문제",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n사용 중 생긴 문제\n\n[문의 본문]\n비 오는 날 양말까지 젖었습니다. 방수에 문제가 있는지 궁금합니다.\n\n[답변]\n방수 제품이 아니므로 빗물 유입이 가능합니다. 젖은 신발을 말린 후 상태를 확인해주세요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3013,
+                "productId": 302,
+                "status": "answered",
+                "title": "관리 방법을 알려주세요",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n관리 방법을 알려주세요\n\n[문의 본문]\n제품을 안전하게 사용하는 방법이 궁금합니다.\n\n[답변]\n방수 제품이 아니므로 빗물 유입이 가능합니다. 젖은 신발을 말린 후 상태를 확인해주세요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3014,
+                "productId": 302,
+                "status": "waiting",
+                "title": "상품 302 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 302 일반 문의\n\n[문의 본문]\n걱정했지만 비 오는 날 양말까지 젖었습니다. 방수에 문제가 있는지 궁금합니다. 같은 문제는 실제로 없었습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3015,
+                "productId": 302,
+                "status": "answered",
+                "title": "상품 302 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 302 일반 문의\n\n[문의 본문]\n색상과 포장 상태를 문의합니다.\n\n[답변]\n색상은 상품 상세 페이지에서 확인해주세요."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 7,
+            "omittedSourceCount": 2,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 0,
+            "inputCodePoints": 0,
+            "inputBytes": 0,
+            "inputTokens": null
+          },
+          "embeddingMs": 0.016199999999571446,
+          "databaseMs": 17.125300000000152,
+          "totalMs": 17.347800000000007,
+          "candidates": [
+            {
+              "inquiry_id": 3011,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3012,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3013,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3014,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3015,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 1
+            },
+            {
+              "inquiry_id": 3016,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 1
+            },
+            {
+              "inquiry_id": 3017,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 1
+            }
+          ],
+          "invalidatedSourceCount": 0
+        },
+        "ids": [
+          3011,
+          3012,
+          3013,
+          3014,
+          3015
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.6,
+        "relevantReturned": 3,
+        "returnedSourceCount": 5
+      },
+      "queryEmbeddingPreparation": null
+    },
+    {
+      "query": "빗물이 신발 안으로 들어온 문의와 방수 답변",
+      "productId": 302,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "caseId": "inquiry-improve-2-answered",
+      "status": "answered",
+      "relevantIds": [
+        3012,
+        3013
+      ],
+      "question": "상품 302의 같은 기간 답변 완료된 공개 문의에서 빗물이 신발 안으로 들어온 문의와 방수 답변를 찾아줘.",
+      "reason": "현재 상태가 answered인 공개 문의 본문·답변 두 건. 제목만 있는 미답변 문의는 상태 조건에서 제외.",
+      "answerFacts": [
+        "방수",
+        "빗물"
+      ],
+      "noEvidence": false,
+      "searchStatus": "ok",
+      "baseline": {
+        "ids": [
+          3015,
+          3013,
+          3012
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.4,
+        "relevantReturned": 2,
+        "returnedSourceCount": 3
+      },
+      "semantic": {
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "inquiry",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "빗물이 신발 안으로 들어온 문의와 방수 답변",
+            "productIds": [
+              302
+            ],
+            "status": "answered",
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T18:53:39.374Z"
+          },
+          "coverage": {
+            "total": 3,
+            "ready": 3,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "inquiry",
+                "id": 3012,
+                "productId": 302,
+                "status": "answered",
+                "title": "사용 중 생긴 문제",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n사용 중 생긴 문제\n\n[문의 본문]\n비 오는 날 양말까지 젖었습니다. 방수에 문제가 있는지 궁금합니다.\n\n[답변]\n방수 제품이 아니므로 빗물 유입이 가능합니다. 젖은 신발을 말린 후 상태를 확인해주세요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3013,
+                "productId": 302,
+                "status": "answered",
+                "title": "관리 방법을 알려주세요",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n관리 방법을 알려주세요\n\n[문의 본문]\n제품을 안전하게 사용하는 방법이 궁금합니다.\n\n[답변]\n방수 제품이 아니므로 빗물 유입이 가능합니다. 젖은 신발을 말린 후 상태를 확인해주세요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3015,
+                "productId": 302,
+                "status": "answered",
+                "title": "상품 302 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 302 일반 문의\n\n[문의 본문]\n색상과 포장 상태를 문의합니다.\n\n[답변]\n색상은 상품 상세 페이지에서 확인해주세요."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 3,
+            "omittedSourceCount": 0,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 0,
+            "inputCodePoints": 0,
+            "inputBytes": 0,
+            "inputTokens": null
+          },
+          "embeddingMs": 0.016000000000076398,
+          "databaseMs": 15.884000000000015,
+          "totalMs": 16.025900000000092,
+          "candidates": [
+            {
+              "inquiry_id": 3012,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3013,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3015,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 1
+            }
+          ],
+          "invalidatedSourceCount": 0
+        },
+        "ids": [
+          3012,
+          3013,
+          3015
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.4,
+        "relevantReturned": 2,
+        "returnedSourceCount": 3
+      },
+      "queryEmbeddingPreparation": null
+    },
+    {
+      "query": "빗물이 신발 안으로 들어온 문의와 방수 답변",
+      "productId": 302,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "caseId": "inquiry-improve-2-waiting",
+      "status": "waiting",
+      "relevantIds": [
+        3011
+      ],
+      "question": "상품 302의 같은 기간 답변 대기 중인 공개 문의에서 빗물이 신발 안으로 들어온 문의와 방수 답변를 찾아줘.",
+      "reason": "제목만 있는 공개 미답변 문의 한 건. 반대 경험을 불만으로 사용하지 않는다.",
+      "answerFacts": [
+        "방수"
+      ],
+      "noEvidence": false,
+      "searchStatus": "ok",
+      "baseline": {
+        "ids": [
+          3017,
+          3016,
+          3014,
+          3011
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 4
+      },
+      "semantic": {
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "inquiry",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "빗물이 신발 안으로 들어온 문의와 방수 답변",
+            "productIds": [
+              302
+            ],
+            "status": "waiting",
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T18:53:39.391Z"
+          },
+          "coverage": {
+            "total": 4,
+            "ready": 4,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "inquiry",
+                "id": 3011,
+                "productId": 302,
+                "status": "waiting",
+                "title": "물이 들어간 신발을 바꿀 수 있나요?",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n물이 들어간 신발을 바꿀 수 있나요?"
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3014,
+                "productId": 302,
+                "status": "waiting",
+                "title": "상품 302 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 302 일반 문의\n\n[문의 본문]\n걱정했지만 비 오는 날 양말까지 젖었습니다. 방수에 문제가 있는지 궁금합니다. 같은 문제는 실제로 없었습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3016,
+                "productId": 302,
+                "status": "waiting",
+                "title": "상품 302 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 302 일반 문의\n\n[문의 본문]\n색상과 포장 상태를 문의합니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3017,
+                "productId": 302,
+                "status": "waiting",
+                "title": "연락처 f***@***",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n연락처 f***@***\n\n[문의 본문]\n문의 연락처 ***입니다.\n\n[답변]\nf***@***으로 연락해주세요."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 4,
+            "omittedSourceCount": 0,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 0,
+            "inputCodePoints": 0,
+            "inputBytes": 0,
+            "inputTokens": null
+          },
+          "embeddingMs": 0.015799999999671854,
+          "databaseMs": 15.647699999999986,
+          "totalMs": 15.769399999999678,
+          "candidates": [
+            {
+              "inquiry_id": 3011,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3014,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3016,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 1
+            },
+            {
+              "inquiry_id": 3017,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 1
+            }
+          ],
+          "invalidatedSourceCount": 0
+        },
+        "ids": [
+          3011,
+          3014,
+          3016,
+          3017
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 4
+      },
+      "queryEmbeddingPreparation": null
+    },
+    {
+      "query": "자동으로 신발끈을 묶는 기능의 고장 문의",
+      "productId": 302,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "caseId": "inquiry-improve-2-absent",
+      "relevantIds": [],
+      "question": "상품 302의 같은 기간 공개 문의에서 자동으로 신발끈을 묶는 기능가 고장났다는 근거를 찾아줘.",
+      "reason": "조건 범위의 모든 공개 문의에 해당 기능 고장 근거가 없다. 임계값 없는 검색 후보를 정답으로 확정하지 않는다.",
+      "answerFacts": [],
+      "noEvidence": true,
+      "searchStatus": "ok",
+      "baseline": {
+        "ids": [
+          3017,
+          3016,
+          3015,
+          3014,
+          3013
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "inquiry",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "자동으로 신발끈을 묶는 기능의 고장 문의",
+            "productIds": [
+              302
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T18:53:39.408Z"
+          },
+          "coverage": {
+            "total": 7,
+            "ready": 7,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "inquiry",
+                "id": 3011,
+                "productId": 302,
+                "status": "waiting",
+                "title": "물이 들어간 신발을 바꿀 수 있나요?",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n물이 들어간 신발을 바꿀 수 있나요?"
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3012,
+                "productId": 302,
+                "status": "answered",
+                "title": "사용 중 생긴 문제",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n사용 중 생긴 문제\n\n[문의 본문]\n비 오는 날 양말까지 젖었습니다. 방수에 문제가 있는지 궁금합니다.\n\n[답변]\n방수 제품이 아니므로 빗물 유입이 가능합니다. 젖은 신발을 말린 후 상태를 확인해주세요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3013,
+                "productId": 302,
+                "status": "answered",
+                "title": "관리 방법을 알려주세요",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n관리 방법을 알려주세요\n\n[문의 본문]\n제품을 안전하게 사용하는 방법이 궁금합니다.\n\n[답변]\n방수 제품이 아니므로 빗물 유입이 가능합니다. 젖은 신발을 말린 후 상태를 확인해주세요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3014,
+                "productId": 302,
+                "status": "waiting",
+                "title": "상품 302 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 302 일반 문의\n\n[문의 본문]\n걱정했지만 비 오는 날 양말까지 젖었습니다. 방수에 문제가 있는지 궁금합니다. 같은 문제는 실제로 없었습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3015,
+                "productId": 302,
+                "status": "answered",
+                "title": "상품 302 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 302 일반 문의\n\n[문의 본문]\n색상과 포장 상태를 문의합니다.\n\n[답변]\n색상은 상품 상세 페이지에서 확인해주세요."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 7,
+            "omittedSourceCount": 2,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 0,
+            "inputCodePoints": 0,
+            "inputBytes": 0,
+            "inputTokens": null
+          },
+          "embeddingMs": 0.06420000000025539,
+          "databaseMs": 17.122199999999793,
+          "totalMs": 17.30580000000009,
+          "candidates": [
+            {
+              "inquiry_id": 3011,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3012,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3013,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3014,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3015,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 1
+            },
+            {
+              "inquiry_id": 3016,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 1
+            },
+            {
+              "inquiry_id": 3017,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 1
+            }
+          ],
+          "invalidatedSourceCount": 0
+        },
+        "ids": [
+          3011,
+          3012,
+          3013,
+          3014,
+          3015
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "queryEmbeddingPreparation": null
+    },
+    {
+      "query": "전원이 오래 유지되지 않는 문의와 배터리 점검 안내",
+      "productId": 303,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "caseId": "inquiry-improve-3-all",
+      "relevantIds": [
+        3021,
+        3022,
+        3023
+      ],
+      "question": "상품 303의 2026년 10월 1일부터 13일까지 공개 문의에서 전원이 오래 유지되지 않는 문의와 배터리 점검 안내를 찾아 ID와 원문을 인용해줘.",
+      "reason": "제목만 있는 공개 문의, 문의 본문, 판매자 답변의 근거 세 건. 문제 없다는 반대 경험과 비밀 문의는 비관련.",
+      "answerFacts": [
+        "배터리",
+        "점검"
+      ],
+      "noEvidence": false,
+      "searchStatus": "ok",
+      "baseline": {
+        "ids": [
+          3027,
+          3026,
+          3025,
+          3024,
+          3023
+        ],
+        "hitAt5": 1,
+        "recallAt5": 0.3333333333333333,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "inquiry",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "전원이 오래 유지되지 않는 문의와 배터리 점검 안내",
+            "productIds": [
+              303
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T18:53:39.433Z"
+          },
+          "coverage": {
+            "total": 7,
+            "ready": 7,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "inquiry",
+                "id": 3021,
+                "productId": 303,
+                "status": "waiting",
+                "title": "충전해도 금방 전원이 꺼집니다",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n충전해도 금방 전원이 꺼집니다"
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3022,
+                "productId": 303,
+                "status": "answered",
+                "title": "사용 중 생긴 문제",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n사용 중 생긴 문제\n\n[문의 본문]\n완전히 충전하고 켰는데 한 시간 만에 멈췄습니다.\n\n[답변]\n배터리 소모가 빠르면 충전기와 케이블을 확인한 뒤 점검을 신청해주세요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3023,
+                "productId": 303,
+                "status": "answered",
+                "title": "관리 방법을 알려주세요",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n관리 방법을 알려주세요\n\n[문의 본문]\n제품을 안전하게 사용하는 방법이 궁금합니다.\n\n[답변]\n배터리 소모가 빠르면 충전기와 케이블을 확인한 뒤 점검을 신청해주세요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3024,
+                "productId": 303,
+                "status": "waiting",
+                "title": "상품 303 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 303 일반 문의\n\n[문의 본문]\n걱정했지만 완전히 충전하고 켰는데 한 시간 만에 멈췄습니다. 같은 문제는 실제로 없었습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3025,
+                "productId": 303,
+                "status": "answered",
+                "title": "상품 303 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 303 일반 문의\n\n[문의 본문]\n색상과 포장 상태를 문의합니다.\n\n[답변]\n색상은 상품 상세 페이지에서 확인해주세요."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 7,
+            "omittedSourceCount": 2,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 0,
+            "inputCodePoints": 0,
+            "inputBytes": 0,
+            "inputTokens": null
+          },
+          "embeddingMs": 0.02029999999967913,
+          "databaseMs": 22.635400000000118,
+          "totalMs": 22.92589999999973,
+          "candidates": [
+            {
+              "inquiry_id": 3021,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3022,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3023,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3024,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3025,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 1
+            },
+            {
+              "inquiry_id": 3026,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 1
+            },
+            {
+              "inquiry_id": 3027,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 1
+            }
+          ],
+          "invalidatedSourceCount": 0
+        },
+        "ids": [
+          3021,
+          3022,
+          3023,
+          3024,
+          3025
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.6,
+        "relevantReturned": 3,
+        "returnedSourceCount": 5
+      },
+      "queryEmbeddingPreparation": null
+    },
+    {
+      "query": "전원이 오래 유지되지 않는 문의와 배터리 점검 안내",
+      "productId": 303,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "caseId": "inquiry-improve-3-answered",
+      "status": "answered",
+      "relevantIds": [
+        3022,
+        3023
+      ],
+      "question": "상품 303의 같은 기간 답변 완료된 공개 문의에서 전원이 오래 유지되지 않는 문의와 배터리 점검 안내를 찾아줘.",
+      "reason": "현재 상태가 answered인 공개 문의 본문·답변 두 건. 제목만 있는 미답변 문의는 상태 조건에서 제외.",
+      "answerFacts": [
+        "배터리",
+        "점검"
+      ],
+      "noEvidence": false,
+      "searchStatus": "ok",
+      "baseline": {
+        "ids": [
+          3025,
+          3023,
+          3022
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.4,
+        "relevantReturned": 2,
+        "returnedSourceCount": 3
+      },
+      "semantic": {
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "inquiry",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "전원이 오래 유지되지 않는 문의와 배터리 점검 안내",
+            "productIds": [
+              303
+            ],
+            "status": "answered",
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T18:53:39.451Z"
+          },
+          "coverage": {
+            "total": 3,
+            "ready": 3,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "inquiry",
+                "id": 3022,
+                "productId": 303,
+                "status": "answered",
+                "title": "사용 중 생긴 문제",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n사용 중 생긴 문제\n\n[문의 본문]\n완전히 충전하고 켰는데 한 시간 만에 멈췄습니다.\n\n[답변]\n배터리 소모가 빠르면 충전기와 케이블을 확인한 뒤 점검을 신청해주세요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3023,
+                "productId": 303,
+                "status": "answered",
+                "title": "관리 방법을 알려주세요",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n관리 방법을 알려주세요\n\n[문의 본문]\n제품을 안전하게 사용하는 방법이 궁금합니다.\n\n[답변]\n배터리 소모가 빠르면 충전기와 케이블을 확인한 뒤 점검을 신청해주세요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3025,
+                "productId": 303,
+                "status": "answered",
+                "title": "상품 303 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 303 일반 문의\n\n[문의 본문]\n색상과 포장 상태를 문의합니다.\n\n[답변]\n색상은 상품 상세 페이지에서 확인해주세요."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 3,
+            "omittedSourceCount": 0,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 0,
+            "inputCodePoints": 0,
+            "inputBytes": 0,
+            "inputTokens": null
+          },
+          "embeddingMs": 0.017699999999877036,
+          "databaseMs": 15.900900000000092,
+          "totalMs": 16.17659999999978,
+          "candidates": [
+            {
+              "inquiry_id": 3022,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3023,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3025,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 1
+            }
+          ],
+          "invalidatedSourceCount": 0
+        },
+        "ids": [
+          3022,
+          3023,
+          3025
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.4,
+        "relevantReturned": 2,
+        "returnedSourceCount": 3
+      },
+      "queryEmbeddingPreparation": null
+    },
+    {
+      "query": "전원이 오래 유지되지 않는 문의와 배터리 점검 안내",
+      "productId": 303,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "caseId": "inquiry-improve-3-waiting",
+      "status": "waiting",
+      "relevantIds": [
+        3021
+      ],
+      "question": "상품 303의 같은 기간 답변 대기 중인 공개 문의에서 전원이 오래 유지되지 않는 문의와 배터리 점검 안내를 찾아줘.",
+      "reason": "제목만 있는 공개 미답변 문의 한 건. 반대 경험을 불만으로 사용하지 않는다.",
+      "answerFacts": [
+        "배터리"
+      ],
+      "noEvidence": false,
+      "searchStatus": "ok",
+      "baseline": {
+        "ids": [
+          3027,
+          3026,
+          3024,
+          3021
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 4
+      },
+      "semantic": {
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "inquiry",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "전원이 오래 유지되지 않는 문의와 배터리 점검 안내",
+            "productIds": [
+              303
+            ],
+            "status": "waiting",
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T18:53:39.469Z"
+          },
+          "coverage": {
+            "total": 4,
+            "ready": 4,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "inquiry",
+                "id": 3021,
+                "productId": 303,
+                "status": "waiting",
+                "title": "충전해도 금방 전원이 꺼집니다",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n충전해도 금방 전원이 꺼집니다"
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3024,
+                "productId": 303,
+                "status": "waiting",
+                "title": "상품 303 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 303 일반 문의\n\n[문의 본문]\n걱정했지만 완전히 충전하고 켰는데 한 시간 만에 멈췄습니다. 같은 문제는 실제로 없었습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3026,
+                "productId": 303,
+                "status": "waiting",
+                "title": "상품 303 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 303 일반 문의\n\n[문의 본문]\n색상과 포장 상태를 문의합니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3027,
+                "productId": 303,
+                "status": "waiting",
+                "title": "연락처 f***@***",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n연락처 f***@***\n\n[문의 본문]\n문의 연락처 ***입니다.\n\n[답변]\nf***@***으로 연락해주세요."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 4,
+            "omittedSourceCount": 0,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 0,
+            "inputCodePoints": 0,
+            "inputBytes": 0,
+            "inputTokens": null
+          },
+          "embeddingMs": 0.02179999999998472,
+          "databaseMs": 16.498599999999897,
+          "totalMs": 16.646600000000035,
+          "candidates": [
+            {
+              "inquiry_id": 3021,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3024,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3026,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 1
+            },
+            {
+              "inquiry_id": 3027,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 1
+            }
+          ],
+          "invalidatedSourceCount": 0
+        },
+        "ids": [
+          3021,
+          3024,
+          3026,
+          3027
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 4
+      },
+      "queryEmbeddingPreparation": null
+    },
+    {
+      "query": "기계가 스스로 먼지를 비우는 기능의 고장 문의",
+      "productId": 303,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "caseId": "inquiry-improve-3-absent",
+      "relevantIds": [],
+      "question": "상품 303의 같은 기간 공개 문의에서 기계가 스스로 먼지를 비우는 기능가 고장났다는 근거를 찾아줘.",
+      "reason": "조건 범위의 모든 공개 문의에 해당 기능 고장 근거가 없다. 임계값 없는 검색 후보를 정답으로 확정하지 않는다.",
+      "answerFacts": [],
+      "noEvidence": true,
+      "searchStatus": "ok",
+      "baseline": {
+        "ids": [
+          3027,
+          3026,
+          3025,
+          3024,
+          3023
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "inquiry",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "기계가 스스로 먼지를 비우는 기능의 고장 문의",
+            "productIds": [
+              303
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T18:53:39.486Z"
+          },
+          "coverage": {
+            "total": 7,
+            "ready": 7,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "inquiry",
+                "id": 3025,
+                "productId": 303,
+                "status": "answered",
+                "title": "상품 303 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 303 일반 문의\n\n[문의 본문]\n색상과 포장 상태를 문의합니다.\n\n[답변]\n색상은 상품 상세 페이지에서 확인해주세요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3026,
+                "productId": 303,
+                "status": "waiting",
+                "title": "상품 303 일반 문의",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n상품 303 일반 문의\n\n[문의 본문]\n색상과 포장 상태를 문의합니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3027,
+                "productId": 303,
+                "status": "waiting",
+                "title": "연락처 f***@***",
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n연락처 f***@***\n\n[문의 본문]\n문의 연락처 ***입니다.\n\n[답변]\nf***@***으로 연락해주세요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3021,
+                "productId": 303,
+                "status": "waiting",
+                "title": "충전해도 금방 전원이 꺼집니다",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n충전해도 금방 전원이 꺼집니다"
+                  }
+                ]
+              },
+              {
+                "sourceType": "inquiry",
+                "id": 3022,
+                "productId": 303,
+                "status": "answered",
+                "title": "사용 중 생긴 문제",
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "[문의 제목]\n사용 중 생긴 문제\n\n[문의 본문]\n완전히 충전하고 켰는데 한 시간 만에 멈췄습니다.\n\n[답변]\n배터리 소모가 빠르면 충전기와 케이블을 확인한 뒤 점검을 신청해주세요."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 7,
+            "omittedSourceCount": 2,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 0,
+            "inputCodePoints": 0,
+            "inputBytes": 0,
+            "inputTokens": null
+          },
+          "embeddingMs": 0.01349999999956708,
+          "databaseMs": 16.352499999999964,
+          "totalMs": 16.456900000000132,
+          "candidates": [
+            {
+              "inquiry_id": 3025,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3026,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3027,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0
+            },
+            {
+              "inquiry_id": 3021,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 1
+            },
+            {
+              "inquiry_id": 3022,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 1
+            },
+            {
+              "inquiry_id": 3023,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 1
+            },
+            {
+              "inquiry_id": 3024,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 1
+            }
+          ],
+          "invalidatedSourceCount": 0
+        },
+        "ids": [
+          3025,
+          3026,
+          3027,
+          3021,
+          3022
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "queryEmbeddingPreparation": null
+    }
+  ]
+}

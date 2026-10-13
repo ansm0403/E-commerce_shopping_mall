@@ -1,0 +1,46 @@
+{
+  "dateKst": "2026-10-14",
+  "recordType": "Summary of observed Nx commands and live synthetic diagnostic artifacts",
+  "userReport": {
+    "ratingQuestion": "generation_failed; previous generic log did not retain upstream reason",
+    "periodQuestion": "no_data response matches current read-only source counts",
+    "moldQuestion": "generation_failed; previous generic log did not retain upstream reason"
+  },
+  "readOnlyUserDatabase": {
+    "reviewId": 1874, "productId": 577, "rating": 5, "version": "1",
+    "productReviewCount": 1, "maxRating2Count": 0, "period20261001Through12Count": 0,
+    "mutated": false
+  },
+  "liveDiagnostic": {
+    "fixture": "Fixed synthetic review result with the app service, prompt, dispatcher and stream; no HTTP server, user DB access, or embedding requests",
+    "runs": [
+      { "caseId": "rating", "beforeManagedRetry": true, "llmRequests": 1, "finalErrorCode": "LLM_UNAVAILABLE", "httpStatus": 503, "toolCalls": 0, "artifact": "search-stream-diagnostic-2026-10-13T17-11-02-292Z.json" },
+      { "caseId": "rating", "beforeManagedRetry": false, "llmRequests": 3, "sdkRequestFailures": 1, "failedStatus": 503, "finalErrorCode": null, "toolStatus": "no_data", "artifact": "search-stream-diagnostic-2026-10-13T17-17-50-586Z.json" },
+      { "caseId": "mold", "beforeManagedRetry": false, "llmRequests": 2, "sdkRequestFailures": 0, "finalErrorCode": null, "toolStatus": "ok", "answerObservation": "States no mold complaint evidence in retrieved material", "artifact": "search-stream-diagnostic-2026-10-13T17-19-16-330Z.json" }
+    ],
+    "totalLlmRequests": 6,
+    "caveat": "Current probes do not establish the cause of the two historical user failures or complete browser/vector-search verification. Original failed probe remains preserved. No answer-accuracy aggregate computed."
+  },
+  "changes": {
+    "managedRetry": { "statuses": [500, 502, 503, 504], "additionalSdkRequestsPerTurn": 1, "delayMs": 1000, "retryAfterPartialParts": false, "replayCompletedTools": false, "cancellationAware": true },
+    "safeFailureMessagesAndLogs": true,
+    "recoveredSdkFailuresRecorded": true,
+    "sdkInternalAttempts": 1,
+    "envChanged": false,
+    "modelChanged": false
+  },
+  "checks": {
+    "focusedUnit": { "passed": 66, "failed": 0, "suites": 4 },
+    "allBackendUnit": { "passed": 691, "failed": 0, "suites": 51, "artifact": "search-stream-failure-unit-2026-10-14.json" },
+    "authenticatedHttpSseAndPostgres": { "passed": 8, "failed": 0 },
+    "backendTypecheck": "passed", "searchEvaluationTypecheck": "passed", "lintQuiet": "passed", "developmentBuild": "passed",
+    "existingBuildMessage": "Nx pruned lockfile unavailable for @nestjs/typeorm@*; root lockfile fallback used",
+    "gitDiffCheck": "passed"
+  },
+  "sourceSha256": {
+    "src/intrastructure/ai/providers/gemini.client.ts": "51BF26D6B43EDF0AF3D9C0ECD249CE9059AE4B900DE2D49C8CBBC187D5AAD1B0",
+    "src/intrastructure/ai/llm-failure.ts": "24EE8F18B86EC1033F6607AE777804234D6F1761BF28E04625D106FBEE79D8B2",
+    "src/admin/assistant/assistant.service.ts": "B2B55177929BD4447F2DFACF8B9E56710E4843D710B32F22753A1D089DA5066B"
+  },
+  "remaining": ["User reruns the two failed browser questions after backend restart", "Original author-attribution wording issue and final 30-answer human review remain separate open quality checks"]
+}

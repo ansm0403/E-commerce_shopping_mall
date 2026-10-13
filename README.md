@@ -325,10 +325,11 @@ PORTONE_API_SECRET=                       # 결제 검증. 없으면 결제 단�
 | `yarn nx run @shopping-mall/backend:seed` · `seed:full` · `seed:reset` | 빌드된 `dist/main.js` 를 `NODE_SEED=true` 로 실행해 데모 관리자·역할·카테고리(+상품·주문 30일치) 시드 — [데이터 가이드](docs/roadmap/ex-db-migration-data-guide.md) |
 | `yarn nx test frontend` | 프론트 단위 5 파일 40건(jsdom + Testing Library) — authClient **동시 401 → refresh 1회·큐 재시도** 인터셉터, JWT payload 판독, 셀러 신청 화면 4분기(미신청·심사 중·승인·반려) 렌더링, API 실패 Sentry 리포터, 홈 렌더 스모크 |
 | `yarn nx test backend` · `yarn nx e2e backend-e2e` | 단위(spec 32 파일, ops 9) · HTTP e2e 5 파일(**이미 떠 있는 4000 을 대상**으로 돈다, `e2e-` 접두 계정을 만들고 스스로 정리) |
+| `yarn nx run @shopping-mall/backend:search:query:verify` · `search:chat:verify` | 리뷰 의미 검색·관리자 HTTP/SSE 검증. 전용 PostgreSQL 필요. [3단계 구현·평가·재현](docs/roadmap/ex-ai-vector-search-phase3.md) |
 | `node scripts/probe/probe.mjs` | 프론트 프로브 — 헤드리스 Chrome 으로 API 응답만 깨뜨려 5개 케이스 재현(서버 무접촉, [README](scripts/probe/README.md)) |
 | `cd backend && node -r ts-node/register/transpile-only eval/run-eval.ts` · 같은 방식으로 `eval/run-judge.ts` · `eval/ops-review-set.ts list|test|stats|chips|notes` | AI 어시스턴트 골든셋·judge / 운영 앱 평가 세트(백엔드 4000 + LLM 키 필요) |
 
-> 로컬 Node 22 에서는 `nx test backend` 가 `jest.config.ts` 파싱에서 실패합니다(CI 의 Node 24 는 정상, `nx test frontend` 는 Node 22 에서도 정상). 로컬 우회는 `node node_modules/jest/bin/jest.js --config '{...}'` 처럼 인라인 config 로.
+> 백엔드 단위 테스트 설정은 `backend/jest.config.cjs`를 사용합니다. Node의 TypeScript 직접 로딩 여부와 관계없이 같은 Nx 명령으로 실행하며, Windows의 preset 입력·출력 경로는 `backend/package.json`에서 `/`로 명시합니다.
 
 ---
 
@@ -343,6 +344,7 @@ PORTONE_API_SECRET=                       # 결제 검증. 없으면 결제 단�
 | [ex-db-migration](docs/roadmap/ex-db-migration.md) · [배포 런북](docs/roadmap/ex-db-migration-deploy-runbook.md) · [데이터 가이드](docs/roadmap/ex-db-migration-data-guide.md) | DB 리셋 + TypeORM 마이그레이션 도입 |
 | [ex-sentry-slack](docs/roadmap/ex-sentry-slack.md) · [ex-observability-map](docs/roadmap/ex-observability-map.md) · [블로그: Sentry 가 API 실패를 못 잡던 문제](docs/blog/sentry-axios-silent-failure.md) | 관측성 — 연동 트러블슈팅, 장애 시나리오 10건 매트릭스 |
 | [ex-ai-assistant](docs/roadmap/ex-ai-assistant.md) · [ex-audit-log-admin](docs/roadmap/ex-audit-log-admin.md) · [ex-review-frontend](docs/roadmap/ex-review-frontend.md) | AI 어시스턴트(Phase 0~7 + eval), 감사 로그 뷰어, 리뷰 프론트 |
+| [ex-ai-vector-search](docs/roadmap/ex-ai-vector-search.md) · [3단계 기록](docs/roadmap/ex-ai-vector-search-phase3.md) | 리뷰 색인·의미 검색·현재 원본 재확인·채팅 도구 연결과 합성 자료 평가. 검색 공개는 초기 색인·최종 답변 사람 검토 후 |
 | [ops-companion-design](docs/roadmap/ops-companion-design.md) · [학습 노트 9편](docs/learning/ops-companion/README.md) · [scripts/probe](scripts/probe/README.md) | 운영 앱 — 설계·결정(§9 Phase 표) / 코드 해설 / 프로브 |
 | [docs/history/README-2026-06-14.md](docs/history/README-2026-06-14.md) | 옛 README — 스택 선택 이유, EC2 선정, 초기 설계 결정 서술 |
 

@@ -1,0 +1,76 @@
+{
+  "runId": "2026-10-13T17-17-50-586Z",
+  "caseId": "rating",
+  "question": "상품 577의 2점 이하 리뷰에서 소매가 조여 움직이기 어렵다는 불만을 의미 검색으로 찾아줘. 리뷰 ID와 원문을 인용해줘.",
+  "model": "gemini-3.1-flash-lite",
+  "planned": 1,
+  "executed": 1,
+  "llmRequests": 3,
+  "requestFailures": [
+    {
+      "code": "LLM_UNAVAILABLE",
+      "httpStatus": 503,
+      "message": "AI 서비스가 일시적으로 응답하지 않습니다. 잠시 후 다시 시도해주세요."
+    }
+  ],
+  "errorCode": null,
+  "httpStatus": null,
+  "elapsedMs": 13816.8527,
+  "eventTypes": [
+    "meta",
+    "tool",
+    "text",
+    "text",
+    "text",
+    "done"
+  ],
+  "errorMessage": null,
+  "reply": "상품 577의 2점 이하 리뷰 중 '소매가 조여 움직이기 어렵다'는 내용과 관련된 데이터가 없습니다. 다른 조건으로 다시 검색해 드릴까요?",
+  "tools": [
+    {
+      "name": "summarize_reviews",
+      "args": {
+        "productId": 577,
+        "query": "소매가 조여서 움직이기 어렵다",
+        "maxRating": 2
+      },
+      "result": {
+        "status": "no_data",
+        "mode": "semantic",
+        "scope": {
+          "sourceType": "review",
+          "timezone": "Asia/Seoul",
+          "unit": "source",
+          "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+          "query": "소매가 조여서 움직이기 어렵다",
+          "productIds": [
+            577
+          ],
+          "maxRating": 2,
+          "take": 5,
+          "checkedAt": "2026-10-13T17:17:45.609Z"
+        },
+        "coverage": {
+          "total": 0,
+          "ready": 0,
+          "pending": 0,
+          "failed": 0,
+          "partial": false
+        },
+        "data": {
+          "sources": [],
+          "candidateChunkCount": 0,
+          "omittedSourceCount": 0,
+          "contextTruncated": false
+        },
+        "error": null
+      }
+    }
+  ],
+  "fixture": {
+    "syntheticReviews": 1,
+    "userDatabaseAccess": false,
+    "embeddingRequests": 0
+  },
+  "caveat": "Current live API probe using the app service/prompt/dispatcher/stream with a fixed synthetic search result. No HTTP authentication or real DB/vector search. Does not establish the cause of previous failures or answer correctness."
+}

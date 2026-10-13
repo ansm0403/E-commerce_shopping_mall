@@ -9,26 +9,36 @@ import { ProductEntity } from '../product/entity/product.entity';
 import { SellerEntity } from '../seller/entity/seller.entity';
 import { CommonService } from '../common/common.service';
 import { SellerInquiryQueryDto } from './dto/seller-inquiry-query.dto';
+import { SearchIndexRecorder } from '../search/search-index-recorder';
+import type { EntityManager } from 'typeorm';
 
 describe('InquiryService', () => {
   let service: InquiryService;
   let sellerRepository: { findOne: jest.Mock };
   let commonService: { paginate: jest.Mock };
-  let inquiries: { findOne: jest.Mock; update: jest.Mock; save: jest.Mock; delete: jest.Mock };
+  let inquiries: { findOne: jest.Mock; update: jest.Mock; save: jest.Mock; delete: jest.Mock; create: jest.Mock; manager: { transaction: jest.Mock } };
   let products: { findOne: jest.Mock };
+  let manager: EntityManager;
+  let searchJobs: { recordInquiry: jest.Mock; advanceInquiry: jest.Mock };
+  let demoPolicy: ReturnType<typeof mockDemoPolicy>;
 
   const query = (status?: InquiryStatus) =>
     Object.assign(new SellerInquiryQueryDto(), { page: 1, status });
 
   beforeEach(async () => {
     sellerRepository = { findOne: jest.fn() };
-    inquiries = { findOne: jest.fn(), update: jest.fn(), save: jest.fn(), delete: jest.fn() };
+    inquiries = { findOne: jest.fn(), update: jest.fn(), save: jest.fn(), delete: jest.fn(), create: jest.fn(value => value), manager: { transaction: jest.fn() } };
+    manager = { getRepository: jest.fn(() => inquiries), queryRunner: { isTransactionActive: true } } as unknown as EntityManager;
+    inquiries.manager.transaction.mockImplementation(callback => callback(manager));
+    searchJobs = { recordInquiry: jest.fn(), advanceInquiry: jest.fn() };
+    demoPolicy = mockDemoPolicy();
     products = { findOne: jest.fn() };
     commonService = { paginate: jest.fn().mockResolvedValue({ data: [], meta: {} }) };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        { provide: DemoPolicyService, useValue: mockDemoPolicy() },
+        { provide: DemoPolicyService, useValue: demoPolicy },
+        { provide: SearchIndexRecorder, useValue: searchJobs },
         InquiryService,
         { provide: getRepositoryToken(InquiryEntity), useValue: inquiries },
         { provide: getRepositoryToken(ProductEntity), useValue: products },
@@ -80,6 +90,9 @@ describe('InquiryService', () => {
     await service.answer(20, 1, { answer: 'first' });
     expect(inquiries.update).toHaveBeenCalledWith({ id: 1, sellerId: 7, status: InquiryStatus.WAITING },
       expect.objectContaining({ answer: 'first', status: InquiryStatus.ANSWERED }));
+    expect(inquiries.findOne).toHaveBeenCalledWith({ where: { id: 1 }, lock: { mode: 'pessimistic_write' } });
+    expect(searchJobs.advanceInquiry).toHaveBeenCalledWith(manager, 1);
+    expect(inquiries.update.mock.invocationCallOrder[0]).toBeLessThan(searchJobs.advanceInquiry.mock.invocationCallOrder[0]);
   });
 
   it('does not delete an inquiry answered after the initial read', async () => {
@@ -87,6 +100,97 @@ describe('InquiryService', () => {
     inquiries.delete.mockResolvedValue({ affected: 0 });
     await expect(service.delete(10, 1)).rejects.toBeInstanceOf(BadRequestException);
     expect(inquiries.delete).toHaveBeenCalledWith({ id: 1, userId: 10, status: InquiryStatus.WAITING });
+  });
+
+  it('creates the public source and job with the same transaction manager', async () => {
+    products.findOne.mockResolvedValue({ id: 2, sellerId: 7 });
+    inquiries.save.mockResolvedValue({ id: 12 });
+    inquiries.findOne.mockResolvedValue({ id: 12 });
+    await expect(service.create(10, { productId: 2, title: '배송 문의', content: '언제 도착하나요?' })).resolves.toEqual({ id: 12 });
+    expect(searchJobs.recordInquiry).toHaveBeenCalledWith(manager, 12);
+    expect(inquiries.save.mock.invocationCallOrder[0]).toBeLessThan(searchJobs.recordInquiry.mock.invocationCallOrder[0]);
+  });
+
+  it('does not accept a source save when job recording fails', async () => {
+    products.findOne.mockResolvedValue({ id: 2, sellerId: 7 });
+    inquiries.save.mockResolvedValue({ id: 12 });
+    searchJobs.recordInquiry.mockRejectedValue(new Error('PROFILE_MISMATCH'));
+    await expect(service.create(10, { productId: 2, title: '배송 문의', content: '언제 도착하나요?' })).rejects.toThrow('PROFILE_MISMATCH');
+    expect(inquiries.findOne).not.toHaveBeenCalled();
+  });
+
+  it('keeps demo creation on the already recorded demo transaction path', async () => {
+    jest.spyOn(demoPolicy, 'createDemoInquiry').mockResolvedValue({ id: 15 } as never);
+    inquiries.findOne.mockResolvedValue({ id: 15 });
+    await service.create(10, { productId: 2, title: 'title', content: 'content' });
+    expect(inquiries.manager.transaction).not.toHaveBeenCalled();
+    expect(searchJobs.recordInquiry).not.toHaveBeenCalled();
+  });
+
+  it('rechecks answered state under the source lock and prevents any duplicate answer/job', async () => {
+    sellerRepository.findOne.mockResolvedValue({ id: 7 });
+    inquiries.findOne.mockResolvedValue({ id: 1, sellerId: 7, status: InquiryStatus.ANSWERED });
+    await expect(service.answer(20, 1, { answer: 'second' })).rejects.toBeInstanceOf(BadRequestException);
+    expect(inquiries.update).not.toHaveBeenCalled();
+    expect(searchJobs.advanceInquiry).not.toHaveBeenCalled();
+  });
+
+  it('uses the locked source transaction for demo actor checks', async () => {
+    sellerRepository.findOne.mockResolvedValue({ id: 7 });
+    inquiries.findOne.mockResolvedValue({ id: 1, sellerId: 7, status: InquiryStatus.WAITING });
+    inquiries.update.mockResolvedValue({ affected: 1 });
+    const actorCheck = jest.spyOn(demoPolicy, 'assertInquiryActor');
+    await service.answer(20, 1, { answer: 'first' });
+    expect(actorCheck).toHaveBeenCalledWith(20, expect.objectContaining({ id: 1 }), manager);
+  });
+
+  it('rejects missing source or invalid owner/status before deleting', async () => {
+    inquiries.findOne.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: 1, userId: 99, status: InquiryStatus.WAITING })
+      .mockResolvedValueOnce({ id: 1, userId: 10, status: InquiryStatus.ANSWERED });
+    await expect(service.delete(10, 1)).rejects.toBeInstanceOf(NotFoundException);
+    await expect(service.delete(10, 1)).rejects.toBeInstanceOf(ForbiddenException);
+    await expect(service.delete(10, 1)).rejects.toBeInstanceOf(BadRequestException);
+    expect(inquiries.delete).not.toHaveBeenCalled();
+  });
+
+  it('deletes the locked waiting source without creating another indexing job', async () => {
+    inquiries.findOne.mockResolvedValue({ id: 1, userId: 10, status: InquiryStatus.WAITING });
+    inquiries.delete.mockResolvedValue({ affected: 1 });
+    await expect(service.delete(10, 1)).resolves.toEqual({ message: '문의가 삭제되었습니다.' });
+    expect(inquiries.findOne).toHaveBeenCalledWith({ where: { id: 1 }, lock: { mode: 'pessimistic_write' } });
+    expect(searchJobs.recordInquiry).not.toHaveBeenCalled();
+    expect(searchJobs.advanceInquiry).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { title: '새 제목' }, { content: '새 본문' }, { answer: '수정한 답변' },
+    { isSecret: true }, { isSecret: false }, { status: InquiryStatus.WAITING }, { answeredAt: null },
+  ])('advances every supported internal source change: %p', async patch => {
+    inquiries.update.mockResolvedValue({ affected: 1 });
+    await service.saveSearchChange(manager, { id: 1 } as InquiryEntity, patch);
+    expect(inquiries.update).toHaveBeenCalledWith({ id: 1 }, patch);
+    expect(searchJobs.advanceInquiry).toHaveBeenCalledWith(manager, 1);
+  });
+
+  it('does not persist ownership/search metadata injected into an internal patch', async () => {
+    inquiries.update.mockResolvedValue({ affected: 1 });
+    await service.saveSearchChange(manager, { id: 1 } as InquiryEntity,
+      { title: '허용 제목', userId: 999, sellerId: 999, searchVersion: '999' } as never);
+    expect(inquiries.update).toHaveBeenCalledWith({ id: 1 }, { title: '허용 제목' });
+  });
+
+  it('does not advance empty changes or changes to a concurrently removed source', async () => {
+    await service.saveSearchChange(manager, { id: 1 } as InquiryEntity, {});
+    expect(inquiries.update).not.toHaveBeenCalled();
+    inquiries.update.mockResolvedValue({ affected: 0 });
+    await expect(service.saveSearchChange(manager, { id: 1 } as InquiryEntity, { title: 'new' })).rejects.toBeInstanceOf(BadRequestException);
+    expect(searchJobs.advanceInquiry).not.toHaveBeenCalled();
+  });
+
+  it('requires an explicit transaction for internal source changes', async () => {
+    await expect(service.saveSearchChange({ queryRunner: { isTransactionActive: false } } as EntityManager,
+      { id: 1 } as InquiryEntity, { isSecret: true })).rejects.toThrow('SEARCH_JOB_REQUIRES_TRANSACTION');
+    expect(inquiries.update).not.toHaveBeenCalled();
   });
 
   describe('getSellerInquiries', () => {

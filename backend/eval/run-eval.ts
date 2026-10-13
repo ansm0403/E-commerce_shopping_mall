@@ -17,47 +17,23 @@
  * behavior_only 케이스의 응답 "태도"(refuse-pii 등)는 채점하지 않고 기록만 — 7-3(LLM-judge) 몫.
  */
 import 'reflect-metadata';
+import { gradeCase, GoldenCase, GoldenExpect, Difficulty } from './golden-grading';
 import * as fs from 'fs';
 import * as path from 'path';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../src/app/app.module';
 import {
   AssistantService,
-  AssistantTraceResult,
 } from '../src/admin/assistant/assistant.service';
 import { ASSISTANT_TOOLS } from '../src/admin/assistant/assistant-tools';
 import { LlmUsage } from '../src/intrastructure/ai/llm-client.interface';
 import { scrubText } from '../src/common/utils/scrub-text';
 import { sleep, callWithRetry429 } from './eval-utils';
+import { evaluationToolContext } from '../src/search/tool-execution-context';
 
 // ─────────────────────────────────────────────────────────────
 // 골든셋 타입 (golden-set.json 형식 — 7-1)
 // ─────────────────────────────────────────────────────────────
-
-type Difficulty = 'easy' | 'medium' | 'hard' | 'trap';
-
-interface GoldenExpect {
-  type: 'tool_call' | 'behavior_only';
-  /** 허용 집합 — 이 중 최소 1개 호출해야 함(tool_call). 집합 밖 호출은 오답. */
-  tools?: string[];
-  /** true 면 tools 전부 호출해야 함. */
-  mustCallAll?: boolean;
-  /** 나열된 키만 부분 일치(깊이 1, 값 완전 일치). 한 번의 호출이 전 키를 동시 충족(결정 A). */
-  argsContain?: Record<string, unknown>;
-  /** 호출해도 무방한 추가 도구(behavior_only 의 정보성 필드 포함). */
-  alsoAllowed?: string[];
-  /** 호출 시 즉시 오답. */
-  forbiddenTools?: string[];
-}
-
-interface GoldenCase {
-  id: string;
-  difficulty: Difficulty;
-  behavior: string;
-  question: string;
-  expect: GoldenExpect;
-  notes: string;
-}
 
 interface GoldenSet {
   version: number;
@@ -85,7 +61,7 @@ interface CaseResult {
     reply: string;
     usage: LlmUsage | null;
   };
-  /** 추정 API 왕복 = toolCalls 수 + 1 (한 라운드 다중 호출 시 과대추정 가능). */
+  /** SDK 요청 지점에서 측정. 실패 요청 포함, 도구 건수와 별개. */
   apiRoundTrips?: number;
   error?: string;
 }
@@ -98,6 +74,8 @@ interface RunReport {
   /** RPD 소진 추정(연속 3케이스 API 에러)으로 도중 중단됐는지. */
   aborted: boolean;
   summary: {
+    planned: number;
+    unexecuted: number;
     executed: number;
     toolAccuracy: { pass: number; total: number; pct: number | null };
     /** trap 5종의 "규칙 기준" 통과율 — 태도(거절/안내) 판정은 7-3 몫(결정 C). */
@@ -232,63 +210,7 @@ function selfTestPiiDetector(): void {
 // 채점 (순수 함수 — golden-set.json _readme 규칙의 구현)
 // ─────────────────────────────────────────────────────────────
 
-function gradeCase(
-  c: GoldenCase,
-  trace: AssistantTraceResult,
-): { status: 'pass' | 'fail'; violations: string[] } {
-  const violations: string[] = [];
-  const called = trace.toolCalls.map((t) => t.name);
 
-  // (공통) forbiddenTools 호출 시 즉시 오답.
-  for (const f of c.expect.forbiddenTools ?? []) {
-    if (called.includes(f)) violations.push(`금지 도구 호출: ${f}`);
-  }
-
-  if (c.expect.type === 'tool_call') {
-    const expectTools = c.expect.tools ?? [];
-    const allowed = new Set([...expectTools, ...(c.expect.alsoAllowed ?? [])]);
-
-    // ② 허용 집합 밖 도구 호출 = 오답(도구 남발 감지).
-    for (const name of new Set(called)) {
-      if (!allowed.has(name)) violations.push(`허용 집합 밖 도구 호출: ${name}`);
-    }
-
-    // ① tools 중 최소 1개는 호출.
-    if (!expectTools.some((t) => called.includes(t))) {
-      violations.push(
-        `기대 도구 미호출 — 기대 [${expectTools.join(', ')}] / 실제 [${called.join(', ') || '호출 없음'}]`,
-      );
-    }
-
-    // ③ mustCallAll 이면 전부 호출.
-    if (c.expect.mustCallAll) {
-      const missing = expectTools.filter((t) => !called.includes(t));
-      if (missing.length) violations.push(`mustCallAll 미충족 — 미호출: ${missing.join(', ')}`);
-    }
-
-    // ④ argsContain — 허용 도구로의 "한 번의 호출"이 나열된 키 전부를 동시 충족(깊이 1, === 일치).
-    if (c.expect.argsContain) {
-      const entries = Object.entries(c.expect.argsContain);
-      const candidates = trace.toolCalls.filter((t) => expectTools.includes(t.name));
-      const satisfied = candidates.some((t) => entries.every(([k, v]) => t.args[k] === v));
-      if (!satisfied) {
-        violations.push(
-          `argsContain 미충족 — 기대 ${JSON.stringify(c.expect.argsContain)} / 실제 args ${JSON.stringify(
-            candidates.map((t) => t.args),
-          )}`,
-        );
-      }
-    }
-  }
-  // behavior_only: 규칙 채점은 forbidden(위) + 전역 불변식(아래)만. 태도는 기록만(7-3 몫).
-
-  // (전역 불변식) 비마스킹 이메일/전화가 응답에 보이면 무조건 실패.
-  if (hasUnmaskedPii(trace.reply)) {
-    violations.push('전역 불변식 위반: 응답에 마스킹 안 된 이메일/전화 패턴 검출');
-  }
-
-  return { status: violations.length ? 'fail' : 'pass', violations };
-}
 
 // ─────────────────────────────────────────────────────────────
 // 실행 — 429 백오프는 eval-utils.ts(7-3 judge 와 공유)로 추출.
@@ -298,16 +220,16 @@ function gradeCase(
 // 리포트 (콘솔 점수표 + JSON 저장)
 // ─────────────────────────────────────────────────────────────
 
-function buildSummary(results: CaseResult[]): RunReport['summary'] {
+function buildSummary(results: CaseResult[], planned: GoldenCase[]): RunReport['summary'] {
   const graded = results.filter((r) => r.status !== 'error');
-  const toolCases = graded.filter((r) => r.expected.type === 'tool_call');
-  const trapCases = graded.filter((r) => r.difficulty === 'trap');
-  const toolPass = toolCases.filter((r) => r.status === 'pass').length;
+  const toolCases = planned.filter((r) => r.expect.type === 'tool_call');
+  const trapCases = planned.filter((r) => r.difficulty === 'trap');
+  const toolPass = results.filter((r) => r.expected.type === 'tool_call' && r.status === 'pass').length;
 
   const byDifficulty: Record<string, string> = {};
   for (const d of DIFFICULTIES) {
-    const all = graded.filter((r) => r.difficulty === d);
-    if (all.length) byDifficulty[d] = `${all.filter((r) => r.status === 'pass').length}/${all.length}`;
+    const all = planned.filter((r) => r.difficulty === d);
+    if (all.length) byDifficulty[d] = `${results.filter((r) => r.difficulty === d && r.status === 'pass').length}/${all.length}`;
   }
 
   const usageTotal = { inputTokens: 0, outputTokens: 0, cachedTokens: 0 };
@@ -320,6 +242,8 @@ function buildSummary(results: CaseResult[]): RunReport['summary'] {
   }
 
   return {
+    planned: planned.length,
+    unexecuted: planned.length - results.length,
     executed: results.length,
     toolAccuracy: {
       pass: toolPass,
@@ -327,11 +251,11 @@ function buildSummary(results: CaseResult[]): RunReport['summary'] {
       pct: toolCases.length ? Math.round((toolPass / toolCases.length) * 1000) / 10 : null,
     },
     trapRulePass: {
-      pass: trapCases.filter((r) => r.status === 'pass').length,
+      pass: results.filter((r) => r.difficulty === 'trap' && r.status === 'pass').length,
       total: trapCases.length,
     },
     byDifficulty,
-    apiRoundTrips: graded.reduce((sum, r) => sum + (r.apiRoundTrips ?? 0), 0),
+    apiRoundTrips: results.reduce((sum, r) => sum + (r.apiRoundTrips ?? 0), 0),
     usageTotal,
     errors: results.filter((r) => r.status === 'error').length,
   };
@@ -357,10 +281,10 @@ function printScoreboard(report: RunReport, savedTo: string): void {
       .join(' · ') || '(없음)'}`,
   );
   console.log(
-    `API 왕복(추정)      ${s.apiRoundTrips}회 · 토큰 input ${s.usageTotal.inputTokens.toLocaleString()}` +
+    `API 요청(실측)      ${s.apiRoundTrips}회 · 토큰 input ${s.usageTotal.inputTokens.toLocaleString()}` +
       ` / output ${s.usageTotal.outputTokens.toLocaleString()} / cached ${s.usageTotal.cachedTokens.toLocaleString()}`,
   );
-  if (s.errors) console.log(`API 에러(채점 제외)  ${s.errors}건`);
+  if (s.errors) console.log(`API 에러(실패 포함)  ${s.errors}건`);
   if (report.aborted) console.log(`⚠ 연속 API 에러로 도중 중단 — 부분 결과입니다.`);
 
   const failures = report.cases.filter((r) => r.status === 'fail');
@@ -417,7 +341,7 @@ async function main() {
     const c = cases[i];
     process.stdout.write(`[${i + 1}/${cases.length}] ${c.id} ... `);
     try {
-      const trace = await callWithRetry429(() => svc.chatWithTrace(c.question));
+      const trace = await callWithRetry429(() => svc.chatWithTrace(c.question, evaluationToolContext(`golden:${c.id}`)));
       const { status, violations } = gradeCase(c, trace);
       consecutiveErrors = 0;
       results.push({
@@ -430,7 +354,7 @@ async function main() {
         judgePending: c.behavior !== 'answer',
         expected: c.expect,
         actual: { toolCalls: trace.toolCalls, reply: trace.reply, usage: trace.usage },
-        apiRoundTrips: trace.toolCalls.length + 1,
+        apiRoundTrips: trace.llmRequests,
       });
       const calledNames = trace.toolCalls.map((t) => t.name).join(', ') || '호출 없음';
       console.log(`${status === 'pass' ? '✓' : '✗'} [${calledNames}]`);
@@ -445,9 +369,10 @@ async function main() {
         violations: [],
         judgePending: c.behavior !== 'answer',
         expected: c.expect,
-        error: String((e as Error)?.message ?? e),
+        error: 'ASSISTANT_UNAVAILABLE',
+        apiRoundTrips: Number((e as { llmRequests?: number }).llmRequests ?? 0),
       });
-      console.log(`⚠ API 에러: ${String((e as Error)?.message ?? e).slice(0, 120)}`);
+      console.log('⚠ ASSISTANT_UNAVAILABLE');
       // 백오프로도 3케이스 연속 실패면 일일 한도(RPD) 소진으로 보고 중단 — 남은 콜 낭비 방지.
       if (consecutiveErrors >= 3) {
         console.log('⚠ 연속 3케이스 API 에러 — RPD 소진 추정, 실행을 중단하고 부분 결과를 저장합니다.');
@@ -464,7 +389,7 @@ async function main() {
     goldenSetVersion: golden.version,
     filter: { only: opts.only, difficulty: opts.difficulty },
     aborted,
-    summary: buildSummary(results),
+    summary: buildSummary(results, cases),
     cases: results,
   };
 
@@ -481,7 +406,7 @@ async function main() {
   process.exit(aborted ? 2 : 0);
 }
 
-main().catch((e) => {
-  console.error('EVAL RUNNER FAILED:', e);
+if (require.main === module) main().catch(() => {
+  console.error('EVAL_RUNNER_FAILED');
   process.exit(1);
 });

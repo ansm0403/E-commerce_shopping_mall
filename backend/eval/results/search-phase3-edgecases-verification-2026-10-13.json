@@ -1,0 +1,47 @@
+{
+  "dateKst": "2026-10-13",
+  "scope": "Phase 3 review semantic search and authenticated assistant edge cases",
+  "recordType": "Summary of observed Nx command results; unit raw results are linked separately",
+  "addedRegressionCases": { "unit": 8, "integration": 19, "total": 27 },
+  "fixedDefectTypes": [
+    "Pool acquisition ignores cancellation until a connection becomes available",
+    "Corrupt original or quote text reported as ready or no_candidates",
+    "Ranked version replaced by a completed version reported as no_candidates",
+    "Tool callback invoked after cancellation while consuming tool_call",
+    "Late SDK chunks and successful completion emitted after cancellation",
+    "Silent provider cancellation returned as successful nonstream response"
+  ],
+  "beforeFix": {
+    "unit": { "total": 20, "passed": 17, "failed": 3 },
+    "firstConnectedDatabaseRun": { "total": 34, "passed": 29, "failedRegressionCases": 4, "sourcePreparationFailures": 1 },
+    "sourcePreparationFailure": "claim order in the existing category-change case; cause undetermined; subsequent 34/34 and 36/36 runs passed",
+    "initialEnvironmentFailure": "Docker was stopped and PostgreSQL port 15433 refused connections; isolated search container was started before database validation"
+  },
+  "results": {
+    "unit": { "passed": 656, "failed": 0, "suites": 50, "rawResult": "search-phase3-edgecases-unit-2026-10-13.json" },
+    "integration": { "foundation": 7, "reviewIndex": 49, "semanticSearch": 36, "authenticatedHttpAndSse": 6, "total": 98, "failed": 0 },
+    "typecheck": { "backend": "passed", "searchEvaluation": "passed" },
+    "lintQuiet": "passed",
+    "developmentBuild": { "status": "passed", "existingMessage": "Nx could not prune @nestjs/typeorm@* from root lockfile and used root lockfile fallback" },
+    "gitDiffCheck": "passed",
+    "remainingProbeSchemas": 0
+  },
+  "environment": {
+    "postgres": "18.3", "pgvector": "0.8.7", "port": 15433,
+    "database": "shopping_mall_search_probe", "schemas": "Random per-run isolated schemas; dropped after tests",
+    "externalLlmAndEmbedding": "Mock transports; no additional live evaluation requests",
+    "userDatabaseMutated": false, "envFileChanged": false,
+    "flags": { "AI_SEARCH_REVIEW_INDEX_ENABLED": true, "AI_SEARCH_WORKER_ENABLED": false, "AI_SEARCH_REVIEWS_ENABLED": false }
+  },
+  "sourceSha256": {
+    "src/search/semantic-search.service.ts": "B5B4D4B7CD83DAA326CC27021FCDA44CE19C4F1D0225D040C439A6520CF4BCD4",
+    "src/admin/assistant/assistant.service.ts": "6A4808DE29B9988A49A145BC7F737A1B1654883C16DA034FA48E95E862597E70",
+    "src/intrastructure/ai/providers/gemini.client.ts": "BE513FA50375FF5DF2087A12E81F513D94F613C301FCB1613168FFDF9FDA8FF9"
+  },
+  "limitations": [
+    "Pool waiters remain queued until pg assigns a client; late acquisition is released without SQL or a transaction",
+    "Coverage correction for original/quote mismatches applies only to candidate sources examined in the final snapshot; direct SQL edits still require reconciliation",
+    "No live model rerun, production load test, or human answer accuracy review in this audit",
+    "Initial indexing and human review of the existing 30 final answers remain pending before public enablement"
+  ]
+}

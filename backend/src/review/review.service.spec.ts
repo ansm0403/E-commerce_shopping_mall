@@ -37,6 +37,8 @@ describe('ReviewService', () => {
 
   beforeEach(async () => {
     reviews = createMockRepository(); orders = createMockRepository(); items = createMockRepository();
+    const manager = { getRepository: () => reviews };
+    Object.assign(reviews, { manager: { transaction: async (callback: (manager: object) => Promise<unknown>) => callback(manager) } });
     events = { emit: jest.fn() };
     const module: TestingModule = await Test.createTestingModule({
       providers: [

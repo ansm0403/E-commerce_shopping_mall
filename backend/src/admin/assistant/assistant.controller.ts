@@ -18,6 +18,7 @@ import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { User } from '../../auth/decorators/user.decorator';
 import { Role } from '../../user/entity/role.entity';
+import { adminToolContext } from '../../search/tool-execution-context';
 
 /**
  * 관리자 AI 어시스턴트 엔드포인트.
@@ -36,8 +37,13 @@ export class AssistantController {
   ) {}
 
   @Post('chat')
-  chat(@Body() body: ChatRequestDto) {
-    return this.assistantService.chat(body.message);
+  async chat(@Body() body: ChatRequestDto, @User('sub') adminUserId: number, @User('roles') roles: Role[], @Res({ passthrough: true }) res?: Response) {
+    const abort = new AbortController();
+    const close = () => { if (!res?.writableEnded) abort.abort(); };
+    res?.on('close', close);
+    try {
+      return await this.assistantService.chat(body.message, adminToolContext(adminUserId, roles ?? [], body.requestId, abort.signal));
+    } finally { res?.removeListener('close', close); }
   }
 
   /**
@@ -62,6 +68,7 @@ export class AssistantController {
     @Body() body: ChatRequestDto,
     @User('sub') adminUserId: number,
     @Res() res: Response,
+    @User('roles') roles: Role[] = [],
   ) {
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache, no-transform');
@@ -74,9 +81,19 @@ export class AssistantController {
     //  ② 연결 끊김: 응답 소켓이 닫힘(탭 닫기 등). 'close' 는 정상 종료 뒤에도 발생하므로 끝나기 전에 닫힌 경우만.
     //     ⚠ 운영(Vercel 프록시 → nginx)에서는 브라우저가 끊어도 이 이벤트가 오지 않았다(실측) → ① 이 필요한 이유.
     const abort = new AbortController();
-    res.on('close', () => {
+    // Next rewrite proxies close inactive upstream sockets after 30 seconds by default.
+    // SSE comments keep transport alive without changing the JSON event contract.
+    const heartbeat = setInterval(() => {
+      if (!abort.signal.aborted && !res.writableEnded && !res.destroyed) res.write(': keep-alive\n\n');
+    }, 15000);
+    heartbeat.unref?.();
+    const clearHeartbeat = () => clearInterval(heartbeat);
+    abort.signal.addEventListener('abort', clearHeartbeat, { once: true });
+    const close = () => {
+      clearHeartbeat();
       if (!res.writableEnded) abort.abort();
-    });
+    };
+    res.on('close', close);
     const { requestId } = body;
     if (requestId) this.streams.register(adminUserId, requestId, abort);
 
@@ -86,20 +103,25 @@ export class AssistantController {
           message: body.message,
           conversationId: body.conversationId,
           adminUserId,
+          roles,
+          requestId: body.requestId,
         },
         abort.signal,
       )) {
-        if (!abort.signal.aborted) res.write(`data: ${JSON.stringify(ev)}\n\n`);
+        if (!abort.signal.aborted && !res.writableEnded && !res.destroyed) res.write(`data: ${JSON.stringify(ev)}\n\n`);
       }
     } catch {
-      if (!abort.signal.aborted) {
+      if (!abort.signal.aborted && !res.writableEnded && !res.destroyed) {
         res.write(
           `data: ${JSON.stringify({ type: 'error', message: 'AI 응답 생성에 실패했습니다.' })}\n\n`,
         );
       }
     } finally {
+      clearHeartbeat();
+      abort.signal.removeEventListener('abort', clearHeartbeat);
+      res.removeListener('close', close);
       if (requestId) this.streams.release(adminUserId, requestId, abort);
-      res.end();
+      if (!res.writableEnded && !res.destroyed) res.end();
     }
   }
 

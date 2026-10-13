@@ -1,0 +1,38 @@
+{
+  "dateKst": "2026-10-13",
+  "scope": "phase3 review semantic search and authenticated assistant tools",
+  "backendUnit": { "passed": 648, "total": 648, "suites": 50, "artifact": "search-phase3-unit-2026-10-13.json" },
+  "postgresIntegration": { "foundation": 7, "index": 49, "semantic": 17, "httpSse": 6, "passed": 79, "total": 79 },
+  "frontendAssistantUnit": { "passed": 23, "total": 23, "suites": 2 },
+  "backendTypecheck": "passed",
+  "searchAndExistingEvalTypecheck": "passed",
+  "lint": { "errors": 0, "existingWarningsRemain": true },
+  "developmentBuild": { "status": "passed", "existingPrunedLockfileFallback": true },
+  "heldOutRetrieval": {
+    "fixtureVersion": "reviews-final-v2", "syntheticReviews": 100, "originalReviews": 0,
+    "planned": 30, "executed": 30, "evidenceQuestions": 20, "noEvidenceQuestions": 10,
+    "baseline": { "hitAt5": 0.5, "recallAt5": 0.5, "precisionAt5": 0.1 },
+    "semantic": { "hitAt5": 1, "recallAt5": 1, "precisionAt5": 0.3 },
+    "apiErrors": 0, "artifact": "search-retrieval-final-v2-2026-10-13T10-56-34-080Z.json",
+    "databaseOnlyMs": { "n": 30, "p50": 48.6978, "p95": 59.5127, "percentileMethod": "nearest-rank" }
+  },
+  "heldOutAssistant": {
+    "artifact": "search-assistant-final-2026-10-13T11-07-46-261Z.json",
+    "planned": 30, "executed": 30, "apiErrors": 0, "llmRequests": 60, "queryEmbeddingRequests": 26,
+    "necessaryChecks": { "evidence": "18/20", "noEvidence": "9/10", "notFinalAccuracy": true }
+  },
+  "regression": {
+    "latestFullRun": "search-assistant-regression-2026-10-13T10-57-45-532Z.json",
+    "fullRulePass": "19/20", "fullToolPass": "16/17", "apiErrors": 1,
+    "separateFailedCaseRecheck": "search-assistant-regression-2026-10-13T11-20-15-057Z.json",
+    "recheckPass": "1/1", "note": "Do not combine separate runs into a single-run 20/20 claim."
+  },
+  "humanReview": {
+    "pending": 30, "artifact": "search-human-review-2026-10-13T11-17-44-591Z.md",
+    "judgeArtifact": "search-answer-judge-2026-10-13T11-17-44-591Z.json", "judgeProvisionalPass": "24/30",
+    "judgeErrors": 2, "judgeContradictionsFlagged": true, "confirmedAnswerSuccessRate": null
+  },
+  "manualDatabaseReadOnlyCheck": { "reviews": 1863, "jobs": 0, "chunks": 0 },
+  "featureFlagsPreserved": { "reviewIndex": true, "worker": false, "semanticReviews": false },
+  "releaseStatus": "initial indexing and full developer answer review required; semantic feature remains disabled"
+}

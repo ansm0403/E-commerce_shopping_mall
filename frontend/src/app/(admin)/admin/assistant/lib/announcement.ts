@@ -45,12 +45,16 @@ export function toSpeechText(markdown: string): string {
  * @param wasStreaming 직전 렌더의 진행 여부
  * @param streaming    지금 진행 여부
  * @param last         마지막 메시지(진행 중이거나 막 끝난 assistant 답변)
+ * @param error        오류는 별도의 role="alert"가 알리므로 진행·완료 알림을 비운다
  */
 export function nextAnnouncement(
   wasStreaming: boolean,
   streaming: boolean,
   last: ChatMessage | undefined,
+  error?: string | null,
 ): string | null {
+  if (error) return '';
+
   if (streaming) {
     const running = last?.tools?.find((t) => t.status === 'running');
     if (running) return toolStatusText(running); // "매출 데이터 조회 중"
@@ -58,11 +62,11 @@ export function nextAnnouncement(
     return wasStreaming ? null : '응답 생성 중';
   }
 
-  if (!wasStreaming) return null; // 진행한 적이 없다(첫 화면·복원) — 알리지 않는다
+  if (!wasStreaming) return last ? null : ''; // 복원된 대화는 알리지 않고, 새 대화는 이전 알림을 비운다
 
   // 방금 끝났다
-  if (!last || last.role !== 'assistant') return null;
+  if (!last || last.role !== 'assistant') return '';
   if (last.stopped) return '응답을 중지했습니다.';
-  if (!last.content) return null; // 오류로 끝남 — 오류 문구는 따로 role="alert" 가 알린다
+  if (!last.content) return ''; // 본문 없이 끝나도 이전 진행 알림을 남기지 않는다
   return `응답 완료. ${toSpeechText(last.content)}`;
 }

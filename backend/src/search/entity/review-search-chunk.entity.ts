@@ -1,0 +1,22 @@
+import { Check, Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
+import type { ReviewEntity } from '../../review/entity/review.entity';
+import { SearchEmbeddingProfileEntity } from './search-embedding-profile.entity';
+
+@Entity('review_search_chunks')
+@Unique('review_search_chunks_source_profile_chunk', ['reviewId', 'profileId', 'chunkIndex'])
+@Check('"source_version" > 0')
+@Check('"chunk_index" BETWEEN 0 AND 31')
+export class ReviewSearchChunkEntity {
+  @PrimaryGeneratedColumn('identity', { type: 'bigint', generatedIdentity: 'BY DEFAULT' }) id: string;
+  @Column({ name: 'review_id', type: 'integer' }) reviewId: number;
+  @ManyToOne('ReviewEntity', { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'review_id' }) review: ReviewEntity;
+  @Column({ name: 'profile_id', type: 'varchar' }) profileId: string;
+  @ManyToOne(() => SearchEmbeddingProfileEntity)
+  @JoinColumn({ name: 'profile_id' }) profile: SearchEmbeddingProfileEntity;
+  @Column({ name: 'source_version', type: 'bigint' }) sourceVersion: string;
+  @Column({ name: 'chunk_index', type: 'integer' }) chunkIndex: number;
+  @Column({ type: 'text' }) text: string;
+  @Column({ name: 'content_hash', type: 'varchar', length: 64 }) contentHash: string;
+  @Column({ type: 'vector', length: 768 }) embedding: number[];
+}

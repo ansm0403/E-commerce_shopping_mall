@@ -1,0 +1,5678 @@
+{
+  "runId": "2026-10-13T10-56-34-080Z",
+  "codeVersion": {
+    "sha256": "f2d313bb190439d58d5eada6866601adc58b1c42b5e1b0ebe39517a627ea60da",
+    "files": [
+      "src/search/semantic-search.service.ts",
+      "src/search/search-document.ts",
+      "src/search/search-input.ts",
+      "src/search/search-profile.ts",
+      "src/admin/assistant/assistant.service.ts",
+      "src/admin/assistant/assistant-tools.ts",
+      "src/admin/assistant/assistant-tool-schemas.ts",
+      "src/intrastructure/ai/providers/gemini.client.ts",
+      "eval/search/fixture.ts",
+      "eval/search/final-fixture.ts",
+      "eval/search/final-fixture-v2.ts"
+    ],
+    "description": "SHA256 of evaluated working-tree sources, including uncommitted changes."
+  },
+  "fixtureVersion": "reviews-final-v2",
+  "split": "final-v2",
+  "profile": {
+    "id": "gemini-embedding-2-768-review-inquiry-v1",
+    "model": "gemini-embedding-2",
+    "dimensions": 768,
+    "preprocessingVersion": "v1",
+    "maskingVersion": "scrub-text-v1",
+    "chunkingVersion": "unicode-paragraph-v1",
+    "queryTemplate": "task: search result | query: {text}",
+    "documentTemplate": "title: {title} | text: {text}",
+    "maxCodePoints": 1000,
+    "overlapCodePoints": 100,
+    "maxInputBytes": 4096,
+    "maxChunks": 32
+  },
+  "syntheticReviews": 100,
+  "originalReviews": 0,
+  "chunkCount": 100,
+  "planned": 30,
+  "executed": 30,
+  "errorCode": null,
+  "criteria": {
+    "retrieval": {
+      "hitAt5": 0.95,
+      "recallAt5": 0.9,
+      "maxApiErrors": 0
+    },
+    "answer": {
+      "minimumEvidenceSuccessRate": 0.9,
+      "minimumNoEvidenceSuccessRate": 0.9,
+      "unmaskedContacts": 0,
+      "invalidCitations": 0
+    },
+    "review": "Developer reviews all 30 final answers. Automated citation/fact checks are necessary checks, not final correctness judgments.",
+    "frozenBeforeFinalExecution": "2026-10-13",
+    "reason": "V1 revealed literal matching and rating-based polarity errors. V2 shares no source/product/topic/question with either previous corpus."
+  },
+  "policy": "exact cosine; 10 candidate chunks; 5 deduplicated sources; no threshold or reranker",
+  "summary": {
+    "baseline": {
+      "hitAt5": 0.5,
+      "recallAt5": 0.5,
+      "precisionAt5": 0.09999999999999999
+    },
+    "semantic": {
+      "hitAt5": 1,
+      "recallAt5": 1,
+      "precisionAt5": 0.30000000000000016
+    }
+  },
+  "embeddingUsageThisRun": {
+    "requests": 60,
+    "inputCodePoints": 3732,
+    "inputBytes": 7004,
+    "inputTokens": null
+  },
+  "generated": {
+    "document": 30,
+    "query": 30
+  },
+  "cacheHits": {
+    "document": 70,
+    "query": 0
+  },
+  "limitations": "Synthetic data, one repetition. Identical fixture inputs share a cached real vector for evaluation. Preparation latency includes RPM waiting. Cached query lookup latency is separate from original API preparation latency. No final answer quality or HTTP latency claims.",
+  "cases": [
+    {
+      "caseId": "final-v2-1-meaning",
+      "query": "옷에서 전기가 올라 착용이 불편한 불만",
+      "productId": 201,
+      "maxRating": null,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "relevantIds": [
+        2001,
+        2002
+      ],
+      "reason": "본문으로 확인한 불만 두 건. 높은 별점 포함. 낮은 별점의 문제 없음·기간 밖·다른 문제는 비관련.",
+      "question": "상품 201의 2026년 10월 1일부터 13일까지 리뷰에서 옷에서 전기가 올라 착용이 불편한 불만을 찾아 원본 ID와 인용으로 알려줘.",
+      "answerFacts": [
+        "찌릿"
+      ],
+      "noEvidence": false,
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          2010,
+          2009,
+          2008,
+          2007,
+          2006
+        ],
+        "hitAt5": 0,
+        "recallAt5": 0,
+        "precisionAt5": 0,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          2001,
+          2002,
+          2003,
+          2005,
+          2006
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.4,
+        "relevantReturned": 2,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "옷에서 전기가 올라 착용이 불편한 불만",
+            "productIds": [
+              201
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T10:53:40.216Z"
+          },
+          "coverage": {
+            "total": 9,
+            "ready": 9,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 2001,
+                "productId": 201,
+                "rating": 5,
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "소매를 만지면 찌릿하고 천이 몸에 달라붙어요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2002,
+                "productId": 201,
+                "rating": 2,
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "소매를 만지면 찌릿하고 천이 몸에 달라붙어요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2003,
+                "productId": 201,
+                "rating": 2,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했던 \"소매를 만지면 찌릿하고 천이 몸에 달라붙어요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2005,
+                "productId": 201,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "가방 끈이 어깨를 파고들어 멍이 들었어요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2006,
+                "productId": 201,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 201의 디자인이 마음에 듭니다. 자동 분류 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 9,
+            "omittedSourceCount": 4,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 50,
+            "inputBytes": 82,
+            "inputTokens": null
+          },
+          "embeddingMs": 5909.232599999988,
+          "databaseMs": 55.698099999979604,
+          "totalMs": 5969.755200000014,
+          "candidates": [
+            {
+              "review_id": 2001,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.15920373322950754
+            },
+            {
+              "review_id": 2002,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.15920373322950754
+            },
+            {
+              "review_id": 2003,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.207497524768249
+            },
+            {
+              "review_id": 2005,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.37901264020686887
+            },
+            {
+              "review_id": 2006,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4041620239632001
+            },
+            {
+              "review_id": 2007,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4041620239632001
+            },
+            {
+              "review_id": 2008,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4041620239632001
+            },
+            {
+              "review_id": 2009,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4041620239632001
+            },
+            {
+              "review_id": 2010,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4041620239632001
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:53:39.817Z",
+        "elapsedMs": 5867.144800000009
+      }
+    },
+    {
+      "caseId": "final-v2-1-rating",
+      "query": "옷에서 전기가 올라 착용이 불편한 불만의 구체적 사례",
+      "productId": 201,
+      "maxRating": 2,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "relevantIds": [
+        2002
+      ],
+      "reason": "상품·기간·2점 이하를 만족하며 본문에 해당 불만이 있는 한 건. 낮은 별점의 문제 없음은 비관련.",
+      "question": "상품 201의 2026년 10월 1일부터 13일까지 2점 이하 리뷰에서 옷에서 전기가 올라 착용이 불편한 불만을 찾아 원본 ID와 인용으로 알려줘.",
+      "answerFacts": [
+        "찌릿"
+      ],
+      "noEvidence": false,
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          2003,
+          2002
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 2
+      },
+      "semantic": {
+        "ids": [
+          2002,
+          2003
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 2,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "옷에서 전기가 올라 착용이 불편한 불만의 구체적 사례",
+            "productIds": [
+              201
+            ],
+            "maxRating": 2,
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T10:53:45.837Z"
+          },
+          "coverage": {
+            "total": 2,
+            "ready": 2,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 2002,
+                "productId": 201,
+                "rating": 2,
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "소매를 만지면 찌릿하고 천이 몸에 달라붙어요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2003,
+                "productId": 201,
+                "rating": 2,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했던 \"소매를 만지면 찌릿하고 천이 몸에 달라붙어요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 2,
+            "omittedSourceCount": 0,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 58,
+            "inputBytes": 102,
+            "inputTokens": null
+          },
+          "embeddingMs": 5883.392099999997,
+          "databaseMs": 53.34159999998519,
+          "totalMs": 5937.583600000013,
+          "candidates": [
+            {
+              "review_id": 2002,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.1701177516895429
+            },
+            {
+              "review_id": 2003,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.22102003598690334
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:53:45.769Z",
+        "elapsedMs": 5850.219699999987
+      }
+    },
+    {
+      "caseId": "final-v2-1-absent",
+      "query": "자동 분류 기능이 고장났다는 불만",
+      "productId": 201,
+      "maxRating": null,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "relevantIds": [],
+      "reason": "지정 기능의 고장 경험은 조건 범위에 없다. 미사용이라는 원문은 긍정·고장 경험의 근거가 아니다.",
+      "question": "상품 201의 2026년 10월 1일부터 13일까지 리뷰에서 자동 분류 기능이 고장났다는 불만을 찾아줘.",
+      "answerFacts": [],
+      "noEvidence": true,
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          2010,
+          2009,
+          2008,
+          2007,
+          2006
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          2006,
+          2007,
+          2008,
+          2009,
+          2010
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "자동 분류 기능이 고장났다는 불만",
+            "productIds": [
+              201
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T10:53:51.441Z"
+          },
+          "coverage": {
+            "total": 9,
+            "ready": 9,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 2006,
+                "productId": 201,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 201의 디자인이 마음에 듭니다. 자동 분류 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2007,
+                "productId": 201,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 201의 디자인이 마음에 듭니다. 자동 분류 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2008,
+                "productId": 201,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 201의 디자인이 마음에 듭니다. 자동 분류 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2009,
+                "productId": 201,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 201의 디자인이 마음에 듭니다. 자동 분류 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2010,
+                "productId": 201,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 201의 디자인이 마음에 듭니다. 자동 분류 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 9,
+            "omittedSourceCount": 4,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 47,
+            "inputBytes": 75,
+            "inputTokens": null
+          },
+          "embeddingMs": 5997.880800000014,
+          "databaseMs": 60.77650000003632,
+          "totalMs": 6059.202900000004,
+          "candidates": [
+            {
+              "review_id": 2006,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.25554564396894264
+            },
+            {
+              "review_id": 2007,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.25554564396894264
+            },
+            {
+              "review_id": 2008,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.25554564396894264
+            },
+            {
+              "review_id": 2009,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.25554564396894264
+            },
+            {
+              "review_id": 2010,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.25554564396894264
+            },
+            {
+              "review_id": 2003,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3592352056959046
+            },
+            {
+              "review_id": 2005,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4076452784855349
+            },
+            {
+              "review_id": 2001,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4138817961847119
+            },
+            {
+              "review_id": 2002,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4138817961847119
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:53:51.792Z",
+        "elapsedMs": 5939.508200000011
+      }
+    },
+    {
+      "caseId": "final-v2-2-meaning",
+      "query": "짐을 메면 어깨가 눌려 아픈 경험",
+      "productId": 202,
+      "maxRating": null,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "relevantIds": [
+        2011,
+        2012
+      ],
+      "reason": "본문으로 확인한 불만 두 건. 높은 별점 포함. 낮은 별점의 문제 없음·기간 밖·다른 문제는 비관련.",
+      "question": "상품 202의 2026년 10월 1일부터 13일까지 리뷰에서 짐을 메면 어깨가 눌려 아픈 경험을 찾아 원본 ID와 인용으로 알려줘.",
+      "answerFacts": [
+        "어깨"
+      ],
+      "noEvidence": false,
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          2020,
+          2019,
+          2018,
+          2017,
+          2016
+        ],
+        "hitAt5": 0,
+        "recallAt5": 0,
+        "precisionAt5": 0,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          2011,
+          2012,
+          2013,
+          2015,
+          2016
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.4,
+        "relevantReturned": 2,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "짐을 메면 어깨가 눌려 아픈 경험",
+            "productIds": [
+              202
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T10:53:57.701Z"
+          },
+          "coverage": {
+            "total": 9,
+            "ready": 9,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 2011,
+                "productId": 202,
+                "rating": 5,
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "가방 끈이 어깨를 파고들어 멍이 들었어요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2012,
+                "productId": 202,
+                "rating": 2,
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "가방 끈이 어깨를 파고들어 멍이 들었어요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2013,
+                "productId": 202,
+                "rating": 2,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했던 \"가방 끈이 어깨를 파고들어 멍이 들었어요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2015,
+                "productId": 202,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "햇빛이 비치면 커튼 너머 실루엣이 그대로 보여요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2016,
+                "productId": 202,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 202의 디자인이 마음에 듭니다. 야간 조도 감지 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 9,
+            "omittedSourceCount": 4,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 47,
+            "inputBytes": 73,
+            "inputTokens": null
+          },
+          "embeddingMs": 5916.868900000001,
+          "databaseMs": 55.95530000000144,
+          "totalMs": 5973.172500000015,
+          "candidates": [
+            {
+              "review_id": 2011,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.17837998802602217
+            },
+            {
+              "review_id": 2012,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.17837998802602217
+            },
+            {
+              "review_id": 2013,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2630299423679542
+            },
+            {
+              "review_id": 2015,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40737049667483105
+            },
+            {
+              "review_id": 2016,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.41732413562248105
+            },
+            {
+              "review_id": 2017,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.41732413562248105
+            },
+            {
+              "review_id": 2018,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.41732413562248105
+            },
+            {
+              "review_id": 2019,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.41732413562248105
+            },
+            {
+              "review_id": 2020,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.41732413562248105
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:53:57.785Z",
+        "elapsedMs": 5866.640700000018
+      }
+    },
+    {
+      "caseId": "final-v2-2-rating",
+      "query": "짐을 메면 어깨가 눌려 아픈 경험의 구체적 사례",
+      "productId": 202,
+      "maxRating": 2,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "relevantIds": [
+        2012
+      ],
+      "reason": "상품·기간·2점 이하를 만족하며 본문에 해당 불만이 있는 한 건. 낮은 별점의 문제 없음은 비관련.",
+      "question": "상품 202의 2026년 10월 1일부터 13일까지 2점 이하 리뷰에서 짐을 메면 어깨가 눌려 아픈 경험을 찾아 원본 ID와 인용으로 알려줘.",
+      "answerFacts": [
+        "어깨"
+      ],
+      "noEvidence": false,
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          2013,
+          2012
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 2
+      },
+      "semantic": {
+        "ids": [
+          2012,
+          2013
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 2,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "짐을 메면 어깨가 눌려 아픈 경험의 구체적 사례",
+            "productIds": [
+              202
+            ],
+            "maxRating": 2,
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T10:54:03.947Z"
+          },
+          "coverage": {
+            "total": 2,
+            "ready": 2,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 2012,
+                "productId": 202,
+                "rating": 2,
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "가방 끈이 어깨를 파고들어 멍이 들었어요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2013,
+                "productId": 202,
+                "rating": 2,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했던 \"가방 끈이 어깨를 파고들어 멍이 들었어요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 2,
+            "omittedSourceCount": 0,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 55,
+            "inputBytes": 93,
+            "inputTokens": null
+          },
+          "embeddingMs": 5910.822400000005,
+          "databaseMs": 45.56260000000475,
+          "totalMs": 5956.834700000007,
+          "candidates": [
+            {
+              "review_id": 2012,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.1937703134485954
+            },
+            {
+              "review_id": 2013,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.27401434844858985
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:54:03.759Z",
+        "elapsedMs": 5866.029299999995
+      }
+    },
+    {
+      "caseId": "final-v2-2-absent",
+      "query": "야간 조도 감지 기능이 고장났다는 불만",
+      "productId": 202,
+      "maxRating": null,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "relevantIds": [],
+      "reason": "지정 기능의 고장 경험은 조건 범위에 없다. 미사용이라는 원문은 긍정·고장 경험의 근거가 아니다.",
+      "question": "상품 202의 2026년 10월 1일부터 13일까지 리뷰에서 야간 조도 감지 기능이 고장났다는 불만을 찾아줘.",
+      "answerFacts": [],
+      "noEvidence": true,
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          2020,
+          2019,
+          2018,
+          2017,
+          2016
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          2016,
+          2017,
+          2018,
+          2019,
+          2020
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "야간 조도 감지 기능이 고장났다는 불만",
+            "productIds": [
+              202
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T10:54:10.267Z"
+          },
+          "coverage": {
+            "total": 9,
+            "ready": 9,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 2016,
+                "productId": 202,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 202의 디자인이 마음에 듭니다. 야간 조도 감지 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2017,
+                "productId": 202,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 202의 디자인이 마음에 듭니다. 야간 조도 감지 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2018,
+                "productId": 202,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 202의 디자인이 마음에 듭니다. 야간 조도 감지 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2019,
+                "productId": 202,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 202의 디자인이 마음에 듭니다. 야간 조도 감지 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2020,
+                "productId": 202,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 202의 디자인이 마음에 듭니다. 야간 조도 감지 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 9,
+            "omittedSourceCount": 4,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 50,
+            "inputBytes": 82,
+            "inputTokens": null
+          },
+          "embeddingMs": 5983.369100000011,
+          "databaseMs": 49.47209999998449,
+          "totalMs": 6033.196100000001,
+          "candidates": [
+            {
+              "review_id": 2016,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2616699145742074
+            },
+            {
+              "review_id": 2017,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2616699145742074
+            },
+            {
+              "review_id": 2018,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2616699145742074
+            },
+            {
+              "review_id": 2019,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2616699145742074
+            },
+            {
+              "review_id": 2020,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2616699145742074
+            },
+            {
+              "review_id": 2015,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3650921942760508
+            },
+            {
+              "review_id": 2013,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3839170608075412
+            },
+            {
+              "review_id": 2011,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.42163550564336294
+            },
+            {
+              "review_id": 2012,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.42163550564336294
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:54:09.785Z",
+        "elapsedMs": 5933.02310000002
+      }
+    },
+    {
+      "caseId": "final-v2-3-meaning",
+      "query": "가림막으로 사생활을 보호하기 어렵다는 불만",
+      "productId": 203,
+      "maxRating": null,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "relevantIds": [
+        2021,
+        2022
+      ],
+      "reason": "본문으로 확인한 불만 두 건. 높은 별점 포함. 낮은 별점의 문제 없음·기간 밖·다른 문제는 비관련.",
+      "question": "상품 203의 2026년 10월 1일부터 13일까지 리뷰에서 가림막으로 사생활을 보호하기 어렵다는 불만을 찾아 원본 ID와 인용으로 알려줘.",
+      "answerFacts": [
+        "실루엣"
+      ],
+      "noEvidence": false,
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          2030,
+          2029,
+          2028,
+          2027,
+          2026
+        ],
+        "hitAt5": 0,
+        "recallAt5": 0,
+        "precisionAt5": 0,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          2021,
+          2022,
+          2023,
+          2025,
+          2026
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.4,
+        "relevantReturned": 2,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "가림막으로 사생활을 보호하기 어렵다는 불만",
+            "productIds": [
+              203
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T10:54:15.216Z"
+          },
+          "coverage": {
+            "total": 9,
+            "ready": 9,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 2021,
+                "productId": 203,
+                "rating": 5,
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "햇빛이 비치면 커튼 너머 실루엣이 그대로 보여요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2022,
+                "productId": 203,
+                "rating": 2,
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "햇빛이 비치면 커튼 너머 실루엣이 그대로 보여요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2023,
+                "productId": 203,
+                "rating": 2,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했던 \"햇빛이 비치면 커튼 너머 실루엣이 그대로 보여요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2025,
+                "productId": 203,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "같이 빤 흰 옷이 푸른색으로 물들어 버렸어요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2026,
+                "productId": 203,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 203의 디자인이 마음에 듭니다. 오프라인 번역 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 9,
+            "omittedSourceCount": 4,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 52,
+            "inputBytes": 90,
+            "inputTokens": null
+          },
+          "embeddingMs": 5978.393599999981,
+          "databaseMs": 52.93210000003455,
+          "totalMs": 6031.665999999997,
+          "candidates": [
+            {
+              "review_id": 2021,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.26537565428733556
+            },
+            {
+              "review_id": 2022,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.26537565428733556
+            },
+            {
+              "review_id": 2023,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2860665574908525
+            },
+            {
+              "review_id": 2025,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40854411644822786
+            },
+            {
+              "review_id": 2026,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4136604769633132
+            },
+            {
+              "review_id": 2027,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4136604769633132
+            },
+            {
+              "review_id": 2028,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4136604769633132
+            },
+            {
+              "review_id": 2029,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4136604769633132
+            },
+            {
+              "review_id": 2030,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4136604769633132
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:54:15.811Z",
+        "elapsedMs": 5921.766100000008
+      }
+    },
+    {
+      "caseId": "final-v2-3-rating",
+      "query": "가림막으로 사생활을 보호하기 어렵다는 불만의 구체적 사례",
+      "productId": 203,
+      "maxRating": 2,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "relevantIds": [
+        2022
+      ],
+      "reason": "상품·기간·2점 이하를 만족하며 본문에 해당 불만이 있는 한 건. 낮은 별점의 문제 없음은 비관련.",
+      "question": "상품 203의 2026년 10월 1일부터 13일까지 2점 이하 리뷰에서 가림막으로 사생활을 보호하기 어렵다는 불만을 찾아 원본 ID와 인용으로 알려줘.",
+      "answerFacts": [
+        "실루엣"
+      ],
+      "noEvidence": false,
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          2023,
+          2022
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 2
+      },
+      "semantic": {
+        "ids": [
+          2022,
+          2023
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 2,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "가림막으로 사생활을 보호하기 어렵다는 불만의 구체적 사례",
+            "productIds": [
+              203
+            ],
+            "maxRating": 2,
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T10:54:21.481Z"
+          },
+          "coverage": {
+            "total": 2,
+            "ready": 2,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 2022,
+                "productId": 203,
+                "rating": 2,
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "햇빛이 비치면 커튼 너머 실루엣이 그대로 보여요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2023,
+                "productId": 203,
+                "rating": 2,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했던 \"햇빛이 비치면 커튼 너머 실루엣이 그대로 보여요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 2,
+            "omittedSourceCount": 0,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 60,
+            "inputBytes": 110,
+            "inputTokens": null
+          },
+          "embeddingMs": 5926.388600000006,
+          "databaseMs": 53.437999999994645,
+          "totalMs": 5980.158100000001,
+          "candidates": [
+            {
+              "review_id": 2022,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2832306354686728
+            },
+            {
+              "review_id": 2023,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3001724780118883
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:54:21.804Z",
+        "elapsedMs": 5877.989100000006
+      }
+    },
+    {
+      "caseId": "final-v2-3-absent",
+      "query": "오프라인 번역 기능이 고장났다는 불만",
+      "productId": 203,
+      "maxRating": null,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "relevantIds": [],
+      "reason": "지정 기능의 고장 경험은 조건 범위에 없다. 미사용이라는 원문은 긍정·고장 경험의 근거가 아니다.",
+      "question": "상품 203의 2026년 10월 1일부터 13일까지 리뷰에서 오프라인 번역 기능이 고장났다는 불만을 찾아줘.",
+      "answerFacts": [],
+      "noEvidence": true,
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          2030,
+          2029,
+          2028,
+          2027,
+          2026
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          2026,
+          2027,
+          2028,
+          2029,
+          2030
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "오프라인 번역 기능이 고장났다는 불만",
+            "productIds": [
+              203
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T10:54:27.832Z"
+          },
+          "coverage": {
+            "total": 9,
+            "ready": 9,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 2026,
+                "productId": 203,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 203의 디자인이 마음에 듭니다. 오프라인 번역 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2027,
+                "productId": 203,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 203의 디자인이 마음에 듭니다. 오프라인 번역 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2028,
+                "productId": 203,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 203의 디자인이 마음에 듭니다. 오프라인 번역 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2029,
+                "productId": 203,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 203의 디자인이 마음에 듭니다. 오프라인 번역 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2030,
+                "productId": 203,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 203의 디자인이 마음에 듭니다. 오프라인 번역 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 9,
+            "omittedSourceCount": 4,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 49,
+            "inputBytes": 81,
+            "inputTokens": null
+          },
+          "embeddingMs": 6005.247999999992,
+          "databaseMs": 52.79279999999562,
+          "totalMs": 6059.097300000023,
+          "candidates": [
+            {
+              "review_id": 2026,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2747082932913856
+            },
+            {
+              "review_id": 2027,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2747082932913856
+            },
+            {
+              "review_id": 2028,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2747082932913856
+            },
+            {
+              "review_id": 2029,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2747082932913856
+            },
+            {
+              "review_id": 2030,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2747082932913856
+            },
+            {
+              "review_id": 2023,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4103859769837842
+            },
+            {
+              "review_id": 2025,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.41556506071134247
+            },
+            {
+              "review_id": 2021,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4429301551497128
+            },
+            {
+              "review_id": 2022,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4429301551497128
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:54:27.859Z",
+        "elapsedMs": 5952.842200000014
+      }
+    },
+    {
+      "caseId": "final-v2-4-meaning",
+      "query": "세탁 중 색이 다른 빨래로 옮겨간 문제",
+      "productId": 204,
+      "maxRating": null,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "relevantIds": [
+        2031,
+        2032
+      ],
+      "reason": "본문으로 확인한 불만 두 건. 높은 별점 포함. 낮은 별점의 문제 없음·기간 밖·다른 문제는 비관련.",
+      "question": "상품 204의 2026년 10월 1일부터 13일까지 리뷰에서 세탁 중 색이 다른 빨래로 옮겨간 문제을 찾아 원본 ID와 인용으로 알려줘.",
+      "answerFacts": [
+        "물들"
+      ],
+      "noEvidence": false,
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          2040,
+          2039,
+          2038,
+          2037,
+          2036
+        ],
+        "hitAt5": 0,
+        "recallAt5": 0,
+        "precisionAt5": 0,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          2031,
+          2032,
+          2033,
+          2035,
+          2036
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.4,
+        "relevantReturned": 2,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "세탁 중 색이 다른 빨래로 옮겨간 문제",
+            "productIds": [
+              204
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T10:54:34.097Z"
+          },
+          "coverage": {
+            "total": 9,
+            "ready": 9,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 2031,
+                "productId": 204,
+                "rating": 5,
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "같이 빤 흰 옷이 푸른색으로 물들어 버렸어요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2032,
+                "productId": 204,
+                "rating": 2,
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "같이 빤 흰 옷이 푸른색으로 물들어 버렸어요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2033,
+                "productId": 204,
+                "rating": 2,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했던 \"같이 빤 흰 옷이 푸른색으로 물들어 버렸어요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2035,
+                "productId": 204,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "책표지 모서리가 일주일 만에 너덜너덜해졌어요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2036,
+                "productId": 204,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 204의 디자인이 마음에 듭니다. 자동 세제 투입 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 9,
+            "omittedSourceCount": 4,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 50,
+            "inputBytes": 80,
+            "inputTokens": null
+          },
+          "embeddingMs": 5914.771100000013,
+          "databaseMs": 59.51270000002114,
+          "totalMs": 5974.772800000006,
+          "candidates": [
+            {
+              "review_id": 2031,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.15760225365200498
+            },
+            {
+              "review_id": 2032,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.15760225365200498
+            },
+            {
+              "review_id": 2033,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.26602635035846667
+            },
+            {
+              "review_id": 2035,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3785210992668705
+            },
+            {
+              "review_id": 2036,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40638359823126535
+            },
+            {
+              "review_id": 2037,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40638359823126535
+            },
+            {
+              "review_id": 2038,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40638359823126535
+            },
+            {
+              "review_id": 2039,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40638359823126535
+            },
+            {
+              "review_id": 2040,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40638359823126535
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:54:33.839Z",
+        "elapsedMs": 5870.661999999982
+      }
+    },
+    {
+      "caseId": "final-v2-4-rating",
+      "query": "세탁 중 색이 다른 빨래로 옮겨간 문제의 구체적 사례",
+      "productId": 204,
+      "maxRating": 2,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "relevantIds": [
+        2032
+      ],
+      "reason": "상품·기간·2점 이하를 만족하며 본문에 해당 불만이 있는 한 건. 낮은 별점의 문제 없음은 비관련.",
+      "question": "상품 204의 2026년 10월 1일부터 13일까지 2점 이하 리뷰에서 세탁 중 색이 다른 빨래로 옮겨간 문제을 찾아 원본 ID와 인용으로 알려줘.",
+      "answerFacts": [
+        "물들"
+      ],
+      "noEvidence": false,
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          2033,
+          2032
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 2
+      },
+      "semantic": {
+        "ids": [
+          2032,
+          2033
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 2,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "세탁 중 색이 다른 빨래로 옮겨간 문제의 구체적 사례",
+            "productIds": [
+              204
+            ],
+            "maxRating": 2,
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T10:54:40.378Z"
+          },
+          "coverage": {
+            "total": 2,
+            "ready": 2,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 2032,
+                "productId": 204,
+                "rating": 2,
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "같이 빤 흰 옷이 푸른색으로 물들어 버렸어요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2033,
+                "productId": 204,
+                "rating": 2,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했던 \"같이 빤 흰 옷이 푸른색으로 물들어 버렸어요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 2,
+            "omittedSourceCount": 0,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 58,
+            "inputBytes": 100,
+            "inputTokens": null
+          },
+          "embeddingMs": 5934.086899999995,
+          "databaseMs": 52.11270000002696,
+          "totalMs": 5986.382899999997,
+          "candidates": [
+            {
+              "review_id": 2032,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.1857343890866172
+            },
+            {
+              "review_id": 2033,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2631646582897531
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:54:39.810Z",
+        "elapsedMs": 5868.282399999996
+      }
+    },
+    {
+      "caseId": "final-v2-4-absent",
+      "query": "자동 세제 투입 기능이 고장났다는 불만",
+      "productId": 204,
+      "maxRating": null,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "relevantIds": [],
+      "reason": "지정 기능의 고장 경험은 조건 범위에 없다. 미사용이라는 원문은 긍정·고장 경험의 근거가 아니다.",
+      "question": "상품 204의 2026년 10월 1일부터 13일까지 리뷰에서 자동 세제 투입 기능이 고장났다는 불만을 찾아줘.",
+      "answerFacts": [],
+      "noEvidence": true,
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          2040,
+          2039,
+          2038,
+          2037,
+          2036
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          2036,
+          2037,
+          2038,
+          2039,
+          2040
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "자동 세제 투입 기능이 고장났다는 불만",
+            "productIds": [
+              204
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T10:54:45.372Z"
+          },
+          "coverage": {
+            "total": 9,
+            "ready": 9,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 2036,
+                "productId": 204,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 204의 디자인이 마음에 듭니다. 자동 세제 투입 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2037,
+                "productId": 204,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 204의 디자인이 마음에 듭니다. 자동 세제 투입 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2038,
+                "productId": 204,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 204의 디자인이 마음에 듭니다. 자동 세제 투입 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2039,
+                "productId": 204,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 204의 디자인이 마음에 듭니다. 자동 세제 투입 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2040,
+                "productId": 204,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 204의 디자인이 마음에 듭니다. 자동 세제 투입 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 9,
+            "omittedSourceCount": 4,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 50,
+            "inputBytes": 82,
+            "inputTokens": null
+          },
+          "embeddingMs": 6020.515199999994,
+          "databaseMs": 56.04859999998007,
+          "totalMs": 6076.835599999991,
+          "candidates": [
+            {
+              "review_id": 2036,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2610319127497399
+            },
+            {
+              "review_id": 2037,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2610319127497399
+            },
+            {
+              "review_id": 2038,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2610319127497399
+            },
+            {
+              "review_id": 2039,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2610319127497399
+            },
+            {
+              "review_id": 2040,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2610319127497399
+            },
+            {
+              "review_id": 2033,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.33435620797153187
+            },
+            {
+              "review_id": 2031,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3466136101707379
+            },
+            {
+              "review_id": 2032,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3466136101707379
+            },
+            {
+              "review_id": 2035,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.40797752141952515
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:54:45.904Z",
+        "elapsedMs": 5969.5981999999785
+      }
+    },
+    {
+      "caseId": "final-v2-5-meaning",
+      "query": "책의 겉면이 마찰을 견디지 못한 불만",
+      "productId": 205,
+      "maxRating": null,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "relevantIds": [
+        2041,
+        2042
+      ],
+      "reason": "본문으로 확인한 불만 두 건. 높은 별점 포함. 낮은 별점의 문제 없음·기간 밖·다른 문제는 비관련.",
+      "question": "상품 205의 2026년 10월 1일부터 13일까지 리뷰에서 책의 겉면이 마찰을 견디지 못한 불만을 찾아 원본 ID와 인용으로 알려줘.",
+      "answerFacts": [
+        "모서리"
+      ],
+      "noEvidence": false,
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          2050,
+          2049,
+          2048,
+          2047,
+          2046
+        ],
+        "hitAt5": 0,
+        "recallAt5": 0,
+        "precisionAt5": 0,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          2041,
+          2042,
+          2043,
+          2045,
+          2046
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.4,
+        "relevantReturned": 2,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "책의 겉면이 마찰을 견디지 못한 불만",
+            "productIds": [
+              205
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T10:54:51.584Z"
+          },
+          "coverage": {
+            "total": 9,
+            "ready": 9,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 2041,
+                "productId": 205,
+                "rating": 5,
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "책표지 모서리가 일주일 만에 너덜너덜해졌어요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2042,
+                "productId": 205,
+                "rating": 2,
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "책표지 모서리가 일주일 만에 너덜너덜해졌어요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2043,
+                "productId": 205,
+                "rating": 2,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했던 \"책표지 모서리가 일주일 만에 너덜너덜해졌어요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2045,
+                "productId": 205,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "냉장 보관했는데 며칠 만에 곰팡이가 퍼졌어요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2046,
+                "productId": 205,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 205의 디자인이 마음에 듭니다. 자동 급식 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 9,
+            "omittedSourceCount": 4,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 49,
+            "inputBytes": 79,
+            "inputTokens": null
+          },
+          "embeddingMs": 5889.665999999997,
+          "databaseMs": 37.69220000001951,
+          "totalMs": 5927.580499999982,
+          "candidates": [
+            {
+              "review_id": 2041,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.156826678457202
+            },
+            {
+              "review_id": 2042,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.156826678457202
+            },
+            {
+              "review_id": 2043,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.23542628560883117
+            },
+            {
+              "review_id": 2045,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3561097918453727
+            },
+            {
+              "review_id": 2046,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4220237945162203
+            },
+            {
+              "review_id": 2047,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4220237945162203
+            },
+            {
+              "review_id": 2048,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4220237945162203
+            },
+            {
+              "review_id": 2049,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4220237945162203
+            },
+            {
+              "review_id": 2050,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4220237945162203
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:54:51.845Z",
+        "elapsedMs": 5833.695500000002
+      }
+    },
+    {
+      "caseId": "final-v2-5-rating",
+      "query": "책의 겉면이 마찰을 견디지 못한 불만의 구체적 사례",
+      "productId": 205,
+      "maxRating": 2,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "relevantIds": [
+        2042
+      ],
+      "reason": "상품·기간·2점 이하를 만족하며 본문에 해당 불만이 있는 한 건. 낮은 별점의 문제 없음은 비관련.",
+      "question": "상품 205의 2026년 10월 1일부터 13일까지 2점 이하 리뷰에서 책의 겉면이 마찰을 견디지 못한 불만을 찾아 원본 ID와 인용으로 알려줘.",
+      "answerFacts": [
+        "모서리"
+      ],
+      "noEvidence": false,
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          2043,
+          2042
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 2
+      },
+      "semantic": {
+        "ids": [
+          2042,
+          2043
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 2,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "책의 겉면이 마찰을 견디지 못한 불만의 구체적 사례",
+            "productIds": [
+              205
+            ],
+            "maxRating": 2,
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T10:54:58.031Z"
+          },
+          "coverage": {
+            "total": 2,
+            "ready": 2,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 2042,
+                "productId": 205,
+                "rating": 2,
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "책표지 모서리가 일주일 만에 너덜너덜해졌어요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2043,
+                "productId": 205,
+                "rating": 2,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했던 \"책표지 모서리가 일주일 만에 너덜너덜해졌어요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 2,
+            "omittedSourceCount": 0,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 57,
+            "inputBytes": 99,
+            "inputTokens": null
+          },
+          "embeddingMs": 6112.206600000005,
+          "databaseMs": 39.330699999962235,
+          "totalMs": 6151.792300000001,
+          "candidates": [
+            {
+              "review_id": 2042,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.17616397852775412
+            },
+            {
+              "review_id": 2043,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.24250112876235352
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:54:58.005Z",
+        "elapsedMs": 6067.197500000009
+      }
+    },
+    {
+      "caseId": "final-v2-5-absent",
+      "query": "자동 급식 기능이 고장났다는 불만",
+      "productId": 205,
+      "maxRating": null,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "relevantIds": [],
+      "reason": "지정 기능의 고장 경험은 조건 범위에 없다. 미사용이라는 원문은 긍정·고장 경험의 근거가 아니다.",
+      "question": "상품 205의 2026년 10월 1일부터 13일까지 리뷰에서 자동 급식 기능이 고장났다는 불만을 찾아줘.",
+      "answerFacts": [],
+      "noEvidence": true,
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          2050,
+          2049,
+          2048,
+          2047,
+          2046
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          2046,
+          2047,
+          2048,
+          2049,
+          2050
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "자동 급식 기능이 고장났다는 불만",
+            "productIds": [
+              205
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T10:55:04.143Z"
+          },
+          "coverage": {
+            "total": 9,
+            "ready": 9,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 2046,
+                "productId": 205,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 205의 디자인이 마음에 듭니다. 자동 급식 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2047,
+                "productId": 205,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 205의 디자인이 마음에 듭니다. 자동 급식 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2048,
+                "productId": 205,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 205의 디자인이 마음에 듭니다. 자동 급식 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2049,
+                "productId": 205,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 205의 디자인이 마음에 듭니다. 자동 급식 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2050,
+                "productId": 205,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 205의 디자인이 마음에 듭니다. 자동 급식 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 9,
+            "omittedSourceCount": 4,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 47,
+            "inputBytes": 75,
+            "inputTokens": null
+          },
+          "embeddingMs": 5791.3389000000025,
+          "databaseMs": 43.42629999993369,
+          "totalMs": 5834.964700000011,
+          "candidates": [
+            {
+              "review_id": 2046,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2535517945967458
+            },
+            {
+              "review_id": 2047,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2535517945967458
+            },
+            {
+              "review_id": 2048,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2535517945967458
+            },
+            {
+              "review_id": 2049,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2535517945967458
+            },
+            {
+              "review_id": 2050,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2535517945967458
+            },
+            {
+              "review_id": 2045,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3537997795998975
+            },
+            {
+              "review_id": 2043,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.38736317609672966
+            },
+            {
+              "review_id": 2041,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4112678275981113
+            },
+            {
+              "review_id": 2042,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4112678275981113
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:55:03.830Z",
+        "elapsedMs": 5737.07269999999
+      }
+    },
+    {
+      "caseId": "final-v2-6-meaning",
+      "query": "보관한 식품에 균이 생겨 먹기 힘든 경험",
+      "productId": 206,
+      "maxRating": null,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "relevantIds": [
+        2051,
+        2052
+      ],
+      "reason": "본문으로 확인한 불만 두 건. 높은 별점 포함. 낮은 별점의 문제 없음·기간 밖·다른 문제는 비관련.",
+      "question": "상품 206의 2026년 10월 1일부터 13일까지 리뷰에서 보관한 식품에 균이 생겨 먹기 힘든 경험을 찾아 원본 ID와 인용으로 알려줘.",
+      "answerFacts": [
+        "곰팡이"
+      ],
+      "noEvidence": false,
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          2060,
+          2059,
+          2058,
+          2057,
+          2056
+        ],
+        "hitAt5": 0,
+        "recallAt5": 0,
+        "precisionAt5": 0,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          2051,
+          2052,
+          2053,
+          2055,
+          2056
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.4,
+        "relevantReturned": 2,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "보관한 식품에 균이 생겨 먹기 힘든 경험",
+            "productIds": [
+              206
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T10:55:10.462Z"
+          },
+          "coverage": {
+            "total": 9,
+            "ready": 9,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 2051,
+                "productId": 206,
+                "rating": 5,
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "냉장 보관했는데 며칠 만에 곰팡이가 퍼졌어요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2052,
+                "productId": 206,
+                "rating": 2,
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "냉장 보관했는데 며칠 만에 곰팡이가 퍼졌어요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2053,
+                "productId": 206,
+                "rating": 2,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했던 \"냉장 보관했는데 며칠 만에 곰팡이가 퍼졌어요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2055,
+                "productId": 206,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "마우스를 가만히 놔도 커서가 혼자 움직여요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2056,
+                "productId": 206,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 206의 디자인이 마음에 듭니다. 모션 인식 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 9,
+            "omittedSourceCount": 4,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 51,
+            "inputBytes": 83,
+            "inputTokens": null
+          },
+          "embeddingMs": 5977.756999999983,
+          "databaseMs": 49.51080000004731,
+          "totalMs": 6027.481599999999,
+          "candidates": [
+            {
+              "review_id": 2051,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.174302820220125
+            },
+            {
+              "review_id": 2052,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.174302820220125
+            },
+            {
+              "review_id": 2053,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.25332665443411917
+            },
+            {
+              "review_id": 2055,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4023683667182243
+            },
+            {
+              "review_id": 2056,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4054052684758813
+            },
+            {
+              "review_id": 2057,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4054052684758813
+            },
+            {
+              "review_id": 2058,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4054052684758813
+            },
+            {
+              "review_id": 2059,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4054052684758813
+            },
+            {
+              "review_id": 2060,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4054052684758813
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:55:09.847Z",
+        "elapsedMs": 5911.484499999962
+      }
+    },
+    {
+      "caseId": "final-v2-6-rating",
+      "query": "보관한 식품에 균이 생겨 먹기 힘든 경험의 구체적 사례",
+      "productId": 206,
+      "maxRating": 2,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "relevantIds": [
+        2052
+      ],
+      "reason": "상품·기간·2점 이하를 만족하며 본문에 해당 불만이 있는 한 건. 낮은 별점의 문제 없음은 비관련.",
+      "question": "상품 206의 2026년 10월 1일부터 13일까지 2점 이하 리뷰에서 보관한 식품에 균이 생겨 먹기 힘든 경험을 찾아 원본 ID와 인용으로 알려줘.",
+      "answerFacts": [
+        "곰팡이"
+      ],
+      "noEvidence": false,
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          2053,
+          2052
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 2
+      },
+      "semantic": {
+        "ids": [
+          2052,
+          2053
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 2,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "보관한 식품에 균이 생겨 먹기 힘든 경험의 구체적 사례",
+            "productIds": [
+              206
+            ],
+            "maxRating": 2,
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T10:55:15.404Z"
+          },
+          "coverage": {
+            "total": 2,
+            "ready": 2,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 2052,
+                "productId": 206,
+                "rating": 2,
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "냉장 보관했는데 며칠 만에 곰팡이가 퍼졌어요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2053,
+                "productId": 206,
+                "rating": 2,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했던 \"냉장 보관했는데 며칠 만에 곰팡이가 퍼졌어요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 2,
+            "omittedSourceCount": 0,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 59,
+            "inputBytes": 103,
+            "inputTokens": null
+          },
+          "embeddingMs": 5964.75139999995,
+          "databaseMs": 36.91439999989234,
+          "totalMs": 6001.976900000009,
+          "candidates": [
+            {
+              "review_id": 2052,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.19746055610593727
+            },
+            {
+              "review_id": 2053,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2718324985304007
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:55:15.883Z",
+        "elapsedMs": 5922.304400000023
+      }
+    },
+    {
+      "caseId": "final-v2-6-absent",
+      "query": "모션 인식 기능이 고장났다는 불만",
+      "productId": 206,
+      "maxRating": null,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "relevantIds": [],
+      "reason": "지정 기능의 고장 경험은 조건 범위에 없다. 미사용이라는 원문은 긍정·고장 경험의 근거가 아니다.",
+      "question": "상품 206의 2026년 10월 1일부터 13일까지 리뷰에서 모션 인식 기능이 고장났다는 불만을 찾아줘.",
+      "answerFacts": [],
+      "noEvidence": true,
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          2060,
+          2059,
+          2058,
+          2057,
+          2056
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          2056,
+          2057,
+          2058,
+          2059,
+          2060
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "모션 인식 기능이 고장났다는 불만",
+            "productIds": [
+              206
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T10:55:21.666Z"
+          },
+          "coverage": {
+            "total": 9,
+            "ready": 9,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 2056,
+                "productId": 206,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 206의 디자인이 마음에 듭니다. 모션 인식 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2057,
+                "productId": 206,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 206의 디자인이 마음에 듭니다. 모션 인식 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2058,
+                "productId": 206,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 206의 디자인이 마음에 듭니다. 모션 인식 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2059,
+                "productId": 206,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 206의 디자인이 마음에 듭니다. 모션 인식 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2060,
+                "productId": 206,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 206의 디자인이 마음에 듭니다. 모션 인식 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 9,
+            "omittedSourceCount": 4,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 47,
+            "inputBytes": 75,
+            "inputTokens": null
+          },
+          "embeddingMs": 5931.421499999997,
+          "databaseMs": 48.62669999996433,
+          "totalMs": 5980.3131000000285,
+          "candidates": [
+            {
+              "review_id": 2056,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.27385660152794744
+            },
+            {
+              "review_id": 2057,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.27385660152794744
+            },
+            {
+              "review_id": 2058,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.27385660152794744
+            },
+            {
+              "review_id": 2059,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.27385660152794744
+            },
+            {
+              "review_id": 2060,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.27385660152794744
+            },
+            {
+              "review_id": 2055,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.29466513331708366
+            },
+            {
+              "review_id": 2051,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.37691559264314034
+            },
+            {
+              "review_id": 2052,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.37691559264314034
+            },
+            {
+              "review_id": 2053,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.38401244688178493
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:55:21.867Z",
+        "elapsedMs": 5899.680999999982
+      }
+    },
+    {
+      "caseId": "final-v2-7-meaning",
+      "query": "입력 기기를 멈췄는데 포인터가 이동하는 문제",
+      "productId": 207,
+      "maxRating": null,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "relevantIds": [
+        2061,
+        2062
+      ],
+      "reason": "본문으로 확인한 불만 두 건. 높은 별점 포함. 낮은 별점의 문제 없음·기간 밖·다른 문제는 비관련.",
+      "question": "상품 207의 2026년 10월 1일부터 13일까지 리뷰에서 입력 기기를 멈췄는데 포인터가 이동하는 문제을 찾아 원본 ID와 인용으로 알려줘.",
+      "answerFacts": [
+        "커서"
+      ],
+      "noEvidence": false,
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          2070,
+          2069,
+          2068,
+          2067,
+          2066
+        ],
+        "hitAt5": 0,
+        "recallAt5": 0,
+        "precisionAt5": 0,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          2061,
+          2062,
+          2063,
+          2065,
+          2066
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.4,
+        "relevantReturned": 2,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "입력 기기를 멈췄는데 포인터가 이동하는 문제",
+            "productIds": [
+              207
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T10:55:27.939Z"
+          },
+          "coverage": {
+            "total": 9,
+            "ready": 9,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 2061,
+                "productId": 207,
+                "rating": 5,
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "마우스를 가만히 놔도 커서가 혼자 움직여요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2062,
+                "productId": 207,
+                "rating": 2,
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "마우스를 가만히 놔도 커서가 혼자 움직여요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2063,
+                "productId": 207,
+                "rating": 2,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했던 \"마우스를 가만히 놔도 커서가 혼자 움직여요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2065,
+                "productId": 207,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "의자 높이를 맞춰도 앉으면 천천히 내려가요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2066,
+                "productId": 207,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 207의 디자인이 마음에 듭니다. 생체 인증 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 9,
+            "omittedSourceCount": 4,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 53,
+            "inputBytes": 91,
+            "inputTokens": null
+          },
+          "embeddingMs": 5939.510600000038,
+          "databaseMs": 38.90589999995427,
+          "totalMs": 5978.667799999996,
+          "candidates": [
+            {
+              "review_id": 2061,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.1904575086730509
+            },
+            {
+              "review_id": 2062,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.1904575086730509
+            },
+            {
+              "review_id": 2063,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.29291288298887586
+            },
+            {
+              "review_id": 2065,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3439554991629128
+            },
+            {
+              "review_id": 2066,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.39785006097552
+            },
+            {
+              "review_id": 2067,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.39785006097552
+            },
+            {
+              "review_id": 2068,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.39785006097552
+            },
+            {
+              "review_id": 2069,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.39785006097552
+            },
+            {
+              "review_id": 2070,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.39785006097552
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:55:27.848Z",
+        "elapsedMs": 5896.6653000000515
+      }
+    },
+    {
+      "caseId": "final-v2-7-rating",
+      "query": "입력 기기를 멈췄는데 포인터가 이동하는 문제의 구체적 사례",
+      "productId": 207,
+      "maxRating": 2,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "relevantIds": [
+        2062
+      ],
+      "reason": "상품·기간·2점 이하를 만족하며 본문에 해당 불만이 있는 한 건. 낮은 별점의 문제 없음은 비관련.",
+      "question": "상품 207의 2026년 10월 1일부터 13일까지 2점 이하 리뷰에서 입력 기기를 멈췄는데 포인터가 이동하는 문제을 찾아 원본 ID와 인용으로 알려줘.",
+      "answerFacts": [
+        "커서"
+      ],
+      "noEvidence": false,
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          2063,
+          2062
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 2
+      },
+      "semantic": {
+        "ids": [
+          2062,
+          2063
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 2,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "입력 기기를 멈췄는데 포인터가 이동하는 문제의 구체적 사례",
+            "productIds": [
+              207
+            ],
+            "maxRating": 2,
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T10:55:34.493Z"
+          },
+          "coverage": {
+            "total": 2,
+            "ready": 2,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 2062,
+                "productId": 207,
+                "rating": 2,
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "마우스를 가만히 놔도 커서가 혼자 움직여요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2063,
+                "productId": 207,
+                "rating": 2,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했던 \"마우스를 가만히 놔도 커서가 혼자 움직여요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 2,
+            "omittedSourceCount": 0,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 61,
+            "inputBytes": 111,
+            "inputTokens": null
+          },
+          "embeddingMs": 6210.0846999999485,
+          "databaseMs": 36.270800000056624,
+          "totalMs": 6246.582000000053,
+          "candidates": [
+            {
+              "review_id": 2062,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.20428127050390732
+            },
+            {
+              "review_id": 2063,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2957873058952857
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:55:34.083Z",
+        "elapsedMs": 6148.604200000002
+      }
+    },
+    {
+      "caseId": "final-v2-7-absent",
+      "query": "생체 인증 기능이 고장났다는 불만",
+      "productId": 207,
+      "maxRating": null,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "relevantIds": [],
+      "reason": "지정 기능의 고장 경험은 조건 범위에 없다. 미사용이라는 원문은 긍정·고장 경험의 근거가 아니다.",
+      "question": "상품 207의 2026년 10월 1일부터 13일까지 리뷰에서 생체 인증 기능이 고장났다는 불만을 찾아줘.",
+      "answerFacts": [],
+      "noEvidence": true,
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          2070,
+          2069,
+          2068,
+          2067,
+          2066
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          2066,
+          2067,
+          2068,
+          2069,
+          2070
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "생체 인증 기능이 고장났다는 불만",
+            "productIds": [
+              207
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T10:55:40.614Z"
+          },
+          "coverage": {
+            "total": 9,
+            "ready": 9,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 2066,
+                "productId": 207,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 207의 디자인이 마음에 듭니다. 생체 인증 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2067,
+                "productId": 207,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 207의 디자인이 마음에 듭니다. 생체 인증 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2068,
+                "productId": 207,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 207의 디자인이 마음에 듭니다. 생체 인증 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2069,
+                "productId": 207,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 207의 디자인이 마음에 듭니다. 생체 인증 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2070,
+                "productId": 207,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 207의 디자인이 마음에 듭니다. 생체 인증 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 9,
+            "omittedSourceCount": 4,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 47,
+            "inputBytes": 75,
+            "inputTokens": null
+          },
+          "embeddingMs": 5807.162299999967,
+          "databaseMs": 35.02039999997942,
+          "totalMs": 5842.56409999996,
+          "candidates": [
+            {
+              "review_id": 2066,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3027650325665662
+            },
+            {
+              "review_id": 2067,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3027650325665662
+            },
+            {
+              "review_id": 2068,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3027650325665662
+            },
+            {
+              "review_id": 2069,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3027650325665662
+            },
+            {
+              "review_id": 2070,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3027650325665662
+            },
+            {
+              "review_id": 2065,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.36389646215887284
+            },
+            {
+              "review_id": 2063,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.37050726570295
+            },
+            {
+              "review_id": 2061,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3710366060003364
+            },
+            {
+              "review_id": 2062,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3710366060003364
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:55:39.922Z",
+        "elapsedMs": 5745.017899999977
+      }
+    },
+    {
+      "caseId": "final-v2-8-meaning",
+      "query": "좌석 높이 설정이 유지되지 않는 불만",
+      "productId": 208,
+      "maxRating": null,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "relevantIds": [
+        2071,
+        2072
+      ],
+      "reason": "본문으로 확인한 불만 두 건. 높은 별점 포함. 낮은 별점의 문제 없음·기간 밖·다른 문제는 비관련.",
+      "question": "상품 208의 2026년 10월 1일부터 13일까지 리뷰에서 좌석 높이 설정이 유지되지 않는 불만을 찾아 원본 ID와 인용으로 알려줘.",
+      "answerFacts": [
+        "높이"
+      ],
+      "noEvidence": false,
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          2080,
+          2079,
+          2078,
+          2077,
+          2076
+        ],
+        "hitAt5": 0,
+        "recallAt5": 0,
+        "precisionAt5": 0,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          2071,
+          2072,
+          2073,
+          2076,
+          2077
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.4,
+        "relevantReturned": 2,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "좌석 높이 설정이 유지되지 않는 불만",
+            "productIds": [
+              208
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T10:55:45.483Z"
+          },
+          "coverage": {
+            "total": 9,
+            "ready": 9,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 2071,
+                "productId": 208,
+                "rating": 5,
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "의자 높이를 맞춰도 앉으면 천천히 내려가요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2072,
+                "productId": 208,
+                "rating": 2,
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "의자 높이를 맞춰도 앉으면 천천히 내려가요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2073,
+                "productId": 208,
+                "rating": 2,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했던 \"의자 높이를 맞춰도 앉으면 천천히 내려가요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2076,
+                "productId": 208,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 208의 디자인이 마음에 듭니다. 대기질 측정 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2077,
+                "productId": 208,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 208의 디자인이 마음에 듭니다. 대기질 측정 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 9,
+            "omittedSourceCount": 4,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 49,
+            "inputBytes": 79,
+            "inputTokens": null
+          },
+          "embeddingMs": 5896.176000000036,
+          "databaseMs": 58.91049999999814,
+          "totalMs": 5955.387899999972,
+          "candidates": [
+            {
+              "review_id": 2071,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.21951961081489713
+            },
+            {
+              "review_id": 2072,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.21951961081489713
+            },
+            {
+              "review_id": 2073,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2878070645217021
+            },
+            {
+              "review_id": 2076,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4103254248263436
+            },
+            {
+              "review_id": 2077,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4103254248263436
+            },
+            {
+              "review_id": 2078,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4103254248263436
+            },
+            {
+              "review_id": 2079,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4103254248263436
+            },
+            {
+              "review_id": 2080,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4103254248263436
+            },
+            {
+              "review_id": 2075,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.41968621367564707
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:55:45.870Z",
+        "elapsedMs": 5847.083199999994
+      }
+    },
+    {
+      "caseId": "final-v2-8-rating",
+      "query": "좌석 높이 설정이 유지되지 않는 불만의 구체적 사례",
+      "productId": 208,
+      "maxRating": 2,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "relevantIds": [
+        2072
+      ],
+      "reason": "상품·기간·2점 이하를 만족하며 본문에 해당 불만이 있는 한 건. 낮은 별점의 문제 없음은 비관련.",
+      "question": "상품 208의 2026년 10월 1일부터 13일까지 2점 이하 리뷰에서 좌석 높이 설정이 유지되지 않는 불만을 찾아 원본 ID와 인용으로 알려줘.",
+      "answerFacts": [
+        "높이"
+      ],
+      "noEvidence": false,
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          2073,
+          2072
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 2
+      },
+      "semantic": {
+        "ids": [
+          2072,
+          2073
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 2,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "좌석 높이 설정이 유지되지 않는 불만의 구체적 사례",
+            "productIds": [
+              208
+            ],
+            "maxRating": 2,
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T10:55:51.781Z"
+          },
+          "coverage": {
+            "total": 2,
+            "ready": 2,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 2072,
+                "productId": 208,
+                "rating": 2,
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "의자 높이를 맞춰도 앉으면 천천히 내려가요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2073,
+                "productId": 208,
+                "rating": 2,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했던 \"의자 높이를 맞춰도 앉으면 천천히 내려가요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 2,
+            "omittedSourceCount": 0,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 57,
+            "inputBytes": 99,
+            "inputTokens": null
+          },
+          "embeddingMs": 5960.386500000022,
+          "databaseMs": 48.69780000002356,
+          "totalMs": 6009.3681000000215,
+          "candidates": [
+            {
+              "review_id": 2072,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2331867823430347
+            },
+            {
+              "review_id": 2073,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2947166737744896
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:55:51.895Z",
+        "elapsedMs": 5907.9228
+      }
+    },
+    {
+      "caseId": "final-v2-8-absent",
+      "query": "대기질 측정 기능이 고장났다는 불만",
+      "productId": 208,
+      "maxRating": null,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "relevantIds": [],
+      "reason": "지정 기능의 고장 경험은 조건 범위에 없다. 미사용이라는 원문은 긍정·고장 경험의 근거가 아니다.",
+      "question": "상품 208의 2026년 10월 1일부터 13일까지 리뷰에서 대기질 측정 기능이 고장났다는 불만을 찾아줘.",
+      "answerFacts": [],
+      "noEvidence": true,
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          2080,
+          2079,
+          2078,
+          2077,
+          2076
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          2076,
+          2077,
+          2078,
+          2079,
+          2080
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "대기질 측정 기능이 고장났다는 불만",
+            "productIds": [
+              208
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T10:55:58.132Z"
+          },
+          "coverage": {
+            "total": 9,
+            "ready": 9,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 2076,
+                "productId": 208,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 208의 디자인이 마음에 듭니다. 대기질 측정 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2077,
+                "productId": 208,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 208의 디자인이 마음에 듭니다. 대기질 측정 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2078,
+                "productId": 208,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 208의 디자인이 마음에 듭니다. 대기질 측정 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2079,
+                "productId": 208,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 208의 디자인이 마음에 듭니다. 대기질 측정 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2080,
+                "productId": 208,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 208의 디자인이 마음에 듭니다. 대기질 측정 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 9,
+            "omittedSourceCount": 4,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 48,
+            "inputBytes": 78,
+            "inputTokens": null
+          },
+          "embeddingMs": 6004.112699999998,
+          "databaseMs": 58.0283000000054,
+          "totalMs": 6062.4518999999855,
+          "candidates": [
+            {
+              "review_id": 2076,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.28222657932191175
+            },
+            {
+              "review_id": 2077,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.28222657932191175
+            },
+            {
+              "review_id": 2078,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.28222657932191175
+            },
+            {
+              "review_id": 2079,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.28222657932191175
+            },
+            {
+              "review_id": 2080,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.28222657932191175
+            },
+            {
+              "review_id": 2071,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3570149136478582
+            },
+            {
+              "review_id": 2072,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3570149136478582
+            },
+            {
+              "review_id": 2073,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.36709659084203117
+            },
+            {
+              "review_id": 2075,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.45542646517121077
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:55:57.946Z",
+        "elapsedMs": 5945.8382000000565
+      }
+    },
+    {
+      "caseId": "final-v2-9-meaning",
+      "query": "털을 깎는 과정에서 피부가 아픈 경험",
+      "productId": 209,
+      "maxRating": null,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "relevantIds": [
+        2081,
+        2082
+      ],
+      "reason": "본문으로 확인한 불만 두 건. 높은 별점 포함. 낮은 별점의 문제 없음·기간 밖·다른 문제는 비관련.",
+      "question": "상품 209의 2026년 10월 1일부터 13일까지 리뷰에서 털을 깎는 과정에서 피부가 아픈 경험을 찾아 원본 ID와 인용으로 알려줘.",
+      "answerFacts": [
+        "따가"
+      ],
+      "noEvidence": false,
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          2090,
+          2089,
+          2088,
+          2087,
+          2086
+        ],
+        "hitAt5": 0,
+        "recallAt5": 0,
+        "precisionAt5": 0,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          2081,
+          2082,
+          2083,
+          2085,
+          2086
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.4,
+        "relevantReturned": 2,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "털을 깎는 과정에서 피부가 아픈 경험",
+            "productIds": [
+              209
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T10:56:04.403Z"
+          },
+          "coverage": {
+            "total": 9,
+            "ready": 9,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 2081,
+                "productId": 209,
+                "rating": 5,
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "면도할 때 털이 뽑혀 피부가 따가워요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2082,
+                "productId": 209,
+                "rating": 2,
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "면도할 때 털이 뽑혀 피부가 따가워요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2083,
+                "productId": 209,
+                "rating": 2,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했던 \"면도할 때 털이 뽑혀 피부가 따가워요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2085,
+                "productId": 209,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "잔 테두리가 두꺼워 마시면 음료가 턱으로 흘러요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2086,
+                "productId": 209,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 209의 디자인이 마음에 듭니다. 자동 분리 수거 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 9,
+            "omittedSourceCount": 4,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 49,
+            "inputBytes": 79,
+            "inputTokens": null
+          },
+          "embeddingMs": 5932.163900000043,
+          "databaseMs": 53.23060000000987,
+          "totalMs": 5985.690199999954,
+          "candidates": [
+            {
+              "review_id": 2081,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.16604853160199862
+            },
+            {
+              "review_id": 2082,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.16604853160199862
+            },
+            {
+              "review_id": 2083,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.26633530046624565
+            },
+            {
+              "review_id": 2085,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4100587222172578
+            },
+            {
+              "review_id": 2086,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4521120353903213
+            },
+            {
+              "review_id": 2087,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4521120353903213
+            },
+            {
+              "review_id": 2088,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4521120353903213
+            },
+            {
+              "review_id": 2089,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4521120353903213
+            },
+            {
+              "review_id": 2090,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4521120353903213
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:56:03.928Z",
+        "elapsedMs": 5869.429899999988
+      }
+    },
+    {
+      "caseId": "final-v2-9-rating",
+      "query": "털을 깎는 과정에서 피부가 아픈 경험의 구체적 사례",
+      "productId": 209,
+      "maxRating": 2,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "relevantIds": [
+        2082
+      ],
+      "reason": "상품·기간·2점 이하를 만족하며 본문에 해당 불만이 있는 한 건. 낮은 별점의 문제 없음은 비관련.",
+      "question": "상품 209의 2026년 10월 1일부터 13일까지 2점 이하 리뷰에서 털을 깎는 과정에서 피부가 아픈 경험을 찾아 원본 ID와 인용으로 알려줘.",
+      "answerFacts": [
+        "따가"
+      ],
+      "noEvidence": false,
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          2083,
+          2082
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 2
+      },
+      "semantic": {
+        "ids": [
+          2082,
+          2083
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 2,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "털을 깎는 과정에서 피부가 아픈 경험의 구체적 사례",
+            "productIds": [
+              209
+            ],
+            "maxRating": 2,
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T10:56:09.303Z"
+          },
+          "coverage": {
+            "total": 2,
+            "ready": 2,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 2082,
+                "productId": 209,
+                "rating": 2,
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "면도할 때 털이 뽑혀 피부가 따가워요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2083,
+                "productId": 209,
+                "rating": 2,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했던 \"면도할 때 털이 뽑혀 피부가 따가워요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 2,
+            "omittedSourceCount": 0,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 57,
+            "inputBytes": 99,
+            "inputTokens": null
+          },
+          "embeddingMs": 5948.367399999988,
+          "databaseMs": 36.49650000000838,
+          "totalMs": 5985.063199999975,
+          "candidates": [
+            {
+              "review_id": 2082,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.19073891363704
+            },
+            {
+              "review_id": 2083,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2836770958456556
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:56:09.951Z",
+        "elapsedMs": 5899.135299999965
+      }
+    },
+    {
+      "caseId": "final-v2-9-absent",
+      "query": "자동 분리 수거 기능이 고장났다는 불만",
+      "productId": 209,
+      "maxRating": null,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "relevantIds": [],
+      "reason": "지정 기능의 고장 경험은 조건 범위에 없다. 미사용이라는 원문은 긍정·고장 경험의 근거가 아니다.",
+      "question": "상품 209의 2026년 10월 1일부터 13일까지 리뷰에서 자동 분리 수거 기능이 고장났다는 불만을 찾아줘.",
+      "answerFacts": [],
+      "noEvidence": true,
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          2090,
+          2089,
+          2088,
+          2087,
+          2086
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          2086,
+          2087,
+          2088,
+          2089,
+          2090
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "자동 분리 수거 기능이 고장났다는 불만",
+            "productIds": [
+              209
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T10:56:15.583Z"
+          },
+          "coverage": {
+            "total": 9,
+            "ready": 9,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 2086,
+                "productId": 209,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 209의 디자인이 마음에 듭니다. 자동 분리 수거 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2087,
+                "productId": 209,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 209의 디자인이 마음에 듭니다. 자동 분리 수거 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2088,
+                "productId": 209,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 209의 디자인이 마음에 듭니다. 자동 분리 수거 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2089,
+                "productId": 209,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 209의 디자인이 마음에 듭니다. 자동 분리 수거 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2090,
+                "productId": 209,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 209의 디자인이 마음에 듭니다. 자동 분리 수거 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 9,
+            "omittedSourceCount": 4,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 50,
+            "inputBytes": 82,
+            "inputTokens": null
+          },
+          "embeddingMs": 5964.183600000048,
+          "databaseMs": 33.287200000020675,
+          "totalMs": 5997.636399999959,
+          "candidates": [
+            {
+              "review_id": 2086,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2635855799462027
+            },
+            {
+              "review_id": 2087,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2635855799462027
+            },
+            {
+              "review_id": 2088,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2635855799462027
+            },
+            {
+              "review_id": 2089,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2635855799462027
+            },
+            {
+              "review_id": 2090,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2635855799462027
+            },
+            {
+              "review_id": 2085,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.36705792553268424
+            },
+            {
+              "review_id": 2083,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.38334484249661427
+            },
+            {
+              "review_id": 2081,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4321401376807762
+            },
+            {
+              "review_id": 2082,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4321401376807762
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:56:15.936Z",
+        "elapsedMs": 5905.327099999995
+      }
+    },
+    {
+      "caseId": "final-v2-10-meaning",
+      "query": "컵으로 음료를 넘길 때 입 밖으로 새는 불편",
+      "productId": 210,
+      "maxRating": null,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "relevantIds": [
+        2091,
+        2092
+      ],
+      "reason": "본문으로 확인한 불만 두 건. 높은 별점 포함. 낮은 별점의 문제 없음·기간 밖·다른 문제는 비관련.",
+      "question": "상품 210의 2026년 10월 1일부터 13일까지 리뷰에서 컵으로 음료를 넘길 때 입 밖으로 새는 불편을 찾아 원본 ID와 인용으로 알려줘.",
+      "answerFacts": [
+        "턱"
+      ],
+      "noEvidence": false,
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          2100,
+          2099,
+          2098,
+          2097,
+          2096
+        ],
+        "hitAt5": 0,
+        "recallAt5": 0,
+        "precisionAt5": 0,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          2091,
+          2092,
+          2093,
+          2095,
+          2096
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.4,
+        "relevantReturned": 2,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "컵으로 음료를 넘길 때 입 밖으로 새는 불편",
+            "productIds": [
+              210
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T10:56:21.846Z"
+          },
+          "coverage": {
+            "total": 9,
+            "ready": 9,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 2091,
+                "productId": 210,
+                "rating": 5,
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "잔 테두리가 두꺼워 마시면 음료가 턱으로 흘러요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2092,
+                "productId": 210,
+                "rating": 2,
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "잔 테두리가 두꺼워 마시면 음료가 턱으로 흘러요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2093,
+                "productId": 210,
+                "rating": 2,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했던 \"잔 테두리가 두꺼워 마시면 음료가 턱으로 흘러요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2095,
+                "productId": 210,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "소매를 만지면 찌릿하고 천이 몸에 달라붙어요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2096,
+                "productId": 210,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 210의 디자인이 마음에 듭니다. 무게 기록 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 9,
+            "omittedSourceCount": 4,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 53,
+            "inputBytes": 87,
+            "inputTokens": null
+          },
+          "embeddingMs": 5948.075399999972,
+          "databaseMs": 30.038100000005215,
+          "totalMs": 5978.304600000032,
+          "candidates": [
+            {
+              "review_id": 2091,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2013037444715139
+            },
+            {
+              "review_id": 2092,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2013037444715139
+            },
+            {
+              "review_id": 2093,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2880857152631846
+            },
+            {
+              "review_id": 2095,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3591808699829139
+            },
+            {
+              "review_id": 2096,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.43390138078692664
+            },
+            {
+              "review_id": 2097,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.43390138078692664
+            },
+            {
+              "review_id": 2098,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.43390138078692664
+            },
+            {
+              "review_id": 2099,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.43390138078692664
+            },
+            {
+              "review_id": 2100,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.43390138078692664
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:56:21.936Z",
+        "elapsedMs": 5904.873500000045
+      }
+    },
+    {
+      "caseId": "final-v2-10-rating",
+      "query": "컵으로 음료를 넘길 때 입 밖으로 새는 불편의 구체적 사례",
+      "productId": 210,
+      "maxRating": 2,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "relevantIds": [
+        2092
+      ],
+      "reason": "상품·기간·2점 이하를 만족하며 본문에 해당 불만이 있는 한 건. 낮은 별점의 문제 없음은 비관련.",
+      "question": "상품 210의 2026년 10월 1일부터 13일까지 2점 이하 리뷰에서 컵으로 음료를 넘길 때 입 밖으로 새는 불편을 찾아 원본 ID와 인용으로 알려줘.",
+      "answerFacts": [
+        "턱"
+      ],
+      "noEvidence": false,
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          2093,
+          2092
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 2
+      },
+      "semantic": {
+        "ids": [
+          2092,
+          2093
+        ],
+        "hitAt5": 1,
+        "recallAt5": 1,
+        "precisionAt5": 0.2,
+        "relevantReturned": 1,
+        "returnedSourceCount": 2,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "컵으로 음료를 넘길 때 입 밖으로 새는 불편의 구체적 사례",
+            "productIds": [
+              210
+            ],
+            "maxRating": 2,
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T10:56:28.686Z"
+          },
+          "coverage": {
+            "total": 2,
+            "ready": 2,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 2092,
+                "productId": 210,
+                "rating": 2,
+                "createdAt": "2026-10-02T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "잔 테두리가 두꺼워 마시면 음료가 턱으로 흘러요."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2093,
+                "productId": 210,
+                "rating": 2,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "걱정했던 \"잔 테두리가 두꺼워 마시면 음료가 턱으로 흘러요.\"와 같은 문제는 실제로 없었습니다. 별점은 배송 일정 때문에 낮게 주었습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 2,
+            "omittedSourceCount": 0,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 61,
+            "inputBytes": 107,
+            "inputTokens": null
+          },
+          "embeddingMs": 6485.78330000001,
+          "databaseMs": 38.78679999994347,
+          "totalMs": 6524.823100000038,
+          "candidates": [
+            {
+              "review_id": 2092,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2039185762405169
+            },
+            {
+              "review_id": 2093,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.28686348826240027
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:56:28.453Z",
+        "elapsedMs": 6435.252700000012
+      }
+    },
+    {
+      "caseId": "final-v2-10-absent",
+      "query": "무게 기록 기능이 고장났다는 불만",
+      "productId": 210,
+      "maxRating": null,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-13",
+      "relevantIds": [],
+      "reason": "지정 기능의 고장 경험은 조건 범위에 없다. 미사용이라는 원문은 긍정·고장 경험의 근거가 아니다.",
+      "question": "상품 210의 2026년 10월 1일부터 13일까지 리뷰에서 무게 기록 기능이 고장났다는 불만을 찾아줘.",
+      "answerFacts": [],
+      "noEvidence": true,
+      "status": "ok",
+      "baseline": {
+        "ids": [
+          2100,
+          2099,
+          2098,
+          2097,
+          2096
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5
+      },
+      "semantic": {
+        "ids": [
+          2096,
+          2097,
+          2098,
+          2099,
+          2100
+        ],
+        "hitAt5": null,
+        "recallAt5": null,
+        "precisionAt5": null,
+        "relevantReturned": 0,
+        "returnedSourceCount": 5,
+        "result": {
+          "status": "ok",
+          "mode": "semantic",
+          "scope": {
+            "sourceType": "review",
+            "timezone": "Asia/Seoul",
+            "unit": "source",
+            "profileId": "gemini-embedding-2-768-review-inquiry-v1",
+            "query": "무게 기록 기능이 고장났다는 불만",
+            "productIds": [
+              210
+            ],
+            "startDate": "2026-10-01",
+            "endDate": "2026-10-13",
+            "take": 5,
+            "checkedAt": "2026-10-13T10:56:34.467Z"
+          },
+          "coverage": {
+            "total": 9,
+            "ready": 9,
+            "pending": 0,
+            "failed": 0,
+            "partial": false
+          },
+          "data": {
+            "sources": [
+              {
+                "sourceType": "review",
+                "id": 2096,
+                "productId": 210,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 210의 디자인이 마음에 듭니다. 무게 기록 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2097,
+                "productId": 210,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 210의 디자인이 마음에 듭니다. 무게 기록 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2098,
+                "productId": 210,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 210의 디자인이 마음에 듭니다. 무게 기록 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2099,
+                "productId": 210,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 210의 디자인이 마음에 듭니다. 무게 기록 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              },
+              {
+                "sourceType": "review",
+                "id": 2100,
+                "productId": 210,
+                "rating": 5,
+                "createdAt": "2026-10-12T00:00:00.000Z",
+                "quotes": [
+                  {
+                    "chunkIndex": 0,
+                    "text": "상품 210의 디자인이 마음에 듭니다. 무게 기록 기능은 사용하지 않아 관련 경험을 적지 않았습니다."
+                  }
+                ]
+              }
+            ],
+            "candidateChunkCount": 9,
+            "omittedSourceCount": 4,
+            "contextTruncated": false
+          },
+          "error": null
+        },
+        "diagnostics": {
+          "embeddingUsage": {
+            "requests": 1,
+            "inputCodePoints": 47,
+            "inputBytes": 75,
+            "inputTokens": null
+          },
+          "embeddingMs": 5484.540900000022,
+          "databaseMs": 32.77759999997215,
+          "totalMs": 5517.496099999989,
+          "candidates": [
+            {
+              "review_id": 2096,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2569273062406334
+            },
+            {
+              "review_id": 2097,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2569273062406334
+            },
+            {
+              "review_id": 2098,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2569273062406334
+            },
+            {
+              "review_id": 2099,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2569273062406334
+            },
+            {
+              "review_id": 2100,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.2569273062406334
+            },
+            {
+              "review_id": 2091,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.35580472017495635
+            },
+            {
+              "review_id": 2092,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.35580472017495635
+            },
+            {
+              "review_id": 2093,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.3617610778898077
+            },
+            {
+              "review_id": 2095,
+              "source_version": "1",
+              "chunk_index": 0,
+              "distance": 0.4329685479728481
+            }
+          ],
+          "invalidatedSourceCount": 0
+        }
+      },
+      "queryEmbeddingPreparation": {
+        "generatedAt": "2026-10-13T10:56:33.951Z",
+        "elapsedMs": 5410.989100000006
+      }
+    }
+  ]
+}
