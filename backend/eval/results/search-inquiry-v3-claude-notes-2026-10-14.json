@@ -1,0 +1,156 @@
+{
+  "_sourceReportSha256": "2e83de18a8a02ab753d61ecf85b076171999705ff429922bda74a39c218a40f8",
+  "_reviewerKind": "agent (Claude; read originals first; not a human verdict)",
+  "_fixtureRole": "frozen-final",
+  "_finalAnswerSuccessRate": null,
+  "inquiry-answer-v3-1-meaning": {
+    "assessment": "fail_candidate",
+    "humanVerdict": "pending",
+    "reason": "#8002·#8003 인용은 맞다. 그러나 제목 근거 #8001(\"우산 살이 휘어요\")을 \"검색하신 '꺾임'이나 '수리 접수'와 직접 연결되는 추가 정보는 없다\"며 본 목록에서 뺐다. 표현이 다르다는 이유로 같은 현상을 낮춘 것으로, 기존 규칙(단어가 달라도 뜻으로 판단)과 새 규칙(제목만 있는 미답변 문의도 같은 목록) 모두에 어긋난다. (첫 도구 호출의 날짜 뒤 쉼표 오류는 다음 호출에서 복구했다.)"
+  },
+  "inquiry-answer-v3-1-status": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건(상품·기간·상태)이 질문과 일치하고, 관련 제목·본문·답변을 구분해 인용했다. 문제 없음 원문은 불만에서 제외했고 내부 필드명·작성 의도 추가는 보이지 않는다."
+  },
+  "inquiry-answer-v3-1-absent": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건이 질문과 일치하고, 반환된 다른 주제 후보를 해당 불만으로 인용하지 않고 근거 없음을 밝혔다."
+  },
+  "inquiry-answer-v3-2-meaning": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건(상품·기간·상태)이 질문과 일치하고, 관련 제목·본문·답변을 구분해 인용했다. 문제 없음 원문은 불만에서 제외했고 내부 필드명·작성 의도 추가는 보이지 않는다."
+  },
+  "inquiry-answer-v3-2-status": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건(상품·기간·상태)이 질문과 일치하고, 관련 제목·본문·답변을 구분해 인용했다. 문제 없음 원문은 불만에서 제외했고 내부 필드명·작성 의도 추가는 보이지 않는다."
+  },
+  "inquiry-answer-v3-2-absent": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건이 질문과 일치하고, 반환된 다른 주제 후보를 해당 불만으로 인용하지 않고 근거 없음을 밝혔다. (첫 도구 호출의 날짜 뒤 쉼표 오류는 다음 호출에서 복구했다.)"
+  },
+  "inquiry-answer-v3-3-meaning": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건(상품·기간·상태)이 질문과 일치하고, 관련 제목·본문·답변을 구분해 인용했다. 문제 없음 원문은 불만에서 제외했고 내부 필드명·작성 의도 추가는 보이지 않는다."
+  },
+  "inquiry-answer-v3-3-status": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건(상품·기간·상태)이 질문과 일치하고, 관련 제목·본문·답변을 구분해 인용했다. 문제 없음 원문은 불만에서 제외했고 내부 필드명·작성 의도 추가는 보이지 않는다."
+  },
+  "inquiry-answer-v3-3-absent": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건이 질문과 일치하고, 반환된 다른 주제 후보를 해당 불만으로 인용하지 않고 근거 없음을 밝혔다."
+  },
+  "inquiry-answer-v3-4-meaning": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건(상품·기간·상태)이 질문과 일치하고, 관련 제목·본문·답변을 구분해 인용했다. 문제 없음 원문은 불만에서 제외했고 내부 필드명·작성 의도 추가는 보이지 않는다."
+  },
+  "inquiry-answer-v3-4-status": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건(상품·기간·상태)이 질문과 일치하고, 관련 제목·본문·답변을 구분해 인용했다. 문제 없음 원문은 불만에서 제외했고 내부 필드명·작성 의도 추가는 보이지 않는다."
+  },
+  "inquiry-answer-v3-4-absent": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건이 질문과 일치하고, 반환된 다른 주제 후보를 해당 불만으로 인용하지 않고 근거 없음을 밝혔다."
+  },
+  "inquiry-answer-v3-5-meaning": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건(상품·기간·상태)이 질문과 일치하고, 관련 제목·본문·답변을 구분해 인용했다. 문제 없음 원문은 불만에서 제외했고 내부 필드명·작성 의도 추가는 보이지 않는다."
+  },
+  "inquiry-answer-v3-5-status": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건(상품·기간·상태)이 질문과 일치하고, 관련 제목·본문·답변을 구분해 인용했다. 문제 없음 원문은 불만에서 제외했고 내부 필드명·작성 의도 추가는 보이지 않는다."
+  },
+  "inquiry-answer-v3-5-absent": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건이 질문과 일치하고, 반환된 다른 주제 후보를 해당 불만으로 인용하지 않고 근거 없음을 밝혔다."
+  },
+  "inquiry-answer-v3-6-meaning": {
+    "assessment": "fail_candidate",
+    "humanVerdict": "pending",
+    "reason": "\"충전되지 않는 내용 또는 교환 안내\" 질문인데 답변은 \"요청하신 안내 내용을 포함한 문의\"로 범위를 줄여 #8052·#8053 만 인용했다. 반환된 제목 근거 #8051(\"충전기를 꽂아도 충전이 안 돼요\")을 아예 빠뜨렸다. (첫 도구 호출의 날짜 뒤 쉼표 오류는 다음 호출에서 복구했다.)"
+  },
+  "inquiry-answer-v3-6-status": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건(상품·기간·상태)이 질문과 일치하고, 관련 제목·본문·답변을 구분해 인용했다. 문제 없음 원문은 불만에서 제외했고 내부 필드명·작성 의도 추가는 보이지 않는다."
+  },
+  "inquiry-answer-v3-6-absent": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건이 질문과 일치하고, 반환된 다른 주제 후보를 해당 불만으로 인용하지 않고 근거 없음을 밝혔다."
+  },
+  "inquiry-answer-v3-7-meaning": {
+    "assessment": "fail_candidate",
+    "humanVerdict": "pending",
+    "reason": "전체 기간 조건과 #8062·#8068·#8063 인용은 맞다. 그러나 제목 근거 #8061 을 본 목록 밖 \"참고로 … 미답변 문의도 확인되었습니다\"로 낮췄다. 제목 원문은 적었지만 v2-10-meaning 사람 판정과 같은 구조라 실패로 본다."
+  },
+  "inquiry-answer-v3-7-status": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건(상품·기간·상태)이 질문과 일치하고, 관련 제목·본문·답변을 구분해 인용했다. 문제 없음 원문은 불만에서 제외했고 내부 필드명·작성 의도 추가는 보이지 않는다."
+  },
+  "inquiry-answer-v3-7-absent": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건이 질문과 일치하고, 반환된 다른 주제 후보를 해당 불만으로 인용하지 않고 근거 없음을 밝혔다."
+  },
+  "inquiry-answer-v3-8-meaning": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건(상품·기간·상태)이 질문과 일치하고, 관련 제목·본문·답변을 구분해 인용했다. 문제 없음 원문은 불만에서 제외했고 내부 필드명·작성 의도 추가는 보이지 않는다. (첫 도구 호출의 날짜 뒤 쉼표 오류는 다음 호출에서 복구했다.)"
+  },
+  "inquiry-answer-v3-8-status": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건(상품·기간·상태)이 질문과 일치하고, 관련 제목·본문·답변을 구분해 인용했다. 문제 없음 원문은 불만에서 제외했고 내부 필드명·작성 의도 추가는 보이지 않는다."
+  },
+  "inquiry-answer-v3-8-absent": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건이 질문과 일치하고, 반환된 다른 주제 후보를 해당 불만으로 인용하지 않고 근거 없음을 밝혔다."
+  },
+  "inquiry-answer-v3-9-meaning": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건(상품·기간·상태)이 질문과 일치하고, 관련 제목·본문·답변을 구분해 인용했다. 문제 없음 원문은 불만에서 제외했고 내부 필드명·작성 의도 추가는 보이지 않는다."
+  },
+  "inquiry-answer-v3-9-status": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건(상품·기간·상태)이 질문과 일치하고, 관련 제목·본문·답변을 구분해 인용했다. 문제 없음 원문은 불만에서 제외했고 내부 필드명·작성 의도 추가는 보이지 않는다."
+  },
+  "inquiry-answer-v3-9-absent": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건이 질문과 일치하고, 반환된 다른 주제 후보를 해당 불만으로 인용하지 않고 근거 없음을 밝혔다."
+  },
+  "inquiry-answer-v3-10-meaning": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "경계. #8091 을 #8092·#8093 과 같은 목록에 제목 원문으로 넣었다. \"본문 내용이 없고 판매자 답변 또한 없습니다\"라는 설명은 사실이고 참고로 낮추지는 않았다. 다만 \"언급하고 있으나\"라는 단서를 붙인 점은 v2 실패와 닮아 사람 확인이 필요하다. (첫 도구 호출의 날짜 뒤 쉼표 오류는 다음 호출에서 복구했다.)"
+  },
+  "inquiry-answer-v3-10-status": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건(상품·기간·상태)이 질문과 일치하고, 관련 제목·본문·답변을 구분해 인용했다. 문제 없음 원문은 불만에서 제외했고 내부 필드명·작성 의도 추가는 보이지 않는다."
+  },
+  "inquiry-answer-v3-10-absent": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건이 질문과 일치하고, 반환된 다른 주제 후보를 해당 불만으로 인용하지 않고 근거 없음을 밝혔다."
+  }
+}

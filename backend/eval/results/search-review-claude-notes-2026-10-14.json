@@ -1,0 +1,186 @@
+{
+  "_sourceReportSha256": "4b0c83d30106555a714f544c6c5d8f292530261fbb830a23c7d0e1b59afc7cf7",
+  "_reviewerKind": "agent (Claude, independent second opinion after reading report first; not a human verdict)",
+  "_comparedWith": "search-review-agent-notes-2026-10-14.json (Codex)",
+  "_finalAnswerSuccessRate": null,
+  "final-v2-1-meaning": {
+    "assessment": "pass_candidate",
+    "codexAssessment": "pass_candidate",
+    "reason": "도구 인자(상품·기간·별점)가 질문과 일치하고 정답 원문을 인용했다. 문제 없음 원문은 불만에서 제외했고 자료에 없는 주장은 보이지 않는다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-1-rating": {
+    "assessment": "pass_candidate",
+    "codexAssessment": "pass_candidate",
+    "reason": "도구 인자(상품·기간·별점)가 질문과 일치하고 정답 원문을 인용했다. 문제 없음 원문은 불만에서 제외했고 자료에 없는 주장은 보이지 않는다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-1-absent": {
+    "assessment": "pass_candidate",
+    "codexAssessment": "pass_candidate",
+    "reason": "도구 인자가 질문과 일치하고, 기능 미사용 원문을 고장 근거로 쓰지 않고 근거 없음을 밝혔다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-2-meaning": {
+    "assessment": "pass_candidate",
+    "codexAssessment": "pass_candidate",
+    "reason": "도구 인자(상품·기간·별점)가 질문과 일치하고 정답 원문을 인용했다. 문제 없음 원문은 불만에서 제외했고 자료에 없는 주장은 보이지 않는다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-2-rating": {
+    "assessment": "pass_candidate",
+    "codexAssessment": "pass_candidate",
+    "reason": "도구 인자(상품·기간·별점)가 질문과 일치하고 정답 원문을 인용했다. 문제 없음 원문은 불만에서 제외했고 자료에 없는 주장은 보이지 않는다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-2-absent": {
+    "assessment": "pass_candidate",
+    "codexAssessment": "pass_candidate",
+    "reason": "도구 인자가 질문과 일치하고, 기능 미사용 원문을 고장 근거로 쓰지 않고 근거 없음을 밝혔다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-3-meaning": {
+    "assessment": "pass_candidate",
+    "codexAssessment": "pass_candidate",
+    "reason": "#2021·#2022 인용, #2023 은 \"실제로 없었다\"로 제외. \"언급하고 있으나\" 접속이 어색할 뿐 분류는 맞다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-3-rating": {
+    "assessment": "pass_candidate",
+    "codexAssessment": "pass_candidate",
+    "reason": "도구 인자(상품·기간·별점)가 질문과 일치하고 정답 원문을 인용했다. 문제 없음 원문은 불만에서 제외했고 자료에 없는 주장은 보이지 않는다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-3-absent": {
+    "assessment": "pass_candidate",
+    "codexAssessment": "pass_candidate",
+    "reason": "도구 인자가 질문과 일치하고, 기능 미사용 원문을 고장 근거로 쓰지 않고 근거 없음을 밝혔다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-4-meaning": {
+    "assessment": "pass_candidate",
+    "codexAssessment": "pass_candidate",
+    "reason": "#2031·#2032 인용, #2033 제외. #2033 문제 없음 설명은 원문에 있으므로 judge 의 허위 추가 판정은 오판(Codex 와 같은 판단).",
+    "humanVerdict": "pending"
+  },
+  "final-v2-4-rating": {
+    "assessment": "pass_candidate",
+    "codexAssessment": "pass_candidate",
+    "reason": "도구 인자(상품·기간·별점)가 질문과 일치하고 정답 원문을 인용했다. 문제 없음 원문은 불만에서 제외했고 자료에 없는 주장은 보이지 않는다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-4-absent": {
+    "assessment": "pass_candidate",
+    "codexAssessment": "pass_candidate",
+    "reason": "도구 인자가 질문과 일치하고, 기능 미사용 원문을 고장 근거로 쓰지 않고 근거 없음을 밝혔다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-5-meaning": {
+    "assessment": "fail_candidate",
+    "codexAssessment": "needs_review",
+    "reason": "별점 조건이 없는 질문이고 정답 기준도 높은 별점의 같은 불만(#2041)을 포함한다. 답변은 #2042만 불만 사례로 제시하고 #2041은 \"평점이 5점\"이라는 이유로 참고 처리했다. 질문하지 않은 별점 기준으로 불만 목록을 좁혀 근거 집합을 잘못 설명했다. Codex 는 needs_review.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-5-rating": {
+    "assessment": "pass_candidate",
+    "codexAssessment": "pass_candidate",
+    "reason": "도구 인자(상품·기간·별점)가 질문과 일치하고 정답 원문을 인용했다. 문제 없음 원문은 불만에서 제외했고 자료에 없는 주장은 보이지 않는다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-5-absent": {
+    "assessment": "pass_candidate",
+    "codexAssessment": "pass_candidate",
+    "reason": "도구 인자가 질문과 일치하고, 기능 미사용 원문을 고장 근거로 쓰지 않고 근거 없음을 밝혔다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-6-meaning": {
+    "assessment": "pass_candidate",
+    "codexAssessment": "pass_candidate",
+    "reason": "도구 인자(상품·기간·별점)가 질문과 일치하고 정답 원문을 인용했다. 문제 없음 원문은 불만에서 제외했고 자료에 없는 주장은 보이지 않는다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-6-rating": {
+    "assessment": "pass_candidate",
+    "codexAssessment": "pass_candidate",
+    "reason": "도구 인자(상품·기간·별점)가 질문과 일치하고 정답 원문을 인용했다. 문제 없음 원문은 불만에서 제외했고 자료에 없는 주장은 보이지 않는다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-6-absent": {
+    "assessment": "needs_review",
+    "codexAssessment": "pass_candidate",
+    "reason": "근거 없음 결론은 맞다. 다만 반환 원문 #2055(\"마우스를 가만히 놔도 커서가 혼자 움직여요\")는 다른 문제의 불만인데 답변이 반환 리뷰를 \"기능 미사용이나 일반적인 사용 후기\"로 묶었다. 불만을 일반 후기로 부른 표현이 극성 기준에 걸리는지 사람이 판단. Codex 는 pass_candidate.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-7-meaning": {
+    "assessment": "pass_candidate",
+    "codexAssessment": "pass_candidate",
+    "reason": "도구 인자(상품·기간·별점)가 질문과 일치하고 정답 원문을 인용했다. 문제 없음 원문은 불만에서 제외했고 자료에 없는 주장은 보이지 않는다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-7-rating": {
+    "assessment": "pass_candidate",
+    "codexAssessment": "pass_candidate",
+    "reason": "도구 인자(상품·기간·별점)가 질문과 일치하고 정답 원문을 인용했다. 문제 없음 원문은 불만에서 제외했고 자료에 없는 주장은 보이지 않는다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-7-absent": {
+    "assessment": "pass_candidate",
+    "codexAssessment": "pass_candidate",
+    "reason": "\"불만 사항은 발견되지 않았습니다\"로 근거 없음을 밝혔다. 자동 필수 검사의 noEvidenceAcknowledged=false 는 문구 패턴이 이 표현을 못 잡은 측정 오류다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-8-meaning": {
+    "assessment": "pass_candidate",
+    "codexAssessment": "pass_candidate",
+    "reason": "도구 인자(상품·기간·별점)가 질문과 일치하고 정답 원문을 인용했다. 문제 없음 원문은 불만에서 제외했고 자료에 없는 주장은 보이지 않는다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-8-rating": {
+    "assessment": "pass_candidate",
+    "codexAssessment": "pass_candidate",
+    "reason": "#2072 인용·#2073 제외가 맞다. 자동 필수 검사의 citedRelevant=false 는 답변이 \"#2072\" 대신 \"리뷰 ID: 2072\" 로 써서 생긴 측정 오류다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-8-absent": {
+    "assessment": "pass_candidate",
+    "codexAssessment": "pass_candidate",
+    "reason": "도구 인자가 질문과 일치하고, 기능 미사용 원문을 고장 근거로 쓰지 않고 근거 없음을 밝혔다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-9-meaning": {
+    "assessment": "fail_candidate",
+    "codexAssessment": "fail_candidate",
+    "reason": "불만 #2081·#2082 인용과 #2083 제외는 맞다. 그러나 #2083 작성자가 \"문제를 확인하는 차원에서 작성\"했다는 의도는 원문에 없다(원문은 문제 없음 + 배송 때문에 낮은 별점). 자료에 없는 주장 추가. Codex 와 같은 판단.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-9-rating": {
+    "assessment": "pass_candidate",
+    "codexAssessment": "pass_candidate",
+    "reason": "#2082 인용·#2083 제외가 맞다. 자동 필수 검사의 citedRelevant=false 는 \"원본 ID 2082\" 표기 때문의 측정 오류다. Codex 지적처럼 judge 의 polarity=false 도 오판.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-9-absent": {
+    "assessment": "pass_candidate",
+    "codexAssessment": "pass_candidate",
+    "reason": "도구 인자가 질문과 일치하고, 기능 미사용 원문을 고장 근거로 쓰지 않고 근거 없음을 밝혔다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-10-meaning": {
+    "assessment": "pass_candidate",
+    "codexAssessment": "pass_candidate",
+    "reason": "도구에는 2026-10-01~10-13 과 상품 210 을 정확히 전달했고 #2091·#2092 인용, #2093 제외가 맞다. 답변 문장에 적용 기간을 쓰지 않은 점만 참고. Codex 와 같은 판단.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-10-rating": {
+    "assessment": "pass_candidate",
+    "codexAssessment": "pass_candidate",
+    "reason": "#2092 인용, #2093 은 문제 없음·배송 별점으로 정확히 설명. judge 의 극성 실패는 오판(Codex 와 같은 판단).",
+    "humanVerdict": "pending"
+  },
+  "final-v2-10-absent": {
+    "assessment": "pass_candidate",
+    "codexAssessment": "pass_candidate",
+    "reason": "도구 인자가 질문과 일치하고, 기능 미사용 원문을 고장 근거로 쓰지 않고 근거 없음을 밝혔다.",
+    "humanVerdict": "pending"
+  }
+}

@@ -1,0 +1,338 @@
+{
+  "schemaVersion": 1,
+  "sourceReportSha256": "4b0c83d30106555a714f544c6c5d8f292530261fbb830a23c7d0e1b59afc7cf7",
+  "reviewer": "",
+  "reviewedAt": null,
+  "entries": [
+    {
+      "caseId": "final-v2-1-meaning",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "final-v2-1-rating",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "final-v2-1-absent",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "final-v2-2-meaning",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "final-v2-2-rating",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "final-v2-2-absent",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "final-v2-3-meaning",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "final-v2-3-rating",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "final-v2-3-absent",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "final-v2-4-meaning",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "final-v2-4-rating",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "final-v2-4-absent",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "final-v2-5-meaning",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "final-v2-5-rating",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "final-v2-5-absent",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "final-v2-6-meaning",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "final-v2-6-rating",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "final-v2-6-absent",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "final-v2-7-meaning",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "final-v2-7-rating",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "final-v2-7-absent",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "final-v2-8-meaning",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "final-v2-8-rating",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "final-v2-8-absent",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "final-v2-9-meaning",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "final-v2-9-rating",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "final-v2-9-absent",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "final-v2-10-meaning",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "final-v2-10-rating",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "final-v2-10-absent",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    }
+  ]
+}

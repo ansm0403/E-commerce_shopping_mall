@@ -1,0 +1,155 @@
+{
+  "_sourceReportSha256": "2e83de18a8a02ab753d61ecf85b076171999705ff429922bda74a39c218a40f8",
+  "_reviewerKind": "agent (independent Claude subagent; did not see Claude notes; not a human verdict)",
+  "_finalAnswerSuccessRate": null,
+  "inquiry-answer-v3-1-meaning": {
+    "verdict": "fail",
+    "borderline": false,
+    "reason": "#8001 제목을 꺾임/수리 접수와 직접 연결 정보 없다며 근거에서 끌어내림."
+  },
+  "inquiry-answer-v3-1-status": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v3-1-absent": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v3-2-meaning": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v3-2-status": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v3-2-absent": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v3-3-meaning": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v3-3-status": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v3-3-absent": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v3-4-meaning": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v3-4-status": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v3-4-absent": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v3-5-meaning": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v3-5-status": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v3-5-absent": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v3-6-meaning": {
+    "verdict": "fail",
+    "borderline": false,
+    "reason": "반환된 관련 근거 #8051 제목을 통째로 빠뜨림."
+  },
+  "inquiry-answer-v3-6-status": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v3-6-absent": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v3-7-meaning": {
+    "verdict": "fail",
+    "borderline": true,
+    "reason": "#8061 을 참고 언급으로 강등. ID·제목은 인용해 경계."
+  },
+  "inquiry-answer-v3-7-status": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v3-7-absent": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v3-8-meaning": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v3-8-status": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v3-8-absent": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v3-9-meaning": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v3-9-status": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v3-9-absent": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v3-10-meaning": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치. #8091 도 제목 원문과 함께 본 목록에 넣었고 본문·답변 없음 설명도 사실."
+  },
+  "inquiry-answer-v3-10-status": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v3-10-absent": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  }
+}

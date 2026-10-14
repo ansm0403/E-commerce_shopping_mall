@@ -23,6 +23,8 @@ export function codeVersion() {
     'src/intrastructure/ai/llm-request-deadline.ts', 'src/search/inquiry-index.store.ts', 'src/search/inquiry-index.processor.ts',
     'src/search/search-index-recorder.ts', 'src/search/search-contract.ts', 'eval/search/inquiry-fixture.ts', 'eval/search/run-inquiry-search-eval.ts',
     'eval/search/inquiry-pilot-confirmation-fixture.ts', 'eval/search/run-inquiry-assistant-pilot.ts',
+    'eval/search/inquiry-final-fixture.ts', 'eval/search/run-inquiry-answer-eval.ts', 'eval/search/synthetic-inquiry-assistant.ts',
+    'eval/search/inquiry-final-fixture-v2.ts', 'eval/search/inquiry-final-fixture-v3.ts', 'eval/search/inquiry-answer-observations.ts',
     'eval/search/fixture.ts', 'eval/search/final-fixture.ts', 'eval/search/final-fixture-v2.ts'];
   const hash = createHash('sha256');
   for (const file of files) { hash.update(file); hash.update(readFileSync(resolve(__dirname, '../..', file))); }

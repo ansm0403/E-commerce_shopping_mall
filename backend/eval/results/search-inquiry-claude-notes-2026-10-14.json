@@ -1,0 +1,156 @@
+{
+  "_sourceReportSha256": "0267e4f178511cc7dc81d2c3d4c428ee16f150d5a8fdcf1d5ef28d8a6174825d",
+  "_reviewerKind": "agent (Claude; read originals before any other opinion; not a human verdict)",
+  "_fixtureRole": "frozen-final",
+  "_finalAnswerSuccessRate": null,
+  "inquiry-answer-v2-1-meaning": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건(상품·기간·상태)이 질문과 일치하고, 관련 제목·본문·답변을 구분해 인용했다. 문제 없음 원문은 불만에서 제외했고 내부 필드명·작성 의도 추가는 보이지 않는다."
+  },
+  "inquiry-answer-v2-1-status": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "첫 호출의 날짜 뒤 쉼표 오류를 스스로 복구해 상품·기간·answered 조건으로 다시 조회했다. #7002·#7003 답변 인용이 맞다. 답변 문장에 기간·상태 조건을 쓰지 않은 점만 참고."
+  },
+  "inquiry-answer-v2-1-absent": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건이 질문과 일치하고, 반환된 다른 주제 후보를 해당 불만으로 인용하지 않고 근거 없음을 밝혔다."
+  },
+  "inquiry-answer-v2-2-meaning": {
+    "assessment": "fail_candidate",
+    "humanVerdict": "pending",
+    "reason": "#7012·#7013 인용은 맞다. 그러나 질문은 상태 조건이 없는 \"무음 내용이나 점검 안내\"인데, 제목 근거인 #7011 을 \"답변이 없는 상태\"라며 참고로만 돌리고 제목 원문도 인용하지 않았다. 사람 판정 리뷰 13번 선례(질문하지 않은 기준으로 관련 근거를 참고로 돌리면 실패)를 적용했다."
+  },
+  "inquiry-answer-v2-2-status": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건(상품·기간·상태)이 질문과 일치하고, 관련 제목·본문·답변을 구분해 인용했다. 문제 없음 원문은 불만에서 제외했고 내부 필드명·작성 의도 추가는 보이지 않는다."
+  },
+  "inquiry-answer-v2-2-absent": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건이 질문과 일치하고, 반환된 다른 주제 후보를 해당 불만으로 인용하지 않고 근거 없음을 밝혔다."
+  },
+  "inquiry-answer-v2-3-meaning": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건(상품·기간·상태)이 질문과 일치하고, 관련 제목·본문·답변을 구분해 인용했다. 문제 없음 원문은 불만에서 제외했고 내부 필드명·작성 의도 추가는 보이지 않는다."
+  },
+  "inquiry-answer-v2-3-status": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건(상품·기간·상태)이 질문과 일치하고, 관련 제목·본문·답변을 구분해 인용했다. 문제 없음 원문은 불만에서 제외했고 내부 필드명·작성 의도 추가는 보이지 않는다."
+  },
+  "inquiry-answer-v2-3-absent": {
+    "assessment": "execution_failed",
+    "humanVerdict": "pending",
+    "reason": "실행 실패(LLM_UNAVAILABLE, Gemini 503 이 재시도에서도 반복). 완료된 답변이 없으므로 통과로 판정할 수 없다. 분모에 남긴다."
+  },
+  "inquiry-answer-v2-4-meaning": {
+    "assessment": "execution_failed",
+    "humanVerdict": "pending",
+    "reason": "실행 실패(LLM_UNAVAILABLE, Gemini 503 이 재시도에서도 반복). 완료된 답변이 없으므로 통과로 판정할 수 없다. 분모에 남긴다."
+  },
+  "inquiry-answer-v2-4-status": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "쉼표 인자 오류를 복구했고 #7032·#7033 판매자 답변을 정확히 인용했다. 답변 문장에 기간·상태 조건을 쓰지 않은 점만 참고."
+  },
+  "inquiry-answer-v2-4-absent": {
+    "assessment": "execution_failed",
+    "humanVerdict": "pending",
+    "reason": "실행 실패(LLM_UNAVAILABLE, Gemini 503 이 재시도에서도 반복). 완료된 답변이 없으므로 통과로 판정할 수 없다. 분모에 남긴다."
+  },
+  "inquiry-answer-v2-5-meaning": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건(상품·기간·상태)이 질문과 일치하고, 관련 제목·본문·답변을 구분해 인용했다. 문제 없음 원문은 불만에서 제외했고 내부 필드명·작성 의도 추가는 보이지 않는다."
+  },
+  "inquiry-answer-v2-5-status": {
+    "assessment": "execution_failed",
+    "humanVerdict": "pending",
+    "reason": "실행 실패(LLM_UNAVAILABLE, Gemini 503 이 재시도에서도 반복). 완료된 답변이 없으므로 통과로 판정할 수 없다. 분모에 남긴다."
+  },
+  "inquiry-answer-v2-5-absent": {
+    "assessment": "execution_failed",
+    "humanVerdict": "pending",
+    "reason": "실행 실패(LLM_UNAVAILABLE, Gemini 503 이 재시도에서도 반복). 완료된 답변이 없으므로 통과로 판정할 수 없다. 분모에 남긴다."
+  },
+  "inquiry-answer-v2-6-meaning": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건(상품·기간·상태)이 질문과 일치하고, 관련 제목·본문·답변을 구분해 인용했다. 문제 없음 원문은 불만에서 제외했고 내부 필드명·작성 의도 추가는 보이지 않는다."
+  },
+  "inquiry-answer-v2-6-status": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건(상품·기간·상태)이 질문과 일치하고, 관련 제목·본문·답변을 구분해 인용했다. 문제 없음 원문은 불만에서 제외했고 내부 필드명·작성 의도 추가는 보이지 않는다."
+  },
+  "inquiry-answer-v2-6-absent": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건이 질문과 일치하고, 반환된 다른 주제 후보를 해당 불만으로 인용하지 않고 근거 없음을 밝혔다."
+  },
+  "inquiry-answer-v2-7-meaning": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건(상품·기간·상태)이 질문과 일치하고, 관련 제목·본문·답변을 구분해 인용했다. 문제 없음 원문은 불만에서 제외했고 내부 필드명·작성 의도 추가는 보이지 않는다."
+  },
+  "inquiry-answer-v2-7-status": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "#7062·#7063 답변 인용이 맞다. 자동 관측의 citedIds 가 빈 것은 답변이 \"#7062\" 대신 \"문의 ID: 7062\"로 써서 생긴 측정 오류다."
+  },
+  "inquiry-answer-v2-7-absent": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "쉼표 인자 오류를 복구했고, 반환 후보를 곰팡이 근거로 인용하지 않고 근거 없음을 밝혔다."
+  },
+  "inquiry-answer-v2-8-meaning": {
+    "assessment": "fail_candidate",
+    "humanVerdict": "pending",
+    "reason": "제목 근거 #7071(\"빗의 이가 쉽게 빠져요\")을 답변에서 아예 빠뜨렸다. 검색은 #7071 을 반환했다. v1 에서 보완하려던 \"제목만 있는 문의\" 처리 문제가 다시 나타났다."
+  },
+  "inquiry-answer-v2-8-status": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건(상품·기간·상태)이 질문과 일치하고, 관련 제목·본문·답변을 구분해 인용했다. 문제 없음 원문은 불만에서 제외했고 내부 필드명·작성 의도 추가는 보이지 않는다."
+  },
+  "inquiry-answer-v2-8-absent": {
+    "assessment": "execution_failed",
+    "humanVerdict": "pending",
+    "reason": "실행 실패(LLM_UNAVAILABLE, Gemini 503 이 재시도에서도 반복). 완료된 답변이 없으므로 통과로 판정할 수 없다. 분모에 남긴다."
+  },
+  "inquiry-answer-v2-9-meaning": {
+    "assessment": "fail_candidate",
+    "humanVerdict": "pending",
+    "reason": "전체 기간 조건은 맞게 적용했고 #7082·#7088·#7083 인용, 기간 밖 다른 불만 #7086 제외도 맞다. 그러나 질문은 \"입구가 잠기지 않는 내용이나 이물질 제거 안내\"(또는)인데, 제목이 바로 그 내용인 #7081 을 \"이물질 제거 관련 내용은 없다\"며 참고로 돌렸다. 두 조건을 모두 요구한 것처럼 해석했다. 사람 판정 리뷰 13번 선례(질문하지 않은 기준으로 관련 근거를 참고로 돌리면 실패)를 적용했다."
+  },
+  "inquiry-answer-v2-9-status": {
+    "assessment": "execution_failed",
+    "humanVerdict": "pending",
+    "reason": "실행 실패(LLM_UNAVAILABLE, Gemini 503 이 재시도에서도 반복). 완료된 답변이 없으므로 통과로 판정할 수 없다. 분모에 남긴다."
+  },
+  "inquiry-answer-v2-9-absent": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건이 질문과 일치하고, 반환된 다른 주제 후보를 해당 불만으로 인용하지 않고 근거 없음을 밝혔다."
+  },
+  "inquiry-answer-v2-10-meaning": {
+    "assessment": "fail_candidate",
+    "humanVerdict": "pending",
+    "reason": "#7092·#7093 인용은 맞고 #7091 제목도 인용했다. 다만 #7091 을 \"관련 증상을 언급하고 있으나 판매자 답변은 없다\"며 참고로 돌렸다. 근거 자체는 드러냈으므로 4건 중 가장 약한 실패다. 사람 판정 리뷰 13번 선례(질문하지 않은 기준으로 관련 근거를 참고로 돌리면 실패)를 적용했다."
+  },
+  "inquiry-answer-v2-10-status": {
+    "assessment": "execution_failed",
+    "humanVerdict": "pending",
+    "reason": "실행 실패(LLM_UNAVAILABLE, Gemini 503 이 재시도에서도 반복). 완료된 답변이 없으므로 통과로 판정할 수 없다. 분모에 남긴다."
+  },
+  "inquiry-answer-v2-10-absent": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구 조건이 질문과 일치하고, 반환된 다른 주제 후보를 해당 불만으로 인용하지 않고 근거 없음을 밝혔다."
+  }
+}
