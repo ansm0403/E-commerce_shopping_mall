@@ -1,0 +1,94 @@
+{
+  "dateKst": "2026-10-14",
+  "stage": "Portfolio preparation after phases 1-4",
+  "checks": {
+    "backendUnit": {
+      "passed": 840,
+      "failed": 0,
+      "suites": 56,
+      "artifact": "search-portfolio-unit-2026-10-14.json"
+    },
+    "authenticatedHttpSse": {
+      "passed": 15,
+      "failed": 0
+    },
+    "backendTypecheck": "passed",
+    "evaluationTypecheck": "passed",
+    "backendLintQuiet": "passed",
+    "developmentBuild": "passed",
+    "existingBuildMessage": "Nx pruned lockfile fallback and inherited Node warning; build target exited 0",
+    "reviewHtmlQa": {
+      "reviewCases": 30,
+      "inquiryDiagnosticCases": 25,
+      "initialHumanVerdicts": 0,
+      "navigation": "passed",
+      "exportJson": "passed",
+      "terminalFailureCannotPass": "passed",
+      "qaVerdictsSavedToEvaluation": false
+    }
+  },
+  "review": {
+    "sourceReport": "search-assistant-final-2026-10-13T11-07-46-261Z.json",
+    "inspectedByAgent": 30,
+    "humanReviewPending": 30,
+    "finalAnswerSuccessRate": null
+  },
+  "inquiryDiagnostic": {
+    "fixtureVersion": "inquiries-answer-final-v1",
+    "fixtureRole": "improvement-diagnostic",
+    "planned": 30,
+    "executed": 25,
+    "completedReplies": 22,
+    "terminalApiErrors": 3,
+    "unexecuted": 5,
+    "llmRequests": 50,
+    "sdkRequestFailures": 3,
+    "embeddingRequests": 73,
+    "recoveredToolArgumentFailures": 3,
+    "originalReportPreserved": true,
+    "agentNotesOnly": true,
+    "finalAnswerSuccessRate": null,
+    "protection": {
+      "protectedInputViolations": 0,
+      "modelBoundaryViolations": 0,
+      "privateSourcesReturned": 0,
+      "rawContactLeaks": 0
+    }
+  },
+  "inquiryFinalV2": {
+    "fixtureVersion": "inquiries-answer-final-v2",
+    "fixtureSha256": "b2d7256ca0ddae7116b9a382f829e9babede30df01481fe5c633a95c177ea5ef",
+    "planned": 30,
+    "executed": 0,
+    "liveRequests": 0,
+    "status": "Frozen and dry-run verified; pending Gemini quota recovery and human review",
+    "finalAnswerSuccessRate": null
+  },
+  "automaticWorker": {
+    "artifact": "search-worker-demo-2026-10-13T22-17-46-785Z.json",
+    "passed": true,
+    "scenarios": 9,
+    "embeddingRequests": 6,
+    "llmRequests": 0,
+    "scheduling": "Real Nest ScheduleModule @Interval(1000), production scheduler/store/processors; no manual work CLI",
+    "userDatabaseAccess": false,
+    "userEnvChanged": false,
+    "browserVerification": false
+  },
+  "productionChanges": [
+    "Treat actual title and seller answer as independent evidence even when the customer body is empty",
+    "Do not expose hasContent/hasAnswer or fabricate source author intent"
+  ],
+  "actualModelEffectAfterRemediation": "Not yet measured; independent v2 required",
+  "remaining": [
+    "Human inspection of the preserved review measurement",
+    "Independent inquiry v2 live evaluation and human inspection after quota recovery",
+    "User browser automatic reflection and actual video recording",
+    "Whole target dataset indexing and unresolved failures before public release"
+  ],
+  "documentation": [
+    "docs/roadmap/ex-ai-vector-search-portfolio-ready.md",
+    "docs/roadmap/ex-ai-vector-search-portfolio-demo.md",
+    "docs/portfolio/admin-ai-semantic-search.md"
+  ]
+}

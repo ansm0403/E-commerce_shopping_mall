@@ -1,0 +1,139 @@
+{
+  "_sourceReportSha256": "0267e4f178511cc7dc81d2c3d4c428ee16f150d5a8fdcf1d5ef28d8a6174825d",
+  "_reviewerKind": "agent (independent Claude subagent; did not see search-inquiry-claude-notes; not a human verdict)",
+  "_finalAnswerSuccessRate": null,
+  "inquiry-answer-v2-1-meaning": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v2-1-status": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v2-1-absent": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v2-2-meaning": {
+    "verdict": "fail",
+    "borderline": true,
+    "reason": "7012·7013 인용, 7011 제목 미인용·'답변이 없는 상태'로 뒤로 미룸. 관련성은 인정해 경계."
+  },
+  "inquiry-answer-v2-2-status": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v2-2-absent": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v2-3-meaning": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v2-3-status": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v2-3-absent": {
+    "verdict": "execution_failed"
+  },
+  "inquiry-answer-v2-4-meaning": {
+    "verdict": "execution_failed"
+  },
+  "inquiry-answer-v2-4-status": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v2-4-absent": {
+    "verdict": "execution_failed"
+  },
+  "inquiry-answer-v2-5-meaning": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v2-5-status": {
+    "verdict": "execution_failed"
+  },
+  "inquiry-answer-v2-5-absent": {
+    "verdict": "execution_failed"
+  },
+  "inquiry-answer-v2-6-meaning": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v2-6-status": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v2-6-absent": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v2-7-meaning": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v2-7-status": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v2-7-absent": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v2-8-meaning": {
+    "verdict": "fail",
+    "borderline": false,
+    "reason": "관련 근거 7071 제목이 반환됐는데 답변에서 완전히 빠짐."
+  },
+  "inquiry-answer-v2-8-status": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v2-8-absent": {
+    "verdict": "execution_failed"
+  },
+  "inquiry-answer-v2-9-meaning": {
+    "verdict": "fail",
+    "borderline": true,
+    "reason": "7081 제목을 '이물질 제거 관련 내용 없다'며 참고로 돌림. 제목 원문은 적어 경계."
+  },
+  "inquiry-answer-v2-9-status": {
+    "verdict": "execution_failed"
+  },
+  "inquiry-answer-v2-9-absent": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  },
+  "inquiry-answer-v2-10-meaning": {
+    "verdict": "pass",
+    "borderline": true,
+    "reason": "7091 ID·제목 원문을 적고 '관련 증상 언급'을 인정. 참고 사항으로 낮춘 배치만 경계."
+  },
+  "inquiry-answer-v2-10-status": {
+    "verdict": "execution_failed"
+  },
+  "inquiry-answer-v2-10-absent": {
+    "verdict": "pass",
+    "borderline": false,
+    "reason": "조건·인용·극성·근거 없음 설명이 원문과 일치."
+  }
+}

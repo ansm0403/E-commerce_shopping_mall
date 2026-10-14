@@ -134,6 +134,8 @@ yarn nx run '@shopping-mall/backend:search:inquiry:cleanup'
 
 ## 공개 전 남은 확인
 
+후속 [포트폴리오 준비 기록](./ex-ai-vector-search-portfolio-ready.md)에서 리뷰 검토 화면, 문의 v1 부분 실행과 실패 분석, 답변 규칙 보완, 독립 문의 v2 30문항과 실제 자동 워커 9/9 확인을 추가했다. 문의 최종 평가의 실제 실행은 Gemini 한도 회복 후 재개하며, 사람 판정과 실제 화면의 자동 반영·영상 기록은 남아 있다.
+
 사용자는 [문의 화면 검증](./ex-ai-vector-search-phase4-manual-test.md)의 1~6번을 완료했다고 보고했다. 일반·체험 경로의 구분과 공유 로그의 범위는 해당 문서에 기록한다. 아래 기존 합성 자료의 평가·사람 검토와 전체 초기 색인 조건은 이 화면 확인과 별개로 유지한다.
 
 최종 자동 검사·실제 요청·실패와 부분 재검증·현재 소스 해시는 [검증 요약](../../backend/eval/results/search-phase4-verification-2026-10-14.json)에 기록했다. [백엔드 단위 원본](../../backend/eval/results/search-phase4-unit-2026-10-14.json)과 [최초 단위 설정 실패](../../backend/eval/results/search-phase4-unit-initial-2026-10-14.json)도 보존한다. 단위 설정 실패는 불필요한 ScheduleModule을 DI 식별 테스트에 넣어 발생한 Nest 패키지 중복 문제였고 테스트 설정을 고친 뒤 전체 831개를 재검증했다.

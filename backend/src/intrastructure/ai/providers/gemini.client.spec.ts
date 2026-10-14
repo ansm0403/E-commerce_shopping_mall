@@ -51,7 +51,7 @@ beforeAll(() => {
 
 describe('GeminiClient.generateWithTools — 중단(signal)', () => {
   it('recovers once from an initial 503 and measures both SDK requests and the failed request', async () => {
-    const { client, generateContentStream } = setup([[textChunk('재시도 답변')]]);
+    const { client, generateContentStream } = setup([[textChunk('재시도 답변')]], { GEMINI_RETRY_BASE_MS: 1 });
     const onRequest = jest.fn(); const onRequestFailure = jest.fn();
     jest.spyOn(client['logger'], 'warn').mockImplementation(() => undefined);
     generateContentStream.mockRejectedValueOnce({ status: 503, message: 'API-key=secret contact@example.com' });
@@ -62,15 +62,37 @@ describe('GeminiClient.generateWithTools — 중단(signal)', () => {
     expect(JSON.stringify(onRequestFailure.mock.calls)).not.toMatch(/API-key|secret|contact@example.com/);
   });
 
-  it('caps retries at one per turn and exposes persistent failure without a third request', async () => {
-    const { client, generateContentStream } = setup([]);
+  it('caps 5xx retries at three per turn by default and exposes persistent failure without a fifth request', async () => {
+    const { client, generateContentStream } = setup([], { GEMINI_RETRY_BASE_MS: 1 });
     const onRequestFailure = jest.fn();
-    jest.spyOn(client['logger'], 'warn').mockImplementation(() => undefined);
+    const warn = jest.spyOn(client['logger'], 'warn').mockImplementation(() => undefined);
     generateContentStream.mockRejectedValue({ status: 503 });
     await expect(collect(client.generateWithTools({ ...base, executeTool: jest.fn(), onRequestFailure }))).rejects.toMatchObject({ status: 503 });
-    expect(generateContentStream).toHaveBeenCalledTimes(2);
-    expect(onRequestFailure).toHaveBeenCalledTimes(2);
+    expect(generateContentStream).toHaveBeenCalledTimes(4);
+    expect(onRequestFailure).toHaveBeenCalledTimes(4);
+    expect(warn.mock.calls.map(([line]) => String(line).match(/delayMs=(\d+)/)?.[1])).toEqual(['1', '2', '4']);
   });
+
+  it('recovers from two consecutive 503s within the retry budget', async () => {
+    const { client, generateContentStream } = setup([[textChunk('세 번째 시도 답변')]], { GEMINI_RETRY_BASE_MS: 1 });
+    jest.spyOn(client['logger'], 'warn').mockImplementation(() => undefined);
+    generateContentStream.mockRejectedValueOnce({ status: 503 }).mockRejectedValueOnce({ status: 502 });
+    const events = await collect(client.generateWithTools({ ...base, executeTool: jest.fn() }));
+    expect(events.map(event => event.type)).toEqual(['text', 'usage', 'done']);
+    expect(generateContentStream).toHaveBeenCalledTimes(3);
+  });
+
+  it('does not retry 5xx failures when GEMINI_TURN_RETRIES is 0', async () => {
+    const { client, generateContentStream } = setup([], { GEMINI_TURN_RETRIES: 0 });
+    generateContentStream.mockRejectedValue({ status: 503 });
+    await expect(collect(client.generateWithTools({ ...base, executeTool: jest.fn() }))).rejects.toMatchObject({ status: 503 });
+    expect(generateContentStream).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([['GEMINI_TURN_RETRIES', 6], ['GEMINI_TURN_RETRIES', -1], ['GEMINI_TURN_RETRIES', 1.5], ['GEMINI_RETRY_BASE_MS', 0], ['GEMINI_RETRY_BASE_MS', 10001]])(
+    'rejects invalid %s=%s at construction', (key, value) => {
+      expect(() => setup([], { [key]: value })).toThrow(`INVALID_${key}`);
+    });
 
   it.each([400, 401, 403, 429])('does not retry permanent/quota HTTP %s failures', async status => {
     const { client, generateContentStream } = setup([]);
@@ -100,8 +122,8 @@ describe('GeminiClient.generateWithTools — 중단(signal)', () => {
     expect(generateContentStream).toHaveBeenCalledTimes(1);
   });
 
-  it('shares its one retry budget across tool rounds without repeating a completed tool', async () => {
-    const { client, generateContentStream } = setup([]);
+  it('shares its retry budget across tool rounds without repeating a completed tool', async () => {
+    const { client, generateContentStream } = setup([], { GEMINI_TURN_RETRIES: 1, GEMINI_RETRY_BASE_MS: 1 });
     const executeTool = jest.fn(async () => ({ status: 'no_data' }));
     jest.spyOn(client['logger'], 'warn').mockImplementation(() => undefined);
     generateContentStream.mockRejectedValueOnce({ status: 503 })

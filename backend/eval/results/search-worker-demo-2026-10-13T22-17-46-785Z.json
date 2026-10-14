@@ -1,0 +1,115 @@
+{
+  "runId": "2026-10-13T22-17-46-785Z",
+  "live": true,
+  "passed": true,
+  "errorCode": null,
+  "scheduling": "Real Nest ScheduleModule @Interval(1000), production scheduler/store/processors; no manual work CLI",
+  "userDatabaseAccess": false,
+  "userEnvChanged": false,
+  "syntheticSources": {
+    "review": 1,
+    "inquiry": 3
+  },
+  "llmRequests": 0,
+  "embeddingUsage": {
+    "requests": 6,
+    "inputCodePoints": 416,
+    "inputBytes": 778,
+    "inputTokens": null
+  },
+  "generated": {
+    "document": 4,
+    "query": 2
+  },
+  "cacheHits": {
+    "document": 0,
+    "query": 0
+  },
+  "checks": [
+    {
+      "caseId": "disabled-worker-keeps-jobs-pending",
+      "passed": true
+    },
+    {
+      "caseId": "pending-source-not-cited",
+      "passed": true
+    },
+    {
+      "caseId": "both-queues-run-through-nest-interval",
+      "passed": true
+    },
+    {
+      "caseId": "automatic-inquiry-search-ready",
+      "passed": true
+    },
+    {
+      "caseId": "old-version-not-returned-after-answer",
+      "passed": true
+    },
+    {
+      "caseId": "automatic-answer-version-search-ready",
+      "passed": true
+    },
+    {
+      "caseId": "private-source-has-no-job-or-request",
+      "passed": true
+    },
+    {
+      "caseId": "waiting-source-delete-immediately-clears-evidence",
+      "passed": true
+    },
+    {
+      "caseId": "protected-inputs-never-sent",
+      "passed": true
+    }
+  ],
+  "outcomes": [
+    {
+      "source": "review",
+      "status": "done",
+      "version": "1",
+      "elapsedMs": 591.5841999999993
+    },
+    {
+      "source": "inquiry",
+      "status": "done",
+      "version": "1",
+      "elapsedMs": 5602.0328
+    },
+    {
+      "source": "inquiry",
+      "status": "done",
+      "version": "2",
+      "elapsedMs": 5495.238799999999
+    },
+    {
+      "source": "inquiry",
+      "status": "done",
+      "version": "1",
+      "elapsedMs": 4369.672100000003
+    }
+  ],
+  "latencies": [
+    {
+      "source": "review",
+      "version": "1",
+      "storedToReadyMs": 2713.0793000000003
+    },
+    {
+      "source": "inquiry",
+      "version": "1",
+      "storedToReadyMs": 8820.3125
+    },
+    {
+      "source": "inquiry",
+      "version": "2",
+      "storedToReadyMs": 6103.8812
+    },
+    {
+      "source": "inquiry",
+      "version": "1",
+      "storedToReadyMs": 4647.004800000002
+    }
+  ],
+  "limitation": "Isolated SQL source writes and actual embeddings, not buyer/seller/admin browser verification. These few queue timings are not production P50/P95 or service latency."
+}

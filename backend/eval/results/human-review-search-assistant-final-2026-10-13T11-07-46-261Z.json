@@ -1,0 +1,338 @@
+{
+  "schemaVersion": 1,
+  "sourceReportSha256": "4b0c83d30106555a714f544c6c5d8f292530261fbb830a23c7d0e1b59afc7cf7",
+  "reviewer": "안상문",
+  "reviewedAt": "2026-10-14T16:47:39+09:00",
+  "entries": [
+    {
+      "caseId": "final-v2-1-meaning",
+      "checks": {
+        "conditions": true,
+        "evidence": true,
+        "polarity": true,
+        "noUnsupportedClaims": true,
+        "stateExplanation": true
+      },
+      "reason": "통과. 질문·실제 도구 조건·반환 원문·답변을 대조해 다섯 기준을 확인했다. 판정은 검토자가 원문 텍스트를 대조한 뒤 채팅으로 전달했고 Claude 가 JSON 으로 기록했다(HTML 버튼 미사용)."
+    },
+    {
+      "caseId": "final-v2-1-rating",
+      "checks": {
+        "conditions": true,
+        "evidence": true,
+        "polarity": true,
+        "noUnsupportedClaims": true,
+        "stateExplanation": true
+      },
+      "reason": "통과. 질문·실제 도구 조건·반환 원문·답변을 대조해 다섯 기준을 확인했다. 판정은 검토자가 원문 텍스트를 대조한 뒤 채팅으로 전달했고 Claude 가 JSON 으로 기록했다(HTML 버튼 미사용)."
+    },
+    {
+      "caseId": "final-v2-1-absent",
+      "checks": {
+        "conditions": true,
+        "evidence": true,
+        "polarity": true,
+        "noUnsupportedClaims": true,
+        "stateExplanation": true
+      },
+      "reason": "통과. 질문·실제 도구 조건·반환 원문·답변을 대조해 다섯 기준을 확인했다. 판정은 검토자가 원문 텍스트를 대조한 뒤 채팅으로 전달했고 Claude 가 JSON 으로 기록했다(HTML 버튼 미사용)."
+    },
+    {
+      "caseId": "final-v2-2-meaning",
+      "checks": {
+        "conditions": true,
+        "evidence": true,
+        "polarity": true,
+        "noUnsupportedClaims": true,
+        "stateExplanation": true
+      },
+      "reason": "통과. 질문·실제 도구 조건·반환 원문·답변을 대조해 다섯 기준을 확인했다. 판정은 검토자가 원문 텍스트를 대조한 뒤 채팅으로 전달했고 Claude 가 JSON 으로 기록했다(HTML 버튼 미사용)."
+    },
+    {
+      "caseId": "final-v2-2-rating",
+      "checks": {
+        "conditions": true,
+        "evidence": true,
+        "polarity": true,
+        "noUnsupportedClaims": true,
+        "stateExplanation": true
+      },
+      "reason": "통과. 질문·실제 도구 조건·반환 원문·답변을 대조해 다섯 기준을 확인했다. 판정은 검토자가 원문 텍스트를 대조한 뒤 채팅으로 전달했고 Claude 가 JSON 으로 기록했다(HTML 버튼 미사용)."
+    },
+    {
+      "caseId": "final-v2-2-absent",
+      "checks": {
+        "conditions": true,
+        "evidence": true,
+        "polarity": true,
+        "noUnsupportedClaims": true,
+        "stateExplanation": true
+      },
+      "reason": "통과. 질문·실제 도구 조건·반환 원문·답변을 대조해 다섯 기준을 확인했다. 판정은 검토자가 원문 텍스트를 대조한 뒤 채팅으로 전달했고 Claude 가 JSON 으로 기록했다(HTML 버튼 미사용)."
+    },
+    {
+      "caseId": "final-v2-3-meaning",
+      "checks": {
+        "conditions": true,
+        "evidence": true,
+        "polarity": true,
+        "noUnsupportedClaims": true,
+        "stateExplanation": true
+      },
+      "reason": "통과. 질문·실제 도구 조건·반환 원문·답변을 대조해 다섯 기준을 확인했다. 판정은 검토자가 원문 텍스트를 대조한 뒤 채팅으로 전달했고 Claude 가 JSON 으로 기록했다(HTML 버튼 미사용)."
+    },
+    {
+      "caseId": "final-v2-3-rating",
+      "checks": {
+        "conditions": true,
+        "evidence": true,
+        "polarity": true,
+        "noUnsupportedClaims": true,
+        "stateExplanation": true
+      },
+      "reason": "통과. 질문·실제 도구 조건·반환 원문·답변을 대조해 다섯 기준을 확인했다. 판정은 검토자가 원문 텍스트를 대조한 뒤 채팅으로 전달했고 Claude 가 JSON 으로 기록했다(HTML 버튼 미사용)."
+    },
+    {
+      "caseId": "final-v2-3-absent",
+      "checks": {
+        "conditions": true,
+        "evidence": true,
+        "polarity": true,
+        "noUnsupportedClaims": true,
+        "stateExplanation": true
+      },
+      "reason": "통과. 질문·실제 도구 조건·반환 원문·답변을 대조해 다섯 기준을 확인했다. 판정은 검토자가 원문 텍스트를 대조한 뒤 채팅으로 전달했고 Claude 가 JSON 으로 기록했다(HTML 버튼 미사용)."
+    },
+    {
+      "caseId": "final-v2-4-meaning",
+      "checks": {
+        "conditions": true,
+        "evidence": true,
+        "polarity": true,
+        "noUnsupportedClaims": true,
+        "stateExplanation": true
+      },
+      "reason": "통과. 질문·실제 도구 조건·반환 원문·답변을 대조해 다섯 기준을 확인했다. 판정은 검토자가 원문 텍스트를 대조한 뒤 채팅으로 전달했고 Claude 가 JSON 으로 기록했다(HTML 버튼 미사용)."
+    },
+    {
+      "caseId": "final-v2-4-rating",
+      "checks": {
+        "conditions": true,
+        "evidence": true,
+        "polarity": true,
+        "noUnsupportedClaims": true,
+        "stateExplanation": true
+      },
+      "reason": "통과. 질문·실제 도구 조건·반환 원문·답변을 대조해 다섯 기준을 확인했다. 판정은 검토자가 원문 텍스트를 대조한 뒤 채팅으로 전달했고 Claude 가 JSON 으로 기록했다(HTML 버튼 미사용)."
+    },
+    {
+      "caseId": "final-v2-4-absent",
+      "checks": {
+        "conditions": true,
+        "evidence": true,
+        "polarity": true,
+        "noUnsupportedClaims": true,
+        "stateExplanation": true
+      },
+      "reason": "통과. 질문·실제 도구 조건·반환 원문·답변을 대조해 다섯 기준을 확인했다. 판정은 검토자가 원문 텍스트를 대조한 뒤 채팅으로 전달했고 Claude 가 JSON 으로 기록했다(HTML 버튼 미사용)."
+    },
+    {
+      "caseId": "final-v2-5-meaning",
+      "checks": {
+        "conditions": true,
+        "evidence": false,
+        "polarity": true,
+        "noUnsupportedClaims": true,
+        "stateExplanation": true
+      },
+      "reason": "실패. 별점 조건이 없는 질문인데 5점 리뷰 #2041 을 \"평점이 5점\"이라는 이유로 참고로만 돌리고 #2042 만 불만으로 제시했다. 묻지 않은 별점 기준으로 불만 목록을 좁혀 근거를 잘못 설명했다. 판정은 검토자가 원문 텍스트를 대조한 뒤 채팅으로 전달했고 Claude 가 JSON 으로 기록했다(HTML 버튼 미사용)."
+    },
+    {
+      "caseId": "final-v2-5-rating",
+      "checks": {
+        "conditions": true,
+        "evidence": true,
+        "polarity": true,
+        "noUnsupportedClaims": true,
+        "stateExplanation": true
+      },
+      "reason": "통과. 질문·실제 도구 조건·반환 원문·답변을 대조해 다섯 기준을 확인했다. 판정은 검토자가 원문 텍스트를 대조한 뒤 채팅으로 전달했고 Claude 가 JSON 으로 기록했다(HTML 버튼 미사용)."
+    },
+    {
+      "caseId": "final-v2-5-absent",
+      "checks": {
+        "conditions": true,
+        "evidence": true,
+        "polarity": true,
+        "noUnsupportedClaims": true,
+        "stateExplanation": true
+      },
+      "reason": "통과. 질문·실제 도구 조건·반환 원문·답변을 대조해 다섯 기준을 확인했다. 판정은 검토자가 원문 텍스트를 대조한 뒤 채팅으로 전달했고 Claude 가 JSON 으로 기록했다(HTML 버튼 미사용)."
+    },
+    {
+      "caseId": "final-v2-6-meaning",
+      "checks": {
+        "conditions": true,
+        "evidence": true,
+        "polarity": true,
+        "noUnsupportedClaims": true,
+        "stateExplanation": true
+      },
+      "reason": "통과. 질문·실제 도구 조건·반환 원문·답변을 대조해 다섯 기준을 확인했다. 판정은 검토자가 원문 텍스트를 대조한 뒤 채팅으로 전달했고 Claude 가 JSON 으로 기록했다(HTML 버튼 미사용)."
+    },
+    {
+      "caseId": "final-v2-6-rating",
+      "checks": {
+        "conditions": true,
+        "evidence": true,
+        "polarity": true,
+        "noUnsupportedClaims": true,
+        "stateExplanation": true
+      },
+      "reason": "통과. 질문·실제 도구 조건·반환 원문·답변을 대조해 다섯 기준을 확인했다. 판정은 검토자가 원문 텍스트를 대조한 뒤 채팅으로 전달했고 Claude 가 JSON 으로 기록했다(HTML 버튼 미사용)."
+    },
+    {
+      "caseId": "final-v2-6-absent",
+      "checks": {
+        "conditions": true,
+        "evidence": true,
+        "polarity": true,
+        "noUnsupportedClaims": true,
+        "stateExplanation": true
+      },
+      "reason": "통과. 검토자 기준: 커서가 혼자 움직이는 현상이 모션 인식 고장 범위에 조금이라도 포함되면 실패, 무관하면 통과. 정답 기준(fixture)에서 #2055 는 다른 상품 주제(커서)를 섞은 \"다른 문제\" 원문이고 이 문항의 정답 원문은 0건이므로 무관으로 보고 통과. 다만 불만인 #2055 를 \"일반적인 사용 후기\"로 묶은 표현은 부정확하다. 판정은 검토자가 원문 텍스트를 대조한 뒤 채팅으로 전달했고 Claude 가 JSON 으로 기록했다(HTML 버튼 미사용)."
+    },
+    {
+      "caseId": "final-v2-7-meaning",
+      "checks": {
+        "conditions": true,
+        "evidence": true,
+        "polarity": true,
+        "noUnsupportedClaims": true,
+        "stateExplanation": true
+      },
+      "reason": "통과. 질문·실제 도구 조건·반환 원문·답변을 대조해 다섯 기준을 확인했다. 판정은 검토자가 원문 텍스트를 대조한 뒤 채팅으로 전달했고 Claude 가 JSON 으로 기록했다(HTML 버튼 미사용)."
+    },
+    {
+      "caseId": "final-v2-7-rating",
+      "checks": {
+        "conditions": true,
+        "evidence": true,
+        "polarity": true,
+        "noUnsupportedClaims": true,
+        "stateExplanation": true
+      },
+      "reason": "통과. 질문·실제 도구 조건·반환 원문·답변을 대조해 다섯 기준을 확인했다. 판정은 검토자가 원문 텍스트를 대조한 뒤 채팅으로 전달했고 Claude 가 JSON 으로 기록했다(HTML 버튼 미사용)."
+    },
+    {
+      "caseId": "final-v2-7-absent",
+      "checks": {
+        "conditions": true,
+        "evidence": true,
+        "polarity": true,
+        "noUnsupportedClaims": true,
+        "stateExplanation": true
+      },
+      "reason": "통과. 질문·실제 도구 조건·반환 원문·답변을 대조해 다섯 기준을 확인했다. 판정은 검토자가 원문 텍스트를 대조한 뒤 채팅으로 전달했고 Claude 가 JSON 으로 기록했다(HTML 버튼 미사용)."
+    },
+    {
+      "caseId": "final-v2-8-meaning",
+      "checks": {
+        "conditions": true,
+        "evidence": true,
+        "polarity": true,
+        "noUnsupportedClaims": true,
+        "stateExplanation": true
+      },
+      "reason": "통과. 질문·실제 도구 조건·반환 원문·답변을 대조해 다섯 기준을 확인했다. 판정은 검토자가 원문 텍스트를 대조한 뒤 채팅으로 전달했고 Claude 가 JSON 으로 기록했다(HTML 버튼 미사용)."
+    },
+    {
+      "caseId": "final-v2-8-rating",
+      "checks": {
+        "conditions": true,
+        "evidence": true,
+        "polarity": true,
+        "noUnsupportedClaims": true,
+        "stateExplanation": true
+      },
+      "reason": "통과. 질문·실제 도구 조건·반환 원문·답변을 대조해 다섯 기준을 확인했다. 판정은 검토자가 원문 텍스트를 대조한 뒤 채팅으로 전달했고 Claude 가 JSON 으로 기록했다(HTML 버튼 미사용)."
+    },
+    {
+      "caseId": "final-v2-8-absent",
+      "checks": {
+        "conditions": true,
+        "evidence": true,
+        "polarity": true,
+        "noUnsupportedClaims": true,
+        "stateExplanation": true
+      },
+      "reason": "통과. 질문·실제 도구 조건·반환 원문·답변을 대조해 다섯 기준을 확인했다. 판정은 검토자가 원문 텍스트를 대조한 뒤 채팅으로 전달했고 Claude 가 JSON 으로 기록했다(HTML 버튼 미사용)."
+    },
+    {
+      "caseId": "final-v2-9-meaning",
+      "checks": {
+        "conditions": true,
+        "evidence": true,
+        "polarity": true,
+        "noUnsupportedClaims": false,
+        "stateExplanation": true
+      },
+      "reason": "실패. #2081·#2082 인용과 #2083 제외는 맞지만, #2083 작성자가 \"문제를 확인하는 차원에서 작성\"했다는 의도는 원문에 없다. 자료에 없는 주장 추가. 판정은 검토자가 원문 텍스트를 대조한 뒤 채팅으로 전달했고 Claude 가 JSON 으로 기록했다(HTML 버튼 미사용)."
+    },
+    {
+      "caseId": "final-v2-9-rating",
+      "checks": {
+        "conditions": true,
+        "evidence": true,
+        "polarity": true,
+        "noUnsupportedClaims": true,
+        "stateExplanation": true
+      },
+      "reason": "통과. 질문·실제 도구 조건·반환 원문·답변을 대조해 다섯 기준을 확인했다. 판정은 검토자가 원문 텍스트를 대조한 뒤 채팅으로 전달했고 Claude 가 JSON 으로 기록했다(HTML 버튼 미사용)."
+    },
+    {
+      "caseId": "final-v2-9-absent",
+      "checks": {
+        "conditions": true,
+        "evidence": true,
+        "polarity": true,
+        "noUnsupportedClaims": true,
+        "stateExplanation": true
+      },
+      "reason": "통과. 질문·실제 도구 조건·반환 원문·답변을 대조해 다섯 기준을 확인했다. 판정은 검토자가 원문 텍스트를 대조한 뒤 채팅으로 전달했고 Claude 가 JSON 으로 기록했다(HTML 버튼 미사용)."
+    },
+    {
+      "caseId": "final-v2-10-meaning",
+      "checks": {
+        "conditions": true,
+        "evidence": true,
+        "polarity": true,
+        "noUnsupportedClaims": true,
+        "stateExplanation": true
+      },
+      "reason": "통과. 질문·실제 도구 조건·반환 원문·답변을 대조해 다섯 기준을 확인했다. 판정은 검토자가 원문 텍스트를 대조한 뒤 채팅으로 전달했고 Claude 가 JSON 으로 기록했다(HTML 버튼 미사용)."
+    },
+    {
+      "caseId": "final-v2-10-rating",
+      "checks": {
+        "conditions": true,
+        "evidence": true,
+        "polarity": true,
+        "noUnsupportedClaims": true,
+        "stateExplanation": true
+      },
+      "reason": "통과. 질문·실제 도구 조건·반환 원문·답변을 대조해 다섯 기준을 확인했다. 판정은 검토자가 원문 텍스트를 대조한 뒤 채팅으로 전달했고 Claude 가 JSON 으로 기록했다(HTML 버튼 미사용)."
+    },
+    {
+      "caseId": "final-v2-10-absent",
+      "checks": {
+        "conditions": true,
+        "evidence": true,
+        "polarity": true,
+        "noUnsupportedClaims": true,
+        "stateExplanation": true
+      },
+      "reason": "통과. 질문·실제 도구 조건·반환 원문·답변을 대조해 다섯 기준을 확인했다. 판정은 검토자가 원문 텍스트를 대조한 뒤 채팅으로 전달했고 Claude 가 JSON 으로 기록했다(HTML 버튼 미사용)."
+    }
+  ]
+}

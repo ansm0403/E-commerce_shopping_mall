@@ -1,0 +1,131 @@
+{
+  "_sourceReportSha256": "c7d6cdc9d2ceb5ff2a41b38c49c9e99993a8ab192baff0c592dc0e4e8405c79c",
+  "_reviewerKind": "agent",
+  "_fixtureRole": "improvement-diagnostic",
+  "_finalAnswerSuccessRate": null,
+  "inquiry-answer-final-1-meaning": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구의 실제 조건과 반환된 원문의 제목·본문·답변을 대조했다. 질문에 관련된 출처를 인용하고 문제 없음 경험을 실제 불만으로 소개하지 않았다. 전체 결과 목록을 요청한 질문은 아니므로 모든 관련 ID의 인용을 자동 요구하지 않는다."
+  },
+  "inquiry-answer-final-1-status": {
+    "assessment": "fail_candidate",
+    "reason": "#6003에는 실제 판매자 답변이 있는데 hasContent=false만으로 제외했다고 답했다. 본문이 없어도 판매자 답변이 질문의 근거가 될 수 있으며 내부 hasContent 필드명도 사용자에게 노출했다.",
+    "humanVerdict": "pending"
+  },
+  "inquiry-answer-final-1-absent": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "명시적 기간·상품을 실제 조회에 적용하고, 기간 밖·비밀 문의의 불만을 기간 안의 공개 후보에서 발견했다고 말하지 않았다. 근거 없음 표현과 자료 범위를 직접 대조했다."
+  },
+  "inquiry-answer-final-2-meaning": {
+    "assessment": "fail_candidate",
+    "reason": "#6011의 실제 제목은 텀블러 누수 내용인데 관련 제목이나 답변이 없다고 설명했다. 제목 존재와 답변 부재를 구별해야 한다. 첫 날짜의 쉼표 오류는 거절 후 정확한 인자로 복구되어 터미널 API 실패가 아니다. invalid_arguments 시도와 수정 후 성공을 모두 보존했다.",
+    "humanVerdict": "pending"
+  },
+  "inquiry-answer-final-2-status": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구의 실제 조건과 반환된 원문의 제목·본문·답변을 대조했다. 질문에 관련된 출처를 인용하고 문제 없음 경험을 실제 불만으로 소개하지 않았다. 전체 결과 목록을 요청한 질문은 아니므로 모든 관련 ID의 인용을 자동 요구하지 않는다. invalid_arguments 시도와 수정 후 성공을 모두 보존했다."
+  },
+  "inquiry-answer-final-2-absent": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "명시적 기간·상품을 실제 조회에 적용하고, 기간 밖·비밀 문의의 불만을 기간 안의 공개 후보에서 발견했다고 말하지 않았다. 근거 없음 표현과 자료 범위를 직접 대조했다."
+  },
+  "inquiry-answer-final-3-meaning": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구의 실제 조건과 반환된 원문의 제목·본문·답변을 대조했다. 질문에 관련된 출처를 인용하고 문제 없음 경험을 실제 불만으로 소개하지 않았다. 전체 결과 목록을 요청한 질문은 아니므로 모든 관련 ID의 인용을 자동 요구하지 않는다."
+  },
+  "inquiry-answer-final-3-status": {
+    "assessment": "fail_candidate",
+    "reason": "#6021은 제목만 있고 본문이 없는데 첫 설명에서는 문의 본문에 현상이 언급됐다고 말했다. #6024의 문제 단어도 제목이 아니라 본문에 있다. 정확한 ID 인용만으로 원문 유형 오류를 통과시키지 않는다.",
+    "humanVerdict": "pending"
+  },
+  "inquiry-answer-final-3-absent": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "명시적 기간·상품을 실제 조회에 적용하고, 기간 밖·비밀 문의의 불만을 기간 안의 공개 후보에서 발견했다고 말하지 않았다. 근거 없음 표현과 자료 범위를 직접 대조했다."
+  },
+  "inquiry-answer-final-4-meaning": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구의 실제 조건과 반환된 원문의 제목·본문·답변을 대조했다. 질문에 관련된 출처를 인용하고 문제 없음 경험을 실제 불만으로 소개하지 않았다. 전체 결과 목록을 요청한 질문은 아니므로 모든 관련 ID의 인용을 자동 요구하지 않는다."
+  },
+  "inquiry-answer-final-4-status": {
+    "assessment": "needs_review",
+    "reason": "#6033의 실제 제목은 판매자 관리 안내라는 일반 문구다. 답변에는 같은 주제의 실제 안내가 있지만 제목이 동일한 주제라는 설명과 본문 부재를 강조한 선택을 대조한다.",
+    "humanVerdict": "pending"
+  },
+  "inquiry-answer-final-4-absent": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "명시적 기간·상품을 실제 조회에 적용하고, 기간 밖·비밀 문의의 불만을 기간 안의 공개 후보에서 발견했다고 말하지 않았다. 근거 없음 표현과 자료 범위를 직접 대조했다."
+  },
+  "inquiry-answer-final-5-meaning": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구의 실제 조건과 반환된 원문의 제목·본문·답변을 대조했다. 질문에 관련된 출처를 인용하고 문제 없음 경험을 실제 불만으로 소개하지 않았다. 전체 결과 목록을 요청한 질문은 아니므로 모든 관련 ID의 인용을 자동 요구하지 않는다."
+  },
+  "inquiry-answer-final-5-status": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구의 실제 조건과 반환된 원문의 제목·본문·답변을 대조했다. 질문에 관련된 출처를 인용하고 문제 없음 경험을 실제 불만으로 소개하지 않았다. 전체 결과 목록을 요청한 질문은 아니므로 모든 관련 ID의 인용을 자동 요구하지 않는다."
+  },
+  "inquiry-answer-final-5-absent": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "명시적 기간·상품을 실제 조회에 적용하고, 기간 밖·비밀 문의의 불만을 기간 안의 공개 후보에서 발견했다고 말하지 않았다. 근거 없음 표현과 자료 범위를 직접 대조했다. invalid_arguments 시도와 수정 후 성공을 모두 보존했다."
+  },
+  "inquiry-answer-final-6-meaning": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구의 실제 조건과 반환된 원문의 제목·본문·답변을 대조했다. 질문에 관련된 출처를 인용하고 문제 없음 경험을 실제 불만으로 소개하지 않았다. 전체 결과 목록을 요청한 질문은 아니므로 모든 관련 ID의 인용을 자동 요구하지 않는다."
+  },
+  "inquiry-answer-final-6-status": {
+    "assessment": "needs_review",
+    "reason": "v1 질문은 미답변 조건과 교환 안내를 함께 요구해 해석이 모호하다. 응답은 실제 제목을 인용하고 없는 안내는 없다고 말했다. v2에서는 미답변 질문이 문제 제목만 요청하도록 분리했으며 이 사례를 일방적으로 실패로 확정하지 않는다.",
+    "humanVerdict": "pending"
+  },
+  "inquiry-answer-final-6-absent": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "명시적 기간·상품을 실제 조회에 적용하고, 기간 밖·비밀 문의의 불만을 기간 안의 공개 후보에서 발견했다고 말하지 않았다. 근거 없음 표현과 자료 범위를 직접 대조했다."
+  },
+  "inquiry-answer-final-7-meaning": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구의 실제 조건과 반환된 원문의 제목·본문·답변을 대조했다. 질문에 관련된 출처를 인용하고 문제 없음 경험을 실제 불만으로 소개하지 않았다. 전체 결과 목록을 요청한 질문은 아니므로 모든 관련 ID의 인용을 자동 요구하지 않는다."
+  },
+  "inquiry-answer-final-7-status": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구의 실제 조건과 반환된 원문의 제목·본문·답변을 대조했다. 질문에 관련된 출처를 인용하고 문제 없음 경험을 실제 불만으로 소개하지 않았다. 전체 결과 목록을 요청한 질문은 아니므로 모든 관련 ID의 인용을 자동 요구하지 않는다."
+  },
+  "inquiry-answer-final-7-absent": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "명시적 기간·상품을 실제 조회에 적용하고, 기간 밖·비밀 문의의 불만을 기간 안의 공개 후보에서 발견했다고 말하지 않았다. 근거 없음 표현과 자료 범위를 직접 대조했다."
+  },
+  "inquiry-answer-final-8-meaning": {
+    "assessment": "pass_candidate",
+    "humanVerdict": "pending",
+    "reason": "도구의 실제 조건과 반환된 원문의 제목·본문·답변을 대조했다. 질문에 관련된 출처를 인용하고 문제 없음 경험을 실제 불만으로 소개하지 않았다. 전체 결과 목록을 요청한 질문은 아니므로 모든 관련 ID의 인용을 자동 요구하지 않는다."
+  },
+  "inquiry-answer-final-8-status": {
+    "assessment": "execution_failed",
+    "humanVerdict": "pending",
+    "reason": "429로 최종 답변을 생성하지 못했다. 근거 없음 성공으로 처리하지 않는다."
+  },
+  "inquiry-answer-final-8-absent": {
+    "assessment": "execution_failed",
+    "humanVerdict": "pending",
+    "reason": "429로 최종 답변을 생성하지 못했다. 근거 없음 성공으로 처리하지 않는다."
+  },
+  "inquiry-answer-final-9-meaning": {
+    "assessment": "execution_failed",
+    "humanVerdict": "pending",
+    "reason": "429로 최종 답변을 생성하지 못했다. 근거 없음 성공으로 처리하지 않는다."
+  }
+}

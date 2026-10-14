@@ -1,0 +1,338 @@
+{
+  "schemaVersion": 1,
+  "sourceReportSha256": "2e83de18a8a02ab753d61ecf85b076171999705ff429922bda74a39c218a40f8",
+  "reviewer": "",
+  "reviewedAt": null,
+  "entries": [
+    {
+      "caseId": "inquiry-answer-v3-1-meaning",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "inquiry-answer-v3-1-status",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "inquiry-answer-v3-1-absent",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "inquiry-answer-v3-2-meaning",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "inquiry-answer-v3-2-status",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "inquiry-answer-v3-2-absent",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "inquiry-answer-v3-3-meaning",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "inquiry-answer-v3-3-status",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "inquiry-answer-v3-3-absent",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "inquiry-answer-v3-4-meaning",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "inquiry-answer-v3-4-status",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "inquiry-answer-v3-4-absent",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "inquiry-answer-v3-5-meaning",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "inquiry-answer-v3-5-status",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "inquiry-answer-v3-5-absent",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "inquiry-answer-v3-6-meaning",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "inquiry-answer-v3-6-status",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "inquiry-answer-v3-6-absent",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "inquiry-answer-v3-7-meaning",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "inquiry-answer-v3-7-status",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "inquiry-answer-v3-7-absent",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "inquiry-answer-v3-8-meaning",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "inquiry-answer-v3-8-status",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "inquiry-answer-v3-8-absent",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "inquiry-answer-v3-9-meaning",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "inquiry-answer-v3-9-status",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "inquiry-answer-v3-9-absent",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "inquiry-answer-v3-10-meaning",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "inquiry-answer-v3-10-status",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    },
+    {
+      "caseId": "inquiry-answer-v3-10-absent",
+      "checks": {
+        "conditions": null,
+        "evidence": null,
+        "polarity": null,
+        "noUnsupportedClaims": null,
+        "stateExplanation": null
+      },
+      "reason": ""
+    }
+  ]
+}

@@ -1,0 +1,155 @@
+{
+  "_sourceReportSha256": "4b0c83d30106555a714f544c6c5d8f292530261fbb830a23c7d0e1b59afc7cf7",
+  "_reviewerKind": "agent",
+  "_finalAnswerSuccessRate": null,
+  "final-v2-1-meaning": {
+    "assessment": "pass_candidate",
+    "reason": "실제 도구의 상품·기간·별점 조건과 반환 원문을 대조했다. 관련 불만을 인용하고 문제 없음 원문을 불만으로 분류하지 않았다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-1-rating": {
+    "assessment": "pass_candidate",
+    "reason": "실제 도구의 상품·기간·별점 조건과 반환 원문을 대조했다. 관련 불만을 인용하고 문제 없음 원문을 불만으로 분류하지 않았다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-1-absent": {
+    "assessment": "pass_candidate",
+    "reason": "조회된 원문의 기능 미사용 표현을 고장 경험으로 만들지 않았다. 실제 도구의 상품·시작일·종료일이 질문과 일치한다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-2-meaning": {
+    "assessment": "pass_candidate",
+    "reason": "실제 도구의 상품·기간·별점 조건과 반환 원문을 대조했다. 관련 불만을 인용하고 문제 없음 원문을 불만으로 분류하지 않았다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-2-rating": {
+    "assessment": "pass_candidate",
+    "reason": "실제 도구의 상품·기간·별점 조건과 반환 원문을 대조했다. 관련 불만을 인용하고 문제 없음 원문을 불만으로 분류하지 않았다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-2-absent": {
+    "assessment": "pass_candidate",
+    "reason": "조회된 원문의 기능 미사용 표현을 고장 경험으로 만들지 않았다. 실제 도구의 상품·시작일·종료일이 질문과 일치한다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-3-meaning": {
+    "assessment": "pass_candidate",
+    "reason": "실제 도구의 상품·기간·별점 조건과 반환 원문을 대조했다. 관련 불만을 인용하고 문제 없음 원문을 불만으로 분류하지 않았다. 기존 보조 판정 API는 실패했으므로 모델 판정 없이 원문 #2021·#2022·#2023을 직접 비교했다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-3-rating": {
+    "assessment": "pass_candidate",
+    "reason": "실제 도구의 상품·기간·별점 조건과 반환 원문을 대조했다. 관련 불만을 인용하고 문제 없음 원문을 불만으로 분류하지 않았다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-3-absent": {
+    "assessment": "pass_candidate",
+    "reason": "조회된 원문의 기능 미사용 표현을 고장 경험으로 만들지 않았다. 실제 도구의 상품·시작일·종료일이 질문과 일치한다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-4-meaning": {
+    "assessment": "pass_candidate",
+    "reason": "실제 도구의 상품·기간·별점 조건과 반환 원문을 대조했다. 관련 불만을 인용하고 문제 없음 원문을 불만으로 분류하지 않았다. judge는 #2033의 문제 없음 설명을 허위 추가라고 판정했지만 해당 내용은 반환 원문에 명시되어 있다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-4-rating": {
+    "assessment": "pass_candidate",
+    "reason": "실제 도구의 상품·기간·별점 조건과 반환 원문을 대조했다. 관련 불만을 인용하고 문제 없음 원문을 불만으로 분류하지 않았다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-4-absent": {
+    "assessment": "pass_candidate",
+    "reason": "조회된 원문의 기능 미사용 표현을 고장 경험으로 만들지 않았다. 실제 도구의 상품·시작일·종료일이 질문과 일치한다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-5-meaning": {
+    "assessment": "needs_review",
+    "reason": "원문이 같은 #2041(5점)과 #2042(2점) 중 #2042만 불만 사례로 제시하고 #2041을 높은 별점이라는 참고로 처리했다. 별점 제한이 없는 질문에서 본문의 같은 불만을 다르게 분류한 것으로 읽히는지 사람이 판단해야 한다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-5-rating": {
+    "assessment": "pass_candidate",
+    "reason": "실제 도구의 상품·기간·별점 조건과 반환 원문을 대조했다. 관련 불만을 인용하고 문제 없음 원문을 불만으로 분류하지 않았다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-5-absent": {
+    "assessment": "pass_candidate",
+    "reason": "조회된 원문의 기능 미사용 표현을 고장 경험으로 만들지 않았다. 실제 도구의 상품·시작일·종료일이 질문과 일치한다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-6-meaning": {
+    "assessment": "pass_candidate",
+    "reason": "실제 도구의 상품·기간·별점 조건과 반환 원문을 대조했다. 관련 불만을 인용하고 문제 없음 원문을 불만으로 분류하지 않았다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-6-rating": {
+    "assessment": "pass_candidate",
+    "reason": "실제 도구의 상품·기간·별점 조건과 반환 원문을 대조했다. 관련 불만을 인용하고 문제 없음 원문을 불만으로 분류하지 않았다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-6-absent": {
+    "assessment": "pass_candidate",
+    "reason": "조회된 원문의 기능 미사용 표현을 고장 경험으로 만들지 않았다. 실제 도구의 상품·시작일·종료일이 질문과 일치한다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-7-meaning": {
+    "assessment": "pass_candidate",
+    "reason": "실제 도구의 상품·기간·별점 조건과 반환 원문을 대조했다. 관련 불만을 인용하고 문제 없음 원문을 불만으로 분류하지 않았다. 기존 보조 판정 API는 실패했으므로 원문 #2061·#2062·#2063을 직접 비교했다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-7-rating": {
+    "assessment": "pass_candidate",
+    "reason": "실제 도구의 상품·기간·별점 조건과 반환 원문을 대조했다. 관련 불만을 인용하고 문제 없음 원문을 불만으로 분류하지 않았다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-7-absent": {
+    "assessment": "pass_candidate",
+    "reason": "조회된 원문의 기능 미사용 표현을 고장 경험으로 만들지 않았다. 실제 도구의 상품·시작일·종료일이 질문과 일치한다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-8-meaning": {
+    "assessment": "pass_candidate",
+    "reason": "실제 도구의 상품·기간·별점 조건과 반환 원문을 대조했다. 관련 불만을 인용하고 문제 없음 원문을 불만으로 분류하지 않았다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-8-rating": {
+    "assessment": "pass_candidate",
+    "reason": "실제 도구의 상품·기간·별점 조건과 반환 원문을 대조했다. 관련 불만을 인용하고 문제 없음 원문을 불만으로 분류하지 않았다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-8-absent": {
+    "assessment": "pass_candidate",
+    "reason": "조회된 원문의 기능 미사용 표현을 고장 경험으로 만들지 않았다. 실제 도구의 상품·시작일·종료일이 질문과 일치한다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-9-meaning": {
+    "assessment": "fail_candidate",
+    "reason": "#2083은 실제 도구 결과에 존재하지만 작성자가 문제를 확인하려고 리뷰를 썼다는 의도는 원문에 없다. 불만 두 건의 인용은 정확하더라도 작성 의도 추가는 noUnsupportedClaims 기준 위반으로 판단한다. judge의 없는 원문이라는 이유와 구별한다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-9-rating": {
+    "assessment": "pass_candidate",
+    "reason": "실제 도구의 상품·기간·별점 조건과 반환 원문을 대조했다. 관련 불만을 인용하고 문제 없음 원문을 불만으로 분류하지 않았다. judge의 polarity=false는 같은 판정 이유의 올바른 제외 설명과 모순된다. 실제 #2083에는 문제가 없고 배송 때문에 낮은 별점을 주었다는 내용이 있다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-9-absent": {
+    "assessment": "pass_candidate",
+    "reason": "조회된 원문의 기능 미사용 표현을 고장 경험으로 만들지 않았다. 실제 도구의 상품·시작일·종료일이 질문과 일치한다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-10-meaning": {
+    "assessment": "pass_candidate",
+    "reason": "실제 도구의 상품·기간·별점 조건과 반환 원문을 대조했다. 관련 불만을 인용하고 문제 없음 원문을 불만으로 분류하지 않았다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-10-rating": {
+    "assessment": "pass_candidate",
+    "reason": "실제 도구의 상품·기간·별점 조건과 반환 원문을 대조했다. 관련 불만을 인용하고 문제 없음 원문을 불만으로 분류하지 않았다. judge는 낮은 별점을 근거로 극성 실패를 표시했지만 #2093의 실제 본문은 문제 없음이다. 별점과 본문 의미를 분리해 대조했다.",
+    "humanVerdict": "pending"
+  },
+  "final-v2-10-absent": {
+    "assessment": "pass_candidate",
+    "reason": "조회된 원문의 기능 미사용 표현을 고장 경험으로 만들지 않았다. 실제 도구의 상품·시작일·종료일이 질문과 일치한다.",
+    "humanVerdict": "pending"
+  }
+}

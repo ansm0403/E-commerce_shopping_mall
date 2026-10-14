@@ -54,6 +54,9 @@ export class GeminiClient implements LlmClient {
   private readonly ai: GoogleGenAI | null;
   private readonly model: string;
   private readonly requestTimeoutMs: number = 60000;
+  /** 5xx 재시도 횟수(턴당)·첫 대기(ms). 대기는 1·2·4배로 늘린다. */
+  private readonly turnRetries: number = 3;
+  private readonly retryBaseMs: number = 1000;
   private readonly turnTimeoutMs: number = 180000;
 
   /** explicit CachedContent 사용 여부(기본 off). 무료티어에선 켜도 생성 실패→no-op. */
@@ -79,6 +82,8 @@ export class GeminiClient implements LlmClient {
     }
     this.requestTimeoutMs = this.readTimeout('GEMINI_REQUEST_TIMEOUT_MS', 60000, 120000);
     this.turnTimeoutMs = this.readTimeout('GEMINI_TURN_TIMEOUT_MS', 180000, 300000);
+    this.turnRetries = this.readInteger('GEMINI_TURN_RETRIES', 3, 0, 5);
+    this.retryBaseMs = this.readInteger('GEMINI_RETRY_BASE_MS', 1000, 1, 10000);
     this.ai = new GoogleGenAI({ apiKey });
     this.logger.log(
       `Gemini 클라이언트 활성 (model=${this.model}, explicitCache=${this.explicitCacheEnabled})`,
@@ -194,7 +199,7 @@ export class GeminiClient implements LlmClient {
 
     // 도구 호출 루프: 모델이 도구를 더 요청하지 않을 때까지(최대 MAX_ROUNDS) 왕복.
     const MAX_ROUNDS = 5;
-    let retriesRemaining = 1;
+    let retriesUsed = 0;
     for (let round = 0; round < MAX_ROUNDS; round++) {
       // 중단됐으면 새 라운드(= 새 LLM 요청)를 열지 않는다. usage·done 없이 끝낸다.
       if (signal?.aborted) return;
@@ -246,16 +251,17 @@ export class GeminiClient implements LlmClient {
         } catch (error) {
           const failure = classifyLlmFailure(error, signal?.aborted);
           params.onRequestFailure?.(failure);
-          // One retry per entire turn; never replay a partial text or buffered tool call.
+          // Bounded retries per entire turn (shared across tool rounds); never replay a partial text or buffered tool call.
           if (signal?.aborted) return;
-          if (retriesRemaining && modelParts.length === 0 && [500, 502, 503, 504].includes(failure.httpStatus ?? 0)) {
-            retriesRemaining--;
+          if (retriesUsed < this.turnRetries && modelParts.length === 0 && [500, 502, 503, 504].includes(failure.httpStatus ?? 0)) {
+            const delayMs = this.retryBaseMs * 2 ** retriesUsed;
+            retriesUsed++;
             this.accumulateUsage(agg, lastUsage, round);
             lastUsage = undefined;
-            this.logger.warn(`GEMINI_REQUEST_RETRY code=${failure.code} httpStatus=${failure.httpStatus} round=${round + 1}`);
+            this.logger.warn(`GEMINI_REQUEST_RETRY code=${failure.code} httpStatus=${failure.httpStatus} round=${round + 1} retry=${retriesUsed}/${this.turnRetries} delayMs=${delayMs}`);
             deadline.close(true);
             closeStream();
-            await this.waitForRetry(signal);
+            await this.waitForRetry(delayMs, signal);
             continue;
           }
           throw error;
@@ -319,13 +325,20 @@ export class GeminiClient implements LlmClient {
     yield { type: 'done' };
   }
 
-  private async waitForRetry(signal?: AbortSignal): Promise<void> {
+  private async waitForRetry(delayMs: number, signal?: AbortSignal): Promise<void> {
     if (signal?.aborted) return;
     await new Promise<void>(resolve => {
       const finish = () => { clearTimeout(timer); signal?.removeEventListener('abort', finish); resolve(); };
-      const timer = setTimeout(finish, 1000);
+      const timer = setTimeout(finish, delayMs);
       signal?.addEventListener('abort', finish, { once: true });
     });
+  }
+
+  private readInteger(key: string, fallback: number, minimum: number, maximum: number): number {
+    const value = this.config.get<unknown>(key, fallback);
+    const number = typeof value === 'number' || typeof value === 'string' ? Number(value) : Number.NaN;
+    if (!Number.isSafeInteger(number) || number < minimum || number > maximum) throw new Error(`INVALID_${key}`);
+    return number;
   }
 
   private readTimeout(key: string, fallback: number, maximum: number): number {
