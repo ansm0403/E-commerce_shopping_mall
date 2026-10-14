@@ -4,13 +4,18 @@
 
 ## 실행 준비
 
-`backend/.env`에 아래 세 값을 설정하고 실행 중인 백엔드를 `Ctrl+C`로 중지한 뒤 다시 실행한다. 현재 서버가 떠 있는 터미널을 사용해 포트가 중복 점유되지 않게 한다.
+`backend/.env`에 아래 네 값을 설정하고 실행 중인 백엔드를 `Ctrl+C`로 중지한 뒤 다시 실행한다. 현재 서버가 떠 있는 터미널을 사용해 포트가 중복 점유되지 않게 한다.
 
 ```dotenv
 AI_SEARCH_INQUIRY_INDEX_ENABLED=true
 AI_SEARCH_INQUIRIES_ENABLED=true
 AI_SEARCH_WORKER_ENABLED=true
+AI_SEARCH_REVIEW_INDEX_ENABLED=false
 ```
+
+> **리뷰 색인 플래그를 반드시 끈다.** 워커가 켜져 있으면 5분마다 도는 대조 작업(reconcile)이 색인 작업이 없는 원본을 전부 "누락"으로 보고 등록한다. 리뷰 색인까지 켜 두면 DB 의 모든 리뷰가 한꺼번에 등록돼 사실상 전체 초기 색인이 돈다. 2026-10-14 시연 시도에서 리뷰 약 1,860건이 17:50 정각에 등록됐고, 826건을 처리하는 동안 임베딩 무료 한도 **하루 1,000건**(`EmbedContentRequestsPerDayPerUserPerProjectPerModel-FreeTier`)을 다 써 문의 D 의 색인도 5회 모두 `EMBEDDING_RATE_LIMIT` 으로 실패했다. 이 한도는 다음 날 오전 9시(KST) 무렵 풀린다.
+>
+> 시연 전에 확인한다: 한도가 남아 있는가, 대기 중인 리뷰 작업이 남아 한도를 먼저 쓰지 않는가(리뷰 색인 플래그를 끄면 워커는 리뷰 큐를 처리하지 않는다). 실패로 끝난 문의 작업은 워커가 다시 잡지 않으므로 새 문의로 시연하거나 `search:inquiry:retry-failed --apply --inquiry-id=<ID>` 로 대기 상태로 돌린다(이 명령은 작업만 되살리고, 처리는 워커가 한다).
 
 ```powershell
 yarn nx run '@shopping-mall/backend:serve'
