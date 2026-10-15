@@ -218,7 +218,31 @@ export async function cleanupE2eInquiriesAndWishlist(ds: DataSource, suite: stri
 
 /** 이름 접두로 e2e 상품을 지운다(계정과 무관하게 남을 수 있어 별도 정리). */
 export async function cleanupE2eProducts(ds: DataSource, suite: string): Promise<void> {
+  await ds.query(`DELETE FROM product_images WHERE "productId" IN (SELECT id FROM products WHERE name LIKE $1)`, [`${e2ePrefix(suite)}%`]);
   await ds.query(`DELETE FROM products WHERE name LIKE $1`, [`${e2ePrefix(suite)}%`]);
+}
+
+/** e2e 계정이 쓴 리뷰와 e2e 상품에 달린 리뷰. reviews 는 users·products FK 라 그 둘보다 먼저 지운다. */
+export async function cleanupE2eReviews(ds: DataSource, suite: string): Promise<void> {
+  const like = `${e2ePrefix(suite)}%`;
+  await ds.query(
+    `DELETE FROM reviews
+     WHERE user_id IN (SELECT id FROM users WHERE email LIKE $1)
+        OR product_id IN (SELECT id FROM products WHERE name LIKE $1)`,
+    [like],
+  );
+}
+
+/**
+ * 경계 시나리오 스펙(src/security) 공용 전체 정리 — FK 순서대로:
+ * 리뷰 → 문의·찜 → 주문(정산·배송·결제·항목·장바구니) → 상품 → 계정(셀러·토큰·감사·역할·사용자)
+ */
+export async function cleanupE2eEverything(ds: DataSource, suite: string): Promise<void> {
+  await cleanupE2eReviews(ds, suite);
+  await cleanupE2eInquiriesAndWishlist(ds, suite);
+  await cleanupE2eOrders(ds, suite);
+  await cleanupE2eProducts(ds, suite);
+  await cleanupE2eData(ds, suite);
 }
 
 /** 해당 스펙이 만든 계정과 그에 딸린 레코드를 전부 지운다(실행 전·후 모두 호출). */
