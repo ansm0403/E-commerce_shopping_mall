@@ -49,7 +49,7 @@ export const REVIEW_CHECKLIST: readonly ReviewChecklistItem[] = [
 /** 승인/반려 제안 규칙 — 이 키들 중 하나라도 false 면 반려 제안, 전부 true 면 승인 제안, 그 밖엔 제안 없음 */
 export const REVIEW_VERDICT_RULE_KEYS: readonly OpsReviewCheckKey[] = ['causeLocation', 'noInventedIdentifiers'];
 
-/** body.checks — 키 4개 각각 true|false|null(판단 못 함)·생략 가능. 모르는 키는 whitelist 로 떨어진다 */
+/** body.checks — 키 4개 각각 true|false|null(판단 못 함)·생략 가능. 모르는 키는 전역 ValidationPipe 의 whitelist 가 버린다(main.ts — 2026-10-16 부터 실제로 켜짐, 그 전엔 이 주석이 사실과 달랐다) */
 export class ReviewChecksDto implements OpsReviewChecks {
   @IsOptional()
   @IsBoolean()

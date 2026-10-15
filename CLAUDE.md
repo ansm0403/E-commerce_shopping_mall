@@ -67,7 +67,8 @@ App Router 라우트 그룹 `(auth)` · `(main)`(상점·구매·`/my/*`) · `(s
 - Vercel 프록시(rewrites)는 **브라우저의 연결 끊김을 백엔드로 전달하지 않는다**(nginx 에는 정상 완료로 찍힌다) — 스트림을 서버에서 멈추려면 `res.on('close')` 가 아니라 명시적 요청으로(`POST /admin/assistant/stream/cancel`). 로컬에서는 전파돼서 운영에서만 드러난다.
 - 머지 직후 2~3분은 Vercel 운영이 옛 버전이다 — 운영 확인은 배포 완료(GitHub Deployments `success`) 뒤 강력 새로고침으로.
 - **프론트는 머지 즉시 운영에 나가지만 백엔드는 수동 배포다** — 백엔드 변경이 딸린 PR 은 순서를 정하고 머지한다(새 API 를 쓰는 프론트면 백엔드 먼저). 이미 머지된 브랜치에 푸시한 커밋은 PR 에 들어가지 않는다.
-- 시드 상품은 전부 판매자가 없다(`sellerId: null`) — 문의 작성은 400, 셀러 화면 시연은 셀러가 등록·승인받은 상품으로. 시드 셀러는 `seller` 역할뿐일 수 있다(실제 승인 흐름은 `buyer`+`seller`).
+- 시드 상품은 지금은 전부 `seller1@seed.com`(승인·비데모)에 붙어 있다(2026-10-16 개발 DB 339/339 확인). 셀러 없는 상품(`sellerId: null`)은 문의 작성 400 에 더해 **주문도 400**("판매자가 준비되지 않았습니다", 3cf48c4) — e2e 가 직접 만드는 무셀러 상품에만 해당. 시드 셀러는 `seller` 역할뿐일 수 있다(실제 승인 흐름은 `buyer`+`seller`).
+- 전역 `ValidationPipe` 는 `whitelist: true`(2026-10-16) — DTO 에 class-validator 데코레이터가 없는 속성은 **조용히 버려진다**. 새 DTO 필드에 데코레이터를 빼먹으면 서버에 안 도착한다. 점검 `node scripts/security/check-dto-decorators.mjs`. 상세 `docs/roadmap/ex-security-api-boundary.md`.
 - 인증 상태는 "모름·있음·없음" 셋이다 — `/auth/me` 응답 전(`isLoading`)이나 다른 탭의 토큰을 기다리는 동안을 "없음"으로 읽으면 로그인한 사용자가 로그인 화면으로 튕긴다(`useRequireAuth`·`AuthContext isAwaitingTabToken`).
 - 계정에 묶인 캐시는 로그인·로그아웃 때 같이 비운다 — 콘솔 가드의 역할 캐시(`ROLE_CHECK_QUERY_KEY`)가 남으면 다른 계정으로 로그인한 사람이 앞 계정의 역할로 판정된다. 이런 결함은 새로고침하면 사라지므로 확인은 **새로고침 없이** 한다(`scripts/seller-console/verify-role-switch.mjs`).
 - 운영 `docker-compose.prod.yaml` 의 postgres 는 pgvector 가 없는 `postgres:18-alpine` 이다 — 배포 절차의 `migrate.js` 가 `SearchFoundation`(`CREATE EXTENSION vector`)에서 실패한다. 의미 검색이 들어간 백엔드를 배포하기 전에 `docker/postgres-vector` 이미지로 교체(볼륨 보존)부터. 플래그가 꺼져 있으면 마이그레이션 전 DB 에서도 리뷰·문의 저장은 동작하게 짜여 있다(`search-index-recorder.ts`) — 켜는 건 마이그레이션 뒤.

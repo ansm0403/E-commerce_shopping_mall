@@ -26,8 +26,32 @@ export class SellerService {
     private readonly dataSource: DataSource,
   ) {}
 
+  /**
+   * 신청자가 정할 수 있는 필드만 골라 복사한다.
+   *
+   * 예전에는 `{ userId, ...dto }` 로 본문을 통째로 펼쳤다. 전역 ValidationPipe 에 whitelist 가 없던 동안
+   * 본문의 `status`·`approvedAt`·`userId`·`id` 가 그대로 엔티티에 들어갔고, 특히 `id` 는 save() 가 UPDATE 로
+   * 돌려 **남의 승인된 셀러 행을 덮어쓸 수 있었다**(docs/roadmap/ex-security-api-boundary.md §2, e2e 재현
+   * backend-e2e/src/security/seller-apply-field-boundary.e2e.spec.ts). 파이프의 whitelist 가 1차 방어이고,
+   * 이 함수는 파이프 설정이 빠져도 경계를 지키는 2차 방어다 — 다른 쓰기 서비스(product·review)와 같은 방식.
+   */
+  private pickApplicantFields(dto: ApplySellerDto) {
+    return {
+      businessName: dto.businessName,
+      businessNumber: dto.businessNumber,
+      representativeName: dto.representativeName,
+      businessAddress: dto.businessAddress,
+      contactEmail: dto.contactEmail,
+      contactPhone: dto.contactPhone,
+      bankName: dto.bankName,
+      bankAccountNumber: dto.bankAccountNumber,
+      bankAccountHolder: dto.bankAccountHolder,
+    };
+  }
+
   async apply(userId: number, dto: ApplySellerDto) {
     const existing = await this.sellerRepository.findOne({ where: { userId } });
+    const fields = this.pickApplicantFields(dto);
 
     if (existing) {
       if (existing.status === SellerStatus.PENDING) {
@@ -36,9 +60,9 @@ export class SellerService {
       if (existing.status === SellerStatus.APPROVED) {
         throw new ConflictException('이미 승인된 셀러입니다.');
       }
-      // REJECTED → 재신청 허용
+      // REJECTED → 재신청 허용. 소유자(userId)·상태·승인 시각은 서버가 정한다.
       await this.sellerRepository.update(existing.id, {
-        ...dto,
+        ...fields,
         status: SellerStatus.PENDING,
         rejectionReason: null,
         approvedAt: null,
@@ -46,7 +70,8 @@ export class SellerService {
       return { message: '셀러 재신청이 완료되었습니다. 관리자 승인을 기다려주세요.' };
     }
 
-    const seller = this.sellerRepository.create({ userId, ...dto });
+    // id 를 넣지 않으므로 save() 는 항상 INSERT 다 — 남의 행을 건드릴 수 없다.
+    const seller = this.sellerRepository.create({ userId, ...fields });
     await this.sellerRepository.save(seller);
     return { message: '셀러 신청이 완료되었습니다. 관리자 승인을 기다려주세요.' };
   }
