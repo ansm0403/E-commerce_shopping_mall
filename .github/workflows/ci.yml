@@ -236,14 +236,16 @@ jobs:
 
       # backend-e2e 는 backend 에 암묵 의존(implicitDependencies) → 백엔드·e2e 가 바뀐 PR 에서만 돈다.
       # 나머지는 passWithNoTests 로 초록. (워크스페이스의 e2e 타깃은 backend-e2e 하나 — frontend-e2e 폴더는 없다)
+      # --output-style=stream: Nx 는 CI 에서 하위 작업 출력을 접어 "성공/실패" 만 남긴다(PR #73 첫 실행에서 확인).
+      # jest 의 `Tests: N passed/failed` 와 스펙의 DB 값 로그가 CI 기록에 남아야 전후 비교가 되므로 그대로 흘린다.
       - name: HTTP e2e — 기존 스펙 (src/backend)
-        run: yarn nx affected -t e2e --base=$NX_BASE --head=$NX_HEAD --testPathPatterns=src/backend
+        run: yarn nx affected -t e2e --base=$NX_BASE --head=$NX_HEAD --output-style=stream --testPathPatterns=src/backend
 
       # 보안 경계 스펙(§4 C). 수정 전(§3 단계 1)이라 **실패가 정상이고 그 로그가 전후 비교의 "전"** 이다.
       # continue-on-error 는 §3 단계 3(필드 선택 복사 + whitelist)에서 제거한다 — 그때부터 빨간불이 job 을 막는다.
       - name: HTTP e2e — 보안 경계 스펙 (src/security) [수정 전 — 실패 기록]
         continue-on-error: true
-        run: yarn nx affected -t e2e --base=$NX_BASE --head=$NX_HEAD --testPathPatterns=src/security
+        run: yarn nx affected -t e2e --base=$NX_BASE --head=$NX_HEAD --output-style=stream --testPathPatterns=src/security
 
       - name: Stop backend
         if: always()
