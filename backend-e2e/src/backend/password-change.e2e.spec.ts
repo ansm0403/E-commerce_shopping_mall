@@ -105,11 +105,16 @@ describe('비밀번호 변경: 규칙과 세션 폐기 (HTTP e2e)', () => {
     );
     expect(refreshB.status).toBe(401);
 
-    // 옛 비밀번호로는 로그인되지 않는다
+    // 옛 비밀번호로는 로그인되지 않는다.
+    // 여기는 loginRaw(429 면 리셋 후 재시도)를 못 쓴다 — 401 자체가 검증 대상이라 생 요청이어야 한다.
+    // 대신 바로 앞에서 IP 로그인 카운터를 비운다: 스펙 9개가 병렬로 돌면 다른 스펙의 로그인이
+    // IP 당 10회/5분을 채워 401 대신 429 가 온다(2026-10-15 보안 스펙 추가 때 실측).
+    await resetLoginRateLimits();
     const oldLogin = await axios.post('/auth/login', { email: emails.buyer, password: E2E_PASSWORD });
     expect(oldLogin.status).toBe(401);
 
-    // 새 비밀번호로 로그인된다
+    // 새 비밀번호로 로그인된다 (같은 이유로 직전에 비운다)
+    await resetLoginRateLimits();
     const newLogin = await axios.post('/auth/login', { email: emails.buyer, password: NEW_PASSWORD });
     expect(newLogin.status).toBe(201);
     const meNew = await axios.get('/users/me', auth(newLogin.data.accessToken));

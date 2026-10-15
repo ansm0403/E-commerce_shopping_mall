@@ -29,8 +29,8 @@ const productName = (label: string) => `${e2ePrefix(SUITE)}${label}`;
  *   · 장바구니 race — 담아둔 뒤 셀러가 숨긴 상품은 주문 단계에서 막힌다
  *   · 업로드 fileFilter — /uploads 정적 서빙을 뚫었으므로 비이미지(.html)는 저장형 XSS 벡터 → 400
  *   · 멀티셀러 주문 — 배송건 분리, 부분 출고/부분 배송완료 시 주문 상태 동기화, 정산 셀러별 분리
- *   · 무셀러(seller_id NULL) 상품 — orderItem null 저장(§7-5), shipment/정산 미생성, 무셀러 전용
- *     주문은 deliver 할 배송건이 없다(404 — 현재 한계를 명세로 고정)
+ *   · 무셀러(seller_id NULL) 상품 — 장바구니엔 담기지만 주문은 400(3cf48c4 규칙), 주문 행·재고·장바구니 불변
+ *     (이전 §7-5 검증 — orderItem null 저장·배송건/정산 미생성 — 은 주문 자체가 막혀 HTTP 로 도달 불가)
  *   · 정산 confirm 은 데모 관리자 403 (DemoAccountGuard)
  */
 
@@ -350,63 +350,66 @@ describe('셀러 파이프라인 엣지케이스 (HTTP e2e)', () => {
     expect(demoConfirm.status).toBe(403);
   }, 60_000);
 
-  it('무셀러(seller_id NULL) 상품: 주문은 되지만 배송건·정산이 생기지 않는다 (§7-5)', async () => {
+  /**
+   * 무셀러(seller_id NULL) 상품 — 3cf48c4(역할 데모·PortOne 테스트 체크아웃) 이후 규칙:
+   * 승인된 비데모 셀러가 없는 상품은 **주문 단계에서 400** 으로 막힌다(order.service createOrder).
+   * 그 전에는 주문이 되고 orderItem.sellerId=null·배송건/정산 미생성(§7-5)을 검증했는데,
+   * 이제 그 경로는 HTTP 로 도달할 수 없다. 여기서는 새 규칙을 고정한다:
+   *   · 장바구니에는 담긴다(장바구니는 셀러를 보지 않는다)
+   *   · 혼합 주문(무셀러 + 셀러A)도 통째로 거절 — 셀러A 몫만 부분 주문되지 않는다
+   *   · 주문 행·재고·장바구니가 모두 그대로다 ("거절했지만 일부는 저장됨"을 막는다)
+   */
+  it('무셀러(seller_id NULL) 상품: 장바구니에는 담기지만 주문 단계에서 400 으로 막히고 아무것도 저장되지 않는다', async () => {
     const ownerless = await createOwnerlessPublishedProduct(ds, {
-      name: productName('무셀러'), price: 5000,
+      name: productName('무셀러'), price: 5000, stock: 10,
     });
     const productA = await createApprovedProduct(sellerA.accessToken, '혼합A', 7000);
 
-    // ① 혼합 주문(무셀러 + 셀러A)
     const cart0 = await addToCart(ownerless, 1);
     const cartA = await addToCart(productA, 1);
-    const mixedOrder = await createOrder([cart0, cartA]);
 
-    // orderItem 스냅샷: 무셀러 상품은 0 이 아니라 NULL 로 저장된다 (§7-5 핵심)
-    const items = await ds.query(
-      `SELECT oi.product_id, oi.seller_id FROM order_items oi
-       JOIN orders o ON o.id = oi.order_id WHERE o.order_number = $1`,
-      [mixedOrder],
+    const countOrders = async () =>
+      (await ds.query(
+        `SELECT count(*)::int AS n FROM orders o JOIN users u ON u.id = o.user_id WHERE u.email = $1`,
+        [emails.buyer],
+      ))[0].n as number;
+    const ordersBefore = await countOrders();
+
+    // ① 혼합 주문(무셀러 + 셀러A) → 400, 메시지는 무셀러 상품을 가리킨다
+    const mixed = await axios.post(
+      '/orders',
+      {
+        cartItemIds: [cart0, cartA],
+        shippingAddress: '서울시 테스트구 엣지로 1',
+        recipientName: 'e2e구매자',
+        recipientPhone: '01000000000',
+      },
+      auth(buyer.accessToken),
     );
-    expect(items.find((i: any) => i.product_id === ownerless).seller_id).toBeNull();
-    expect(items.find((i: any) => i.product_id === productA).seller_id).toBe(sellerAId);
+    expect(mixed.status).toBe(400);
+    expect(String(mixed.data.message)).toContain('판매자가 준비되지 않았습니다');
 
-    await simulatePaidOrder(ds, mixedOrder);
-
-    // 배송건은 셀러A 것 하나뿐 — A 출고만으로 주문이 SHIPPED 로 넘어간다
-    const detail = await axios.get(`/admin/orders/${mixedOrder}`, auth(admin.accessToken));
-    expect(detail.data.shipments).toHaveLength(1);
-    const ship = await axios.patch(
-      `/seller/orders/${mixedOrder}/ship`,
-      { trackingNumber: 'M-0001', carrier: 'e2e택배' },
-      auth(sellerA.accessToken),
+    // ② 무셀러 전용 주문도 같다
+    const only = await axios.post(
+      '/orders',
+      {
+        cartItemIds: [cart0],
+        shippingAddress: '서울시 테스트구 엣지로 1',
+        recipientName: 'e2e구매자',
+        recipientPhone: '01000000000',
+      },
+      auth(buyer.accessToken),
     );
-    expect(ship.data.status).toBe('shipped');
-    await axios.patch(`/admin/orders/${mixedOrder}/deliver`, {}, auth(admin.accessToken));
-    const confirm = await axios.patch(`/orders/${mixedOrder}/confirm`, {}, auth(buyer.accessToken));
-    expect(confirm.status).toBe(200);
+    expect(only.status).toBe(400);
 
-    // 정산은 셀러A 몫 1건만 — 무셀러 몫은 만들지 않는다
-    let settlements: any[] = [];
-    for (let i = 0; i < 20; i++) {
-      settlements = await ds.query(
-        `SELECT * FROM settlements WHERE order_number = $1`, [mixedOrder],
-      );
-      if (settlements.length > 0) break;
-      await new Promise((r) => setTimeout(r, 250));
-    }
-    expect(settlements).toHaveLength(1);
-    expect(settlements[0].seller_id).toBe(sellerAId);
-    expect(Number(settlements[0].amount)).toBe(7000);
-
-    // ② 무셀러 전용 주문 — 배송건이 아예 없어 deliver 할 대상이 없다(404).
-    //    주문이 PREPARING 에 갇히는 현재 설계의 한계를 명세로 고정해 둔다
-    //    (실서비스라면 플랫폼 직배송 주체가 필요하다 — 로드맵 §7-5 메모 참고).
-    const cartOnly0 = await addToCart(ownerless, 1);
-    const ownerlessOrder = await createOrder([cartOnly0]);
-    await simulatePaidOrder(ds, ownerlessOrder);
-    const deliverNone = await axios.patch(
-      `/admin/orders/${ownerlessOrder}/deliver`, {}, auth(admin.accessToken),
+    // ③ DB 불변 — 주문 행 없음, 재고 그대로, 장바구니 항목 그대로
+    expect(await countOrders()).toBe(ordersBefore);
+    const [{ stockQuantity }] = await ds.query(
+      `SELECT "stockQuantity" FROM products WHERE id = $1`, [ownerless],
     );
-    expect(deliverNone.status).toBe(404);
+    expect(stockQuantity).toBe(10);
+    const cart = await axios.get('/cart', auth(buyer.accessToken));
+    expect(cart.status).toBe(200);
+    expect(cart.data.items.map((i: any) => i.id)).toEqual(expect.arrayContaining([cart0, cartA]));
   }, 60_000);
 });

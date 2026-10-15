@@ -558,8 +558,10 @@ describe('모바일 토큰 전략 + ops 인시던트 조회 (HTTP e2e)', () => {
       await resetLoginRateLimits();
       const mobile = await axios.post('/auth/demo-login', {}, { headers: MOBILE });
       if (mobile.status === 403) {
-        // DEMO_LOGIN_ENABLED 가 아닌 서버 — 분기 자체는 컨트롤러 단위 테스트가 고정한다
-        expect(mobile.data.message).toMatch(/데모/);
+        // 데모 로그인이 꺼진 서버("데모 로그인이 비활성화…") 또는 켜졌지만 데모 계정이 DB 에 없는 서버
+        // (빈 DB 의 CI — 3cf48c4 이후 "체험 계정이 준비되지 않았습니다", code DEMO_UNAVAILABLE).
+        // 분기 자체는 컨트롤러 단위 테스트가 고정한다.
+        expect(mobile.data.message).toMatch(/데모|체험 계정/);
         return;
       }
       expect(mobile.status).toBe(200);
