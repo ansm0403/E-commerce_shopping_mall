@@ -218,6 +218,27 @@ describe('정상 회귀: 화면이 보내는 본문 그대로 (HTTP e2e)', () =>
     expect(results).toEqual(Object.fromEntries(calls.map(([label]) => [label, 200])));
   }, 60_000);
 
+  /**
+   * 외부(PortOne)가 보내는 웹훅 본문은 우리 DTO 에 없는 키(`timestamp`·`data.storeId`)를 늘 포함한다.
+   * 거절 모드가 여기까지 적용되면 서명 검증 전에 400 이 나서 웹훅이 전부 거절된다 — 2026-10-16 운영에서 실측한 회귀.
+   * 기대: 400 이 아니다. 서명 비밀이 없는 서버(로컬·CI)는 검증을 건너뛰어 핸들러까지 가고(모르는 결제라 200 + internal error 본문),
+   * 비밀이 있는 서버는 서명 401. 반면 필수 필드(paymentId)가 빠지면 여전히 400 이어야 한다(검증 자체는 살아 있다).
+   */
+  it('D-13 PortOne 웹훅: DTO 밖의 키가 있어도 거절(400)하지 않는다 — 필수 필드 누락은 400', async () => {
+    const portoneShape = {
+      type: 'Transaction.Paid',
+      timestamp: '2026-10-16T00:00:00.000Z',
+      data: { storeId: 'store-e2e', paymentId: 'E2E-NORMAL-NONE', transactionId: 'tx-e2e-none' },
+    };
+    const res = await axios.post('/payments/webhook', portoneShape);
+    expect(res.status).not.toBe(400);
+    expect([200, 401]).toContain(res.status);
+    expect(JSON.stringify(res.data)).not.toContain('should not exist');
+
+    const missing = await axios.post('/payments/webhook', { type: 'Transaction.Paid', timestamp: 'x', data: { storeId: 's' } });
+    expect([400, 401]).toContain(missing.status); // 비밀 있는 서버는 서명이 먼저 401, 없는 서버는 paymentId 누락 400
+  });
+
   it('D-11 비밀번호 변경(ChangePasswordRequest 2키) → 200, 새 비밀번호로 로그인', async () => {
     await resetLoginRateLimits();
     const token = (await loginRaw(emails.pwUser)).data.accessToken;
