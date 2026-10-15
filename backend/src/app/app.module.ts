@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, HttpAdapterHost } from '@nestjs/core';
 import { SentryModule } from '@sentry/nestjs/setup';
 import { SentryGlobalFilter } from '@sentry/nestjs/setup';
@@ -33,6 +33,21 @@ import { OpsModule } from '../ops/ops.module';
 import { DemoCheckoutApiModule } from '../demo/demo-checkout-api.module';
 import { SearchIndexModule } from '../search/search-index.module';
 
+/**
+ * 양의 정수 env 를 읽는다. 자릿수만 허용 — parseInt 는 '1.5'·'1e3' 을 1 로 읽어 오타 하나가
+ * 전역 제한을 1회로 만든다. 값이 있는데 형식이 틀리면 기본값으로 가되 경고를 남긴다(조용한 무시 방지).
+ */
+function envPositiveInt(key: string, fallback: number): number {
+  const raw = process.env[key]?.trim();
+  if (raw === undefined || raw === '') return fallback;
+  const parsed = /^\d+$/.test(raw) ? Number(raw) : NaN;
+  if (!Number.isSafeInteger(parsed) || parsed <= 0) {
+    Logger.warn(`${key}='${raw}' 은(는) 양의 정수가 아니라 기본값 ${fallback} 을 씁니다.`, 'AppModule');
+    return fallback;
+  }
+  return parsed;
+}
+
 @Module({
   imports: [
     // Sentry: 다른 모듈보다 먼저 등록 (요청 컨텍스트/에러 캡처 활성화)
@@ -52,10 +67,12 @@ import { SearchIndexModule } from '../search/search-index.module';
     }),
     ThrottlerModule.forRoot([
       {
-        // 글로벌 기본: IP당 1분에 100회
-        // 봇은 이를 초과, 일반 사용자는 이 이내
-        ttl: 60000,
-        limit: 100,
+        // 글로벌 기본: IP당 1분에 100회 — 봇은 이를 초과, 일반 사용자는 이 이내.
+        // CI 의 HTTP e2e(backend-e2e)는 모든 요청이 한 IP(localhost)에서 병렬로 나가 이 제한에 걸리므로
+        // THROTTLE_TTL_MS / THROTTLE_LIMIT env 로만 바꿀 수 있게 한다. 미설정이면 기존 값 그대로(운영 불변).
+        // (ConfigModule.forRoot 가 위에서 먼저 평가돼 backend/.env 를 process.env 에 올린다 — TypeOrm 설정과 같은 전제)
+        ttl: envPositiveInt('THROTTLE_TTL_MS', 60000),
+        limit: envPositiveInt('THROTTLE_LIMIT', 100),
       },
     ]),
     EventEmitterModule.forRoot(),

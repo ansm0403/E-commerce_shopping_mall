@@ -118,3 +118,167 @@ jobs:
             "$EMOJI" "$STATUS" "$REPO" "$BRANCH" "$ACTOR" "${COMMIT_FIRST:-수동 실행(workflow_dispatch)}" "$RUN_URL")
           PAYLOAD=$(jq -n --arg text "$TEXT" '{text: $text}')
           curl -s -X POST -H 'Content-type: application/json' --data "$PAYLOAD" "$SLACK_WEBHOOK"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # 실서버 HTTP e2e(backend-e2e) — 화면 밖 API 경계(권한·필드)를 매 push/PR 마다 실제 요청으로 점검한다.
+  # 단위 테스트는 가드·파이프·서비스·DB 를 가짜로 바꾸므로 "맞물려 도는지"는 여기서만 확인된다.
+  # 설계: docs/roadmap/ex-security-api-boundary.md §4. `ci` job 과 병렬.
+  # ─────────────────────────────────────────────────────────────────────────────
+  security-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    services:
+      postgres:
+        # SearchFoundation 마이그레이션이 CREATE EXTENSION vector 를 실행한다 → pgvector 가 든 18 계열이어야 한다.
+        # (ci job 의 postgres:17-alpine 으로는 이 단계에서 실패. 운영은 자체 이미지 ansmoon/postgres-vector:18.x)
+        image: pgvector/pgvector:pg18
+        env:
+          POSTGRES_USER: e2e
+          POSTGRES_PASSWORD: e2e
+          POSTGRES_DB: e2e_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      # 백엔드(app.module/connection-options)·마이그레이션(dist/migrate.js)·e2e(support/db.ts)가 같은 이름을 읽는다.
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: e2e
+      POSTGRES_PASSWORD: e2e
+      POSTGRES_DB: e2e_db
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
+      PORT: 4000
+      # 부팅 필수(ConfigModule validate) + 메일 링크 생성에 쓰인다. CORS 는 Origin 없는 요청(axios)엔 영향 없다.
+      FRONTEND_URL: http://localhost:3000
+      CORS_ORIGINS: http://localhost:3000
+      # CI 전용 시크릿 — 운영·로컬 값과 달라야 한다(여기 값으로 서명한 토큰은 다른 서버에서 무효).
+      JWT_SECRET: ci-only-jwt-secret-do-not-use-in-production
+      JWT_REFRESH_SECRET: ci-only-jwt-refresh-secret-do-not-use-in-production
+      # 전역 요청 제한(기본 IP 당 100회/60초)을 CI 에서만 높인다 — 모든 스펙이 한 IP(localhost)에서 병렬로 나간다.
+      # 로그인 전용 제한(IP 당 10회/5분)은 스펙이 429 때 Redis 키를 비워 흡수한다(support/login.ts).
+      THROTTLE_LIMIT: '10000'
+      # 외부 키(SMTP·Sentry·Gemini·PortOne·데모 계정)는 두지 않는다 — 없이도 부팅되고 해당 API 가 no-op/503 인지가 이 job 의 확인 항목.
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set Nx affected base/head SHAs
+        uses: nrwl/nx-set-shas@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Enable Corepack (Yarn 4)
+        run: corepack enable
+
+      - name: Get yarn cache directory
+        id: yarn-cache
+        run: echo "dir=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.yarn-cache.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      # shared → backend 순으로 빌드된다(backend build 가 ^build 에 의존).
+      # development 번들을 쓴다 — 운영 번들(--node-env=production)은 NODE_ENV 가 박혀 ops simulate 경로가 꺼지고
+      # 쿠키가 Secure 가 되어 로컬 e2e(yarn nx serve backend = development)와 조건이 달라진다.
+      - name: Build shared + backend (development bundle)
+        run: yarn nx run @shopping-mall/backend:build:development
+
+      # 운영과 같은 실행기(dist/migrate.js, ts-node 불필요). 역할(roles) 부트스트랩은 백엔드 부팅 시 RolesSeedService 가 한다.
+      - name: Run DB migrations
+        run: node backend/dist/migrate.js
+
+      - name: Start backend (background)
+        working-directory: backend
+        run: |
+          nohup node dist/main.js > ../security-e2e-backend.log 2>&1 &
+          echo $! > ../security-e2e-backend.pid
+
+      # health 는 DB·Redis 중 하나라도 안 되면 503 → curl -f 가 실패해 계속 기다린다.
+      - name: Wait for /v1/health
+        run: |
+          for i in $(seq 1 45); do
+            if curl -sf http://localhost:4000/v1/health; then
+              echo; echo "backend ready (${i}번째 시도, 2초 간격)"; exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::backend 가 90초 안에 준비되지 않았습니다"
+          tail -n 80 security-e2e-backend.log
+          exit 1
+
+      # backend-e2e 는 backend 에 암묵 의존(implicitDependencies) → 백엔드·e2e 가 바뀐 PR 에서만 돈다.
+      # 나머지는 passWithNoTests 로 초록. (워크스페이스의 e2e 타깃은 backend-e2e 하나 — frontend-e2e 폴더는 없다)
+      - name: HTTP e2e — 기존 스펙 (src/backend)
+        run: yarn nx affected -t e2e --base=$NX_BASE --head=$NX_HEAD --testPathPatterns=src/backend
+
+      # 보안 경계 스펙(§4 C). 수정 전(§3 단계 1)이라 **실패가 정상이고 그 로그가 전후 비교의 "전"** 이다.
+      # continue-on-error 는 §3 단계 3(필드 선택 복사 + whitelist)에서 제거한다 — 그때부터 빨간불이 job 을 막는다.
+      - name: HTTP e2e — 보안 경계 스펙 (src/security) [수정 전 — 실패 기록]
+        continue-on-error: true
+        run: yarn nx affected -t e2e --base=$NX_BASE --head=$NX_HEAD --testPathPatterns=src/security
+
+      - name: Stop backend
+        if: always()
+        run: |
+          if [ -f security-e2e-backend.pid ]; then kill "$(cat security-e2e-backend.pid)" 2>/dev/null || true; fi
+
+      - name: Upload backend log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-e2e-backend-log
+          path: security-e2e-backend.log
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Notify Slack (security-e2e 결과)
+        if: always() && github.event_name != 'pull_request'
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_DEPLOYMENTS }}
+          JOB_STATUS: ${{ job.status }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+          ACTOR: ${{ github.actor }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$SLACK_WEBHOOK" ]; then
+            echo "SLACK_WEBHOOK_DEPLOYMENTS 시크릿 미설정 → 알림 스킵"
+            exit 0
+          fi
+          if [ "$JOB_STATUS" = "success" ]; then
+            EMOJI="✅"; STATUS="성공"
+          else
+            EMOJI="❌"; STATUS="실패"
+          fi
+          TEXT=$(printf '%s *security-e2e %s* — `%s`\n• 브랜치: `%s` (by %s)\n• <%s|GitHub Actions 로그 보기>' \
+            "$EMOJI" "$STATUS" "$REPO" "$BRANCH" "$ACTOR" "$RUN_URL")
+          PAYLOAD=$(jq -n --arg text "$TEXT" '{text: $text}')
+          curl -s -X POST -H 'Content-type: application/json' --data "$PAYLOAD" "$SLACK_WEBHOOK"

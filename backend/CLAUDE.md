@@ -4,7 +4,7 @@
 
 ## 구조
 - 모듈러 모놀리식: 기능 폴더 = Nest 모듈(`*.module/controller/service.ts` + `dto/` + `entity/`). 모듈: auth, user, seller, category, product, review, cart, order, payment, settlement, inquiry, wish-list, audit, admin(+assistant), ops(RN 운영 앱 전용), common, intrastructure, seed.
-- 전역: prefix `/v1`, 포트 4000(`main.ts`), `ValidationPipe({transform:true})` + `ClassSerializerInterceptor`, `ThrottlerModule`(100req/60s), `EventEmitterModule`. 전역 Throttler 가드·예외 필터는 `app/app.module.ts`. 공통 엔티티 `BaseModel`(id/createdAt/updatedAt), 페이지네이션 page/cursor 둘 다(`common/`).
+- 전역: prefix `/v1`, 포트 4000(`main.ts`), `ValidationPipe({transform:true})` + `ClassSerializerInterceptor`, `ThrottlerModule`(100req/60s — `THROTTLE_TTL_MS`/`THROTTLE_LIMIT` env 로만 변경, CI e2e 용), `EventEmitterModule`. 전역 Throttler 가드·예외 필터는 `app/app.module.ts`. 공통 엔티티 `BaseModel`(id/createdAt/updatedAt), 페이지네이션 page/cursor 둘 다(`common/`).
 - 이름과 정체가 어긋나는 곳:
   - `intrastructure/`(오타 그대로) = `redis/` · `emailVerify/`(SMTP) · `ai/`(프로바이더 비종속 `LlmClient`, 현재 Gemini `@google/genai`).
   - 가드/데코레이터는 `common/` 이 아니라 `auth/guards`·`auth/decorators`(`JwtAuthGuard`·`RolesGuard`·`DemoAccountGuard`, `@Roles()`·`@User()`) 와 `audit/decorators`(`@Auditable()` — `audit.module` 이 전역 인터셉터 등록).
