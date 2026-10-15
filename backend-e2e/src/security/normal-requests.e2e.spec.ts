@@ -69,6 +69,9 @@ describe('정상 회귀: 화면이 보내는 본문 그대로 (HTTP e2e)', () =>
   });
 
   it('D-1 로그인(LoginRequest: email·password·rememberMe) → 201, 로그아웃 → 2xx', async () => {
+    // LoginRequest 모양(rememberMe 포함)을 그대로 보내야 해서 loginRaw(429 재시도)를 못 쓴다 — 직전에 IP 카운터를 비운다.
+    // 보안 스펙 6개가 병렬로 로그인하면 10회/5분 제한을 넘긴다(PR #77 CI 에서 429 실측).
+    await resetLoginRateLimits();
     const res = await axios.post('/auth/login', { email: emails.buyer, password: E2E_PASSWORD, rememberMe: true });
     expect(res.status).toBe(201);
     const cookie = (res.headers['set-cookie'] ?? []).find((c: string) => c.startsWith('refreshToken='))?.split(';')[0];
