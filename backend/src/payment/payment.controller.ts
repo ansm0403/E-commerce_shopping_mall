@@ -8,6 +8,7 @@ import {
   Post,
   Req,
   UseGuards,
+  ValidationPipe,
 } from '@nestjs/common';
 import type { RawBodyRequest } from '@nestjs/common';
 import type { Request } from 'express';
@@ -71,16 +72,34 @@ export class PaymentWebhookController {
    * 서명 검증은 ValidationPipe 가 만든 dto 가 아니라 **원문(rawBody)** 으로 한다 — 파싱·재직렬화하면 서명이 어긋난다.
    * 검증 실패(401)도 @Auditable 이 success:false 로 남긴다 — 위조 시도 자체가 보안 기록이다.
    */
+  /**
+   * 본문 검증은 전역 ValidationPipe(forbidNonWhitelisted — 모르는 필드 400)를 **쓰지 않는다.**
+   * 이 본문은 PortOne 이 보내는 것이라 우리 DTO 에 없는 키(`timestamp`·`data.storeId` 등)가 항상 함께 온다 —
+   * 거절 모드를 그대로 두면 서명 검증에도 못 가고 400 이 난다(2026-10-16 운영 회귀 실측, 바로 되돌림).
+   * 그래서 `@Body()` 를 DTO 타입으로 받지 않아 전역 파이프가 건너뛰게 하고(메타타입 Object 는 검증 대상이 아니다),
+   * 서명 검증 뒤에 whitelist(버리기) 파이프로 직접 검증한다. 필수 필드 누락(paymentId 없음)은 여전히 400 이다.
+   * 전역 파이프는 파라미터 파이프와 **둘 다** 실행되므로 `@Body(new ValidationPipe(...))` 로는 전역 거절을 피할 수 없다.
+   */
+  private readonly webhookBodyPipe = new ValidationPipe({
+    transform: true,
+    transformOptions: { enableImplicitConversion: true },
+    whitelist: true,
+    forbidNonWhitelisted: false,
+  });
+
   @Post('webhook')
   @HttpCode(200)
   @Auditable(AuditAction.PAYMENT_WEBHOOK)
   handleWebhook(
     @Req() req: RawBodyRequest<Request>,
     @Headers() headers: Record<string, string | string[] | undefined>,
-    @Body() dto: WebhookPaymentDto,
+    @Body() body: WebhookPaymentDto | Record<string, unknown>,
   ) {
+    // 서명 검증은 파싱 전 원문으로, 동기로 먼저 — 위조는 본문을 보기도 전에 401
     this.verifier.assertValid(req.rawBody, headers);
-    return this.paymentService.handleWebhook(dto);
+    return this.webhookBodyPipe
+      .transform(body, { type: 'body', metatype: WebhookPaymentDto, data: undefined })
+      .then((dto: WebhookPaymentDto) => this.paymentService.handleWebhook(dto));
   }
 }
 
