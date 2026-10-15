@@ -1,6 +1,6 @@
 # 화면 밖의 API 경계 재점검 — 보안 설계
 
-작성일: 2026-10-15. **상태: §4 구현 순서 0~2단계 완료(PR #73·#74), 3단계 수정 완료·운영 배포 대기(2026-10-16).**
+작성일: 2026-10-15. **상태: §4 구현 순서 0~3단계 완료 — 3단계 수정(PR #75)이 2026-10-16 01:46 KST 운영 배포됨(`eb4829c`), 운영 DB 악용 흔적 없음. 다음 = 4단계.**
 결함은 코드를 읽어서 찾은 뒤 2026-10-15 에 실제 HTTP 요청으로 재현했다(§2 셀러 신청 행, §4 단계 1). `○` 로 표시한 수치는 측정 후 채운다.
 
 > 표기 원칙(2026-10-15 검토): 결함은 **1건**(요청 본문을 그대로 믿는 지점)이고, 재현한 변조 **경로가 4개**다. "결함 4건" 으로 쓰지 않는다.
@@ -59,8 +59,11 @@
 | 위험 | 내용 | 대응 |
 | --- | --- | --- |
 | 동적 키 DTO | 페이지네이션 DTO가 `[key: string]: any` 로 `where__*` 키를 받는다(`common/dto/paginate.dto.ts:146`). whitelist 를 켜면 이 키가 버려지거나 400이 된다. | 웹 프론트의 `where__`/`order__` 사용처는 0건이다(grep 확인). 운영 앱과 서버 내부 사용처를 확인한다. 사용처가 없으면 인덱스 시그니처를 지우고, 있으면 그 DTO만 명시 필드로 바꾼다. |
-| 데코레이터 없는 속성 | whitelist 는 class-validator 데코레이터가 없는 속성을 모르는 필드로 취급한다. | 모든 DTO 속성에 데코레이터가 붙어 있는지 확인하는 스크립트를 한 번 돌린다. |
-| 중첩 객체 | `@ValidateNested` 와 `@Type` 이 없으면 중첩 객체 안은 검증되지 않는다. 상품 `specs` 는 자유 형식 객체다. | 중첩 DTO 목록을 만들고, 자유 형식 객체는 의도한 예외로 문서에 남긴다. |
+| 데코레이터 없는 속성 | whitelist 는 class-validator 데코레이터가 없는 속성을 모르는 필드로 취급한다. `@Type()`·`@Transform()`(class-transformer)만 있는 속성도 버려진다. | ✅ `scripts/security/check-dto-decorators.mjs` — 컨트롤러의 @Body/@Query 클래스 43개 + 상속 + **`@Type(() => X)` 중첩 DTO 6개**(총 49개) 전부 데코레이터 있음(2026-10-16). 처음 버전은 중첩을 안 따라갔다 — 엣지 검증에서 보강. |
+| 중첩 객체 | `@ValidateNested` 와 `@Type` 이 있는 중첩 DTO 안에서도 whitelist 가 돈다(모르는 키 버림). 없는 자유 형식 객체(`@IsObject` 만)는 통째로 유지된다. | ✅ 중첩 6개 점검 포함. 웹훅 `WebhookPaymentDto.data` 는 `@ValidateNested` 라 PortOne 의 여분 키(storeId 등)가 버려지지만 서비스는 `type`·`data.paymentId`·`data.transactionId` 만 읽어 영향 없음. (별건: `WebhookDataDto.transactionId` 가 `@IsString()` 만 있고 `@IsOptional()` 이 없어 PortOne 이 그 키를 생략하면 400 — whitelist 와 무관한 기존 상태, §8 후보로 기록) |
+| 서비스가 DTO 를 통째로 쓰는 곳 | `repository.create(dto)`·`Object.assign(entity, dto)`·`dto as any` 가 있으면 "선언되지 않았지만 저장되던" 키가 whitelist 뒤 사라진다. | ✅ grep 결과 0곳(카테고리 create 도 필드를 고른다). 즉 whitelist 가 버리는 키는 어떤 서비스도 읽지 않던 키다 → 동작 변화 없음. |
+| 필드 선택 복사의 `undefined` | 재신청에서 선택 필드(contactEmail·contactPhone)를 생략하면 `update(id, { contactEmail: undefined })` 가 된다. | ✅ 실측(2026-10-16): TypeORM 은 `undefined` 를 건너뛰어 **기존 값 유지** — 스프레드 시절(키 없음)과 같은 동작. |
+| 운영 앱 본문 | Ops Companion 의 쓰기 본문 키가 DTO 밖이면 버려진다. | ✅ `ReviewInput`(verdict·rating·comment·guided·checks) ⊆ `CreateReviewDto`, 기기 등록·로그아웃 본문도 DTO 와 일치. |
 | 프론트의 여분 필드 | 화면이 DTO에 없는 필드를 습관적으로 보내면 거절 단계에서 정상 기능이 깨진다. | `frontend/src/service/` 의 쓰기 요청 본문을 DTO와 대조한다. 대조 결과가 §4의 D 시나리오가 된다. |
 | 운영 앱 | Ops Companion 의 요청 본문도 같은 파이프를 지난다. | `ops-companion/src/lib/api.ts` 호출을 같은 방식으로 대조한다. |
 | 웹훅 | PortOne 웹훅은 원문 본문으로 서명을 검증한다. | 본문 DTO 적용 여부를 확인하고, 웹훅 e2e로 확인한다. |
@@ -142,7 +145,7 @@ API 목록은 `frontend/src/service/*.ts` 와 운영 앱 `ops-companion/src/lib/
 | 0 ✅ | 로컬에서 기존 e2e 8개 스펙이 통과하는지 확인한다. | 2026-10-15: 첫 실행 1건 실패 — main 의 낡은 테스트 2건(§2 CI 행) 갱신 후 8스위트 58/58 |
 | 1 ✅ | 셀러 신청 필드 덮어쓰기를 로컬 e2e로 재현한다(§3 단계 1). 수정 전이므로 **실패하는 테스트**로 기록한다. | 2026-10-15: 4개 경로 전부 201, DB 변조 확인(§2 셀러 신청 행). 번들 사본에 whitelist·forbid 를 패치해 **수정 뒤에는 두 모드 모두 4/4 통과**하는 테스트임도 확인 |
 | 2 ✅ | CI `security-e2e` job 을 만든다. pgvector 이미지, 마이그레이션, 기동, 헬스 대기, 요청 제한 env 를 갖춘다. 기존 8개 스펙을 CI에서 먼저 초록으로 만든다. | 2026-10-15: 로컬 도커로 CI 조건 재현 58/58 → **PR #73 첫 실행 통과(job 2분 0초)**. 첫 실행 로그에는 Nx 가 jest 요약을 접어 "실패" 만 남았다 → `--output-style=stream` 추가로 `Tests:` 와 DB 값이 로그에 남게 함 |
-| 3 (코드 ✅, 배포 대기) | 셀러 신청·재신청을 필드 선택 복사로 바꾸고 whitelist(버리기)를 켠다. 단계 1 의 테스트가 통과로 바뀌는지 확인하고 CI 의 `continue-on-error` 를 뗀다. 회귀 위험표의 동적 키 DTO·데코레이터 없는 속성 점검을 여기서 미리 돈다. **운영 백엔드 배포**(수동) 뒤 운영 DB 에서 악용 흔적을 확인한다(아래 질의). | 2026-10-16 로컬: 보안 스펙 4 실패 → **4 통과**, 9스위트 62/62. 남은 것: PR CI 로그(`Tests: 4 passed`)·운영 health 버전·흔적 질의 결과(없음이면 "없음" 으로 기록) |
+| 3 ✅ | 셀러 신청·재신청을 필드 선택 복사로 바꾸고 whitelist(버리기)를 켠다. 단계 1 의 테스트가 통과로 바뀌는지 확인하고 CI 의 `continue-on-error` 를 뗀다. 회귀 위험표의 동적 키 DTO·데코레이터 없는 속성 점검을 여기서 미리 돈다. **운영 백엔드 배포**(수동) 뒤 운영 DB 에서 악용 흔적을 확인한다(아래 질의). | PR #75: 보안 스펙 **4 실패 → 4 통과**(CI `security-e2e` 2분 18초), 9스위트 62/62. **운영 배포 2026-10-16 01:46 KST**: 이미지 `ansmoon/shopping-mall-backend:eb4829c`(digest abb300c1…), 10-14 와 같은 절차(.env 백업 → `BACKEND_IMAGE`·`APP_VERSION` 교체 → pull → `migrate.js check` 변경 없음 → backend 만 재생성, 중단 약 30초) → `/v1/health` version `eb4829c`. 스모크: 상품·카테고리 200, 모르는 쿼리 필드 포함 200(버림), 무토큰 셀러 신청 401, 데모 로그인 200, Vercel 프록시 200. **흔적 질의: 악용 없음** — 승인 셀러 6건 전부 seller 역할 보유(Q1 0건), 승인 뒤 수정된 행 0건(Q3 0건, 전 행 `createdAt`=`updatedAt`), Q2 의 6건은 전부 시드(09-14)·체험 상점 픽스처(10-11)로 승인 API 를 거치지 않아 감사 로그가 없는 것이 정상. 함정: `ssh 'bash -s' < script` 로 돌리면 `docker compose run` 이 stdin 의 나머지 스크립트를 삼킨다 → `-T` 또는 scp 후 파일 실행 |
 | 4 | 먼저 `frontend/src/service/*.ts`·`ops-companion/src/lib/api.ts` 에서 호출 API 목록을 뽑아 **점검 대상 API 수(분모)** 를 확정한다. 그다음 시나리오 A~D 를 추가하고 D 전체 통과를 확인한 뒤 `forbidNonWhitelisted` 로 올린다. 시나리오 수는 목표가 아니라 분모에서 따라오는 값이다. | §6 측정표 |
 
 ### 운영 DB 악용 흔적 질의 (3단계 배포 직후, 수동)
@@ -186,11 +189,12 @@ WHERE status = 'approved' AND "updatedAt" > "approvedAt" + interval '1 minute';
 | --- | --- | --- |
 | 점검 대상 API 수 | ○ (4단계에서 확정) | ○ |
 | 시나리오 수 (A / B / C / D) | 0 / 0 / 4 / 0 (2026-10-15, 셀러 신청만) | 같음 + 4단계 추가분 |
-| 실패한 경계 시나리오 | 4 (결함 1건, 변조 경로 4개 — PR #74 CI 로그) | 0 (2026-10-16 로컬 62/62, CI 는 3단계 PR 에서) |
-| 정상 요청(D) 실패 | — | 0 |
-| CI `security-e2e` 실행 시간 | **2분 0초** (PR #73 첫 실행 — 설치 47s·빌드 9s·마이그레이션 1s·health 2s·e2e 본체 13s. 기존 `ci` job 2분 46초보다 짧다) | ○분 |
-| 기존 e2e 통과 | 58/58 (낡은 테스트 2건 갱신 후) | ○/○ |
-| 기존 단위 테스트 통과 | ○/○ (CI 로그) | ○/○ |
+| 실패한 경계 시나리오 | 4 (결함 1건, 변조 경로 4개 — PR #74 CI 로그) | **0** (PR #75 CI `Tests: 4 passed`, 운영 `eb4829c` 배포) |
+| 정상 요청(D) 실패 | — | 0 (4단계에서 D 추가 후 확정) |
+| CI `security-e2e` 실행 시간 | **2분 0초** (PR #73 첫 실행 — 설치 47s·빌드 9s·마이그레이션 1s·health 2s·e2e 본체 13s. 기존 `ci` job 2분 46초보다 짧다) | **2분 18초** (PR #75) |
+| 기존 e2e 통과 | 58/58 (낡은 테스트 2건 갱신 후) | 58/58 (+ 보안 4) |
+| 기존 단위 테스트 통과 | ○/○ (CI 로그) | 통과 (PR #75 `ci` job Test 스텝 20s, 셀러 단위 13/13) |
+| 운영 DB 악용 흔적 | — | 없음 (2026-10-16 질의 3개) |
 
 ## 7. 이력서와 면접 메모
 

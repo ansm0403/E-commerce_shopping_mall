@@ -95,6 +95,7 @@ function importSourceOf(sf, identifier) {
 
 const results = []; // { cls, prop, verdict, detail, file }
 const seen = new Set();
+const nestedTargets = []; // [className, via] — @Type(() => X) 로 발견한 중첩 DTO
 
 function analyze(name, via) {
   if (seen.has(name)) return;
@@ -122,6 +123,19 @@ function analyze(name, via) {
       else if (src === 'class-transformer') hasTransformerOnly = true;
       else unknown.push(`${id}←${src ?? 'local'}`);
     }
+    // 중첩 DTO: @Type(() => Foo) 가 있으면 Foo 안에서도 whitelist 가 돌므로(ValidateNested) Foo 도 분석한다.
+    for (const d of decos) {
+      const expr = d.expression;
+      if (!ts.isCallExpression(expr) || expr.expression.getText(sf) !== 'Type') continue;
+      const arg = expr.arguments[0];
+      if (arg && ts.isArrowFunction(arg)) {
+        const body = arg.body;
+        const target = ts.isIdentifier(body) ? body.text : null;
+        if (target && /^[A-Z]/.test(target) && !['Number', 'String', 'Boolean', 'Date', 'Array', 'Object'].includes(target)) {
+          nestedTargets.push([target, `${name}.${prop} @Type`]);
+        }
+      }
+    }
     if (hasValidator) continue;
     if (unknown.length) results.push({ cls: name, prop, verdict: 'CHECK', detail: `프로젝트 데코레이터 ${unknown.join(', ')}`, file: rel });
     else if (hasTransformerOnly) results.push({ cls: name, prop, verdict: 'FAIL', detail: 'class-transformer 만 — whitelist 가 버린다', file: rel });
@@ -142,11 +156,19 @@ function analyze(name, via) {
 }
 
 for (const name of [...boundTypes.keys()].sort()) analyze(name, [...boundTypes.get(name)].join(', '));
+// 중첩 DTO 는 큐가 비울 때까지 따라간다(중첩 안의 중첩 포함)
+let nestedCount = 0;
+while (nestedTargets.length) {
+  const [target, via] = nestedTargets.shift();
+  if (seen.has(target)) continue;
+  nestedCount++;
+  analyze(target, via);
+}
 
 // 3. 출력
 const fails = results.filter((r) => r.verdict === 'FAIL');
 const checks = results.filter((r) => r.verdict === 'CHECK');
-console.log(`@Body/@Query 로 바인딩되는 클래스 ${boundTypes.size}개, 상속 포함 분석 ${seen.size}개`);
+console.log(`@Body/@Query 로 바인딩되는 클래스 ${boundTypes.size}개, 상속 포함 분석 ${seen.size}개 (그중 @Type 중첩 DTO ${nestedCount}개)`);
 console.log(`whitelist 가 버릴 속성(FAIL): ${fails.length}개 · 확인 필요(CHECK): ${checks.length}개\n`);
 for (const r of [...fails, ...checks]) console.log(`${r.verdict.padEnd(5)} ${r.cls}.${r.prop}  — ${r.detail}  [${r.file}]`);
 if (fails.length === 0 && checks.length === 0) console.log('모든 속성에 class-validator 데코레이터가 있다.');
