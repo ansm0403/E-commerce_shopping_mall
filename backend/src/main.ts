@@ -109,8 +109,11 @@ async function bootstrap() {
       // 본문·쿼리 필드를 버린다. 없을 때는 `status`·`userId`·`id` 같은 서버 전용 필드가 서비스까지 도달해
       // 셀러 신청에서 남의 승인 행을 덮어쓸 수 있었다(e2e 재현 backend-e2e/src/security/). 모든 @Body/@Query
       // 클래스의 속성에 데코레이터가 있는지는 scripts/security/check-dto-decorators.mjs 로 확인한다.
-      // forbidNonWhitelisted(400 거절)는 §4 D 시나리오(화면이 실제로 보내는 본문) 통과 뒤 §4 4단계에서 켠다.
+      // forbidNonWhitelisted: 모르는 필드를 조용히 버리지 않고 400 으로 거절한다(§4 4단계). 공격 시도도 클라이언트 버그도
+      // 보이게 된다. 화면이 실제로 보내는 본문은 backend-e2e/src/security/normal-requests(D)와
+      // scripts/security/compare-request-types.mjs 로 DTO 와 일치함을 확인한 뒤 켰다.
       whitelist: true,
+      forbidNonWhitelisted: true,
     })
   );
 
