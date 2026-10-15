@@ -1,6 +1,6 @@
 # 화면 밖의 API 경계 재점검 — 보안 설계
 
-작성일: 2026-10-15. **상태: §4 구현 순서 0~2단계 완료(2026-10-15), 3단계(수정·운영 배포) 진행 예정.**
+작성일: 2026-10-15. **상태: §4 구현 순서 0~2단계 완료(PR #73·#74), 3단계 수정 완료·운영 배포 대기(2026-10-16).**
 결함은 코드를 읽어서 찾은 뒤 2026-10-15 에 실제 HTTP 요청으로 재현했다(§2 셀러 신청 행, §4 단계 1). `○` 로 표시한 수치는 측정 후 채운다.
 
 > 표기 원칙(2026-10-15 검토): 결함은 **1건**(요청 본문을 그대로 믿는 지점)이고, 재현한 변조 **경로가 4개**다. "결함 4건" 으로 쓰지 않는다.
@@ -34,7 +34,7 @@
 | 항목 | 확인한 동작 | 위치 |
 | --- | --- | --- |
 | 객체 경계 | 주문, 리뷰, 문의, 장바구니, 셀러 상품, 셀러 문의, 정산, 결제가 서비스에서 소유자를 대조한다. 코드 기준으로는 빈틈을 찾지 못했다. | 각 `*.service.ts` |
-| 전역 입력 검증 | `ValidationPipe` 에 `whitelist` 가 없다. DTO에 없는 필드도 그대로 통과한다. | `backend/src/main.ts:104` |
+| 전역 입력 검증 | (3단계 전) `ValidationPipe` 에 `whitelist` 가 없었다. DTO에 없는 필드도 그대로 통과했다. **3단계(2026-10-16)에서 `whitelist: true` 를 켰다** — 켜기 전에 `scripts/security/check-dto-decorators.mjs` 로 @Body/@Query 클래스 43개의 모든 속성에 class-validator 데코레이터가 있음을 확인(버려질 정상 필드 0). `forbidNonWhitelisted` 는 4단계. | `backend/src/main.ts` |
 | 셀러 신청 | 받은 본문을 엔티티에 통째로 펼쳐 넣는다. 첫 신청은 `create({ userId, ...dto })`, 재신청은 `update(id, { ...dto, ... })` 이다. **HTTP 재현 완료(2026-10-15, `backend-e2e/src/security/seller-apply-field-boundary.e2e.spec.ts`, 전부 201):** ① `status:'approved'`·`approvedAt` 이 그대로 저장돼 `/seller/me` 가 approved ② `userId` 로 **남의 계정**에 신청 행 생성(공격자 행은 없음) ③ `id` 로 **남의 승인된 셀러 행을 UPDATE** — 소유자·상호·사업자번호·계좌가 공격자 값으로 바뀌고 승인 상태는 유지되어 승인 없이 승인 셀러가 되며 정산 계좌가 가로채진다 ④ 재신청은 status·rejectionReason·approvedAt 은 서버가 다시 쓰지만 `userId` 는 통과해 행이 남의 계정으로 이동. 수정 뒤 허용 결과는 "400+DB 불변" 또는 "201+서버값만 저장" 둘 다로 스펙에 적어, 단계 3(버리기)과 4(거절) 모두의 통과 기준이 된다. | `backend/src/seller/seller.service.ts:49`, `:40` |
 | 다른 쓰기 서비스 | 상품, 리뷰, 문의, 프로필, 회원가입은 필드를 골라 복사한다. | `product.service.ts:236`, `review.service.ts:81` 등 |
 | 선례 | 데모 체크아웃 한 곳만 `whitelist + forbidNonWhitelisted` 를 쓴다. | `demo-checkout.controller.ts:33` |
@@ -68,11 +68,11 @@
 
 ### 단계
 
-1. **재현.** 셀러 신청에 서버가 정해야 하는 필드를 포함한 요청을 보내고, DB 값이 바뀌는지 e2e로 기록한다. 이것이 수정 전 실패 기록이 된다.
-2. 셀러 신청과 재신청을 필드 선택 복사로 바꾼다.
-3. 전역 `whitelist: true` 를 켜고, 단위 테스트와 e2e 전체 통과를 확인한다.
+1. ✅ **재현.** 셀러 신청에 서버가 정해야 하는 필드를 포함한 요청을 보내고, DB 값이 바뀌는지 e2e로 기록한다. 이것이 수정 전 실패 기록이 된다. → PR #74 의 CI 로그(`Tests: 4 failed`)가 공식 기록.
+2. ✅ 셀러 신청과 재신청을 필드 선택 복사로 바꾼다. → `seller.service.ts pickApplicantFields`. `id` 를 넣지 않으므로 `save()` 가 항상 INSERT.
+3. ✅ 전역 `whitelist: true` 를 켜고, 단위 테스트와 e2e 전체 통과를 확인한다. → 로컬 9스위트 62/62(보안 스펙 4/4 통과로 전환) 2회 연속, 셀러 단위 스펙 통과. 회귀 위험표 대응: 동적 키 인덱스 시그니처 제거(어떤 클라이언트도 안 보냄, 서비스도 안 읽음), 데코레이터 점검 스크립트 0건.
 4. `forbidNonWhitelisted: true` 를 켜고, §4의 D 시나리오(정상 요청) 전체 통과를 확인한다.
-5. ops DTO 주석이 다시 사실과 맞는지 확인한다.
+5. ✅ ops DTO 주석이 다시 사실과 맞는지 확인한다. → `review.dto.ts` 주석에 "2026-10-16 부터 실제로 켜짐" 명시.
 
 ## 4. 보완 ② 실제 서버 테스트를 CI에 연결
 
@@ -142,8 +142,34 @@ API 목록은 `frontend/src/service/*.ts` 와 운영 앱 `ops-companion/src/lib/
 | 0 ✅ | 로컬에서 기존 e2e 8개 스펙이 통과하는지 확인한다. | 2026-10-15: 첫 실행 1건 실패 — main 의 낡은 테스트 2건(§2 CI 행) 갱신 후 8스위트 58/58 |
 | 1 ✅ | 셀러 신청 필드 덮어쓰기를 로컬 e2e로 재현한다(§3 단계 1). 수정 전이므로 **실패하는 테스트**로 기록한다. | 2026-10-15: 4개 경로 전부 201, DB 변조 확인(§2 셀러 신청 행). 번들 사본에 whitelist·forbid 를 패치해 **수정 뒤에는 두 모드 모두 4/4 통과**하는 테스트임도 확인 |
 | 2 ✅ | CI `security-e2e` job 을 만든다. pgvector 이미지, 마이그레이션, 기동, 헬스 대기, 요청 제한 env 를 갖춘다. 기존 8개 스펙을 CI에서 먼저 초록으로 만든다. | 2026-10-15: 로컬 도커로 CI 조건 재현 58/58 → **PR #73 첫 실행 통과(job 2분 0초)**. 첫 실행 로그에는 Nx 가 jest 요약을 접어 "실패" 만 남았다 → `--output-style=stream` 추가로 `Tests:` 와 DB 값이 로그에 남게 함 |
-| 3 | 셀러 신청·재신청을 필드 선택 복사로 바꾸고 whitelist(버리기)를 켠다. 단계 1 의 테스트가 통과로 바뀌는지 확인하고 CI 의 `continue-on-error` 를 뗀다. 회귀 위험표의 동적 키 DTO·데코레이터 없는 속성 점검을 여기서 미리 돈다. **운영 백엔드 배포**(수동) 뒤 운영 DB 에서 악용 흔적을 확인한다: 승인 상태인데 사용자에게 seller 역할이 없는 행(③ 경로), 승인 상태인데 `SELLER_APPROVED` 감사 로그가 없는 행(① 경로), `approvedAt` 뒤에 `updatedAt` 이 갱신된 행. | 전후 로그, 운영 health 버전, 흔적 질의 결과(없음이면 "없음" 으로 기록) |
+| 3 (코드 ✅, 배포 대기) | 셀러 신청·재신청을 필드 선택 복사로 바꾸고 whitelist(버리기)를 켠다. 단계 1 의 테스트가 통과로 바뀌는지 확인하고 CI 의 `continue-on-error` 를 뗀다. 회귀 위험표의 동적 키 DTO·데코레이터 없는 속성 점검을 여기서 미리 돈다. **운영 백엔드 배포**(수동) 뒤 운영 DB 에서 악용 흔적을 확인한다(아래 질의). | 2026-10-16 로컬: 보안 스펙 4 실패 → **4 통과**, 9스위트 62/62. 남은 것: PR CI 로그(`Tests: 4 passed`)·운영 health 버전·흔적 질의 결과(없음이면 "없음" 으로 기록) |
 | 4 | 먼저 `frontend/src/service/*.ts`·`ops-companion/src/lib/api.ts` 에서 호출 API 목록을 뽑아 **점검 대상 API 수(분모)** 를 확정한다. 그다음 시나리오 A~D 를 추가하고 D 전체 통과를 확인한 뒤 `forbidNonWhitelisted` 로 올린다. 시나리오 수는 목표가 아니라 분모에서 따라오는 값이다. | §6 측정표 |
+
+### 운영 DB 악용 흔적 질의 (3단계 배포 직후, 수동)
+
+경로마다 남는 자국이 다르다. 운영 셀러 행은 한 자릿수라 결과를 눈으로 다 본다.
+
+```sql
+-- ③ id 덮어쓰기 흔적: 승인 상태인데 사용자에게 seller 역할이 없다 (정상 승인은 역할 부여와 한 트랜잭션)
+SELECT s.id, s.user_id, s."businessName", s."approvedAt", s."updatedAt"
+FROM sellers s
+WHERE s.status = 'approved'
+  AND NOT EXISTS (SELECT 1 FROM user_roles ur JOIN roles r ON r.id = ur.role_id
+                  WHERE ur.user_id = s.user_id AND r.name = 'seller');
+
+-- ① status 변조 흔적: 승인 상태인데 관리자 승인 감사 로그가 없다 (metadata 에 params.id 가 실린다)
+SELECT s.id, s.user_id, s."approvedAt"
+FROM sellers s
+WHERE s.status = 'approved'
+  AND NOT EXISTS (SELECT 1 FROM audit_logs a
+                  WHERE a.action = 'SELLER_APPROVED' AND a.metadata->>'id' = s.id::text);
+
+-- 공통: 승인 뒤에 행이 다시 수정됐다
+SELECT id, user_id, "approvedAt", "updatedAt" FROM sellers
+WHERE status = 'approved' AND "updatedAt" > "approvedAt" + interval '1 minute';
+```
+
+감사 로그가 도입되기 전에 승인된 셀러는 ① 질의에 잡히므로 `approvedAt` 과 감사 로그 도입 시점을 함께 본다.
 
 ## 5. 하지 않는 것과 이유
 
@@ -160,7 +186,7 @@ API 목록은 `frontend/src/service/*.ts` 와 운영 앱 `ops-companion/src/lib/
 | --- | --- | --- |
 | 점검 대상 API 수 | ○ (4단계에서 확정) | ○ |
 | 시나리오 수 (A / B / C / D) | 0 / 0 / 4 / 0 (2026-10-15, 셀러 신청만) | 같음 + 4단계 추가분 |
-| 실패한 경계 시나리오 | 4 (결함 1건, 변조 경로 4개) | 0 |
+| 실패한 경계 시나리오 | 4 (결함 1건, 변조 경로 4개 — PR #74 CI 로그) | 0 (2026-10-16 로컬 62/62, CI 는 3단계 PR 에서) |
 | 정상 요청(D) 실패 | — | 0 |
 | CI `security-e2e` 실행 시간 | **2분 0초** (PR #73 첫 실행 — 설치 47s·빌드 9s·마이그레이션 1s·health 2s·e2e 본체 13s. 기존 `ci` job 2분 46초보다 짧다) | ○분 |
 | 기존 e2e 통과 | 58/58 (낡은 테스트 2건 갱신 후) | ○/○ |

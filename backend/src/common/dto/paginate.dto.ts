@@ -140,8 +140,7 @@ export class BasePaginateDto {
   @Type(()=>PaginateFilterDto)
   filter? : PaginateFilterDto;
 
-  // 동적 필터를 위한 인덱스 시그니처
-  // where__필드명__필터타입 형식의 필터를 동적으로 받을 수 있음
-  // 예: where__id__more_than, where__name__like, where__price__between 등
-  [key: string]: any;
+  // 예전에는 `[key: string]: any` 인덱스 시그니처로 where__필드__연산 형식의 동적 키를 받는다고 선언했지만,
+  // CommonService.paginate 는 filter·cursor 만 읽고 어떤 클라이언트(웹·운영 앱·e2e)도 그 키를 보내지 않았다.
+  // 전역 ValidationPipe whitelist 와 충돌하는 죽은 선언이라 지웠다(위 주석의 where__ 예시는 설계 당시 메모).
 }
