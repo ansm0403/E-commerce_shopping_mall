@@ -6,7 +6,14 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { orderQueryOptions } from '@/lib/react-query/order-query-options';
-import { OrderResponse } from '@/model/order';
+import { OrderResponse, OrderStatus } from '@/model/order';
+
+/** 결제가 끝난 뒤의 상태들 — 결제 직후 리스너가 preparing 으로 넘기므로 'paid' 하나만 보면 안 된다 */
+const PAID_OR_LATER: ReadonlySet<OrderStatus> = new Set<OrderStatus>(['paid', 'preparing', 'shipped', 'delivered', 'completed']);
+
+export function isPaidOrLater(order: Pick<OrderResponse, 'status' | 'paidAt'>): boolean {
+  return Boolean(order.paidAt) || PAID_OR_LATER.has(order.status);
+}
 
 export default function CheckoutCompleteContent() {
   const router = useRouter();
@@ -37,7 +44,11 @@ export default function CheckoutCompleteContent() {
     );
   }
 
-  if (!order || order.status !== 'paid') {
+  // 결제 뒤 상태는 `paid` 에 머물지 않는다 — 백엔드의 order.paid 리스너가 곧바로 `preparing` 으로 넘기고,
+  // 운영에서는 PortOne 웹훅이 verify 보다 먼저 와서 이 페이지가 열릴 땐 이미 preparing 이다.
+  // 그래서 "결제가 됐는가" 는 paidAt(또는 결제 이후 상태)으로 본다. `status !== 'paid'` 만 보면 성공한 결제가
+  // "확인할 수 없습니다" 로 보인다(2026-10-16 운영 실결제에서 확인, 3cf48c4 이후 회귀).
+  if (!order || !isPaidOrLater(order)) {
     return (
       <div className="py-20 text-center">
         <p>결제 완료 상태를 확인할 수 없습니다.</p>
