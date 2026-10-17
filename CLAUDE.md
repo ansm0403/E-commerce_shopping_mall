@@ -31,7 +31,7 @@ App Router 라우트 그룹 `(auth)` · `(main)`(상점·구매·`/my/*`) · `(s
 - 셀러: 신청/상태 확인(`my/seller-apply`) · 콘솔 셸 + 대시보드(`/seller`) · 상품 등록/수정/게시 토글 · 주문/배송 · 정산 · 문의 답변(`seller/inquiries`) → `docs/roadmap/01-seller-core.md`, 셸·대시보드는 `01-2-seller-dashboard-inquiry.md`, 문의는 `05-buyer-flow-complete.md`
 - 관리자: 대시보드 · 감사 로그 · 셀러 승인 · 상품 승인(=게시) · 주문 · 정산 확정/지급 · 운영 앱 소개(`ops-app`) → `02-admin-core.md`, `ex-audit-log-admin.md`
 - 관리자 AI 어시스턴트(tool use 6종·SSE·멀티턴·eval 루프, 다음 = Phase 6b) → `docs/roadmap/ex-ai-assistant.md` · 채팅 화면 UX(도구 진행 표시·마크다운·명시적 중지·401 갱신·스크린리더, 전/후 측정) → `04-ai-chat-ux.md`
-- 관리자 AI 의미 검색(리뷰·공개 문의, pgvector·Gemini 임베딩 — 운영: 문의 검색 켜짐·리뷰 초기 색인 진행 중) → `docs/roadmap/ex-ai-vector-search.md`(+phase1~4, `-portfolio-ready`, `-deploy`)
+- 관리자 AI 의미 검색(리뷰·공개 문의, pgvector·Gemini 임베딩 — 운영 반영: 리뷰·문의 검색 켜짐) → `docs/roadmap/ex-ai-vector-search.md`(+phase1~4, `-portfolio-ready`, `-deploy`)
 - RN 운영 앱 Ops Companion: Phase 0~8 운영 배포 + 외부 공개(preview APK·데모 계정·EAS Update·웹 체험판) → `ops-companion/README.md`, `docs/learning/ops-companion/`, 설계 `docs/roadmap/ops-companion-design.md` §9
 
 **stub / 미완**
