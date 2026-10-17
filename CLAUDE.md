@@ -31,7 +31,7 @@ App Router 라우트 그룹 `(auth)` · `(main)`(상점·구매·`/my/*`) · `(s
 - 셀러: 신청/상태 확인(`my/seller-apply`) · 콘솔 셸 + 대시보드(`/seller`) · 상품 등록/수정/게시 토글 · 주문/배송 · 정산 · 문의 답변(`seller/inquiries`) → `docs/roadmap/01-seller-core.md`, 셸·대시보드는 `01-2-seller-dashboard-inquiry.md`, 문의는 `05-buyer-flow-complete.md`
 - 관리자: 대시보드 · 감사 로그 · 셀러 승인 · 상품 승인(=게시) · 주문 · 정산 확정/지급 · 운영 앱 소개(`ops-app`) → `02-admin-core.md`, `ex-audit-log-admin.md`
 - 관리자 AI 어시스턴트(tool use 6종·SSE·멀티턴·eval 루프, 다음 = Phase 6b) → `docs/roadmap/ex-ai-assistant.md` · 채팅 화면 UX(도구 진행 표시·마크다운·명시적 중지·401 갱신·스크린리더, 전/후 측정) → `04-ai-chat-ux.md`
-- 관리자 AI 의미 검색(리뷰·공개 문의, pgvector·Gemini 임베딩 — 기능 플래그 기본 off·운영 미배포, 사람 판정·문의 최종 평가 남음) → `docs/roadmap/ex-ai-vector-search.md`(+phase1~4, `-portfolio-ready`)
+- 관리자 AI 의미 검색(리뷰·공개 문의, pgvector·Gemini 임베딩 — 운영: 문의 검색 켜짐·리뷰 초기 색인 진행 중) → `docs/roadmap/ex-ai-vector-search.md`(+phase1~4, `-portfolio-ready`, `-deploy`)
 - RN 운영 앱 Ops Companion: Phase 0~8 운영 배포 + 외부 공개(preview APK·데모 계정·EAS Update·웹 체험판) → `ops-companion/README.md`, `docs/learning/ops-companion/`, 설계 `docs/roadmap/ops-companion-design.md` §9
 
 **stub / 미완**
@@ -71,5 +71,5 @@ App Router 라우트 그룹 `(auth)` · `(main)`(상점·구매·`/my/*`) · `(s
 - 전역 `ValidationPipe` 는 `whitelist + forbidNonWhitelisted`(2026-10-16) — DTO 에 class-validator 데코레이터가 없는 **본문·쿼리** 키는 400(`property x should not exist`). 새 DTO 필드에 데코레이터를 빼먹으면 그 필드를 보내는 화면이 깨지고, 프론트가 DTO 에 없는 키(쿼리 포함)를 보내면 그 화면이 깨진다. 점검 3종 `scripts/security/{check-dto-decorators,compare-request-types,list-api-surface}.mjs`, e2e `backend-e2e/src/security/`(D 스펙이 화면 본문·쿼리 그대로). 상세 `docs/roadmap/ex-security-api-boundary.md`.
 - 인증 상태는 "모름·있음·없음" 셋이다 — `/auth/me` 응답 전(`isLoading`)이나 다른 탭의 토큰을 기다리는 동안을 "없음"으로 읽으면 로그인한 사용자가 로그인 화면으로 튕긴다(`useRequireAuth`·`AuthContext isAwaitingTabToken`).
 - 계정에 묶인 캐시는 로그인·로그아웃 때 같이 비운다 — 콘솔 가드의 역할 캐시(`ROLE_CHECK_QUERY_KEY`)가 남으면 다른 계정으로 로그인한 사람이 앞 계정의 역할로 판정된다. 이런 결함은 새로고침하면 사라지므로 확인은 **새로고침 없이** 한다(`scripts/seller-console/verify-role-switch.mjs`).
-- 운영 `docker-compose.prod.yaml` 의 postgres 는 pgvector 가 없는 `postgres:18-alpine` 이다 — 배포 절차의 `migrate.js` 가 `SearchFoundation`(`CREATE EXTENSION vector`)에서 실패한다. 의미 검색이 들어간 백엔드를 배포하기 전에 `docker/postgres-vector` 이미지로 교체(볼륨 보존)부터. 플래그가 꺼져 있으면 마이그레이션 전 DB 에서도 리뷰·문의 저장은 동작하게 짜여 있다(`search-index-recorder.ts`) — 켜는 건 마이그레이션 뒤.
+- 운영 postgres 는 `ansmoon/postgres-vector:18.6-0.8.7`(운영 18.6 기반 digest + LLVM 21 로 빌드, 2026-10-14 교체). 운영 postgres 이미지를 바꿀 때는 **실행 중인 마이너 버전과 기반 digest·LLVM 버전을 맞춰** `docker/postgres-vector/Dockerfile` 빌드 인자로 다시 빌드한다(낮은 마이너로 내리지 않는다). 의미 검색 워커(`AI_SEARCH_WORKER_ENABLED`)를 켜면 5분 reconcile 이 색인 기록 없는 원본을 **전부** 등록해 임베딩 무료 한도(1,000건/일)를 넘긴다 — 초기 색인 절차는 `docs/roadmap/ex-ai-vector-search-deploy.md`. 운영 이미지에는 search CLI 가 없다(SQL 로 대체).
 - CSP(`frontend/next.config.js`)에 없는 출처는 브라우저가 조용히 막는다 — 업로드 미리보기(`blob:`)가 엑스박스였던 원인. 새 종류의 이미지·연결을 붙이면 CSP 부터 본다.
