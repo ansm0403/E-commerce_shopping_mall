@@ -32,6 +32,9 @@ const inquiryBaseScope = (): InquirySearchScope => ({ sourceType: 'inquiry', tim
 /** Exact cosine search. No source locks or DB transaction remain open during external embedding. */
 export class SemanticSearchService {
   constructor(readonly db: DataSource, readonly config: ConfigService, readonly embedding: EmbeddingClient, readonly recorder: SearchIndexRecorder) {}
+  // 검색 플래그(리뷰·문의 2개)는 색인 플래그(2개, search-index-recorder)·워커 플래그(1개)와 따로 켠다.
+  // 운영에서는 색인·워커만 먼저 켜서 기존 자료를 다 색인하고(pending·running·failed 0 확인) 그 뒤에 검색을 열었다.
+  // 한 플래그로 묶으면 색인이 반쯤 된 상태로 검색이 열린다. 근거: docs/roadmap/ex-ai-vector-search-deploy.md (초기 색인 절차·§4)
   isReviewsEnabled(): boolean { return this.config.get('AI_SEARCH_REVIEWS_ENABLED') === 'true'; }
   isInquiriesEnabled(): boolean { return this.config.get('AI_SEARCH_INQUIRIES_ENABLED') === 'true'; }
 
@@ -75,6 +78,10 @@ export class SemanticSearchService {
       if (!Array.isArray(vectors) || vectors.length !== 1) throw new SearchError('INVALID_EMBEDDING');
       assertSearchVector(vectors[0]);
       this.checkAbort(context);
+      // 조건(상품·카테고리·별점·기간·현재 버전)은 SQL WHERE 가 거르고, 임베딩은 남은 후보의 순서만 정한다.
+      // 벡터 인덱스(HNSW 등) 없이 `<=>` 정확 코사인 거리로 정렬한다 — 근사 인덱스는 조건 필터와 겹치면
+      // 걸러진 뒤 후보가 모자라 결과가 빠질 수 있어, 규모·지연을 측정한 뒤 넣고 다시 평가한다.
+      // 근거: docs/roadmap/ex-ai-vector-search.md §4 · §6-2(상위 10청크, 임계값·재순위화 없음)
       const candidates = await this.snapshot(context, async manager => {
         await this.recorder.assertProfile(manager);
         const filter = this.filter(args, [PROFILE.id, JSON.stringify(vectors[0])]);
@@ -132,6 +139,10 @@ export class SemanticSearchService {
           const text = points.slice(0, remaining).join('');
           if (points.length > remaining) truncated = true;
           remaining -= Math.min(points.length, remaining);
+          // 행을 펼치지 않고 내보낼 필드만 골라 새 객체를 만든다. 이 값은 HTTP 응답이 아니라 도구 결과로
+          // LLM 에 바로 들어가서 ClassSerializerInterceptor·@Exclude 를 거치지 않는다(manager.query 의 날것 행이기도 하다).
+          // 행을 그대로 넘기면 원문 전체(comment)·해시·버전 같은 내부 값까지 LLM 으로 나간다.
+          // 인용문(text)은 색인 때 scrubText 로 연락처를 가린 청크이고, 디스패처(maskAssistantValue)가 한 번 더 가린다.
           if (!source) {
             source = { sourceType: 'review', id: row.review_id, productId: row.product_id, rating: row.rating, createdAt: row.created_at.toISOString(), quotes: [] };
             grouped.set(row.review_id, source);

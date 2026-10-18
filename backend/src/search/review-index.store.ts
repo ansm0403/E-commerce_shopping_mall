@@ -108,6 +108,11 @@ export class ReviewIndexStore {
     await this.db.transaction(async manager => { await this.lockCurrent(manager, job); });
   }
 
+  // 임베딩은 트랜잭션 밖에서 기다린다(요청 제한 15초). 그 사이 원본이 수정됐거나(search_version 증가)
+  // 점유가 만료돼 다른 처리기가 같은 작업을 다시 잡았으면, 손에 든 벡터는 옛 본문·남의 작업 결과다.
+  // 그래서 저장·실패 기록 직전에 원본 → 작업 순서로 잠그고 버전·점유 토큰·만료를 다시 본다(버전이 다르면 superseded).
+  // 이 검사가 없으면 늦게 도착한 옛 결과가 저장돼 원본과 색인이 어긋난다.
+  // 근거: docs/roadmap/ex-ai-vector-search.md §5-2 · review-index.integration.spec.ts "discards the late old result"
   private async lockCurrent(manager: EntityManager, job: ClaimedReviewJob): Promise<boolean> {
     const [source] = await manager.query(`SELECT search_version FROM ${searchTable(manager, 'reviews')} WHERE id=$1 FOR UPDATE`, [job.review_id]);
     if (!source) return false;
