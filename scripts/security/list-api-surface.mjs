@@ -128,7 +128,10 @@ for (const file of CLIENT_FILES) {
   visit(sf);
 }
 
-// 중복 제거(메서드+경로)
+// 중복 제거(메서드+경로). 이 키 수가 리포트의 "화면이 부르는 API" 수다(2026-10-18 실행 95).
+// 라우트 수와 1:1 이 아니다 — 서로 다른 키가 같은 핸들러에 붙을 수 있다
+// (GET /products/:p 와 GET /products/all 이 둘 다 ProductController.findOne → 서로 다른 라우트로는 94).
+// 근거: docs/roadmap/ex-security-api-surface.md
 const clientMap = new Map();
 for (const c of clientCalls) {
   const key = `${c.method} ${c.path}`;

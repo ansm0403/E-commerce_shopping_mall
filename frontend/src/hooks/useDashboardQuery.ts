@@ -19,6 +19,9 @@ import {
  * 대시보드 차트 공통 React Query 옵션.
  * - refetchOnWindowFocus false: 운영자가 의도적으로 새로고침할 때만 갱신
  * - staleTime은 차트별로 다름 (Design_Dashboard.md §10.2 캐싱 TTL 차등)
+ *   KPI 1분 · 추이·보안 5분 · 퍼널 10분 — 값이 바뀌는 속도에 맞춰 재조회 간격을 나눈다.
+ *   설계표는 Redis TTL 이었지만 백엔드 캐시는 붙이지 않았다. 이 차등은 브라우저의
+ *   React Query 캐시에만 있다 — 다른 메뉴에 갔다 오거나 필터를 되돌릴 때 같은 집계 쿼리를 다시 보내지 않게.
  */
 
 const NO_FOCUS_REFETCH = { refetchOnWindowFocus: false } as const;
@@ -60,6 +63,10 @@ export function useOrderTrendQuery(params: OrderTrendParams) {
   });
 }
 
+/**
+ * 로그인 성공·실패·잠금 일별 추이.
+ * - staleTime 5분 — 주문 트렌드와 같은 기간 필터·일별 집계라 같은 주기로 둔다
+ */
 export function useSecurityQuery(params: SecurityParams) {
   return useQuery<SecurityResponse>({
     queryKey: ['dashboard', 'security', params.startDate, params.endDate],
