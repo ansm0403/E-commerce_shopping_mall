@@ -8,7 +8,7 @@
 ## 1. 개요 / 스택
 - 풀스택 쇼핑몰 모노레포(포트폴리오/실서비스). **Nx 21 + Yarn(berry)**, 공용 타입 `@shopping-mall/shared`.
 - 백엔드 NestJS 11 + TypeORM + PostgreSQL 18 + Redis · 프론트 Next.js(App Router, React 19) + TanStack Query + axios + ECharts · 운영 앱 Expo SDK 57(RN).
-- 배포: 프론트 **Vercel**, 백엔드 **AWS EC2** Docker Compose(postgres+redis+backend+nginx+certbot). 공개 진입점 `https://api.ansmoon.dev`(nginx 443 → backend 4000 내부 전용). 브라우저는 Vercel rewrites(`/api/*`) same-origin 프록시, RN 앱은 nginx 직접. 상세 `docs/roadmap/03-infra-nginx.md`(+runbook).
+- 배포: 프론트 **Vercel**(`https://shop.ansmoon.dev` — 옛 `shopping-mall-frontend-dusky.vercel.app` 도 유지, 지우지 말 것. 프론트 도메인을 더하면 백엔드 `CORS_ORIGINS` 에도 더해야 쓰기가 산다), 백엔드 **AWS EC2** Docker Compose(postgres+redis+backend+nginx+certbot). 공개 진입점 `https://api.ansmoon.dev`(nginx 443 → backend 4000 내부 전용). 브라우저는 Vercel rewrites(`/api/*`) same-origin 프록시, RN 앱은 nginx 직접. 상세 `docs/roadmap/03-infra-nginx.md`(+runbook).
 - 관측성: Sentry(프론트/백/앱, DSN 없으면 no-op) + Slack 2종(CI→`#deployments`, Claude 훅→`#claude-hooks`). Sentry→Slack 통합은 없다(Team 플랜 전용) — 장애 알림 통로는 RN 운영 앱 푸시뿐. 상세 `docs/roadmap/ex-observability-map.md`.
 
 ## 2. 구조 / 명령

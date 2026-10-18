@@ -12,7 +12,7 @@
 
 | 무엇 | 어디서 보나 | 비고 |
 |---|---|---|
-| 쇼핑몰 웹 | https://shopping-mall-frontend-dusky.vercel.app | 로그인 화면 **"관리자 페이지 체험하기"** 로 데모 관리자 진입(계정 정보 불필요) |
+| 쇼핑몰 웹 | https://shop.ansmoon.dev | 로그인 화면 **"관리자 페이지 체험하기"** 로 데모 관리자 진입(계정 정보 불필요). 옛 주소 `shopping-mall-frontend-dusky.vercel.app` 도 같은 사이트로 계속 열린다 |
 | 백엔드 API | https://api.ansmoon.dev/v1/health | nginx + Let's Encrypt. 응답의 `version` 이 배포된 커밋 SHA, DB·Redis 중 하나라도 죽으면 503 |
 | 운영 앱(안드로이드) | [APK 설치 링크](https://e-commerce-ops-companion.vercel.app/android) · [설치 안내·QR](ops-companion/README.md#설치해서-써-보기-포트폴리오-방문자용) | 스토어 미배포(EAS preview 빌드). 로그인 화면 **"데모 계정으로 체험하기"** |
 | 운영 앱(아이폰·PC) | https://e-commerce-ops-companion.vercel.app | **웹 체험판** — 같은 RN 코드를 react-native-web 으로 내보낸 것. 설치 없이 데모 로그인, 푸시·생체 잠금만 없음 |

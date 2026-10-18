@@ -34,7 +34,7 @@ function parseArgs(argv) {
     return i >= 0 && argv[i + 1] !== undefined ? argv[i + 1] : fallback;
   };
   return {
-    base: get('--base', 'https://shopping-mall-frontend-dusky.vercel.app'),
+    base: get('--base', 'https://shop.ansmoon.dev'),
     path: get('--path', '/'),
     runs: Number(get('--runs', '1')),
     waitMs: Number(get('--wait', '15000')),

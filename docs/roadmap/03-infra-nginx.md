@@ -294,7 +294,7 @@ certbot 사이드카가 12시간마다 `renew` 를 시도하고(만료 30일 전
 | 12-4 | `next.config.js:176-179` 주석 정정("nginx 전환 시 rewrites 제거"는 폐기된 v1 설계) | 미착수 |
 | 12-7 | CORS 거부를 500 → **403**, `main.ts:54` 주석 정정(§8 부수 발견) | 미착수 |
 | 12-8 | `.env` 의 `PROTOCOL=https` / `HOST=api.ansmoon.dev` 교정(§8 함정 6) | **RN 착수 전 권장** |
-| 12-9 | (선택) 커스텀 도메인 `shop.ansmoon.dev` 를 Vercel 에 연결 | 추가 비용 0. 브랜드 일관성 + 도메인 영구 고정 |
+| 12-9 | 커스텀 도메인 `shop.ansmoon.dev` 를 Vercel 에 연결 | 🔶 **2026-10-19 진행 중** — Vercel Domains(Connect to Production) + Cloudflare `CNAME shop → <프로젝트별>.vercel-dns-017.com`(회색 구름) 완료, 화면·HTTPS 200. 옛 `shopping-mall-frontend-dusky.vercel.app` 은 **지우지 않고 유지**(이력서·외부 링크 — 이름을 놓으면 남이 가져갈 수 있다). ⚠ 도메인만 붙이면 새 주소의 **쓰기(POST·PATCH)만 500**(`Not allowed by CORS`, 실측) — EC2 `.env` `CORS_ORIGINS` 에 새 주소를 **추가**(기존 값 유지) + `up -d backend` + nginx reload 가 먼저다. 이어서 `FRONTEND_URL`(인증 메일 링크)을 새 주소로. AI 장애 분석의 서비스 지도도 두 도메인으로 고치고 접미사 `.1 → .2`(`ops-analysis.service.ts`). 나중에(선택) vercel.app → 새 주소 **307** 리다이렉트 |
 | — | `scripts/deploy.sh`, Dockerfile prod-deps 구조 | DB 트랙 파킹 승계 |
 
 ---

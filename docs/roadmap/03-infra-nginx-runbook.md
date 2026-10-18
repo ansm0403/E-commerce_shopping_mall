@@ -356,7 +356,7 @@ Vercel → 프로젝트 → **Settings → Environment Variables** → `API_PROX
 
 배포 `Ready` 후 **브라우저**(이제부터는 브라우저가 맞다 — Vercel 사이트는 same-origin 이라 HSTS 무관):
 
-> ⚠ **반드시 운영 도메인 `https://shopping-mall-frontend-dusky.vercel.app` 에서 확인한다.** Vercel 배포 화면의 "Visit" 이 여는
+> ⚠ **반드시 운영 도메인 `https://shopping-mall-frontend-dusky.vercel.app` 에서 확인한다**(2026-10-19 부터는 `https://shop.ansmoon.dev` 도 운영 도메인 — 03 §11). Vercel 배포 화면의 "Visit" 이 여는
 > `...-<해시>-sangmoons-projects.vercel.app` 은 **배포 1건짜리 임시 주소**라 백엔드 `CORS_ORIGINS` 에 없다 → 브라우저가 `Origin` 을
 > 붙이는 **POST 만 500**(로그인·회원가입·주문)이고 GET(목록·상세)은 멀쩡해 보여 오판하기 쉽다(실측 2026-09-15, §13-L).
 
