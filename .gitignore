@@ -71,3 +71,8 @@ uploads/
 # nginx 런타임 설정 디렉터리(EC2 에서 bootstrap/최종본을 cp 해 넣는 곳) + certbot 산출물 — 커밋 금지
 nginx/conf.d/
 certbot/
+
+# frontend-e2e (Playwright) 산출물
+frontend-e2e/.state
+frontend-e2e/test-results
+frontend-e2e/playwright-report

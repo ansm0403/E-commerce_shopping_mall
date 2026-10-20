@@ -58,12 +58,14 @@ App Router 라우트 그룹 `(auth)` · `(main)`(상점·구매·`/my/*`) · `(s
 - 어시스턴트 채팅(프론트): `app/(admin)/admin/assistant/` — `hooks/useAssistantStream` + `lib/`(순수 함수: `chat-message`·`delta-batcher`·`announcement`) + `service/admin-assistant.ts`(fetch 스트림·401 재시도·`stream/cancel`) + `service/assistant-sse.ts`(파서). 와이어 타입은 `shared/src/lib/types/assistant/`. 측정·검증 스크립트 `scripts/ai-chat/`.
 - LLM(`intrastructure/ai/` 의 `LLM_CLIENT`) 사용처: `admin/assistant/`(도구 `assistant-tools.ts`, 디스패처 `assistant.service.ts executeTool`) · `ops/ops-analysis.service.ts` · `product/product-summary.service.ts`(리뷰 요약이 review 가 아니라 product 에).
 - 의미 검색: `backend/src/search/` — 원본 저장 트랜잭션에서 `SearchIndexRecorder`(review/inquiry/demo/seed 가 호출) → 워커 `ReviewIndexScheduler`(이름과 달리 리뷰·문의 큐를 번갈아 처리) → `*-index.processor`/`*-index.store` → 조회 `semantic-search.service.ts`. 플래그 `AI_SEARCH_{REVIEWS,INQUIRIES,REVIEW_INDEX,INQUIRY_INDEX,WORKER}_ENABLED`. 평가 DB 는 별도 `docker-compose.search.yaml`(15433, `search:db:up`) · 평가 스크립트 `backend/eval/search/`.
+- 프론트 브라우저 E2E: `frontend-e2e/`(Playwright — **Nx 프로젝트 아님**, 루트 `yarn e2e:frontend`, CI `frontend-e2e` job). 데이터 준비는 `backend-e2e/src/support/*` 를 그대로 import(`e2e-fe-checkout-` 접두, teardown 청소). 전제 = 백엔드 4000 + 운영 빌드(`NEXT_PUBLIC_API_URL=/api`, PowerShell 로 빌드) + 백엔드 `CORS_ORIGINS` 에 3100. PortOne 결제창은 열지 않는다. 상세 `docs/roadmap/ex-frontend-e2e.md`.
 - 업로드: `product.controller.ts`(multer) → `main.ts` `express.static('/uploads')`(v1 밖) → `next.config.js` rewrites. Sentry 초기화: `backend/src/instrument.ts` · `frontend/src/instrumentation(-client).ts` + `sentry.*.config.ts` · `ops-companion/src/lib/sentry.ts`.
 
 ## 9. 전역 함정 (영역별 함정은 하위 CLAUDE.md)
 - 백엔드는 `@shopping-mall/shared` 를 **값으로 import 금지** — `import type` + `typeof` 만(Nx webpack 이 외부화하는데 운영 이미지에 링크가 없어 `Cannot find module`). 예 `backend/src/ops/visitor-test.ts`.
 - 옛 로컬 백엔드가 4000 을 쥐고 있으면 새 번들이 `EADDRINUSE`, e2e 는 옛 응답을 받는다 — `netstat -ano | grep :4000` 의 PID 시작 시각 확인.
-- 병렬 Bash 는 cwd 를 공유한다 — 한쪽의 `cd` 때문에 `yarn add` 가 엉뚱한 `package.json` 에 들어간다.
+- 병렬 Bash 는 cwd 를 공유한다 — 한쪽의 `cd` 때문에 `yarn add` 가 엉뚱한 `package.json` 에 들어간다. `yarn add` 는 손대지 않은 워크스페이스 `package.json` 의 서식도 다시 쓴다(내용 변화 없으면 `git checkout`).
+- 브라우저는 same-origin 이어도 **POST·PATCH 에는 `Origin` 을 붙이고**(GET 은 안 붙임) Next rewrites 가 그대로 넘긴다 — 백엔드 `CORS_ORIGINS` 에 그 사이트가 없으면 GET 은 되는데 **쓰기만 500**(`Not allowed by CORS`). 로컬 3100 운영 빌드로 화면을 확인할 때 걸린다.
 - `yarn nx serve backend` 는 cwd 가 backend 라 **`backend/.env`** 를 읽는다(루트 `.env` 가 아니다). backend/.env 의 `AI_SEARCH_*_ENABLED=true` 를 검색 테이블이 없는 DB(루트 `.env` 의 로컬 postgres:18-alpine)와 함께 쓰면 **문의 작성이 500** → 로컬 e2e 전에 플래그를 `false` 로 export.
 - Vercel 프록시(rewrites)는 **브라우저의 연결 끊김을 백엔드로 전달하지 않는다**(nginx 에는 정상 완료로 찍힌다) — 스트림을 서버에서 멈추려면 `res.on('close')` 가 아니라 명시적 요청으로(`POST /admin/assistant/stream/cancel`). 로컬에서는 전파돼서 운영에서만 드러난다.
 - 머지 직후 2~3분은 Vercel 운영이 옛 버전이다 — 운영 확인은 배포 완료(GitHub Deployments `success`) 뒤 강력 새로고침으로.
