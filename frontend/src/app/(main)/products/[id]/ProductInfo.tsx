@@ -225,13 +225,8 @@ export default function ProductInfo({
           </span>
           <span className="text-sm text-secondary-600">원</span>
         </div>
-        {displayPrice >= 50000 ? (
-          <p className="text-green-800 text-xs font-medium"><span aria-hidden="true">🚚 </span>무료배송</p>
-        ) : (
-          <p className="text-secondary-600 text-xs">
-            <span aria-hidden="true">🚚 </span>배송비 3,000원 (50,000원 이상 무료)
-          </p>
-        )}
+        {/* 배송비는 서버 주문 금액에 없다 — 화면만 "3,000원" 을 약속하면 청구액과 어긋난다(ex-frontend-e2e.md §4 (a)) */}
+        <p className="text-green-800 text-xs font-medium"><span aria-hidden="true">🚚 </span>무료배송</p>
       </div>
 
       {/* ── 이벤트 / 태그 ── */}

@@ -11,9 +11,6 @@ import { useClearCart } from '@/hooks/useCart';
 import { Cart } from '@/model/cart';
 import CartItemRow from './CartItemRow';
 
-const SHIPPING_FEE = 3000;
-const FREE_SHIPPING_THRESHOLD = 50000;
-
 export default function CartPage() {
   const router = useRouter();
   const clearCart = useClearCart();
@@ -37,9 +34,9 @@ export default function CartPage() {
     (sum, item) => sum + item.product.price * item.quantity,
     0
   );
-  const shippingFee =
-    subtotal === 0 ? 0 : subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
-  const total = subtotal + shippingFee;
+  // 배송비는 서버에 없다 — 주문 금액(order.totalAmount)은 항목 합계만이고 결제창에도 그 금액이 넘어간다.
+  // 화면이 3,000원을 더해 보이던 것은 실제 청구와 어긋났다(frontend-e2e 가 잡음, ex-frontend-e2e.md §4 → (a) 적용 2026-10-21).
+  const total = subtotal;
 
   if (isLoading) {
     return (
@@ -112,20 +109,8 @@ export default function CartPage() {
                 </div>
                 <div className="flex justify-between text-secondary-600">
                   <span>배송비</span>
-                  <span>
-                    {shippingFee === 0 ? (
-                      <span className="text-green-700 font-medium">무료</span>
-                    ) : (
-                      `${shippingFee.toLocaleString()}원`
-                    )}
-                  </span>
+                  <span className="text-green-700 font-medium">무료</span>
                 </div>
-                {subtotal > 0 && subtotal < FREE_SHIPPING_THRESHOLD && (
-                  <p className="text-xs text-secondary-500">
-                    {(FREE_SHIPPING_THRESHOLD - subtotal).toLocaleString()}원 더
-                    담으면 무료배송
-                  </p>
-                )}
               </div>
 
               <div className="border-t border-secondary-200 pt-4 flex justify-between items-center">
