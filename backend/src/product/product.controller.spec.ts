@@ -11,7 +11,6 @@ jest.mock('../order/entity/order.entity', () => ({
 
 import { ProductController, AdminProductController } from './product.controller';
 import { ProductService } from './product.service';
-import { ProductSeedService } from '../common/seeds/product.seed';
 import { ProductSummaryService } from './product-summary.service';
 import { ProductEntity, ProductStatus, ApprovalStatus, SalesType } from './entity/product.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -71,10 +70,6 @@ const mockProductService = {
   reject: jest.fn(),
 };
 
-const mockSeedService = {
-  seedProducts: jest.fn(),
-};
-
 const mockSummaryService = {
   getReviewSummary: jest.fn(),
 };
@@ -88,7 +83,6 @@ describe('ProductController', () => {
       controllers: [ProductController],
       providers: [
         { provide: ProductService, useValue: mockProductService },
-        { provide: ProductSeedService, useValue: mockSeedService },
         { provide: ProductSummaryService, useValue: mockSummaryService },
       ],
     })

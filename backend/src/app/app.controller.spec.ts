@@ -6,7 +6,6 @@ import { AppService } from './app.service';
 describe('AppController', () => {
   let app: TestingModule;
   const appService = {
-    getData: jest.fn(() => ({ message: 'Hello API' })),
     checkReadiness: jest.fn(),
   };
 
@@ -15,13 +14,6 @@ describe('AppController', () => {
       controllers: [AppController],
       providers: [{ provide: AppService, useValue: appService }],
     }).compile();
-  });
-
-  describe('getData', () => {
-    it('should return "Hello API"', () => {
-      const appController = app.get<AppController>(AppController);
-      expect(appController.getData()).toEqual({ message: 'Hello API' });
-    });
   });
 
   describe('getHealth', () => {

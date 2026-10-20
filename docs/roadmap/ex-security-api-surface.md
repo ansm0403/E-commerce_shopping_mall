@@ -1,11 +1,11 @@
 # API 표면과 요청 타입 대조 — 점검 분모
 
-> `node scripts/security/list-api-surface.mjs` 와 `node scripts/security/compare-request-types.mjs` 의 출력(2026-10-16). 코드가 바뀌면 다시 생성한다. 해석은 [ex-security-api-boundary.md](./ex-security-api-boundary.md) §4·§6.
+> `node scripts/security/list-api-surface.mjs` 와 `node scripts/security/compare-request-types.mjs` 의 출력(2026-10-20 — 미호출 라우트 점검으로 5개를 지운 뒤 재생성, 직전 생성은 2026-10-16: 라우트 112·미호출 18). 코드가 바뀌면 다시 생성한다. 해석은 [ex-security-api-boundary.md](./ex-security-api-boundary.md) §4·§6, 미호출 라우트의 분류는 §9.
 
 
 - 클라이언트가 호출하는 API(메서드+경로 기준): **95개** (호출 지점 108곳)
 - 그중 백엔드 라우트와 대응된 것: 95개 · 대응 안 됨: 0개
-- 백엔드 전체 라우트: 112개 · 클라이언트가 부르지 않는 라우트: 18개
+- 백엔드 전체 라우트: 107개 · 클라이언트가 부르지 않는 라우트: 13개
 
 ## 1. 클라이언트가 호출하는 API (= 점검 대상)
 
@@ -112,10 +112,7 @@
 | 메서드 | 경로 | 가드 | 컨트롤러 |
 | --- | --- | --- | --- |
 | POST | `/admin/assistant/chat` | admin | AssistantController.chat |
-| GET | `/` | 공개 | AppController.getData |
 | GET | `/health` | 공개 | AppController.getHealth |
-| GET | `/auth/check-email` | 공개 | AuthController.checkEmail |
-| GET | `/auth/check-nickname` | 공개 | AuthController.checkNickname |
 | POST | `/auth/logout-all` | 로그인 | AuthController.logoutAllDevices |
 | GET | `/auth/sessions` | 로그인 | AuthController.getActiveSessions |
 | DELETE | `/auth/sessions/:tokenId` | 로그인 | AuthController.revokeSession |
@@ -123,12 +120,10 @@
 | PATCH | `/admin/categories/:id` | admin · 데모 차단 | AdminCategoryController.update |
 | DELETE | `/admin/categories/:id` | admin · 데모 차단 | AdminCategoryController.remove |
 | PATCH | `/admin/categories/:id/visibility` | admin · 데모 차단 | AdminCategoryController.updateVisibility |
-| GET | `/categories/:slug` | 공개 | CategoryController.findBySlug |
 | GET | `/ops/analyses/stats` | admin | OpsController.getReviewStats |
 | PUT | `/ops/incidents/:id/note` | admin · 데모 차단 | OpsController.upsertNote |
 | POST | `/admin/payments/:orderNumber/cancel` | admin · 데모 차단 | AdminPaymentController.cancelPayment |
 | POST | `/payments/webhook` | 공개 | PaymentWebhookController.handleWebhook |
-| POST | `/products/seed` | admin | ProductController.seed |
 
 ## 4. 클라이언트 요청 타입 ⊆ DTO 대조 (D 선행 점검)
 
@@ -158,7 +153,7 @@
 | cart.updateCartItem → UpdateCartItemDto | UpdateCartItemDto | — | — | OK |
 | wishlist.toggleWishlist → ToggleWishlistDto | ToggleWishlistDto | — | — | OK |
 | auth.demoLogin → (parseDemoRole, DTO 없음) | — | (DTO 없음: 파이프 미적용) | | INFO |
-| auth.resendVerificationEmail → CheckEmailDto? | CheckEmailDto | — | — | OK |
+| auth.resendVerificationEmail → @Body(email) (DTO 없음) | — | (DTO 없음: 파이프 미적용) | | INFO |
 | admin-order.deliverOrder → @Body(sellerId) (DTO 없음) | — | (DTO 없음: 파이프 미적용) | | INFO |
 | demo-checkout.createDemoCheckout → CreateDemoCheckoutDto | CreateDemoCheckoutDto | — | — | OK |
 | ops.registerDevice → RegisterDeviceDto | RegisterDeviceDto | — | — | OK |

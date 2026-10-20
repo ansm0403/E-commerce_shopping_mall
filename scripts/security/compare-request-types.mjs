@@ -134,7 +134,9 @@ const INLINE = {
   'cart.updateCartItem → UpdateCartItemDto': { keys: ['quantity'], dto: 'UpdateCartItemDto' },
   'wishlist.toggleWishlist → ToggleWishlistDto': { keys: ['productId'], dto: 'ToggleWishlistDto' },
   'auth.demoLogin → (parseDemoRole, DTO 없음)': { keys: ['role'], dto: null },
-  'auth.resendVerificationEmail → CheckEmailDto?': { keys: ['email'], dto: 'CheckEmailDto' },
+  // 핸들러가 `@Body('email') email: string` 으로 받는다 — 원시 타입이라 전역 파이프의 whitelist 대상이 아니다.
+  // (예전엔 check-email 의 CheckEmailDto 로 짐작했는데, 그 라우트·DTO 는 2026-10-20 에 지웠다 — ex-security-api-boundary.md §9)
+  'auth.resendVerificationEmail → @Body(email) (DTO 없음)': { keys: ['email'], dto: null },
   'admin-order.deliverOrder → @Body(sellerId) (DTO 없음)': { keys: ['sellerId'], dto: null },
   'demo-checkout.createDemoCheckout → CreateDemoCheckoutDto': { keys: ['requestId'], dto: 'CreateDemoCheckoutDto' },
   'ops.registerDevice → RegisterDeviceDto': { keys: ['expoPushToken', 'platform'], dto: 'RegisterDeviceDto' },

@@ -20,8 +20,6 @@ import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { CheckEmailDto } from './dto/check-email.dto';
-import { CheckNicknameDto } from './dto/check-nickname.dto';
 import { RefreshDto } from './dto/refresh.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { User } from './decorators/user.decorator';
@@ -285,19 +283,7 @@ export class AuthController {
     });
   }
 
-  @Get('check-email')
-  checkEmail(
-    @Query() query: CheckEmailDto,
-    @Ip() ipAddress: string,
-  ) {
-    return this.authService.checkEmailDuplicate(query.email, ipAddress);
-  }
-
-  @Get('check-nickname')
-  checkNickname(
-    @Query() query: CheckNicknameDto,
-    @Ip() ipAddress: string,
-  ) {
-    return this.authService.checkNicknameDuplicate(query.nickName, ipAddress);
-  }
+  // `GET /auth/check-email`·`GET /auth/check-nickname` 은 2026-10-20 에 삭제했다 — 부르는 화면이 없는데
+  // "이 이메일이 가입돼 있는가"를 공개로 답해 계정 존재 여부를 열거당할 수 있었다(IP 당 20회/분 제한뿐).
+  // 가입 폼이 중복 확인을 다시 쓰게 되면 그때 되살린다(git 이력). docs/roadmap/ex-security-api-boundary.md §9.
 }

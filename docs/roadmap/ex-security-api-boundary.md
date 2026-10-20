@@ -1,6 +1,6 @@
 # 화면 밖의 API 경계 재점검 — 보안 설계
 
-작성일: 2026-10-15. **상태: §4 구현 순서 0~4단계 완료 — 거절 모드가 운영에 있다.** 4단계(PR #77)를 2026-10-16 03:12 KST 배포 → PortOne 웹훅 회귀(§3 "웹훅")로 03:27 `eb4829c` 롤백 → 웹훅 예외 핫픽스(PR #78) → **03:56 KST `5e4e100` 재배포**, 컨테이너 안 프로브로 PortOne 모양 본문이 서명 검증(401)에 도달함을 확인, 화면 쿼리 스모크 실패 0. 분모와 대조표는 [ex-security-api-surface.md](./ex-security-api-surface.md).
+작성일: 2026-10-15. **상태: §4 구현 순서 0~4단계 완료 — 거절 모드가 운영에 있다. 2026-10-20 §9 미호출 라우트 점검 완료(18개 분류 · 5개 삭제 — 시드 엔드포인트 포함 · 세션 관리 3개 상시 확인, 라우트 112 → 107) — 로컬 검증 완료, 운영 배포 대기.** 4단계(PR #77)를 2026-10-16 03:12 KST 배포 → PortOne 웹훅 회귀(§3 "웹훅")로 03:27 `eb4829c` 롤백 → 웹훅 예외 핫픽스(PR #78) → **03:56 KST `5e4e100` 재배포**, 컨테이너 안 프로브로 PortOne 모양 본문이 서명 검증(401)에 도달함을 확인, 화면 쿼리 스모크 실패 0. 분모와 대조표는 [ex-security-api-surface.md](./ex-security-api-surface.md).
 결함은 코드를 읽어서 찾은 뒤 2026-10-15 에 실제 HTTP 요청으로 재현했다(§2 셀러 신청 행, §4 단계 1). `○` 로 표시한 수치는 측정 후 채운다.
 
 > 표기 원칙(2026-10-15 검토): 결함은 **1건**(요청 본문을 그대로 믿는 지점)이고, 재현한 변조 **경로가 4개**다. "결함 4건" 으로 쓰지 않는다.
@@ -10,7 +10,7 @@
 
 2026년 10월 국내 금융권에서 AI 에이전트를 이용한 것으로 추정되는 해킹이 보도됐다. 보도에서 얻은 교훈은 세 가지다.
 
-1. 공격 도구는 화면에서 API 주소만 수집하고, 그다음부터는 화면을 거치지 않는다.
+1. 뚫린 자리는 외부에 노출된 주변부 시스템(대출모집인 조회·직원용 모바일)이었고, 공격은 화면이 아니라 고객번호 같은 **입력값을 바꾼 요청**으로 이뤄졌다. 공격 서버에서 AI 침투 도구(ARTEX)·Claude Code 흔적이 나왔고, 금감원은 "대외 시스템의 인증·인가·검증 기능 확인" 공문을 보냈다. (2026-10-19 기사 원문 확인 — 동아일보 10-15 · 조선일보 10-06 · 코레이즈 분석 10-07 · 보안뉴스 10-18. 처음 적었던 "화면에서 API 주소만 수집하고 그다음부터는 화면을 거치지 않는다"는 기사에 없는 표현이라 고쳤다.)
 2. 피해는 주로 권한 검증 미흡과 입력값 변조에서 나왔다.
 3. 연 1~2회 정기 점검으로는 쉬지 않고 시도하는 공격 속도를 따라가지 못했다.
 
@@ -188,8 +188,9 @@ WHERE status = 'approved' AND "updatedAt" > "approvedAt" + interval '1 minute';
 
 | 항목 | 수정 전 | 수정 후 |
 | --- | --- | --- |
-| 점검 대상 API 수 | 95 (클라이언트가 부르는 메서드+경로, 백엔드 라우트 112개 중 — `list-api-surface.mjs`) | 95 |
-| 시나리오 수 (A / B / C / D) | 0 / 0 / 4 / 0 (2026-10-15, 셀러 신청만) | 12 / 6 (라우트 60개) / 14 / 12 (목록 쿼리 19개) = 44건 |
+| 점검 대상 API 수 | 95 (클라이언트가 부르는 메서드+경로, 백엔드 라우트 112개 중 — `list-api-surface.mjs`) | 95 (라우트 **107**개 중 — 2026-10-20 §9 에서 미호출 5개 삭제) |
+| 미호출 라우트 중 분류 안 된 것 | 18 (분모 밖, 보지 않음) | **0** (13개 전부 §9 표 — 삭제 5 · 상시 확인 3 · 의도된 공개 1 · 외부 전용 1 · B 커버 8) |
+| 시나리오 수 (A / B / C / D) | 0 / 0 / 4 / 0 (2026-10-15, 셀러 신청만) | 12 / 6 (라우트 60개) / 14 / 13 (목록 쿼리 19개 + 웹훅 D-13) = 45건 → 2026-10-20 B-7~B-9 추가 **48건** |
 | 실패한 경계 시나리오 | 4 (결함 1건, 변조 경로 4개 — PR #74 CI 로그) | **0** (3단계 PR #75; 4단계 추가 40건도 로컬 0 실패 — 객체·역할 경계는 코드 검토대로 빈틈 없음 확정) |
 | 정상 요청(D) 실패 | — | 0 (거절 모드에서 D 12건 + 기존 58건 통과) |
 | CI `security-e2e` 실행 시간 | **2분 0초** (PR #73 첫 실행 — 설치 47s·빌드 9s·마이그레이션 1s·health 2s·e2e 본체 13s. 기존 `ci` job 2분 46초보다 짧다) | **2분 18초** (PR #75, 스펙 9개) → **2분 37초** (PR #77, 스펙 14개 102건 — e2e 본체 14s) |
@@ -228,3 +229,42 @@ WHERE status = 'approved' AND "updatedAt" > "approvedAt" + interval '1 minute';
 | 가드 거절 감사 기록 | 401·403 거절은 감사 인터셉터보다 앞에서 끝나서 기록되지 않는다. | `audit/interceptors/audit.interceptor.ts` | 운영 앱 푸시와 연결하면 "공격 시도 가시화"가 된다. |
 | 의존성 자동 점검 | dependabot, audit 같은 자동 점검이 없다. | `.github/` | 공개된 취약점이 생겼을 때 대응 공백이 생긴다. |
 | CSP 강화 | 운영 CSP 에 `unsafe-inline`, `unsafe-eval` 이 있다. | `frontend/next.config.js:96` | nonce 전환은 PortOne SDK 호환 확인이 필요하다. |
+
+## 9. 미호출 라우트 점검 — "분모 밖" 18개를 분류하고 5개를 지웠다 (2026-10-20)
+
+### 왜
+
+§6 의 "빈틈 없음"은 화면이 부르는 95개 기준이었고, 호출하는 화면이 없는 라우트 18개는 정상 시나리오를 만들 수 없어 분모 밖에 두었다. 그런데 2026-10 금융권 사고 보도의 통로는 **"삭제 안 한 테스트 페이지"** 였고(동아일보 관련 기사), 보안뉴스 리포트도 방치된 섀도·좀비 API 를 표적으로 꼽았다. 호출자가 없는 라우트는 가드가 빠져 있어도 **아무 화면도 깨지지 않으니 영영 드러나지 않는다.** 이번 사례의 가장 약한 고리라 18개를 하나씩 분류했다.
+
+### 분류 (`list-api-surface.mjs` 2026-10-20 실행, 위 §8 와 같은 날)
+
+| 라우트 | 가드 | 호출자 | 결정 | 근거·확인 |
+| --- | --- | --- | --- | --- |
+| `POST /products/seed` | admin (**데모 차단 없음**) | 없음 — 운영 부트스트랩은 `SEED_PRODUCTS=true` 배치 경로(2026-08-18) | **삭제** | 데모 로그인 기본 역할이 admin 이라 공개 "관리자 체험하기" 토큰으로 닿았다. 지금 구현은 TRUNCATE 가 아니라 upsert(컨트롤러 주석이 낡음)지만, 운영 상품 300여 개를 다시 쓰게 하는 경로가 공개 계정에 열려 있던 셈. 운영 nginx 보존 로그에 호출 0건. 실행 재현은 하지 않았다(운영·개발 DB 를 쓰는 경로) — 도달 가능성은 AST 가드 목록(`JwtAuthGuard, RolesGuard` 뿐)으로 확인 |
+| `GET /` | 공개 | 없음 — 스캐폴딩 "Hello API", `console.log("나야")` | **삭제** | 운영 nginx 로그엔 zgrab·CriminalIP·연구 스캐너만 두드리던 경로 |
+| `GET /auth/check-email` · `check-nickname` | 공개(IP 당 20회/분) | 없음 — 가입 폼이 쓰지 않음 | **삭제** | "이 이메일이 가입돼 있는가"를 공개로 답해 계정 존재 여부 열거 가능. 가입 폼이 중복 확인을 다시 쓰면 git 이력에서 되살린다 |
+| `GET /categories/:slug` | 공개 | 없음 — 화면·앱 모두 트리(`GET /categories`)만 | **삭제** | 공개 읽기라 위험은 낮지만 쓰지 않는 라우트는 지운다 |
+| `POST /auth/logout-all` · `GET /auth/sessions` · `DELETE /auth/sessions/:tokenId` | 로그인 | 없음 — "다른 기기 로그아웃" UI 후보 | **유지 + 상시 확인** | 사용자 범위가 코드로 지켜지는지(남의 tokenId → 400·행 불변, 목록은 내 것만, logout-all 은 내 refresh 만) `role-boundary` B-7·B-9 로 매 PR |
+| `GET /health` | 공개 | UptimeRobot · compose healthcheck · CI 헬스 대기 | 의도된 공개 | 503 readiness, 레이트리밋 제외(§ex-observability-map) |
+| `POST /payments/webhook` | 공개(서명 + nginx IP) | PortOne 서버 | 외부 발신 전용 | §3 "웹훅", D-13 |
+| `POST /admin/assistant/chat` · `/admin/categories` 4개 · `/ops/analyses/stats` · `/ops/incidents/:id/note` · `/admin/payments/:orderNumber/cancel` | admin(+데모 차단) | 없음 — 관리자 카테고리 화면 stub·CLI·향후 화면 | 유지 | B-1~B-3·B-6 이 이미 401/403 을 확인(스펙 라우트 64개에 포함) |
+
+결과: 라우트 **112 → 107**, 미호출 **18 → 13**, 13개 전부 위 표에 분류됨(삭제 5 · 상시 확인 3 · 의도된 공개 1 · 외부 전용 1 · B 커버 8). 더 이상 "보지 않은 라우트"는 없다.
+
+### 테스트
+
+- `role-boundary.e2e.spec.ts`: `LOGIN_ROUTES` 3개 → **B-7**(토큰 없이 401), `REMOVED_ROUTES` 5개 → **B-8**(토큰을 붙여도 404 — 되살아나면 빨간불), **B-9**(남의 세션 삭제 400 + 행 불변 · 목록은 내 것만 · logout-all 은 내 refresh 만 폐기, 남의 것 1개 유지). `ADMIN_ROUTES` 에서 시드 제거.
+- 단위: `app`·`auth.service`·`category`·`product.controller` 스펙에서 삭제한 메서드의 케이스 제거 — 변경 모듈 7 스위트 75건 통과.
+- 정적 점검: `check-dto-decorators` 0/49 그대로 · `compare-request-types` 는 `resendVerificationEmail` 항목이 지운 `CheckEmailDto` 를 가리키던 것을 "`@Body('email')` 원시 타입 — 파이프 대상 아님"으로 정정, 불일치 0.
+- 로컬 e2e(백엔드 `dist/main.js`, 2026-10-20): `src/security` **6 스위트 48건**(45 + B-7~B-9) · `src/backend` 8 스위트 58건 전부 통과. 삭제 라우트 5개 curl → 전부 404.
+
+### 함정 (로컬)
+
+- `yarn nx serve backend` 는 cwd 가 backend 라 **`backend/.env`** 를 읽는다. 이 PC 의 backend/.env 는 `AI_SEARCH_INQUIRY_INDEX_ENABLED=true` 인데 루트 `.env` 의 개발 DB(postgres:18-alpine, 검색 테이블 없음)로 띄우면 **문의 작성이 500**(`relation "search_embedding_profiles" does not exist`) → 객체 경계 A 스펙 12건이 준비 단계에서 전부 실패한다. 로컬 e2e 는 `AI_SEARCH_*_ENABLED=false` 를 export 하고 띄운다(CI 는 플래그가 없어 false).
+- Docker Desktop 엔진이 내려가 있으면(파이프 없음) compose 가 안 올라온다 — `Docker Desktop.exe` 를 띄우고 `docker version` 이 답할 때까지 기다린 뒤 `docker compose -f docker-compose.local.yaml up -d --wait`.
+
+### 남은 것
+
+- **운영 배포가 필요하다**(백엔드 변경 — 라우트 5개 삭제). 배포 뒤 `curl -X POST https://api.ansmoon.dev/v1/products/seed` 가 404 인지 확인.
+- 세션 관리 3개는 UI 가 생기거나 영영 안 생기거나 둘 중 하나로 결론을 내야 한다 — 다음 분기까지 UI 가 없으면 삭제 후보.
+- 이 표는 코드가 바뀌면 `list-api-surface.mjs` 의 미호출 목록과 다시 맞춘다. **새 미호출 라우트는 여기에 분류 근거가 있어야 한다.**

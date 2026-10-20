@@ -41,26 +41,6 @@ export class CategoryService {
   }
 
   /**
-   * slug로 단일 카테고리 조회 + 하위 카테고리 전체 (path LIKE)
-   */
-  async findBySlug(slug: string): Promise<{ category: CategoryEntity; descendants: CategoryEntity[] }> {
-    const category = await this.categoryRepository.findOne({ where: { slug } });
-    if (!category) {
-      throw new NotFoundException(`카테고리 '${slug}'를 찾을 수 없습니다.`);
-    }
-
-    const descendants = await this.categoryRepository.find({
-      where: { path: Like(`${category.path}%`), isVisible: true },
-      order: { depth: 'ASC', sortOrder: 'ASC' },
-    });
-
-    // 자기 자신 제외
-    const children = descendants.filter((d) => d.id !== category.id);
-
-    return { category, descendants: children };
-  }
-
-  /**
    * (AI 어시스턴트 5a) 카테고리 이름 → 자신 + 모든 하위 카테고리 ID (path LIKE 하위 확장).
    *
    * - 상품은 리프 카테고리에 저장되므로, 부모 이름으로 거르려면 하위까지 펼쳐야 매칭된다(D4).

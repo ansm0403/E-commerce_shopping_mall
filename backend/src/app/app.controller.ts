@@ -7,11 +7,8 @@ import { AppService } from './app.service';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  @Get()
-  getData() {
-    console.log("나야");
-    return this.appService.getData();
-  }
+  // 스캐폴딩의 `GET /`("Hello API")은 2026-10-20 에 삭제 — 부르는 곳이 없고, 운영 nginx 로그엔 스캐너(zgrab·CriminalIP 등)만
+  // 두드리던 경로였다. 쓰지 않는 라우트는 지운다(docs/roadmap/ex-security-api-boundary.md §9).
 
   /**
    * 외부 감시(UptimeRobot)와 compose healthcheck 가 같이 보는 URL.

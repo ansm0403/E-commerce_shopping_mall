@@ -5,8 +5,6 @@ import {
   Delete,
   Get,
   HttpCode,
-  InternalServerErrorException,
-  Logger,
   Param,
   ParseIntPipe,
   Patch,
@@ -34,18 +32,14 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { DemoAccountGuard } from '../auth/guards/demo-account.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '../user/entity/role.entity';
-import { ProductSeedService } from '../common/seeds/product.seed';
 import { Serialize } from '../common/interceptors/serialize.interceptor';
 import { Auditable } from '../audit/decorators/auditable.decorator';
 import { AuditAction } from '../audit/entity/audit-log.entity';
 
 @Controller('products')
 export class ProductController {
-  private readonly logger = new Logger(ProductController.name);
-
   constructor(
     private readonly productService: ProductService,
-    private readonly productSeedService: ProductSeedService,
     private readonly productSummaryService: ProductSummaryService,
   ) {}
 
@@ -141,33 +135,9 @@ export class ProductController {
     return this.productService.remove(id, req.user.sub);
   }
 
-  // Admin 전용: 시드 데이터 삽입 (TRUNCATE products CASCADE — 파괴적).
-  // 2026-08-18 가드 복구: 운영 부트스트랩은 이제 배치 경로(SEED_PRODUCTS=true)를 쓰므로
-  // 이 엔드포인트가 무인증일 이유가 없다. (docs/roadmap/ex-db-migration.md §4-0)
-  @Post('seed')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
-  async seed() {
-    try {
-      return await this.productSeedService.seedProducts();
-    } catch (e) {
-      const err = e as {
-        message?: string;
-        name?: string;
-        code?: string;
-        detail?: string;
-        stack?: string;
-      };
-      this.logger.error('SEED FAILED', err.stack || String(e));
-      throw new InternalServerErrorException({
-        message: err.message ?? 'seed failed',
-        name: err.name,
-        code: err.code,
-        detail: err.detail,
-        stack: err.stack?.split('\n').slice(0, 8),
-      });
-    }
-  }
+  // `POST /products/seed` 는 2026-10-20 에 삭제했다 — 호출하는 화면이 없고(운영 부트스트랩은 SEED_PRODUCTS=true 배치 경로),
+  // 관리자 가드만 있어 공개 데모 관리자 토큰으로 운영 상품을 다시 쓰게 할 수 있었다(DemoAccountGuard 없음).
+  // 쓰지 않는 라우트는 가드를 고치는 게 아니라 지운다 — docs/roadmap/ex-security-api-boundary.md §9.
 
   @Post(':id/images')
   @UseGuards(DemoAccountGuard)
