@@ -20,11 +20,14 @@ export {
 /** 이 스위트의 이름공간 — 계정 이메일·상품명이 전부 `e2e-fe-checkout-` 로 시작한다 */
 export const SUITE = 'fe-checkout';
 
-/** 주문서 화면과 같은 배송비 규칙(frontend checkout/page.tsx SHIPPING_FEE · FREE_SHIPPING_THRESHOLD) */
-export const SHIPPING_FEE = 3000;
-export const FREE_SHIPPING_THRESHOLD = 50000;
+/**
+ * 화면이 보여야 하는 총 결제금액 = 서버 규칙(order.service.ts: 항목 합계, 배송비 없음).
+ * 2026-10-16 첫 실행 전까지 화면은 5만 원 미만에 3,000원을 더했고(22,900원) 서버는 19,900원을 청구했다 —
+ * 결정 (a)(ex-frontend-e2e.md §4, 2026-10-21): 화면을 서버에 맞춰 배송비 줄은 "무료". 이 함수가 다시 더하기 시작하면 서버와 어긋난다.
+ */
+export const SHIPPING_LABEL = '무료';
 export function expectedTotal(subtotal: number): number {
-  return subtotal + (subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE);
+  return subtotal;
 }
 /** 화면 표기와 같은 금액 문자열 — toLocaleString() → "22,900원" */
 export function won(amount: number): string {

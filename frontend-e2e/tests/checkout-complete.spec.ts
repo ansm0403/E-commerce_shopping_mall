@@ -48,8 +48,10 @@ test.describe('결제 완료 페이지', () => {
 
     await expect(page.getByRole('heading', { name: '결제가 완료되었습니다!' })).toBeVisible();
     await expect(page.getByText(paidOrderNumber)).toBeVisible();
-    // ⚠ 2026-10-16 첫 실행에서 실패: 완료 페이지는 서버 금액 19,900원을 보이고 주문서는 22,900원을 보였다(배송비 불일치, ex-frontend-e2e.md §4)
-    await expect(page.getByText(won(expectedTotal(fx.price)), { exact: true }), '주문서가 보여 준 총 결제금액이 완료 페이지에도').toBeVisible();
+    // 2026-10-16 첫 실행에서 실패했던 단언: 완료 페이지는 서버 금액 19,900원, 주문서는 22,900원(배송비 불일치) → 결정 (a)로 주문서를 서버에 맞춤(ex-frontend-e2e.md §4).
+    // 금액이 맞아지자 같은 문자열이 상품 줄(item.subtotal)에도 나와 strict mode 에 걸렸다 → "총 결제금액" 행 단위로 본다(checkout.spec 과 같은 방식).
+    const totalRow = page.locator('div', { has: page.getByText('총 결제금액', { exact: true }) }).last();
+    await expect(totalRow, '주문서가 보여 준 총 결제금액이 완료 페이지에도').toContainText(won(expectedTotal(fx.price)));
     await expect(page.getByText('결제 완료 상태를 확인할 수 없습니다.')).toHaveCount(0);
 
     await page.getByRole('button', { name: '주문 상세 보기' }).click();

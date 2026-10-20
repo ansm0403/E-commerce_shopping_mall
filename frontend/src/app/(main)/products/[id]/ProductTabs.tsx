@@ -136,9 +136,7 @@ export default function ProductTabs({
               </div>
               <div>
                 <p className="text-sm text-secondary-500 mb-1">배송비</p>
-                <p className="text-secondary-900 font-semibold">
-                  {product.price >= 50000 ? '무료' : '3,000원'}
-                </p>
+                <p className="text-secondary-900 font-semibold">무료</p>
               </div>
               <div>
                 <p className="text-sm text-secondary-500 mb-1">배송 기간</p>

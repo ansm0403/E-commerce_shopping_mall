@@ -1,6 +1,6 @@
 # 프론트 브라우저 E2E — 결제 동선을 Playwright 로 CI 에 (2026-10-16 착수)
 
-작성일: 2026-10-16. **상태: 로컬 구현 완료 · 8건 중 6건 통과, 2건은 발견한 결함(§4 배송비 불일치)으로 빨간불 유지 · CI job 작성(미실행) · 미커밋.**
+작성일: 2026-10-16. **상태: 브랜치 `feat/frontend-e2e-playwright`(2026-10-21) — 첫 커밋은 8건 중 6건 통과·2건 빨간불(§4 배송비 불일치, 수정 전 기록), 둘째 커밋이 결정 (a) 적용(화면을 서버에 맞춤) → 로컬 8건 통과(§5). CI `frontend-e2e` job 첫 실행은 PR 에서.**
 
 ## 1. 왜
 
@@ -25,7 +25,7 @@
 - 전제: 백엔드 4000 + 프론트 **운영 빌드**(`NEXT_PUBLIC_API_URL=/api`, `API_PROXY_TARGET=http://localhost:4000/v1` — 운영과 같은 same-origin 프록시). webServer 가 `next start -p 3100` 을 띄운다(로컬에 떠 있으면 재사용).
 - CI: `.github/workflows/ci.yml` `frontend-e2e` job — security-e2e 와 같은 서비스 컨테이너·마이그레이션·백엔드 기동·헬스 대기 + `npx next build`(Nx 캐시 우회 — build inputs 에 `NEXT_PUBLIC_API_URL` 이 없어 다른 값의 번들이 캐시로 돌아올 수 있다) + `playwright install --with-deps chromium` + 실행 + 리포트 업로드. `CORS_ORIGINS`·`FRONTEND_URL` 은 3100.
 
-## 4. 첫 실행에서 발견한 것 — 화면 총 결제금액 ≠ 서버 주문 금액 (미결)
+## 4. 첫 실행에서 발견한 것 — 화면 총 결제금액 ≠ 서버 주문 금액 (결정 (a) 적용, 2026-10-21)
 
 | | 주문서 화면 | 서버(`POST /orders` 응답 · 완료 페이지) |
 |---|---|---|
@@ -37,12 +37,20 @@
 
 선택지: (a) **프론트가 서버가 청구하는 대로 보인다** — 배송비 줄을 "무료"로(세 화면), 가장 작고 정직하다. (b) 백엔드에 배송비를 둔다 — 주문·결제 금액·정산·데모 결제·PortOne 금액 대조까지 번지는 기능 작업. **결정 전까지 두 스펙(`checkout` 1 · `checkout-complete` 1)은 빨간불로 둔다**(깨진 상태를 먼저 기록 — 보안 트랙과 같은 원칙). 결정은 사용자.
 
+**결정 (a) — 2026-10-21, 사용자.** 적용:
+- `cart/page.tsx`·`checkout/page.tsx`: `SHIPPING_FEE`·`FREE_SHIPPING_THRESHOLD` 상수와 "N원 더 담으면 무료배송" 안내 삭제, 배송비 줄은 항상 "무료", `total = subtotal`(서버 `order.totalAmount` 와 같은 규칙). 왜인지 주석으로 남김.
+- `products/[id]/ProductInfo.tsx`(가격 아래 🚚 문구)·`ProductTabs.tsx`(배송 탭): 5만 원 분기 삭제, "무료배송"/"무료".
+- `frontend-e2e/support/api.ts`: `expectedTotal(subtotal) = subtotal`, `SHIPPING_LABEL = '무료'`(`SHIPPING_FEE` 상수 삭제). 두 단언은 그대로 두어 **화면이 다시 배송비를 더하기 시작하면 빨간불**.
+- 금액이 맞아지자 완료 페이지의 `getByText('19,900원')` 이 상품 줄(`item.subtotal`)과 총액 둘에 걸려 strict mode 로 한 번 더 실패 → "총 결제금액" 행 단위로(`checkout.spec` 과 같은 방식). 금액 단언은 **항상 행 단위**가 규칙.
+- 백엔드 변경 없음. 운영 프론트는 머지 즉시 바뀐다 — 운영도 같은 불일치가 있었으므로 "19,900원 약속 → 19,900원 청구"로 맞아진다.
+- 기록 순서: 첫 커밋(`52f1c71`)이 빨간불 상태를, 둘째 커밋이 수정을 담는다 — PR 에서 "테스트가 먼저 잡고 고쳤다"가 커밋 단위로 보인다.
+
 ## 5. 측정 (로컬, 2026-10-16, 운영 빌드 3100 + 백엔드 dist/main.js)
 
 | 지표 | 값 |
 |---|---|
-| 스펙 | 3 파일 8건 — 통과 6 · 실패 2(§4) |
-| 실행 시간 | 46~47초(webServer 기동 포함, 직렬) · 첫 실행은 로그인 429 로 2.2분 |
+| 스펙 | 3 파일 8건 — 2026-10-16 통과 6 · 실패 2(§4) → **2026-10-21 (a) 적용 뒤 8건 통과**(`[checkout] 화면 총 결제금액 19,900원 / 서버 주문 totalAmount 19,900원`) |
+| 실행 시간 | 46~47초(webServer 기동 포함, 직렬) · 첫 실행은 로그인 429 로 2.2분 · (a) 적용 뒤 36.8초 |
 | 발견 | 배송비 불일치 1건(§4) · 하네스 함정 2건(§6 — 로그인 레이트리밋, CORS) |
 | 추가 의존성 | `@playwright/test` 1.64.1(루트 devDependency), Chromium headless shell 118 MB |
 
@@ -61,7 +69,7 @@ CI job 시간은 첫 실행 뒤에 적는다.
 
 ## 7. 남은 것
 
-1. §4 결정 → 해당 쪽 수정 → 두 스펙 초록 확인(결정이 (a)면 `expectedTotal` 도 서버 규칙으로).
-2. 커밋·PR(사용자 승인) → CI `frontend-e2e` 첫 실행 시간 기록 → `security-e2e` 와의 중복 스텝(서버 준비)을 합칠지 검토.
+1. ~~§4 결정 → 해당 쪽 수정 → 두 스펙 초록 확인~~ → (a) 적용, 로컬 8건 통과(2026-10-21).
+2. ~~커밋·PR(사용자 승인)~~ → 브랜치 `feat/frontend-e2e-playwright` 푸시, PR 은 사용자가 생성 → CI `frontend-e2e` 첫 실행 시간 기록 → `security-e2e` 와의 중복 스텝(서버 준비)을 합칠지 검토.
 3. 완료 페이지 판정을 옛 코드(`status === 'paid'`)로 되돌려 `checkout-complete` 가 실제로 빨간불이 되는지 CI 로그로 확인(테스트가 잡는지).
 4. 기존 `scripts/buyer-flow/` 가운데 결제 동선 스크립트(`verify-demo-checkout`·`reload-probe` 의 cart/checkout 부분)는 이 스위트가 대신하므로 README 에 표기.

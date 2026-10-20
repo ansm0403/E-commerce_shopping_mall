@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { addToCart, clearCart, expectedTotal, login, readFixtures, SHIPPING_FEE, won } from '../support/api';
+import { addToCart, clearCart, expectedTotal, login, readFixtures, SHIPPING_LABEL, won } from '../support/api';
 import { autoDismissDialogs, loginViaForm } from '../support/browser';
 
 const fx = readFixtures();
@@ -26,13 +26,13 @@ test.describe('주문서: 장바구니에서 결제창 직전까지', () => {
     await page.waitForURL('**/checkout');
     await expect(page.getByRole('heading', { name: '주문서 작성' })).toBeVisible();
 
-    // 상품 19,900원 + 배송비 3,000원(5만 원 미만) — 화면이 계산한 합계. 금액 문자열은 헤더 장바구니 링크·상품 줄에도
+    // 상품 19,900원, 배송비 "무료"(서버 규칙 — 결정 (a)). 금액 문자열은 헤더 장바구니 링크·상품 줄에도
     // 나오므로 "결제 금액" 요약의 행 단위로 본다(가장 안쪽 div = 그 행).
     const total = expectedTotal(fx.price);
     const summaryRow = (label: string) =>
       page.locator('div', { has: page.getByText(label, { exact: true }) }).last();
     await expect(summaryRow('상품 금액')).toContainText(won(fx.price));
-    await expect(summaryRow('배송비')).toContainText(won(SHIPPING_FEE));
+    await expect(summaryRow('배송비')).toContainText(SHIPPING_LABEL);
     await expect(summaryRow('총 결제금액')).toContainText(won(total));
 
     await page.getByLabel('수령인').fill('e2e구매자');
@@ -53,8 +53,8 @@ test.describe('주문서: 장바구니에서 결제창 직전까지', () => {
     expect(order.status).toBe('pending_payment');
     // 결제창에 넘기는 금액은 화면이 아니라 서버가 저장한 주문 금액이다 — 둘이 같아야 한다
     console.log(`[checkout] 화면 총 결제금액 ${won(total)} / 서버 주문 totalAmount ${won(Number(order.totalAmount))}`);
-    // ⚠ 2026-10-16 첫 실행에서 실패: 화면 22,900원 / 서버 19,900원 — 백엔드에는 배송비 개념이 없고 화면만 3,000원을 더한다
-    //   (docs/roadmap/ex-frontend-e2e.md §4). 어느 쪽을 고칠지 결정 전까지 이 단언은 "수정 전 기록" 으로 빨간불을 유지한다.
+    // 2026-10-16 첫 실행에서 실패했던 단언: 화면 22,900원 / 서버 19,900원 — 백엔드에는 배송비 개념이 없고 화면만 3,000원을 더했다.
+    //   결정 (a)(docs/roadmap/ex-frontend-e2e.md §4, 2026-10-21)로 화면을 서버에 맞춤. 다시 어긋나면 여기서 빨간불.
     expect(Number(order.totalAmount), '화면 총 결제금액과 서버 주문 금액').toBe(total);
     expect(order.items).toHaveLength(1);
     expect(order.items[0].productId).toBe(fx.productId);

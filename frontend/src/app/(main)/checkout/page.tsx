@@ -20,9 +20,6 @@ import { createOrder, cancelOrder } from '@/service/order';
 import { Cart } from '@/model/cart';
 import { OrderResponse } from '@/model/order';
 
-const SHIPPING_FEE = 3000;
-const FREE_SHIPPING_THRESHOLD = 50000;
-
 export default function CheckoutPage() {
   const router = useRouter();
   const { user, isHydrated } = useAuth();
@@ -95,9 +92,9 @@ export default function CheckoutPage() {
     (sum, item) => sum + item.product.price * item.quantity,
     0
   );
-  const shippingFee =
-    subtotal === 0 ? 0 : subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
-  const total = subtotal + shippingFee;
+  // 배송비는 서버에 없다 — POST /orders 가 저장하는 totalAmount 는 항목 합계만이고 결제창에 넘기는 금액도 그것이다.
+  // 화면만 3,000원을 더해 22,900원을 약속하고 19,900원을 청구하던 불일치를 frontend-e2e 가 잡았다(ex-frontend-e2e.md §4 → (a) 적용 2026-10-21).
+  const total = subtotal;
 
   const createOrderMutation = useMutation({
     mutationFn: () => {
@@ -466,13 +463,7 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between text-secondary-600">
                   <span>배송비</span>
-                  <span>
-                    {shippingFee === 0 ? (
-                      <span className="text-green-700 font-medium">무료</span>
-                    ) : (
-                      `${shippingFee.toLocaleString()}원`
-                    )}
-                  </span>
+                  <span className="text-green-700 font-medium">무료</span>
                 </div>
               </div>
 
