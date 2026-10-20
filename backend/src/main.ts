@@ -52,7 +52,7 @@ async function bootstrap() {
 
   // CORS 설정
   // CORS_ORIGINS: 콤마로 구분된 허용 origin 목록 (이메일 링크용 FRONTEND_URL과 분리)
-  // 로컬: http://localhost:3000 / 운영: https://shopping-mall-frontend-dusky.vercel.app
+  // 로컬: http://localhost:3000 / 운영: https://shop.ansmoon.dev, https://shopping-mall-frontend-dusky.vercel.app(옛 주소 유지)
   // 운영은 Vercel 프록시 덕에 브라우저가 EC2를 직접 호출하지 않아 사실상 무의미하지만 명시해둠
   const allowedOrigins = (process.env.CORS_ORIGINS ?? 'http://localhost:3000')
     .split(',')

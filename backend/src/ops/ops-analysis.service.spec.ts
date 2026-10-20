@@ -731,7 +731,7 @@ describe('OpsAnalysisService — AI 분석 파이프라인(설계 §3.4)', () =>
       await build();
     });
 
-    it('기본으로 SYSTEM 바로 뒤에 지도 블록이 붙고 버전에 .1 이 붙는다(v1.1). 결론 문장은 없다', async () => {
+    it('기본으로 SYSTEM 바로 뒤에 지도 블록이 붙고 버전에 지도 접미사가 붙는다(v1.2). 결론 문장은 없다', async () => {
       llm.generate.mockResolvedValueOnce(VALID_JSON);
       const { item } = await service.analyze('7742806116');
 
@@ -740,13 +740,14 @@ describe('OpsAnalysisService — AI 분석 파이프라인(설계 §3.4)', () =>
       expect(system.static).toContain('[서비스 지도');
       expect(system.static).toContain('https://api.ansmoon.dev 하나다');
       expect(system.static).toContain('CORS_ORIGINS');
+      expect(system.static).toContain('https://shop.ansmoon.dev');
       // 지도는 사실만 — "정상 차단이다" 같은 결론을 미리 주지 않는다(그건 모델이 내려야 측정이 된다)
       expect(system.static).not.toMatch(/정상 차단|조치 불필요/);
-      expect(item.promptVersion).toBe('v1.1');
-      expect(repo.save).toHaveBeenCalledWith(expect.objectContaining({ promptVersion: 'v1.1' }));
+      expect(item.promptVersion).toBe('v1.2');
+      expect(repo.save).toHaveBeenCalledWith(expect.objectContaining({ promptVersion: 'v1.2' }));
     });
 
-    it('도구를 켜면 v3.1 — 지도는 SYSTEM 과 도구 안내 사이에 온다', async () => {
+    it('도구를 켜면 v3.2 — 지도는 SYSTEM 과 도구 안내 사이에 온다', async () => {
       reader.isEnabled.mockReturnValue(true);
       ops.getIncident.mockResolvedValue({ item: corsIncident(), cached: false });
       llm.generateWithTools.mockImplementation(scriptedTools([{ text: CORS_JSON }]));
@@ -756,7 +757,7 @@ describe('OpsAnalysisService — AI 분석 파이프라인(설계 §3.4)', () =>
       const [{ system }] = llm.generateWithTools.mock.calls[0];
       expect(system.static.indexOf('[서비스 지도')).toBeGreaterThan(0);
       expect(system.static.indexOf('[서비스 지도')).toBeLessThan(system.static.indexOf('[소스 코드 읽기 도구]'));
-      expect(item.promptVersion).toBe('v3.1');
+      expect(item.promptVersion).toBe('v3.2');
     });
 
     it('body serviceMap:false 면 지도 없이 옛 버전 그대로(v1) — 평가 스크립트의 재현 팔', async () => {
@@ -771,7 +772,7 @@ describe('OpsAnalysisService — AI 분석 파이프라인(설계 §3.4)', () =>
       await build();
       llm.generate.mockResolvedValueOnce(VALID_JSON).mockResolvedValueOnce(VALID_JSON);
       expect((await service.analyze('7742806116', { force: true })).item.promptVersion).toBe('v1');
-      expect((await service.analyze('7742806116', { force: true, serviceMap: true })).item.promptVersion).toBe('v1.1');
+      expect((await service.analyze('7742806116', { force: true, serviceMap: true })).item.promptVersion).toBe('v1.2');
     });
   });
 

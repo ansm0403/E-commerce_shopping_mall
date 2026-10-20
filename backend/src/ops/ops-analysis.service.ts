@@ -69,8 +69,11 @@ export class OpsAnalysisService {
   static readonly PROMPT_VERSION = 'v1';
   static readonly PROMPT_VERSION_FEW_SHOT = 'v2';
   static readonly PROMPT_VERSION_TOOLS = 'v3';
-  /** 서비스 지도(SERVICE_MAP)가 system 에 들어가면 어느 버전이든 `.1` 이 붙는다(v1.1 · v2.1 · v3.1) — 5편 버전 규칙 */
-  static readonly SERVICE_MAP_SUFFIX = '.1';
+  /**
+   * 서비스 지도(SERVICE_MAP)가 system 에 들어가면 어느 버전이든 이 접미사가 붙는다 — 5편 버전 규칙.
+   * `.1` = 프론트 도메인 하나(vercel.app). `.2` = 커스텀 도메인 shop.ansmoon.dev 추가로 허용 출처가 둘이 된 지도(2026-10-19).
+   */
+  static readonly SERVICE_MAP_SUFFIX = '.2';
   /** few-shot 예시의 본문 필드 상한. 예시 3개가 인시던트 데이터보다 길어지지 않게 */
   static readonly FEW_SHOT_FIELD_MAX = 1_500;
   /** 행에 저장하는 제목·예외 한 줄의 상한(컬럼 길이와 같다) */
@@ -116,13 +119,13 @@ export class OpsAnalysisService {
    * 사실은 코드에 없고 nginx·EC2 환경변수에만 있다. 코드를 아무리 읽어도 못 배우는 종류의 지식이라 프롬프트에 직접 준다.
    *
    * ⚠ 결론("CORS 오류는 정상 차단이다")은 적지 않는다 — 그건 모델이 지도를 보고 스스로 내려야 측정이 성립한다. 여기 있는 것은
-   * 도메인이 누구인지, 허용 목록이 어디서 오는지뿐이다. 도메인이 바뀌면 이 문자열도 바꾸고 버전 접미사를 올린다(.1 → .2).
+   * 도메인이 누구인지, 허용 목록이 어디서 오는지뿐이다. 도메인이 바뀌면 이 문자열도 바꾸고 버전 접미사를 올린다(SERVICE_MAP_SUFFIX — 지금 .2).
    * 기본 켬(OPS_ANALYSIS_SERVICE_MAP=false 로 끔). body serviceMap:false 는 평가 스크립트의 v1/v2/v3 재현용.
    */
   static readonly SERVICE_MAP = [
     '[서비스 지도 — 이 조직의 배포 구성(사실)]',
     '- 백엔드(NestJS) 의 공개 주소는 https://api.ansmoon.dev 하나다(EC2, nginx 뒤). Sentry 프로젝트 e-commerse-backend. 이 도메인은 서버 자신이다 — 백엔드가 자기 자신에게 브라우저 요청을 보내는 일은 없으므로, 정당한 요청의 Origin 헤더에 이 값이 올 수 없다.',
-    '- 쇼핑몰 프론트(Next.js) 는 Vercel 에 있다: https://shopping-mall-frontend-dusky.vercel.app. Sentry 프로젝트 e-commerse-frontend. 백엔드의 CORS 허용 출처(CORS_ORIGINS)는 이 프론트 도메인뿐이고, 그 값은 코드가 아니라 서버 환경변수에 있다.',
+    '- 쇼핑몰 프론트(Next.js) 는 Vercel 에 있고 같은 사이트를 두 주소로 연다: https://shop.ansmoon.dev(대표) · https://shopping-mall-frontend-dusky.vercel.app(옛 주소, 유지). Sentry 프로젝트 e-commerse-frontend. 백엔드의 CORS 허용 출처(CORS_ORIGINS)는 이 두 프론트 도메인과 운영 앱 웹 체험판 도메인이고, 그 값은 코드가 아니라 서버 환경변수에 있다.',
     '- 운영 앱(React Native, ops-companion) 은 백엔드를 직접 호출하며 브라우저가 아니라 Origin 헤더를 보내지 않는다(CORS 와 무관). Sentry 프로젝트 ops-companion.',
     '- 운영 백엔드는 인터넷에 열려 있어 봇·취약점 스캐너의 요청(예: /wp-json, /blog/wordpress 경로)이 매일 들어온다.',
   ].join('\n');
