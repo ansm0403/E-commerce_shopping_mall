@@ -40,10 +40,6 @@ export class AppService {
     private readonly redis: RedisService,
   ) {}
 
-  getData(): { message: string } {
-    return { message: 'Hello API' };
-  }
-
   /**
    * readiness — "요청을 받아 처리할 수 있는가".
    * 프로세스가 살아 있는지(liveness)만 보면 postgres 가 죽어도 health 가 200 이라 UptimeRobot 이

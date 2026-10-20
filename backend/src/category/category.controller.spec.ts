@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import { CategoryController, AdminCategoryController } from './category.controller';
 import { CategoryService } from './category.service';
 import { CategoryEntity } from './entity/category.entity';
@@ -26,7 +26,6 @@ const mockCategory = (overrides: Partial<CategoryEntity> = {}): CategoryEntity =
 
 const mockCategoryService = {
   getCategoryTree: jest.fn(),
-  findBySlug: jest.fn(),
   create: jest.fn(),
   update: jest.fn(),
   updateVisibility: jest.fn(),
@@ -54,24 +53,6 @@ describe('CategoryController (공개 API)', () => {
       const result = await controller.getCategoryTree();
 
       expect(result).toEqual(tree);
-    });
-  });
-
-  describe('GET /categories/:slug', () => {
-    it('slug로 카테고리 + 하위 항목을 반환한다', async () => {
-      const response = { category: mockCategory(), descendants: [] };
-      mockCategoryService.findBySlug.mockResolvedValue(response);
-
-      const result = await controller.findBySlug('hats');
-
-      expect(result.category.slug).toBe('hats');
-      expect(mockCategoryService.findBySlug).toHaveBeenCalledWith('hats');
-    });
-
-    it('없는 slug → NotFoundException', async () => {
-      mockCategoryService.findBySlug.mockRejectedValue(new NotFoundException());
-
-      await expect(controller.findBySlug('nonexistent')).rejects.toThrow(NotFoundException);
     });
   });
 });

@@ -510,47 +510,4 @@ describe('AuthService', () => {
       await expect(service.verifyAccessToken('token')).resolves.toMatchObject({ sub: 1 });
     });
   });
-
-  // ─── checkEmailDuplicate ─────────────────────────────────
-  describe('checkEmailDuplicate', () => {
-    beforeEach(() => {
-      redisService.checkRateLimit.mockResolvedValue(true);
-    });
-
-    it('사용 가능한 이메일 → available: true', async () => {
-      usersRepository.exists.mockResolvedValue(false);
-      const result = await service.checkEmailDuplicate('new@example.com', '127.0.0.1');
-      expect(result.available).toBe(true);
-    });
-
-    it('중복 이메일 → available: false', async () => {
-      usersRepository.exists.mockResolvedValue(true);
-      const result = await service.checkEmailDuplicate('dup@example.com', '127.0.0.1');
-      expect(result.available).toBe(false);
-    });
-
-    it('Rate limit 초과 → HttpException 429', async () => {
-      redisService.checkRateLimit.mockResolvedValue(false);
-      await expect(service.checkEmailDuplicate('x@x.com', '127.0.0.1')).rejects.toThrow(HttpException);
-    });
-  });
-
-  // ─── checkNicknameDuplicate ──────────────────────────────
-  describe('checkNicknameDuplicate', () => {
-    beforeEach(() => {
-      redisService.checkRateLimit.mockResolvedValue(true);
-    });
-
-    it('사용 가능한 닉네임 → available: true', async () => {
-      usersRepository.exists.mockResolvedValue(false);
-      const result = await service.checkNicknameDuplicate('newNick', '127.0.0.1');
-      expect(result.available).toBe(true);
-    });
-
-    it('중복 닉네임 → available: false', async () => {
-      usersRepository.exists.mockResolvedValue(true);
-      const result = await service.checkNicknameDuplicate('dupNick', '127.0.0.1');
-      expect(result.available).toBe(false);
-    });
-  });
 });

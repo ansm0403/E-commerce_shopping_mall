@@ -23,12 +23,6 @@ describe('AppService', () => {
 
   afterEach(() => jest.useRealTimers());
 
-  describe('getData', () => {
-    it('should return "Hello API"', () => {
-      expect(service.getData()).toEqual({ message: 'Hello API' });
-    });
-  });
-
   describe('checkReadiness', () => {
     it('DB·Redis 가 모두 응답하면 ready', async () => {
       dataSource.query.mockResolvedValue([{ '?column?': 1 }]);

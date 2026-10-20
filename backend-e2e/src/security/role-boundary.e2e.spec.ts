@@ -10,8 +10,9 @@ import { auth } from '../support/commerce';
  * (docs/roadmap/ex-security-api-boundary.md §4 시나리오 B)
  *
  * 공격자 모델: 화면에서 `admin/*`·`ops/*` 주소를 수집한 뒤 자기 토큰으로 직접 호출한다.
- * 라우트 목록은 scripts/security/list-api-surface.mjs 의 결과(백엔드 라우트 112개 중 admin 역할 37개)다 —
- * 화면이 부르지 않는 관리자 라우트(카테고리·결제 취소·시드)도 존재하므로 함께 넣는다.
+ * 라우트 목록은 scripts/security/list-api-surface.mjs 의 결과(백엔드 라우트 107개 중 admin 역할 36개)다 —
+ * 화면이 부르지 않는 관리자 라우트(카테고리·결제 취소)도 존재하므로 함께 넣는다. 미호출 라우트의 분류는 §9
+ * (2026-10-20: 시드 등 5개 삭제 → REMOVED_ROUTES, 세션 관리 3개는 LOGIN_ROUTES 로 상시 확인).
  *
  * 기대: 토큰 없음 401 · 구매자/셀러 토큰 403 · 데모 관리자의 쓰기(DemoAccountGuard) 403.
  * 가드가 핸들러보다 먼저 끊으므로 본문은 비워도 된다(400 이 아니라 403 이어야 한다).
@@ -66,6 +67,31 @@ const ADMIN_ROUTES: Route[] = [
   ['GET', '/ops/analyses/pending'],
   ['GET', '/ops/analyses/stats'],
   ['POST', '/ops/analyses/999999/review'],
+];
+
+/**
+ * 로그인만 필요한 세션 관리 라우트 — 부르는 화면은 없지만 남겨 둔다(마이페이지 "다른 기기 로그아웃" 후보).
+ * 화면이 없는 라우트는 깨져도 아무 화면이 안 깨지므로, 여기서 매 PR 경계를 확인한다(§9).
+ */
+const LOGIN_ROUTES: Route[] = [
+  ['POST', '/auth/logout-all'],
+  ['GET', '/auth/sessions'],
+  ['DELETE', '/auth/sessions/00000000-0000-0000-0000-000000000000'],
+];
+
+/**
+ * 2026-10-20 에 삭제한 라우트(§9 미호출 라우트 점검) — 되살아나면 여기서 빨간불.
+ *   GET /            스캐폴딩 "Hello API"            → 부르는 곳 없음(운영 로그엔 스캐너만)
+ *   GET /auth/check-email · check-nickname           → 부르는 화면 없음 + 계정 존재 여부 열거 가능
+ *   GET /categories/:slug                            → 화면·앱 모두 트리만 씀
+ *   POST /products/seed                              → 배치 경로(SEED_PRODUCTS)로 대체됐는데 데모 관리자 토큰으로 닿던 쓰기
+ * 토큰을 붙여도 404 여야 한다(401/403 이면 라우트가 살아 있는 것).
+ */
+const REMOVED_ROUTES: Route[] = [
+  ['GET', '/'],
+  ['GET', '/auth/check-email?email=e2e@test.local'],
+  ['GET', '/auth/check-nickname?nickName=e2e'],
+  ['GET', '/categories/hats'],
   ['POST', '/products/seed'],
 ];
 
@@ -122,6 +148,8 @@ describe('역할 경계: 관리자·운영·셀러·구매자 전용 API (HTTP e
   let buyer: string;
   let seller: string;
   let demoAdmin: string;
+  let buyerUserId: number;
+  let sellerUserId: number;
   let categoriesBefore: number;
 
   beforeAll(async () => {
@@ -130,8 +158,9 @@ describe('역할 경계: 관리자·운영·셀러·구매자 전용 API (HTTP e
     await cleanupE2eEverything(ds, SUITE);
     await resetLoginRateLimits();
 
-    await createUser(ds, { email: emails.buyer, role: 'buyer' });
+    buyerUserId = await createUser(ds, { email: emails.buyer, role: 'buyer' });
     const sellerUser = await createUser(ds, { email: emails.seller, role: 'seller' });
+    sellerUserId = sellerUser;
     await createApprovedSeller(ds, { userId: sellerUser, businessName: `${p}상회`, businessNumber: '999-55-00001' });
     await createUser(ds, { email: emails.demoAdmin, role: 'admin', isDemo: true });
 
@@ -181,5 +210,43 @@ describe('역할 경계: 관리자·운영·셀러·구매자 전용 API (HTTP e
 
     const categoriesAfter = (await ds.query(`SELECT count(*)::int AS n FROM categories`))[0].n;
     expect(categoriesAfter).toBe(categoriesBefore);
+  }, 60_000);
+
+  it(`B-7 토큰 없이 세션 관리 라우트 ${LOGIN_ROUTES.length}개 → 전부 401`, async () => {
+    expectAll(await statusesOf(LOGIN_ROUTES), 401);
+  }, 60_000);
+
+  it(`B-8 삭제한 라우트 ${REMOVED_ROUTES.length}개는 토큰을 붙여도 404 — 되살아나면 빨간불`, async () => {
+    expectAll(await statusesOf(REMOVED_ROUTES, buyer), 404);
+  }, 60_000);
+
+  it('B-9 세션 관리(화면 없음): 남의 세션은 지울 수 없고 내 것만 보이며, logout-all 은 내 refresh 만 폐기한다', async () => {
+    const [victim] = await ds.query(
+      `SELECT id FROM refresh_tokens WHERE "userId" = $1 AND "isRevoked" = false ORDER BY "createdAt" DESC LIMIT 1`,
+      [sellerUserId],
+    );
+    expect(victim).toBeDefined();
+
+    // 남의 tokenId 로 삭제 — 존재 여부조차 알려주지 않는다(400 "세션을 찾을 수 없습니다"), 행은 그대로
+    const forged = await axios.delete(`/auth/sessions/${victim.id}`, auth(buyer));
+    expect(forged.status).toBe(400);
+    const [after] = await ds.query(`SELECT "isRevoked" FROM refresh_tokens WHERE id = $1`, [victim.id]);
+    expect(after.isRevoked).toBe(false);
+
+    // 목록은 내 세션만
+    const mine = await axios.get('/auth/sessions', auth(buyer));
+    expect(mine.status).toBe(200);
+    expect(mine.data.length).toBeGreaterThan(0);
+    expect(mine.data.map((s: { id: string }) => s.id)).not.toContain(victim.id);
+
+    // logout-all: 내 refresh 전부 폐기, 남의 것은 그대로 (이 스펙의 마지막 — 구매자 토큰은 이후 쓰지 않는다)
+    const out = await axios.post('/auth/logout-all', {}, auth(buyer));
+    expect(out.status).toBe(201);
+    const [[mineLeft], [theirs]] = await Promise.all([
+      ds.query(`SELECT count(*)::int AS n FROM refresh_tokens WHERE "userId" = $1 AND "isRevoked" = false`, [buyerUserId]),
+      ds.query(`SELECT count(*)::int AS n FROM refresh_tokens WHERE "userId" = $1 AND "isRevoked" = false`, [sellerUserId]),
+    ]);
+    expect(mineLeft.n).toBe(0);
+    expect(theirs.n).toBe(1);
   }, 60_000);
 });

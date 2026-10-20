@@ -746,55 +746,5 @@ export class AuthService {
     return { message: '해당 이메일로 인증 메일이 발송되었습니다.' };
   }
 
-  // ===== 이메일 중복 검증 =====
-  async checkEmailDuplicate(email: string, ipAddress: string) {
-    // Rate Limiting: 1분에 20회 제한
-    const canAttempt = await this.redisService.checkRateLimit(
-      `check-email:${ipAddress}`,
-      20, // IP당 20회
-      60, // 1분
-    );
-
-    if (!canAttempt) {
-      throw new HttpException(
-        '너무 많은 요청입니다. 잠시 후 다시 시도해주세요.',
-        HttpStatus.TOO_MANY_REQUESTS,
-      );
-    }
-
-    const exists = await this.usersRepository.exists({
-      where: { email },
-    });
-
-    return {
-      available: !exists,
-      message: exists ? '이미 사용 중인 이메일입니다.' : '사용 가능한 이메일입니다.',
-    };
-  }
-
-  // ===== 닉네임 중복 검증 =====
-  async checkNicknameDuplicate(nickName: string, ipAddress: string) {
-    // Rate Limiting: 1분에 20회 제한
-    const canAttempt = await this.redisService.checkRateLimit(
-      `check-nickname:${ipAddress}`,
-      20, // IP당 20회
-      60, // 1분
-    );
-
-    if (!canAttempt) {
-      throw new HttpException(
-        '너무 많은 요청입니다. 잠시 후 다시 시도해주세요.',
-        HttpStatus.TOO_MANY_REQUESTS,
-      );
-    }
-
-    const exists = await this.usersRepository.exists({
-      where: { nickName },
-    });
-
-    return {
-      available: !exists,
-      message: exists ? '이미 사용 중인 닉네임입니다.' : '사용 가능한 닉네임입니다.',
-    };
-  }
+  // checkEmailDuplicate · checkNicknameDuplicate 는 2026-10-20 에 라우트와 함께 삭제(ex-security-api-boundary.md §9).
 }

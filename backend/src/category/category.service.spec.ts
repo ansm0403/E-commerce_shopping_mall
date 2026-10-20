@@ -94,29 +94,6 @@ describe('CategoryService', () => {
     });
   });
 
-  // ─── findBySlug ─────────────────────────────────────
-  describe('findBySlug', () => {
-    it('slug로 카테고리 + 하위 항목을 반환한다', async () => {
-      const parent = mockCategory({ id: 2, slug: 'snapback', path: '/1/2/' });
-      const child = mockCategory({ id: 3, slug: 'flat-brim', path: '/1/2/3/', parentId: 2, depth: 2 });
-
-      mockRepository.findOne.mockResolvedValue(parent);
-      mockRepository.find.mockResolvedValue([parent, child]);
-
-      const result = await service.findBySlug('snapback');
-
-      expect(result.category.slug).toBe('snapback');
-      expect(result.descendants).toHaveLength(1);
-      expect(result.descendants[0].slug).toBe('flat-brim');
-    });
-
-    it('존재하지 않는 slug → NotFoundException', async () => {
-      mockRepository.findOne.mockResolvedValue(null);
-
-      await expect(service.findBySlug('nonexistent')).rejects.toThrow(NotFoundException);
-    });
-  });
-
   // ─── create ─────────────────────────────────────────
   describe('create', () => {
     it('최상위 카테고리를 생성한다 — path = /id/', async () => {

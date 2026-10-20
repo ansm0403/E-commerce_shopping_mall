@@ -33,10 +33,8 @@ export class CategoryController {
     return this.categoryService.getCategoryTree();
   }
 
-  @Get(':slug')
-  findBySlug(@Param('slug') slug: string) {
-    return this.categoryService.findBySlug(slug);
-  }
+  // `GET /categories/:slug` 는 2026-10-20 에 삭제 — 화면·운영 앱 모두 트리(`GET /categories`)만 쓴다.
+  // 쓰지 않는 라우트는 지운다(docs/roadmap/ex-security-api-boundary.md §9).
 }
 
 // ─── 어드민 API ────────────────────────────────────────
