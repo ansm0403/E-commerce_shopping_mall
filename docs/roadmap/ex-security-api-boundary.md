@@ -248,8 +248,10 @@ WHERE status = 'approved' AND "updatedAt" > "approvedAt" + interval '1 minute';
 | `GET /health` | 공개 | UptimeRobot · compose healthcheck · CI 헬스 대기 | 의도된 공개 | 503 readiness, 레이트리밋 제외(§ex-observability-map) |
 | `POST /payments/webhook` | 공개(서명 + nginx IP) | PortOne 서버 | 외부 발신 전용 | §3 "웹훅", D-13 |
 | `POST /admin/assistant/chat` · `/admin/categories` 4개 · `/ops/analyses/stats` · `/ops/incidents/:id/note` · `/admin/payments/:orderNumber/cancel` | admin(+데모 차단) | 없음 — 관리자 카테고리 화면 stub·CLI·향후 화면 | 유지 | B-1~B-3·B-6 이 이미 401/403 을 확인(스펙 라우트 64개에 포함) |
+| `POST · GET · DELETE /admin/mcp` (2026-11-01 추가, `feat/mcp-practice`) | admin(데모 차단 없음 — 채팅과 같게) + `MCP_SERVER_ENABLED` 가드(기본 off → 404) | 없음 — 로컬 Claude Code(MCP 클라이언트) 연습용 | 유지(로컬 연습용, **운영에 켜지 않음**) | 가드 순서 Jwt → Roles → 플래그라 꺼져 있어도 토큰 없음 401 · 구매자 403, 관리자만 404(curl, 세 메서드). POST 본문은 DTO 없이 `req.body`(JSON-RPC) → `check-dto-decorators` **대상 밖** — 형식은 SDK, 도구 인자는 `parseToolArguments`(zod strict). GET·DELETE 는 stateless 라 405. `role-boundary` 미포함(머지 때 결정). 설계 `ex-mcp-practice.md` |
 
 결과: 라우트 **112 → 107**, 미호출 **18 → 13**, 13개 전부 위 표에 분류됨(삭제 5 · 상시 확인 3 · 의도된 공개 1 · 외부 전용 1 · B 커버 8). 더 이상 "보지 않은 라우트"는 없다.
+(2026-11-01, `feat/mcp-practice` 브랜치: MCP 연습 라우트 3개 추가 → 110 / 미호출 16. main 에 머지하기 전까지 main 의 수치는 107 / 13 그대로.)
 
 ### 시드 엔드포인트 악용 흔적 (2026-10-20 배포 뒤 확인, 면접 "실제 피해는 없었나" 대비)
 
