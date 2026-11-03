@@ -314,6 +314,7 @@
   },
   "dependencies": {
     "@google/genai": "*",
+    "@modelcontextprotocol/sdk": "*",
     "@nestjs/axios": "*",
     "@nestjs/common": "*",
     "@nestjs/config": "*",

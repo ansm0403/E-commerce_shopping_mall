@@ -15,6 +15,7 @@ import type {
   LlmMessage,
   LlmSystemPrompt,
   LlmToolCall,
+  LlmToolDef,
   LlmUsage,
 } from '../../intrastructure/ai/llm-client.interface';
 import { DashboardService } from '../dashboard/dashboard.service';
@@ -201,6 +202,14 @@ export class AssistantService {
       return { error: 'endDate 형식이 올바르지 않습니다. YYYY-MM-DD(실재하는 날짜)로 지정하세요.' };
     }
     return { start, end };
+  }
+
+  /**
+   * 지금 켜진 의미 검색 플래그에 맞는 도구 목록. 채팅(chatWithTrace·streamChat)과 MCP 서버(mcp/)가
+   * 같은 목록을 쓴다 — 두 경로의 도구 설명·스키마가 갈라지면 MCP 전/후 비교(ex-mcp-practice.md §6)가 성립하지 않는다.
+   */
+  availableTools(): LlmToolDef[] {
+    return assistantTools(this.semanticSearch?.isReviewsEnabled() ?? false, this.semanticSearch?.isInquiriesEnabled?.() ?? false);
   }
 
   /**
@@ -512,7 +521,7 @@ export class AssistantService {
       for await (const ev of this.llm.generateWithTools({
         system: this.buildSystemPrompt(),
         messages: [{ role: 'user', content: scrubText(message) ?? '' }],
-        tools: assistantTools(this.semanticSearch?.isReviewsEnabled() ?? false, this.semanticSearch?.isInquiriesEnabled?.() ?? false),
+        tools: this.availableTools(),
         signal: context.signal,
         onRequest: () => { llmRequests++; },
         onRequestFailure: failure => { llmRequestFailures.push(failure); },
@@ -595,7 +604,7 @@ export class AssistantService {
       for await (const ev of this.llm.generateWithTools({
         system: this.buildSystemPrompt(),
         messages: history.map(message => ({ ...message, content: scrubText(message.content) ?? '' })),
-        tools: assistantTools(this.semanticSearch?.isReviewsEnabled() ?? false, this.semanticSearch?.isInquiriesEnabled?.() ?? false),
+        tools: this.availableTools(),
         executeTool: (call) => this.executeTool(call, context),
         signal,
         onRequest: () => { llmRequests++; },

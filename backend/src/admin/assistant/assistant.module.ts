@@ -13,6 +13,7 @@ import { AssistantStreamRegistry } from './assistant-stream-registry';
 import { AssistantConversationEntity } from './entity/conversation.entity';
 import { AssistantMessageEntity } from './entity/message.entity';
 import { SearchModule } from '../../search/search.module';
+import { McpController } from './mcp/mcp.controller';
 
 /**
  * 관리자 AI 어시스턴트 모듈.
@@ -24,6 +25,7 @@ import { SearchModule } from '../../search/search.module';
  *   카테고리명→카테고리ID 변환(CategoryService) + 리뷰/문의 읽기(Review/InquiryService).
  * - forFeature: 대화 영속화(Phase 2.5) 엔티티. autoLoadEntities 로 스키마 동기화.
  * - LLM_CLIENT: AiModule(forRoot, global)이 전역 제공하므로 별도 import 불필요.
+ * - McpController: 같은 도구를 MCP 로 내보내는 로컬 연습 라우트(MCP_SERVER_ENABLED 기본 off, docs/roadmap/ex-mcp-practice.md).
  */
 @Module({
   imports: [
@@ -40,7 +42,7 @@ import { SearchModule } from '../../search/search.module';
     InquiryModule,
     SearchModule,
   ],
-  controllers: [AssistantController],
+  controllers: [AssistantController, McpController],
   providers: [AssistantService, AssistantStreamRegistry],
 })
 export class AssistantModule {}
